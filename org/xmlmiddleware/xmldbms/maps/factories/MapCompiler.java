@@ -1423,7 +1423,17 @@ public class MapCompiler
       Enumeration columns;
       Column      column;
 
-      // Set the column numbers from 1 to n.
+      // Set the column numbers from 1 to n. Note that these column numbers
+      // are incorrect when applied to a result set passed in by the application.
+      // This is because we have no control over the order in which the
+      // application orders the columns in the result set. Therefore, the
+      // application must override these column numbers by calling
+      // MetadataInitializer and passing in the result set and the table.
+      //
+      // For all other result sets -- that is, result sets created by DBMSToDOM --
+      // these column numbers are inherently correct. This is because we use them
+      // to construct SELECT statements with columns in the specified order. In other
+      // words, the column numbers are part of a self-fulfilling prophecy.
 
       columns = table.getColumns();
       for (int i = 1; i <= table.getNumberOfColumns(); i++)
