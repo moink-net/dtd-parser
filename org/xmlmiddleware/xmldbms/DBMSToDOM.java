@@ -268,7 +268,7 @@ public class DBMSToDOM
 
       filters = filterSet.getFilters();
       if ((filters.size() != 1) || (filters.elementAt(0) instanceof RootFilter))
-         throw new IllegalArgumentException("When you pass a result set, you must specify exactly one result set filter.");
+         throw new IllegalArgumentException("When you pass a result set, you must pass exactly one result set filter.");
 
       // Set the filter parameters. We do this here because the filters are optimized
       // for the parameters only being set once.

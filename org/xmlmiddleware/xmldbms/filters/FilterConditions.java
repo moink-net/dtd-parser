@@ -312,7 +312,13 @@ public class FilterConditions
       String       columnName;
       Column       column;
 
-      condition = (String)conditions.elementAt(index);
+      // Convert the condition string to a character array. Note that we add a
+      // trailing space to simplify the parsing code in the case where a parameter
+      // name ends the condition string. That is, we change the case "Foo=$Foo" to
+      // "Foo=$Foo " so we can stop parsing the parameter name at the space, rather
+      // than the end of the string.
+
+      condition = (String)conditions.elementAt(index) + " ";
       src = condition.toCharArray();
 
       for (int i = 0; i < src.length; i++)
@@ -342,7 +348,6 @@ public class FilterConditions
                   // Start parsing the parameter name.
 
                   state = DOLLARFOUND;
-System.out.println("dollar found: " + i);
                   dollar = i;
                   break;
 
@@ -357,18 +362,9 @@ System.out.println("dollar found: " + i);
             {
                case 0x20:   // Space
                case 0x0d:   // Tab
+               case ')':
 
-System.out.println("whitespace found: " + i);
-                  // Parse until we hit whitespace.
-
-                  // If the parameter name is zero-length -- that is, we
-                  // have a standalone dollar sign, ignore it.
-
-                  if ((i - dollar) == 0)
-                  {
-                     state = FINDDOLLAR;
-                     break;
-                  }
+                  // Parse until we hit whitespace or a closing parenthesis.
 
                   // Construct the parameter name (including the dollar sign)
                   // and get the parameter value.
