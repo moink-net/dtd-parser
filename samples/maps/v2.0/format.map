@@ -24,7 +24,7 @@
       <DecimalFormat Pattern="###.###,##" Name="DF2">
          <Locale Language="de" Country="DE" />
       </DecimalFormat>
-      <FormatClass Name="FC1" DefaultForTypes="INTEGER CHAR VARBINARY" Class="XMLFormatterImpl" />
+      <FormatClass Name="FC1" DefaultForTypes="INTEGER CHAR VARBINARY" Class="org.xmlmiddleware.conversions.helpers.BooleanFormatter" />
    </Options>
    <Databases>
       <Database Name="Default">
