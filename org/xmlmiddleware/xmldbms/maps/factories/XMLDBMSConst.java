@@ -49,14 +49,13 @@ public class XMLDBMSConst
    public static String ELEM_EXTENDS           = "Extends";
    public static String ELEM_FIXEDORDER        = "FixedOrder";
    public static String ELEM_FOREIGNKEY        = "ForeignKey";
-   public static String ELEM_GENERATE          = "Generate";
    public static String ELEM_INLINEMAP         = "InlineMap";
    public static String ELEM_LOCALE            = "Locale";
    public static String ELEM_MAPS              = "Maps";
    public static String ELEM_NAMESPACE         = "Namespace";
    public static String ELEM_NUMBERFORMAT      = "NumberFormat";
    public static String ELEM_OPTIONS           = "Options";
-   public static String ELEM_ORDER             = "Order";
+   public static String ELEM_ORDERCOLUMN       = "OrderColumn";
    public static String ELEM_PATTERN           = "Pattern";
    public static String ELEM_PCDATA            = "PCDATA";
    public static String ELEM_PRIMARYKEY        = "PrimaryKey";
@@ -91,14 +90,13 @@ public class XMLDBMSConst
                                          ELEM_EXTENDS,
                                          ELEM_FIXEDORDER,
                                          ELEM_FOREIGNKEY,
-                                         ELEM_GENERATE,
                                          ELEM_INLINEMAP,
                                          ELEM_LOCALE,
                                          ELEM_MAPS,
                                          ELEM_NAMESPACE,
                                          ELEM_NUMBERFORMAT,
                                          ELEM_OPTIONS,
-                                         ELEM_ORDER,
+                                         ELEM_ORDERCOLUMN,
                                          ELEM_PATTERN,
                                          ELEM_PCDATA,
                                          ELEM_PRIMARYKEY,
@@ -136,33 +134,32 @@ public class XMLDBMSConst
    public static final int ELEM_TOKEN_EXTENDS           = 10;
    public static final int ELEM_TOKEN_FIXEDORDER        = 11;
    public static final int ELEM_TOKEN_FOREIGNKEY        = 12;
-   public static final int ELEM_TOKEN_GENERATE          = 13;
-   public static final int ELEM_TOKEN_INLINEMAP         = 14;
-   public static final int ELEM_TOKEN_LOCALE            = 15;
-   public static final int ELEM_TOKEN_MAPS              = 16;
-   public static final int ELEM_TOKEN_NAMESPACE         = 17;
-   public static final int ELEM_TOKEN_NUMBERFORMAT      = 18;
-   public static final int ELEM_TOKEN_OPTIONS           = 19;
-   public static final int ELEM_TOKEN_ORDER             = 20;
-   public static final int ELEM_TOKEN_PATTERN           = 21;
-   public static final int ELEM_TOKEN_PCDATA            = 22;
-   public static final int ELEM_TOKEN_PRIMARYKEY        = 23;
-   public static final int ELEM_TOKEN_PROPERTYMAP       = 24;
-   public static final int ELEM_TOKEN_RELATEDCLASS      = 25;
-   public static final int ELEM_TOKEN_SCHEMA            = 26;
-   public static final int ELEM_TOKEN_TABLE             = 27;
-   public static final int ELEM_TOKEN_TIMEFORMAT        = 28;
-   public static final int ELEM_TOKEN_TOCLASSTABLE      = 29;
-   public static final int ELEM_TOKEN_TOCOLUMN          = 30;
-   public static final int ELEM_TOKEN_TOPROPERTYTABLE   = 31;
-   public static final int ELEM_TOKEN_UNIQUEKEY         = 32;
-   public static final int ELEM_TOKEN_USEBASETABLE      = 33;
-   public static final int ELEM_TOKEN_USECLASSMAP       = 34;
-   public static final int ELEM_TOKEN_USECOLUMN         = 35;
-   public static final int ELEM_TOKEN_USEFOREIGNKEY     = 36;
-   public static final int ELEM_TOKEN_USETABLE          = 37;
-   public static final int ELEM_TOKEN_USEUNIQUEKEY      = 38;
-   public static final int ELEM_TOKEN_XMLTODBMS         = 39;
+   public static final int ELEM_TOKEN_INLINEMAP         = 13;
+   public static final int ELEM_TOKEN_LOCALE            = 14;
+   public static final int ELEM_TOKEN_MAPS              = 15;
+   public static final int ELEM_TOKEN_NAMESPACE         = 16;
+   public static final int ELEM_TOKEN_NUMBERFORMAT      = 17;
+   public static final int ELEM_TOKEN_OPTIONS           = 18;
+   public static final int ELEM_TOKEN_ORDERCOLUMN       = 19;
+   public static final int ELEM_TOKEN_PATTERN           = 20;
+   public static final int ELEM_TOKEN_PCDATA            = 21;
+   public static final int ELEM_TOKEN_PRIMARYKEY        = 22;
+   public static final int ELEM_TOKEN_PROPERTYMAP       = 23;
+   public static final int ELEM_TOKEN_RELATEDCLASS      = 24;
+   public static final int ELEM_TOKEN_SCHEMA            = 25;
+   public static final int ELEM_TOKEN_TABLE             = 26;
+   public static final int ELEM_TOKEN_TIMEFORMAT        = 27;
+   public static final int ELEM_TOKEN_TOCLASSTABLE      = 28;
+   public static final int ELEM_TOKEN_TOCOLUMN          = 29;
+   public static final int ELEM_TOKEN_TOPROPERTYTABLE   = 30;
+   public static final int ELEM_TOKEN_UNIQUEKEY         = 31;
+   public static final int ELEM_TOKEN_USEBASETABLE      = 32;
+   public static final int ELEM_TOKEN_USECLASSMAP       = 33;
+   public static final int ELEM_TOKEN_USECOLUMN         = 34;
+   public static final int ELEM_TOKEN_USEFOREIGNKEY     = 35;
+   public static final int ELEM_TOKEN_USETABLE          = 36;
+   public static final int ELEM_TOKEN_USEUNIQUEKEY      = 37;
+   public static final int ELEM_TOKEN_XMLTODBMS         = 38;
    
    public static final int[] ELEM_TOKENS = {
                                             ELEM_TOKEN_ATTRIBUTE,
@@ -178,14 +175,13 @@ public class XMLDBMSConst
                                             ELEM_TOKEN_EXTENDS,
                                             ELEM_TOKEN_FIXEDORDER,
                                             ELEM_TOKEN_FOREIGNKEY,
-                                            ELEM_TOKEN_GENERATE,
                                             ELEM_TOKEN_INLINEMAP,
                                             ELEM_TOKEN_LOCALE,
                                             ELEM_TOKEN_MAPS,
                                             ELEM_TOKEN_NAMESPACE,
                                             ELEM_TOKEN_NUMBERFORMAT,
                                             ELEM_TOKEN_OPTIONS,
-                                            ELEM_TOKEN_ORDER,
+                                            ELEM_TOKEN_ORDERCOLUMN,
                                             ELEM_TOKEN_PATTERN,
                                             ELEM_TOKEN_PCDATA,
                                             ELEM_TOKEN_PRIMARYKEY,
@@ -213,7 +209,8 @@ public class XMLDBMSConst
 
    // Enumeration value strings
 
-   // ATTR_MULTIVALUED, ATTR_QUOTEIDENTIFIERS, ATTR_USEBASETABLE, ATTR_NULLABLE
+   // ATTR_MULTIVALUED, ATTR_QUOTEIDENTIFIERS, ATTR_USEBASETABLE,
+   // ATTR_GENERATE, ATTR_NULLABLE
    public static String ENUM_NO      = "No";
    public static String ENUM_YES     = "Yes";
    public static String ENUM_UNKNOWN = "Unknown"; // ATTR_NULLABLE only
@@ -302,6 +299,7 @@ public class XMLDBMSConst
    public static String ATTR_DIRECTION        = "Direction";
    public static String ATTR_ELEMENTTYPE      = "ElementType";
    public static String ATTR_FORMAT           = "Format";
+   public static String ATTR_GENERATE         = "Generate";
    public static String ATTR_KEYGENERATOR     = "KeyGenerator";
    public static String ATTR_KEYINBASETABLE   = "KeyInBaseTable";
    public static String ATTR_KEYINPARENTTABLE = "KeyInParentTable";
@@ -328,6 +326,7 @@ public class XMLDBMSConst
                                          ATTR_DIRECTION,
                                          ATTR_ELEMENTTYPE,
                                          ATTR_FORMAT,
+                                         ATTR_GENERATE,
                                          ATTR_KEYGENERATOR,
                                          ATTR_KEYINBASETABLE,
                                          ATTR_KEYINPARENTTABLE,
@@ -357,23 +356,24 @@ public class XMLDBMSConst
    public static final int ATTR_TOKEN_DIRECTION        = 4;
    public static final int ATTR_TOKEN_ELEMENTTYPE      = 5;
    public static final int ATTR_TOKEN_FORMAT           = 6;
-   public static final int ATTR_TOKEN_KEYGENERATOR     = 7;
-   public static final int ATTR_TOKEN_KEYINBASETABLE   = 8;
-   public static final int ATTR_TOKEN_KEYINPARENTTABLE = 9;
-   public static final int ATTR_TOKEN_LANGUAGE         = 10;
-   public static final int ATTR_TOKEN_LENGTH           = 11;
-   public static final int ATTR_TOKEN_MULTIVALUED      = 12;
-   public static final int ATTR_TOKEN_NAME             = 13;
-   public static final int ATTR_TOKEN_NULLABLE         = 14;
-   public static final int ATTR_TOKEN_PRECISION        = 15;
-   public static final int ATTR_TOKEN_PREFIX           = 16;
-   public static final int ATTR_TOKEN_QUOTEIDENTIFIERS = 17;
-   public static final int ATTR_TOKEN_SCALE            = 18;
-   public static final int ATTR_TOKEN_SCHEMA           = 19;
-   public static final int ATTR_TOKEN_URI              = 20;
-   public static final int ATTR_TOKEN_USEBASETABLE     = 21;
-   public static final int ATTR_TOKEN_VALUE            = 22;
-   public static final int ATTR_TOKEN_VERSION          = 23;
+   public static final int ATTR_TOKEN_GENERATE         = 7;
+   public static final int ATTR_TOKEN_KEYGENERATOR     = 8;
+   public static final int ATTR_TOKEN_KEYINBASETABLE   = 9;
+   public static final int ATTR_TOKEN_KEYINPARENTTABLE = 10;
+   public static final int ATTR_TOKEN_LANGUAGE         = 11;
+   public static final int ATTR_TOKEN_LENGTH           = 12;
+   public static final int ATTR_TOKEN_MULTIVALUED      = 13;
+   public static final int ATTR_TOKEN_NAME             = 14;
+   public static final int ATTR_TOKEN_NULLABLE         = 15;
+   public static final int ATTR_TOKEN_PRECISION        = 16;
+   public static final int ATTR_TOKEN_PREFIX           = 17;
+   public static final int ATTR_TOKEN_QUOTEIDENTIFIERS = 18;
+   public static final int ATTR_TOKEN_SCALE            = 19;
+   public static final int ATTR_TOKEN_SCHEMA           = 20;
+   public static final int ATTR_TOKEN_URI              = 21;
+   public static final int ATTR_TOKEN_USEBASETABLE     = 22;
+   public static final int ATTR_TOKEN_VALUE            = 23;
+   public static final int ATTR_TOKEN_VERSION          = 24;
 
    public static final int[] ATTR_TOKENS = {
                                             ATTR_TOKEN_CATALOG,
@@ -383,6 +383,7 @@ public class XMLDBMSConst
                                             ATTR_TOKEN_DIRECTION,
                                             ATTR_TOKEN_ELEMENTTYPE,
                                             ATTR_TOKEN_FORMAT,
+                                            ATTR_TOKEN_GENERATE,
                                             ATTR_TOKEN_KEYGENERATOR,
                                             ATTR_TOKEN_KEYINBASETABLE,
                                             ATTR_TOKEN_KEYINPARENTTABLE,
@@ -406,6 +407,7 @@ public class XMLDBMSConst
 
    public static String DEF_MULTIVALUED      = ENUM_NO;
    public static String DEF_QUOTEIDENTIFIERS = ENUM_YES;
+   public static String DEF_GENERATE         = ENUM_NO;
    public static String DEF_DATABASENAME     = "Default";
    public static String DEF_VERSION          = "2.0";
    public static String DEF_DIRECTION        = ENUM_ASCENDING;

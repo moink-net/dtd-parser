@@ -664,7 +664,6 @@ public class MapSerializer extends XMLWriter
       writeElementStart(XMLDBMSConst.ELEM_USEFOREIGNKEY, 1, true);
    }
 
-
    private void writeMapEnd()
       throws IOException
    {
@@ -770,24 +769,21 @@ public class MapSerializer extends XMLWriter
 
       attrs[0] = XMLDBMSConst.ATTR_DIRECTION;
       values[0] = (orderInfo.isAscending()) ? XMLDBMSConst.ENUM_ASCENDING : XMLDBMSConst.ENUM_DESCENDING;
-      writeElementStart(XMLDBMSConst.ELEM_ORDER, 1, false);
 
       if (orderInfo.orderValueIsFixed())
       {
-         attrs[0] = XMLDBMSConst.ATTR_VALUE;
-         values[0] = String.valueOf(orderInfo.getFixedOrderValue());
-         writeElementStart(XMLDBMSConst.ELEM_FIXEDORDER, 1, true);
+         attrs[1] = XMLDBMSConst.ATTR_VALUE;
+         values[1] = String.valueOf(orderInfo.getFixedOrderValue());
+         writeElementStart(XMLDBMSConst.ELEM_FIXEDORDER, 2, true);
       }
       else
       {
-         writeUseColumn(orderInfo.getOrderColumn());
-         if (orderInfo.generateOrder())
-         {
-            writeElementStart(XMLDBMSConst.ELEM_GENERATE, 0, true);
-         }
+         attrs[1] = XMLDBMSConst.ATTR_NAME;
+         values[1] = orderInfo.getOrderColumn().getName();
+         attrs[2] = XMLDBMSConst.ATTR_GENERATE;
+         values[2] = orderInfo.generateOrder() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
+         writeElementStart(XMLDBMSConst.ELEM_ORDERCOLUMN, 3, true);
       }
-
-      writeElementEnd(XMLDBMSConst.ELEM_ORDER);
    }
 
    private void writePrimaryKey(Key key)

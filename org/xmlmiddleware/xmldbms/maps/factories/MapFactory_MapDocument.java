@@ -99,27 +99,25 @@ public class MapFactory_MapDocument
    //          STATE_USEBASETABLE
    //          STATE_PROPERTYMAP
    //             STATE_TOPROPERTYTABLE
-   //             STATE_ORDER
    //          STATE_RELATEDCLASS
-   //             STATE_ORDER
    //          STATE_INLINECLASS
    //             STATE_PROPERTYMAP
    //             STATE_RELATEDCLASS
    //             STATE_INLINECLASS...
-   //             STATE_ORDER
    //
    // The following table shows which states affect the processing of which element types:
    //
    // State                  Affected element types
    // --------------         -----------------------------------------------------
-   // STATE_KEY              UseColumn, UseUniqueKey
+   // STATE_KEY              UseUniqueKey
    // STATE_CLASSMAP         ElementType, PropertyMap, InlineMap, RelatedClass, UseClassMap
    // STATE_USEBASETABLE     UseUniqueKey, UseForeignKey
-   // STATE_PROPERTYMAP      ElementType, Order
-   // STATE_RELATEDCLASS     ElementType, Order, UseUniqueKey, UseForeignKey, UseClassMap
-   // STATE_INLINECLASS      ElementType, PropertyMap, InlineMap, RelatedClass, Order
+   // STATE_PROPERTYMAP      ElementType, OrderColumn, FixedOrder
+   // STATE_RELATEDCLASS     ElementType, OrderColumn, FixedOrder, UseUniqueKey,
+   //                        UseForeignKey, UseClassMap
+   // STATE_INLINECLASS      ElementType, PropertyMap, InlineMap, RelatedClass,
+   //                        OrderColumn, FixedOrder
    // STATE_TOPROPERTYTABLE  UseUniqueKey, UseForeignKey
-   // STATE_ORDER            UseColumn
 
 
    // State integers (for switch statements)
@@ -131,7 +129,6 @@ public class MapFactory_MapDocument
    private static final int iSTATE_RELATEDCLASS    = 5;
    private static final int iSTATE_INLINECLASS     = 6;
    private static final int iSTATE_TOPROPERTYTABLE = 7;
-   private static final int iSTATE_ORDER           = 8;
 
    // State objects (for state variable and stateStack)
    private static final Integer STATE_NONE            = new Integer(iSTATE_NONE);
@@ -142,7 +139,6 @@ public class MapFactory_MapDocument
    private static final Integer STATE_RELATEDCLASS    = new Integer(iSTATE_RELATEDCLASS);
    private static final Integer STATE_INLINECLASS     = new Integer(iSTATE_INLINECLASS);
    private static final Integer STATE_TOPROPERTYTABLE = new Integer(iSTATE_TOPROPERTYTABLE);
-   private static final Integer STATE_ORDER           = new Integer(iSTATE_ORDER);
 
    // Date/time format type
    private static final int DATE = 0;
@@ -449,10 +445,6 @@ public class MapFactory_MapDocument
                processForeignKey(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_GENERATE:
-               processGenerate();
-               break;
-
             case XMLDBMSConst.ELEM_TOKEN_INLINEMAP:
                // Set the state and push the current inlineClassMap onto the stack. We
                // set the new inlineClassMap when we process the <ElementType> element.
@@ -473,10 +465,8 @@ public class MapFactory_MapDocument
                processFormatStart(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_ORDER:
-               processOrder(attrs);
-               stateStack.push(state);
-               state = STATE_ORDER;
+            case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
+               processOrderColumn(attrs);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_PATTERN:
@@ -650,7 +640,6 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_CLASSMAP:
-            case XMLDBMSConst.ELEM_TOKEN_ORDER:
             case XMLDBMSConst.ELEM_TOKEN_PROPERTYMAP:
             case XMLDBMSConst.ELEM_TOKEN_RELATEDCLASS:
             case XMLDBMSConst.ELEM_TOKEN_TOPROPERTYTABLE:
@@ -667,11 +656,11 @@ public class MapFactory_MapDocument
             case XMLDBMSConst.ELEM_TOKEN_EMPTYSTRINGISNULL:
             case XMLDBMSConst.ELEM_TOKEN_EXTENDS:
             case XMLDBMSConst.ELEM_TOKEN_FIXEDORDER:
-            case XMLDBMSConst.ELEM_TOKEN_GENERATE:
             case XMLDBMSConst.ELEM_TOKEN_LOCALE:
             case XMLDBMSConst.ELEM_TOKEN_MAPS:
             case XMLDBMSConst.ELEM_TOKEN_NAMESPACE:
             case XMLDBMSConst.ELEM_TOKEN_OPTIONS:
+            case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_PATTERN:
             case XMLDBMSConst.ELEM_TOKEN_PCDATA:
             case XMLDBMSConst.ELEM_TOKEN_SCHEMA:
@@ -1046,6 +1035,12 @@ One solution is to store the format names in each column, then later have Map.re
    {
       String attrValue;
 
+      // Create an OrderInfo object.
+
+      processOrder(attrs);
+
+      // Set the fixed order value.
+
       attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_VALUE);
       orderInfo.setFixedOrderValue(parseInt(attrValue));
    }
@@ -1080,40 +1075,6 @@ One solution is to store the format names in each column, then later have Map.re
       formatName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
       locale = null;
       pattern = null;
-   }
-
-   private void processGenerate()
-   {
-      if (((Integer)stateStack.peek()).intValue() == iSTATE_RELATEDCLASS)
-      {
-         // We can't set whether order is generated now because we haven't
-         // yet set the column (see processOrderColumn()). Therefore, save
-         // this for processing with resolveRCMWrappers().
-
-         rcmWrapper.generateOrder = true;
-      }
-      else // parent state is STATE_INLINECLASS or STATE_PROPERTYMAP
-      {
-         orderInfo.setGenerateOrder(true);
-      }
-   }
-
-   private void processKeyColumn(String name)
-      throws MapException
-   {
-       // Process <UseColumn> when it is inside a <PrimaryKey>, <UniqueKey>,
-       // or <ForeignKey> element.
-
-       Column column;
-
-      // Get the key column. This is in the table for the ClassMap being
-      // declared. Note that the column must have been declared or an error
-      // is thrown.
-
-      column = table.getColumn(name);
-      if (column == null)
-          throw new MapException("Key column " + name + " not found in table " + table.getUniversalName());
-      keyColumns.addElement(column);
    }
 
    private void processKeyEnd()
@@ -1180,7 +1141,7 @@ One solution is to store the format names in each column, then later have Map.re
 
    private void processOrder(Attributes attrs)
    {
-      boolean ascending;
+      String  ascending;
 
       // Create a new OrderInfo object and add it to the appropriate parent object.
 
@@ -1202,24 +1163,28 @@ One solution is to store the format names in each column, then later have Map.re
 
       // Set whether the order is ascending or descending.
 
-      ascending = getAttrValue(attrs, XMLDBMSConst.ATTR_DIRECTION, XMLDBMSConst.DEF_DIRECTION).equals(XMLDBMSConst.ENUM_ASCENDING);
-      orderInfo.setIsAscending(ascending);
+      ascending = getAttrValue(attrs, XMLDBMSConst.ATTR_DIRECTION, XMLDBMSConst.DEF_DIRECTION);
+      orderInfo.setIsAscending(ascending.equals(XMLDBMSConst.ENUM_ASCENDING));
    }
 
-   private void processOrderColumn(String name)
+   private void processOrderColumn(Attributes attrs)
       throws MapException
    {
-      // Process <UseColumn> when it is inside an <Order> element.
-
+      String   name;
+      boolean  generate;
       Column   column;
       LinkInfo linkInfo;
       Table    orderColumnTable = null;
-     
-      // Get the table that the order column is in. Note that we peek at the
-      // previous state, as which table we use depends on whether the <Order>
-      // element appears in a <PropertyMap>, <RelatedClass>, or <InlineMap>.
 
-      switch (((Integer)stateStack.peek()).intValue())
+      // Create an OrderInfo object and get the name of the order column
+
+      processOrder(attrs);
+      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      generate = isYes(getAttrValue(attrs, XMLDBMSConst.ATTR_GENERATE, XMLDBMSConst.DEF_GENERATE));
+
+      // Get the table that the order column is in.
+
+      switch (state.intValue())
       {
          case iSTATE_PROPERTYMAP:
             // If the LinkInfo is null, the order column is in the class table.
@@ -1244,10 +1209,11 @@ One solution is to store the format names in each column, then later have Map.re
 
          case iSTATE_RELATEDCLASS:
             // We may not know the name of the related class table yet, so
-            // just save the name of the order column and process it later
-            // in resolveRCMWrappers().
+            // just save the name of the order column and whether it is
+            // generated. We will process it later in resolveRCMWrappers().
 
             rcmWrapper.orderColumnName = name;
+            rcmWrapper.generateOrder = generate;
             return;
 
          case iSTATE_INLINECLASS:
@@ -1266,6 +1232,10 @@ One solution is to store the format names in each column, then later have Map.re
       if (column == null)
          throw new MapException("Order column " + name + " not found in table " + orderColumnTable.getUniversalName());
       orderInfo.setOrderColumn(column);
+
+      // Set whether order is generated.
+
+      orderInfo.setGenerateOrder(generate);
    }
 
    private void processPattern(Attributes attrs)
@@ -1516,23 +1486,20 @@ One solution is to store the format names in each column, then later have Map.re
       throws MapException
    {
       String name;
+      Column column;
+
+      // Get the name of the column to use in the key.
 
       name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
 
-      // If the <UseColumn> element occurs inside a <PrimaryKey>, <UniqueKey>,
-      // or <ForeignKey> element, process it with processKeyColumn(). If it
-      // occurs inside an <Order> element, process it with processOrderColumn().
+      // Get the key column. This is in the table for the ClassMap being
+      // declared. Note that the column must have been declared or an error
+      // is thrown.
 
-      switch (state.intValue())
-      {
-         case iSTATE_KEY:
-            processKeyColumn(name);
-            break;
-
-         case iSTATE_ORDER:
-            processOrderColumn(name);
-            break;
-      }
+      column = table.getColumn(name);
+      if (column == null)
+          throw new MapException("Key column " + name + " not found in table " + table.getUniversalName());
+      keyColumns.addElement(column);
    }
 
    private void processUseForeignKey(Attributes attrs)
