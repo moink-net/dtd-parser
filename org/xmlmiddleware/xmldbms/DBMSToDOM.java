@@ -689,7 +689,6 @@ public class DBMSToDOM
       transferInfo = null;
       map = null;
       filterBase = null;
-      doc = null;
    }
 
    private OrderedNode getOrderedRootNode(Node rootNode, FilterSet filterSet)
