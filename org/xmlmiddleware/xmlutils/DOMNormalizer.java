@@ -18,14 +18,13 @@
 // Changes from version 1.0:
 // * Fix violation of DOM spec and infinite loop in expandEntityRef
 // Changes from version 1.01: None
-// Changes from version 1.1: General cleanup
+// Changes from version 1.1:
+// * Moved to xmlutils package
+// * General cleanup
 
-package org.xmlmiddleware.domutils;
+package org.xmlmiddleware.xmlutils;
 
-import org.w3c.dom.Attr;
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
+import org.w3c.dom.*;
 
 /**
  * Utility methods that treat a DOM tree as if it consisted only of

@@ -19,8 +19,6 @@
 
 package org.xmlmiddleware.utils;
 
-import java.lang.*;
-
 /**
  * Exception thrown by methods in the Pool interface.
  *

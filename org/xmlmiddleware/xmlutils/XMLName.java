@@ -20,10 +20,11 @@
 // * Added prefix and uri variables
 // * Changed "prefixed" to "qualified" and "qualified" to "universal"
 // * Significantly rewrote API and restricted legal parameter values
+// * Moved to xmlutils package
 
-package org.xmlmiddleware.utils;
+package org.xmlmiddleware.xmlutils;
 
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * Contains information about a name in a namespace.

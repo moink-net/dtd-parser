@@ -17,10 +17,11 @@
 // Version 2.0
 // Changes from version 1.01: New in 1.1
 // Changes from version 1.1:
+// * Moved to xmlutils.helpers package
 
-package org.xmlmiddleware.domutils.helpers;
+package org.xmlmiddleware.xmlutils.external;
 
-import org.xmlmiddleware.domutils.*;
+import org.xmlmiddleware.xmlutils.*;
 
 import org.xml.sax.*;
 import org.w3c.dom.*;

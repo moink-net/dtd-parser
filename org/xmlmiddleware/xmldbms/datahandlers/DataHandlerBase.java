@@ -1,19 +1,17 @@
-package org.xmlmiddleware.xmldbms.helpers;
+package org.xmlmiddleware.xmldbms.datahandlers;
 
-import java.lang.*;
+import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.xmldbms.*;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmldbms.maps.utils.*;
+
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 
-import org.xmlmiddleware.xmldbms.*;
-import org.xmlmiddleware.xmldbms.maps.*;
-import org.xmlmiddleware.xmldbms.maps.utils.*;
-import org.xmlmiddleware.conversions.*;
-
-import org.xmlmiddleware.db.*;
-
 /**
- * Implements basic support for The DataHandler interface. The insert(...) 
+ * Implements basic support for the DataHandler interface. The insert(...) 
  * is implemented by child classes.
  *
  * @author Sean Walter

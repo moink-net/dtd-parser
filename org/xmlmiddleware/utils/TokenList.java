@@ -20,7 +20,7 @@
 
 package org.xmlmiddleware.utils;
 
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * Manages a list of tokens.

@@ -1,14 +1,12 @@
-package org.xmlmiddleware.xmldbms.helpers;
-
-import java.lang.*;
-import java.util.*;
-import java.sql.*;
-import javax.sql.*;
+package org.xmlmiddleware.xmldbms.datahandlers.external;
 
 import org.xmlmiddleware.xmldbms.*;
-import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
+import java.sql.*;
+import java.util.*;
+import javax.sql.*;
 
 /**
  * <p>DataHandler implementation for the MySQL database.</p>

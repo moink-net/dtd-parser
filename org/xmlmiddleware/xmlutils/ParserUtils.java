@@ -18,8 +18,9 @@
 // Changes from version 1.01: New in 1.1
 // Changes from version 1.1:
 // * Modified for SAX 2
+// * Moved to xmlutils package
 
-package org.xmlmiddleware.domutils;
+package org.xmlmiddleware.xmlutils;
 
 import org.xml.sax.*;
 import org.w3c.dom.*;

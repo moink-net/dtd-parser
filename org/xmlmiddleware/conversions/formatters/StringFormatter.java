@@ -17,7 +17,9 @@
 // Version 2.0
 // Changes from version 1.0: New in version 2.0
 
-package org.xmlmiddleware.conversions;
+package org.xmlmiddleware.conversions.formatters;
+
+import org.xmlmiddleware.conversions.*;
 
 /**
  * Interface for custom formatting classes.

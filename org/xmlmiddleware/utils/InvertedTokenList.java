@@ -19,7 +19,7 @@
 
 package org.xmlmiddleware.utils;
 
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * An inverted token list is used to find the name associated with a token.

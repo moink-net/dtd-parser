@@ -1,8 +1,27 @@
-package org.xmlmiddleware.xmldbms;
+// This software is in the public domain.
+//
+// The software is provided "as is", without warranty of any kind,
+// express or implied, including but not limited to the warranties
+// of merchantability, fitness for a particular purpose, and
+// noninfringement. In no event shall the author(s) be liable for any
+// claim, damages, or other liability, whether in an action of
+// contract, tort, or otherwise, arising from, out of, or in connection
+// with the software or the use or other dealings in the software.
+//
+// Parts of this software were originally developed in the Database
+// and Distributed Systems Group at the Technical University of
+// Darmstadt, Germany:
+//
+//    http://www.informatik.tu-darmstadt.de/DVS1/
 
+// Version 2.0
+// Changes from version 1.1: New in version 2.0
+
+package org.xmlmiddleware.xmldbms.datahandlers;
+
+import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
-import java.lang.*;
 import java.sql.*;
 import javax.sql.*;
 

@@ -1,11 +1,11 @@
-package org.xmlmiddleware.xmldbms.helpers;
-
-import java.lang.*;
-import java.sql.*;
-import javax.sql.*;
+package org.xmlmiddleware.xmldbms.datahandlers.external;
 
 import org.xmlmiddleware.xmldbms.*;
+import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+
+import java.sql.*;
+import javax.sql.*;
 
 /**
  * <p>DataHandler implementation for JDBC3 drivers. Incomplete

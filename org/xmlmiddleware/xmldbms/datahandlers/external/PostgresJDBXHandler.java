@@ -1,30 +1,32 @@
-package org.xmlmiddleware.xmldbms.helpers;
+package org.xmlmiddleware.xmldbms.datahandlers.external;
 
-import java.lang.*;
+import org.xmlmiddleware.xmldbms.*;
+import org.xmlmiddleware.xmldbms.datahandlers.*;
+import org.xmlmiddleware.xmldbms.maps.*;
+
 import java.sql.*;
 import javax.sql.*;
 
-import org.xmlmiddleware.xmldbms.*;
-import org.xmlmiddleware.conversions.*;
-import org.xmlmiddleware.xmldbms.maps.*;
+import org.sourceforge.jxdbcon.postgresql.PGPreparedStatement;
 
 /**
- * <p>DataHandler implementation for Postgres using the default JDBC drivers.</p>
+ * <p>DataHandler implementation for Postgres using the JDBXCon drivers
+ * (http://jxdbcon.sourceforge.net/).</p>
  *
  * <p>Database generated keys are retrieved using the the row oid.</p>
  *
  * @author Sean Walter
  * @version 2.0
  */
-public class PostgresHandler
+public class PostgresJDBXHandler
     extends DataHandlerBase
 {
     protected final static String OIDNAME = "oid";
 
     /** 
-     * Creates a PostgresHandler. 
+     * Creates a PostgresJDBXHandler
      */
-    public PostgresHandler()
+    public PostgresJDBXHandler()
     {
         super();
     }
@@ -40,7 +42,6 @@ public class PostgresHandler
         // Create the key
         m_oidKey = createColumnKey(OIDNAME, Types.INTEGER); 
     }
-
 
     /**
      * Inserts a row into the table. Refreshes any key columns needed. Does this
@@ -63,12 +64,11 @@ public class PostgresHandler
 
         if(refreshCols.length > 0)
         {
-            org.postgresql.Statement psqlStmt = 
-                    (org.postgresql.Statement)getRawStatement(stmt);
+            PGPreparedStatement psqlStmt = (PGPreparedStatement)getRawStatement(stmt);
 
             // Get the OID of the last row
-            int oid = psqlStmt.getInsertedOID();
-
+            ResultSet oidRs = psqlStmt.getGeneratedKeys();
+            int oid = oidRs.getInt(OIDNAME);
 
             // SELECT the columns with that oid
             String sql = m_dml.getSelect(table, m_oidKey, refreshCols);
@@ -86,8 +86,8 @@ public class PostgresHandler
             // Set them in the row
             for(int i = 0; i < refreshCols.length; i++)
                 setColumnValue(row, refreshCols[i], rs.getObject(refreshCols[i].getName()));
-        }
 
+        }
     }
 
     // The key for the 'oid' column

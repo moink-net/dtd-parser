@@ -17,11 +17,11 @@
 // Version 2.0
 // Changes from version 1.01: New in version 2.0
 
-package org.xmlmiddleware.xmldbms.helpers;
+package org.xmlmiddleware.xmldbms.datahandlers;
 
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
-import java.lang.*;
+
 import java.sql.*;
 import java.util.*;
 

@@ -1,12 +1,12 @@
-package org.xmlmiddleware.xmldbms.helpers;
-
-import java.lang.*;
-import java.util.*;
-import java.sql.*;
-import javax.sql.*;
+package org.xmlmiddleware.xmldbms.datahandlers.external;
 
 import org.xmlmiddleware.xmldbms.*;
+import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+
+import java.sql.*;
+import java.util.*;
+import javax.sql.*;
 
 // "IMPL:" Comments are implementors requirements or suggestions
 

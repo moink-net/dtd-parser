@@ -19,25 +19,14 @@
 // Changes from version 1.01: None
 // Changes from version 1.1:
 // * Changed name and wrote parse method. (This previously just threw an exception.)
+// * Moved to xmlutils package
 
-package org.xmlmiddleware.domutils;
+package org.xmlmiddleware.xmlutils;
 
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.DocumentFragment;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.ProcessingInstruction;
-import org.w3c.dom.Text;
+import org.xml.sax.*;
+import org.w3c.dom.*;
 
 /**
  * Creates a DocumentFragment from a string whose value is well-formed XML.

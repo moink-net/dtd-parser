@@ -20,13 +20,12 @@
 // * Change getQuote to use byte constants instead of char values
 // Changes from version 1.01:
 // * Changed to use Writer instead of OutputStream
+// * Moved to xmlutils package
 // * General cleanup
 
-package org.xmlmiddleware.utils;
+package org.xmlmiddleware.xmlutils;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 
 /**
  * Utility methods for writing an XML document to a Writer.

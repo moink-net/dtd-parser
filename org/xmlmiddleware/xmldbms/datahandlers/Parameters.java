@@ -1,5 +1,4 @@
 // This software is in the public domain.
-
 //
 // The software is provided "as is", without warranty of any kind,
 // express or implied, including but not limited to the warranties
@@ -22,25 +21,16 @@
 // * All conversion code moved to conversions package
 // * Added new methods and arguments
 
-package org.xmlmiddleware.xmldbms.helpers;
+package org.xmlmiddleware.xmldbms.datahandlers;
 
-import org.xmlmiddleware.conversions.ByteArray;
-import org.xmlmiddleware.conversions.ConversionException;
-import org.xmlmiddleware.conversions.ConvertObject;
-import org.xmlmiddleware.conversions.StringFormatter;
-import org.xmlmiddleware.db.JDBCTypes;
-import org.xmlmiddleware.xmldbms.maps.Column;
+import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.xmldbms.maps.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 
 /**
  * Sets parameters in an SQL statement.

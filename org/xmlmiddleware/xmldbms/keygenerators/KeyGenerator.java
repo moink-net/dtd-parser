@@ -7,9 +7,9 @@
 // Changes from version 1.01:
 // * Added initialize(Properties) and close() methods
 
-package org.xmlmiddleware.xmldbms;
+package org.xmlmiddleware.xmldbms.keygenerators;
 
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Interface for a class that generates key values (object IDs).

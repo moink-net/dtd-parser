@@ -16,9 +16,11 @@
 
 // Version 2.0
 // Changes from version 1.01: New in version 1.1
-// Changes from version 1.1: Now extends WrappedException
+// Changes from version 1.1:
+// * Now extends WrappedException
+// * Moved to xmlutils package
 
-package org.xmlmiddleware.domutils;
+package org.xmlmiddleware.xmlutils;
 
 import org.xmlmiddleware.utils.WrappedException;
 

@@ -19,8 +19,6 @@
 
 package org.xmlmiddleware.utils;
 
-import java.lang.*;
-
 /**
  * <p>This class can encapsulate another Exception. The code
  * is largely copied from SAXException, by David Megginson.</p>
