@@ -946,7 +946,8 @@ they can be a series of tokens. -->
 
 <!ELEMENT %p;PropertyMap ((%p;ElementType | %p;Attribute | %p;PCDATA),
                           %p;ToPropertyTable?, %p;ToColumn,
-                          (%p;OrderColumn | %p;FixedOrder)?, TLOrderColumn?)>
+                          (%p;OrderColumn | %p;FixedOrder)?,
+                          TLOrderColumn?)>
 <!ATTLIST %p;PropertyMap
           TokenList (Yes | No) "No"
           ContainsXML (Yes | No) "No">
@@ -978,8 +979,8 @@ they can be a series of tokens. -->
 <!-- ****************** Inline ************************* -->
 
 <!ELEMENT %p;InlineMap (%p;ElementType,
-                        %p;PropertyMap*, %p;InlineMap*, %p;RelatedClass*,
-                        (%p;OrderColumn | %p;FixedOrder)?)>
+                        (%p;OrderColumn | %p;FixedOrder)?,
+                        %p;PropertyMap*, %p;InlineMap*, %p;RelatedClass*)>
 
 <!-- ****************** Related classes ************************* -->
 
