@@ -1,0 +1,139 @@
+<!-- This DTD is in the public domain.
+
+     The DTD is provided "as is", without warranty of any kind,
+     express or implied, including but not limited to the warranties
+     of merchantability, fitness for a particular purpose, and
+     noninfringement. In no event shall the author(s) be liable for
+     any claim, damages, or other liability, whether in an action of
+     contract, tort, or otherwise, arising from, out of, or in
+     connection with the DTD or the use or other dealings in the DTD.
+
+     Version 2.0
+     Changes from version 1.x: New in version 2.0
+
+     Written by Ronald Bourret, 2001
+-->
+
+<!-- ************************************************************* -->
+<!--                         Namespace entities                    -->
+<!-- ************************************************************* -->
+
+<!-- These entities allow the DTD to be used with namespaces. If a
+     non-null prefix is used, the p and s entities must be declared
+     in the internal subset of the map document. The p entity provides
+     the prefix used in element type names and the s entity provides
+     the suffix used in the namespace declaration.
+
+     For example, suppose you want to use the prefix "action".
+     Declare the following entities in the internal subset of your
+     map document; notice that the p entity ends in a colon (:)
+     and the s entity starts with a colon (:)
+
+        <DOCTYPE Actions SYSTEM "actions.dtd" [
+           <!ENTITY % p "action:">
+           <!ENTITY % s ":action">
+        ]>
+        <action:Actions Version="2.0"
+                 xmlns:action="http://www.xmlmiddleware.org/xmldbms/actions/v2">
+           <action:Action>
+              ...
+
+     If you do not declare the p and s entities in the internal subset
+     of your map document, then declare the XML-DBMS v2 namespace as
+     the default namespace. For example:
+
+        <DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd">
+        <XMLToDBMS Version="2.0"
+                 xmlns:="http://www.xmlmiddleware.org/xmldbms/actions/v2">
+           <Options>
+              ...
+
+     If you are using a parser that reads the external subset, such
+     as a validating parser, you do not need to declare the namespace.
+     This is because it is declared in the DTD. However, this is
+     considered poor practice, as there is no guarantee other users
+     of the map document will use a parser that reads the external
+     subset.
+
+     WARNING: For a map document to validate against this DTD, it
+     must use the same prefix for the actions namespace throughout
+     the entire document. For details, see:
+
+        http://www.rpbourret.com/xml/NamespacesFAQ.htm#s7
+-->
+
+<!ENTITY % p "" >
+<!ENTITY % s "" >
+<!ENTITY % nsdecl "xmlns%s;" >
+
+<!-- ************************************************************* -->
+<!--                         Action language                       -->
+<!-- ************************************************************* -->
+
+<!-- An action document consists of a set of actions to be applied
+     to the values in an XML document. -->
+
+<!ELEMENT %p;Actions (%p;DefaultAction?, %p;Action+)>
+<!ATTLIST %p;Actions
+          Version FIXED "2.0"
+          %nsdecl; CDATA "http://www.xmlmiddleware.org/xmldbms/actions/v1">
+
+<!-- The allowable actions are as follows:
+
+     None:           Do nothing. The element exists to provide
+                     context, such as key values.
+     Insert:         Insert the row; throw an error if it exists.
+     SoftInsert:     Same as Insert, except no error is thrown.
+     Update:         Update the row; throw an error if it does not exist.
+     UpdateOrInsert: Update the row if it exists, otherwise insert it.
+     Delete:         Delete the row; throw an error if it does not exist.
+     SoftDelete:     Same as Delete, except no error is thrown.
+
+     Actions are specified for element types that are mapped as
+     classes. This translates into inserting, updating, and deleting
+     rows. It is an error to specify an action for an element type
+     that is mapped as a property.
+
+     An action document that specifies that rows are to be inserted
+     or updated cannot also specify that rows are to be deleted and
+     vice versa. Action documents that specifies that rows are to be
+     inserted or updated are used by DOMToDBMS. Action documents that
+     specify that rows are to be deleted are used by DBMSDelete.
+-->
+
+<!ENTITY % actions "%p;None |
+                    %p;Insert |
+                    %p;SoftInsert |
+                    %p;Update |
+                    %p;UpdateOrInsert |
+                    %p;Delete |
+                    %p;SoftDelete"
+<!ELEMENT %p;DefaultAction (%actions;)>
+<!ELEMENT %p;Action (%p;ElementType, (%actions;))>
+
+<!ELEMENT %p;None EMPTY>
+<!ELEMENT %p;Insert EMPTY>
+<!ELEMENT %p;SoftInsert EMPTY>
+<!ELEMENT %p;Update (%p;All |
+                     (%p;PCDATA?, (%p;ElementType | %p;Attribute)+))>
+<!ELEMENT %p;UpdateOrInsert (%p;All |
+                             (%p;PCDATA?, (%p;ElementType | %p;Attribute)+))>
+<!ELEMENT %p;Delete EMPTY>
+<!ELEMENT %p;SoftDelete EMPTY>
+
+<!-- The All, ElementType, Attribute, and PCDATA elements specify
+     which properties (columns) are to be updated. Note that element
+     types specified in this context must be mapped as properties.
+-->
+
+<!ELEMENT %p;All EMPTY>
+
+<!ELEMENT %p;ElementType EMPTY>
+<!ATTLIST %p;ElementType
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT %p;Attribute EMPTY>
+<!ATTLIST %p;Attribute
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT %p;PCDATA EMPTY>
