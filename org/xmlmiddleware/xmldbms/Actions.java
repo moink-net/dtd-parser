@@ -57,6 +57,7 @@ public class Actions
 
    private Hashtable actions;
    private Map       map;
+   private Action    defaultAction = null;
 
    //*********************************************************************
    // Constructors
@@ -76,6 +77,26 @@ public class Actions
    //*********************************************************************
    // Public methods
    //*********************************************************************
+
+   /**
+    * Get the default action for a document.
+    *
+    * @return The default action or null if no default action was found.
+    */
+   public final Action getDefaultAction()
+   {
+      return defaultAction;
+   }
+
+   /**
+    * Set the default action for a document.
+    *
+    * @param defaultAction The default action. Null if there is no default action.
+    */
+   public void setDefaultAction(Action defaultAction)
+   {
+      this.defaultAction = defaultAction;
+   }
 
    /**
     * Get the action for an element type mapped as a class.

@@ -50,7 +50,7 @@ public class Action
    private Hashtable     updateElements = new Hashtable();
    private Hashtable     updateAttrs = new Hashtable();
    private PropertyMap   pcdataMap = null;
-   private Column[]      updateColumns = null;
+   private Vector        updateColumns = null;
 
    //*********************************************************************
    // Constants
@@ -168,37 +168,30 @@ public class Action
       return (pcdataMap != null);
    }
 
-   public final Column[] getUpdateColumns()
+   public final Vector getUpdateColumns()
    {
-      Vector      v;
       Enumeration e;
-      PropertyMap propMap;
 
       if (updateColumns == null)
       {
-         v = new Vector();
+         updateColumns = new Vector();
 
          e = updateElements.elements();
          while (e.hasMoreElements())
          {
-            propMap = (PropertyMap)e.nextElement();
-            v.addElement(propMap.getColumn());
+            updateColumns.addElement((PropertyMap)e.nextElement());
          }
 
          e = updateAttrs.elements();
          while (e.hasMoreElements())
          {
-            propMap = (PropertyMap)e.nextElement();
-            v.addElement(propMap.getColumn());
+            updateColumns.addElement((PropertyMap)e.nextElement());
          }
 
          if (pcdataMap != null)
          {
-            v.addElement(pcdataMap.getColumn());
+            updateColumns.addElement(pcdataMap);
          }
-
-         updateColumns = new Column[v.size()];
-         v.copyInto(updateColumns);
       }
       return updateColumns;
    }

@@ -32,6 +32,7 @@ public class ActionConst
    // Action attributes and values
    //*********************************************************************
 
+/*
    public static String URI_ACTION            = "http://www.xmlmiddleware.org/xmldbms/actions/v2";
 
    public static String ATTR_ACTION           = "Action";
@@ -46,6 +47,7 @@ public class ActionConst
 
    public static String VALUE_ALL             = "#All";
    public static String VALUE_PCDATA          = "#PCDATA";
+*/
 
    //*********************************************************************
    // Action language element strings and tokens
@@ -55,6 +57,7 @@ public class ActionConst
    public static String ELEM_ACTIONS        = "Actions";
    public static String ELEM_ALL            = "All";
    public static String ELEM_ATTRIBUTE      = "Attribute";
+   public static String ELEM_DEFAULTACTION  = "DefaultAction";
    public static String ELEM_DELETE         = "Delete";
    public static String ELEM_ELEMENTTYPE    = "ElementType";
    public static String ELEM_INSERT         = "Insert";
@@ -70,6 +73,7 @@ public class ActionConst
                                          ELEM_ACTIONS,
                                          ELEM_ALL,
                                          ELEM_ATTRIBUTE,
+                                         ELEM_DEFAULTACTION,
                                          ELEM_DELETE,
                                          ELEM_ELEMENTTYPE,
                                          ELEM_INSERT,
@@ -88,21 +92,23 @@ public class ActionConst
    public static final int ELEM_TOKEN_ACTIONS        = 1;
    public static final int ELEM_TOKEN_ALL            = 2;
    public static final int ELEM_TOKEN_ATTRIBUTE      = 3;
-   public static final int ELEM_TOKEN_DELETE         = 4;
-   public static final int ELEM_TOKEN_ELEMENTTYPE    = 5;
-   public static final int ELEM_TOKEN_INSERT         = 6;
-   public static final int ELEM_TOKEN_NONE           = 7;
-   public static final int ELEM_TOKEN_PCDATA         = 8;
-   public static final int ELEM_TOKEN_SOFTDELETE     = 9;
-   public static final int ELEM_TOKEN_SOFTINSERT     = 10;
-   public static final int ELEM_TOKEN_UPDATE         = 11;
-   public static final int ELEM_TOKEN_UPDATEORINSERT = 12;
+   public static final int ELEM_TOKEN_DEFAULTACTION  = 4;
+   public static final int ELEM_TOKEN_DELETE         = 5;
+   public static final int ELEM_TOKEN_ELEMENTTYPE    = 6;
+   public static final int ELEM_TOKEN_INSERT         = 7;
+   public static final int ELEM_TOKEN_NONE           = 8;
+   public static final int ELEM_TOKEN_PCDATA         = 9;
+   public static final int ELEM_TOKEN_SOFTDELETE     = 10;
+   public static final int ELEM_TOKEN_SOFTINSERT     = 11;
+   public static final int ELEM_TOKEN_UPDATE         = 12;
+   public static final int ELEM_TOKEN_UPDATEORINSERT = 13;
    
    public static final int[] ELEM_TOKENS = {
                                             ELEM_TOKEN_ACTION,
                                             ELEM_TOKEN_ACTIONS,
                                             ELEM_TOKEN_ALL,
                                             ELEM_TOKEN_ATTRIBUTE,
+                                            ELEM_TOKEN_DEFAULTACTION,
                                             ELEM_TOKEN_DELETE,
                                             ELEM_TOKEN_ELEMENTTYPE,
                                             ELEM_TOKEN_INSERT,
