@@ -266,14 +266,18 @@ well-formedness requirement in XML. For example:
 
    <Where Condition="Price &lt; 100.00" />
 
-2) Any parameter name ($xxxxx) for which no corresponding parameter is
-passed to retrieveDocument is treated as a literal.
+2) If you want to use a literal of the form $token, you must escape it
+by preceding it with backslash (\). For example:
+
+   <Where Condition="Description LIKE '%\$token%'" />
+   <Where Condition="PriceAsString = '\$10 (US)'" />
+
 
 3) The replacement of scalar parameters is simplistic: anything of the
 form $token is assumed to be a parameter (regardless of position) and
-is replaced by a parameter marker (?) if a parameter with the same name
-is found. Therefore, if you have data values of the form $token, be
-sure not to name any parameters with the names used by the data values.
+is replaced by a parameter marker (?). The only exception is when the
+$token is preceded by a backslash (\).
+
 
 4) The replacement of Vector parameters is also simplistic. In
 particular, the parameter is replaced by Vector.size() parameter
