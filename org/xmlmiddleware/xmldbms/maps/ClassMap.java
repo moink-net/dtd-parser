@@ -20,8 +20,9 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.XMLName;
-import java.util.Hashtable;
+import org.xmlmiddleware.xmlutils.*;
+
+import java.util.*;
 
 /**
  * Maps an element type as a class; <a href="../readme.htm#NotForUse">not for
@@ -42,7 +43,7 @@ import java.util.Hashtable;
  * ClassMap), then all mutator methods except useClassMap() return an
  * IllegalStateException.</p>
  *
- * <p>ClassMaps are stored in the Map class. They are pointed to by ClassMaps
+ * <p>ClassMaps are stored in the XMLDBMSMap class. They are pointed to by ClassMaps
  * and RelatedClassMaps.</p>
  *
  * @author Ronald Bourret, 1998-9, 2001
@@ -189,7 +190,7 @@ public class ClassMap extends ClassMapBase
     * is useful if you want the map objects to preserve inheritance information
     * but want to store the data for the class in a single table, rather than in a
     * base table and a class table. Inheritance information can then be used elsewhere,
-    * such as when an XML Schema is generated from a Map.</p>
+    * such as when an XML Schema is generated from an XMLDBMSMap.</p>
     *
     * @param baseLinkInfo The LinkInfo. The "parent" table is the base class table.
     *    Null if the base class table is not used.

@@ -19,23 +19,14 @@
 
 package org.xmlmiddleware.xmldbms.maps.utils;
 
-import org.xmlmiddleware.conversions.StringFormatter;
-import org.xmlmiddleware.xmldbms.maps.Column;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.MapException;
-import org.xmlmiddleware.xmldbms.maps.Table;
+import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.xmldbms.maps.*;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.sql.*;
+import java.util.*;
 
 /**
- * Initializes the metadata in a Map object from a database.
+ * Initializes the metadata in an XMLDBMSMap object from a database.
  *
  * <p>Metadata must be set for any columns for which data is to be
  * transferred. The result of not setting metadata is undefined. Metadata
@@ -49,7 +40,7 @@ import java.util.Hashtable;
  * want to retrieve metadata for some tables from the database, then retrieve
  * metadata for other tables from another source, such as a result set.</p>
  *
- * <p>You can use Map.checkMetadata() to determine if metadata has been set
+ * <p>You can use XMLDBMSMap.checkMetadata() to determine if metadata has been set
  * for all tables.</p>
  *
  * <p>The methods in this class overwrite any existing metadata for tables
@@ -65,7 +56,7 @@ public class MetadataInitializer
    // Variables
    //**************************************************************************
 
-   private Map map;
+   private XMLDBMSMap map;
 
    //**************************************************************************
    // Constants
@@ -80,9 +71,9 @@ public class MetadataInitializer
    /**
     * Construct a new MetadataInitializer.
     *
-    * @param map The Map to initialize.
+    * @param map The XMLDBMSMap to initialize.
     */
-   public MetadataInitializer(Map map)
+   public MetadataInitializer(XMLDBMSMap map)
    {
       if (map == null)
          throw new IllegalArgumentException("map argument must not be null.");
@@ -184,7 +175,8 @@ public class MetadataInitializer
    /**
     * Initialize database metadata from a result set.
     *
-    * <p>This method initializes metadata only for the specified table. It does
+    * <p>This method initializes metadata only for the specified table. (This is the
+    * "table" that maps the result set.) This method does
     * not affect metadata for other tables. Thus, it can be called for different
     * tables, such as when multiple result sets are passed to DBMSToDOM.retrieveDocument.</p>
     *
@@ -209,14 +201,40 @@ public class MetadataInitializer
                                   ResultSet rs)
       throws MapException
    {
-      ResultSetMetaData meta;
-      Table             table;
-      Enumeration       columns;
-      Column            column;
+      Table table;
 
       table = map.getTable(databaseName, catalogName, schemaName, tableName);
       if (table == null)
          throw new MapException("Table not found: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+
+      initializeMetadata(table, rs);
+
+   }
+
+   /**
+    * Initialize database metadata from a result set.
+    *
+    * <p>This method initializes metadata only for the specified table. (This is the
+    * "table" that maps the result set.) This method does
+    * not affect metadata for other tables. Thus, it can be called for different
+    * tables, such as when multiple result sets are passed to DBMSToDOM.retrieveDocument.</p>
+    *
+    * <p>This method is liberal with respect to metadata. That is, if any columns
+    * in the result set are not mapped, or if any columns in the specified table
+    * are not in the result set, they are ignored. This allows a single mapping
+    * to be used for multiple result sets based on the same table.</p>
+    *
+    * @param table The Table used to map the result set.
+    * @param rs The result set.
+    * @exception MapException Thrown if the table is not found or an error occurs
+    *    retrieving the metadata.
+    */
+   public void initializeMetadata(Table table, ResultSet rs)
+      throws MapException
+   {
+      ResultSetMetaData meta;
+      Enumeration       columns;
+      Column            column;
 
       initColumns(table);
 
@@ -348,7 +366,7 @@ public class MetadataInitializer
       // Set the column formatter to the default formatter as needed. This
       // is necessary if the formatter has not been set or if the formatter
       // cannot handle the column's type. The latter case occurs when the
-      // Map is re-initialized using a new database and the column type in
+      // XMLDBMSMap is re-initialized using a new database and the column type in
       // the new database is different than the column type in the old database.
 
       formatter = column.getFormatter();

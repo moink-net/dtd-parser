@@ -19,20 +19,14 @@
 
 package org.xmlmiddleware.xmldbms.actions;
 
-import org.xmlmiddleware.utils.TokenList;
-import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.PropertyMap;
+import org.xmlmiddleware.utils.*;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import java.io.IOException;
-import java.util.Hashtable;
+import java.io.*;
+import java.util.*;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import org.xml.sax.*;
 
 /**
  * Compiles an action document into an Actions object.
@@ -127,7 +121,7 @@ public class ActionCompiler implements ContentHandler
     * @exception SAXException Thrown if the action document contains an error.
     * @exception IOException Thrown if an IO error occurs.
     */
-   public Actions compile(Map map, InputSource src)
+   public Actions compile(XMLDBMSMap map, InputSource src)
       throws SAXException, IOException
    {
       // Check the arguments.

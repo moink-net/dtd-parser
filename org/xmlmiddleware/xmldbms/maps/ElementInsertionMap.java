@@ -19,7 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.xmlutils.*;
 
 /**
  * Describes a wrapper element that needs to be inserted;

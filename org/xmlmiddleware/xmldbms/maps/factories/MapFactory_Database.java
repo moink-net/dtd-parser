@@ -19,34 +19,19 @@
 
 package org.xmlmiddleware.xmldbms.maps.factories;
 
-import org.xmlmiddleware.db.JDBCTypes;
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmldbms.maps.utils.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.Column;
-import org.xmlmiddleware.xmldbms.maps.ColumnMap;
-import org.xmlmiddleware.xmldbms.maps.Key;
-import org.xmlmiddleware.xmldbms.maps.LinkInfo;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.MapException;
-import org.xmlmiddleware.xmldbms.maps.RelatedClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.Table;
-
-import org.xmlmiddleware.xmldbms.maps.utils.MapInverter;
-
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.sql.*;
+import java.util.*;
 
 /**
- * Create a Map from a database.
+ * Create an XMLDBMSMap from a database.
  *
  * <p>Through primary key / foreign key references, the tables in a database
- * form a graph. MapFactory_Database follows this graph and creates a Map. Tables
+ * form a graph. MapFactory_Database follows this graph and creates an XMLDBMSMap. Tables
  * are mapped to elements with complex types and columns may be mapped either to
  * attributes or to elements containing only PCDATA. The calling application
  * specifies which tables to include in the map in any of a number of ways.</p>
@@ -57,11 +42,11 @@ import java.util.Vector;
  *    // Instantiate a new map factory and set the JDBC connection.
  *    factory = new MapFactory_Database(conn);<br />
  *
- *    // Create a Map based on the graph including the SalesOrders table.
+ *    // Create an XMLDBMSMap based on the graph including the SalesOrders table.
  *    map = factory.createMap("SalesOrders");<br />
  * </pre>
  *
- * <p>It is important to understand that a Map is a directed graph. This is different
+ * <p>It is important to understand that an XMLDBMSMap is a directed graph. This is different
  * from the tables in a database, which form an undirected graph. In particular, a primary
  * key / foreign key link can be traversed in either direction; the hierarchy of an XML
  * document forces you to choose one of those directions. That is, you can choose to
@@ -69,7 +54,7 @@ import java.util.Vector;
  * parent) or from foreign key to primary key (in which case the foreign key table is
  * the parent).</p>
  *
- * <p>Which direction the Map constructed by this class uses depends on the tables you
+ * <p>Which direction the XMLDBMSMap constructed by this class uses depends on the tables you
  * choose as root table. For example, suppose we have the following graph of tables:</p>
  *
  * <pre>
@@ -116,7 +101,7 @@ import java.util.Vector;
  *    &lt;/Customer>
  * </pre>
  *
- * <p>You have several different choices on how to construct the Map. You can specify
+ * <p>You have several different choices on how to construct the XMLDBMSMap. You can specify
  * whether to follow primary key links (that is, links where the primary key is in the
  * current table) and whether to following foreign key links (that is, links where the
  * foreign key is in the current table). For example, following only primary key links
@@ -168,7 +153,7 @@ import java.util.Vector;
  * </pre>
  *
  * <p>The last option is that you can "trim" a graph by specifying "stop" tables. These are
- * tables that are not included in the Map. For example, in the first example above, if you
+ * tables that are not included in the XMLDBMSMap. For example, in the first example above, if you
  * only wanted to create an XML document with SalesOrders, Lines, and Parts, you could
  * specify Customers as a stop table.</p>
  *
@@ -195,7 +180,7 @@ public class MapFactory_Database
                         namespaceURIs = null;
    private boolean      useElementTypes = true,
                         followPrimaryKeys = true, followForeignKeys = true;
-   private Map          map = null;
+   private XMLDBMSMap   map = null;
    private Hashtable    processedTables = new Hashtable(),
                         elementTypeNames = new Hashtable(),
                         conns = new Hashtable(),
@@ -372,9 +357,9 @@ public class MapFactory_Database
     * @param rootSchemaName Name of the root schema. May be null.
     * @param rootTableName Name of the root table.
     *
-    * @return The Map.
+    * @return The XMLDBMSMap.
     */
-   public Map createMap(String rootCatalogName, String rootSchemaName, String rootTableName)
+   public XMLDBMSMap createMap(String rootCatalogName, String rootSchemaName, String rootTableName)
       throws SQLException, MapException
    {
       // Check the arguments and state.
@@ -400,9 +385,9 @@ public class MapFactory_Database
     * @param rootSchemaNames Names of the root schemas. Entries may be null.
     * @param rootTableNames Names of the root tables.
     *
-    * @return The Map.
+    * @return The XMLDBMSMap.
     */
-   public Map createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String[] rootSchemaNames, String[] rootTableNames)
+   public XMLDBMSMap createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String[] rootSchemaNames, String[] rootTableNames)
       throws SQLException, MapException
    {
       checkArray(rootTableNames, 0, true, null, TABLENAME);
@@ -440,9 +425,9 @@ public class MapFactory_Database
     * @param stopSchemaNames Names of the stop schemas. Entries may be null.
     * @param stopTableNames Names of the stop tables.
     *
-    * @return The Map.
+    * @return The XMLDBMSMap.
     */
-   public Map createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String[] rootSchemaNames, String[] rootTableNames, String[] stopDatabaseNames, String[] stopCatalogNames, String[] stopSchemaNames, String[] stopTableNames)
+   public XMLDBMSMap createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String[] rootSchemaNames, String[] rootTableNames, String[] stopDatabaseNames, String[] stopCatalogNames, String[] stopSchemaNames, String[] stopTableNames)
       throws SQLException, MapException
    {
       String    name;
@@ -485,9 +470,9 @@ public class MapFactory_Database
     *    name "Default" is used.
     * @param rootCatalogNames Names of the root catalogs.
     *
-    * @return The Map.
+    * @return The XMLDBMSMap.
     */
-   public Map createMap(String[] rootDatabaseNames, String[] rootCatalogNames)
+   public XMLDBMSMap createMap(String[] rootDatabaseNames, String[] rootCatalogNames)
       throws SQLException, MapException
    {
       checkArray(rootCatalogNames, 0, true, null, ROOT + CATALOGNAME);
@@ -513,9 +498,9 @@ public class MapFactory_Database
     * @param rootCatalogNames Names of the root catalogs. Entries may be null.
     * @param rootSchemaNames Names of the root schemas.
     *
-    * @return The Map.
+    * @return The XMLDBMSMap.
     */
-   public Map createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String rootSchemaNames[])
+   public XMLDBMSMap createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String rootSchemaNames[])
       throws SQLException, MapException
    {
       checkArray(rootSchemaNames, 0, true, null, ROOT + SCHEMANAME);
@@ -620,7 +605,7 @@ public class MapFactory_Database
       XMLName          elementTypeName;
       Vector           remoteTables = new Vector(), remoteLinkInfos = new Vector();
 
-      // Create a new Table. We use Map.createTable because the Table might already
+      // Create a new Table. We use XMLDBMSMap.createTable because the Table might already
       // have been created. This happens when a table that we have already processed
       // points to this table. 
 
@@ -831,7 +816,7 @@ public class MapFactory_Database
       for (int i = 0; i < remoteTables.size(); i++)
       {
          // Get the next LinkInfo and remote table, then create a ClassTableMap for
-         // the remote table. We use Map.createClassTableMap because the table might
+         // the remote table. We use XMLDBMSMap.createClassTableMap because the table might
          // already have been created.
 
          linkInfo = (LinkInfo)linkInfos.elementAt(i);
@@ -1071,7 +1056,7 @@ public class MapFactory_Database
                setKeyColumnArray(pkTable, pkColumnNames, primaryKey);
             }
 
-            // Create the primary key table and the primary key. We use Map.createTable
+            // Create the primary key table and the primary key. We use XMLDBMSMap.createTable
             // because the table might already have been built. For example, another
             // table that we have already processed might have pointed to it, or we
             // are processing exported keys, in which case the primary key table is
@@ -1319,7 +1304,7 @@ public class MapFactory_Database
    {
       checkState();
       setDefault(databaseNames, DEFAULT);
-      map = new Map();
+      map = new XMLDBMSMap();
       processedTables.clear();
       elementTypeNames.clear();
       attributeHashes.clear();

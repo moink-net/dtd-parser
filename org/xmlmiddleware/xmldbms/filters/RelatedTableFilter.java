@@ -19,7 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.xmldbms.maps.Table;
+import org.xmlmiddleware.xmldbms.maps.*;
 
 /**
  * Identifies a particular use of a related table. <b>For internal use.</b>

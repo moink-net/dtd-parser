@@ -19,14 +19,9 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.LinkInfo;
-import org.xmlmiddleware.xmldbms.maps.PropertyTableMap;
-import org.xmlmiddleware.xmldbms.maps.RelatedClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.Table;
+import org.xmlmiddleware.xmldbms.maps.*;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * A container for filters between a class table and child tables. <b>For internal use.</b>

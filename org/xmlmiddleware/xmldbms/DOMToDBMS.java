@@ -18,26 +18,27 @@
 
 package org.xmlmiddleware.xmldbms;
 
-import java.lang.*;
+import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.xmldbms.datahandlers.*;
+import org.xmlmiddleware.xmldbms.filters.*;
+import org.xmlmiddleware.xmldbms.keygenerators.*;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmldbms.actions.*;
+import org.xmlmiddleware.xmlutils.*;
+
 import java.io.*;
-import java.util.*;
 import java.sql.*;
+import java.util.*;
 import javax.sql.*;
 
 import org.w3c.dom.*;
-
-import org.xmlmiddleware.conversions.*;
-import org.xmlmiddleware.domutils.*;
-import org.xmlmiddleware.utils.*;
-import org.xmlmiddleware.xmldbms.filters.*;
-import org.xmlmiddleware.xmldbms.maps.*;
-import org.xmlmiddleware.xmldbms.actions.*;
 
 /**
  * Transfers data from the database to a DOM tree.
  *
  * <p>DOMToDBMS transfers data from a DOM tree to the database according
- * to a particular Map and Actions object. The caller must provide a
+ * to a particular XMLDBMSMap and Actions object. The caller must provide a
  * TransferInfo object, which contains the map and database handlers,
  * a DOM Element or Document, and one or more actions to be taken when
  * storing this data in the database.</p>
@@ -46,7 +47,7 @@ import org.xmlmiddleware.xmldbms.actions.*;
  * to the map document orders.map and the action document orders.act:</p>
  *
  * <pre>
- *    // Create the Map object with a user-defined function.
+ *    // Create the XMLDBMSMap object with a user-defined function.
  *
  *    map = createMap("orders.map");
  *

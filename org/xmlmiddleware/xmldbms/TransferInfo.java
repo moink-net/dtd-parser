@@ -20,7 +20,9 @@
 
 package org.xmlmiddleware.xmldbms;
 
+import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+
 import java.util.*;
 
 /**
@@ -29,14 +31,14 @@ import java.util.*;
  *
  * <p>A TransferInfo object encapsulates the mapping metadata and DataHandler objects
  * needed to transfer data between an XML document and the database(s) according
- * to a particular map. It contains a single Map object and one DataHandler object per
- * database and is roughly equivalent to a Map object in XML-DBMS version 1.0.
+ * to a particular map. It contains a single XMLDBMSMap object and one DataHandler object per
+ * database and is roughly equivalent to a XMLDBMSMap object in XML-DBMS version 1.0.
  * Applications that use more than one map -- that is, that transfer data to/from
  * more than one class of XML documents -- should use one TransferInfo object per map.</p>
  *
  * <p>TransferInfo objects are reusable. In fact, reusing them on multiple calls
  * to DOMToDBMS.processDocument, DBMSDelete.delete, and DBMSToDOM.retrieveDocument
- * will be more efficient than recreating them. This is because they contain Map
+ * will be more efficient than recreating them. This is because they contain XMLDBMSMap
  * objects (which don't need to be recompiled), as well as pooled connections and
  * statements (which don't need to be reprepared).</p>
  *
@@ -60,8 +62,8 @@ public class TransferInfo
    // Class variables
    //**************************************************************************
 
-   private Map       map;
-   private Hashtable dataHandlers = new Hashtable();
+   private XMLDBMSMap map;
+   private Hashtable  dataHandlers = new Hashtable();
 
    //**************************************************************************
    // Public methods
@@ -70,12 +72,12 @@ public class TransferInfo
    /**
     * Create a new TransferInfo object.
     *
-    * @param map The Map object to which the TransferInfo object applies
+    * @param map The XMLDBMSMap object to which the TransferInfo object applies
     */
-   public TransferInfo(Map map)
+   public TransferInfo(XMLDBMSMap map)
    {
       if (map == null)
-         throw new IllegalArgumentException("Map argument must not be null.");
+         throw new IllegalArgumentException("map argument must not be null.");
       this.map = map;
    }
 
@@ -85,12 +87,12 @@ public class TransferInfo
     * <p>This is a convenience constructor for applications that use a
     * single database.</p>
     *
-    * @param map The Map object to which the TransferInfo object applies
+    * @param map The XMLDBMSMap object to which the TransferInfo object applies
     * @param dbName The name of the database as it appears in the map. If this
     *    is null, the name "Default" is used.
     * @param dataHandler An implementation of DataHandler for the database.
     */
-   public TransferInfo(Map map, String dbName, DataHandler dataHandler)
+   public TransferInfo(XMLDBMSMap map, String dbName, DataHandler dataHandler)
    {
       if (map == null)
          throw new IllegalArgumentException("map argument must not be null.");
@@ -109,11 +111,11 @@ public class TransferInfo
    //**************************************************************************
 
    /**
-    * Get the Map object
+    * Get the XMLDBMSMap object
     *
-    * @return The Map object.
+    * @return The XMLDBMSMap object.
     */
-   public final Map getMap()
+   public final XMLDBMSMap getMap()
    {
       return map;
    }

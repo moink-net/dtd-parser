@@ -19,7 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.WrappedException;
+import org.xmlmiddleware.utils.*;
 
 /**
  * Thrown when a error occurs constructing or using a map object.

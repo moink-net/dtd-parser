@@ -21,13 +21,14 @@
 package org.xmlmiddleware.xmldbms.tools;
 
 import org.xmlmiddleware.db.*;
-import org.xmlmiddleware.domutils.*;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.actions.*;
+import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.filters.*;
-import org.xmlmiddleware.xmldbms.helpers.*;
+import org.xmlmiddleware.xmldbms.keygenerators.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.factories.*;
+import org.xmlmiddleware.xmlutils.*;
 
 import org.xml.sax.*;
 import org.w3c.dom.*;
@@ -35,8 +36,8 @@ import org.w3c.dom.*;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
-import javax.sql.*;
 import java.util.*;
+import javax.sql.*;
 
 /**
  * Simplified interface to XML-DBMS.
@@ -87,7 +88,7 @@ import java.util.*;
  *     <p>Note that DBName and DataHandlerClass are both optional. If DBName
  *     is omitted, "Default" is used. This is an error if there is more than
  *     one database. If DataHandlerClass is omitted,
- *     org.xmlmiddleware.xmldbms.helpers.GenericHandler is used.</p></li>
+ *     org.xmlmiddleware.xmldbms.datahandlers.GenericHandler is used.</p></li>
  *
  * <li><p>Transfer properties specify what is to be done (store, retrieve, or
  *     delete a document) and the files to use. They are Method, MapFile,
@@ -249,7 +250,7 @@ import java.util.*;
  * DataHandler, etc.) are cached between calls to setDatabaseProperties().</p>
  *
  * <pre>
- * Map (MapFile)
+ * XMLDBMSMap (MapFile)
  * Actions (ActionFile)
  * FilterSet (FilterFile)
  * KeyGenerator (KeyGeneratorName)
@@ -282,7 +283,7 @@ public class Transfer extends PropertyProcessor
    // Constants
    // ************************************************************************
 
-   private static String GENERICHANDLER = "org.xmlmiddleware.xmldbms.helpers.GenericHandler";
+   private static String GENERICHANDLER = "org.xmlmiddleware.xmldbms.datahandlers.GenericHandler";
    private static String JDBC1DATASOURCE = "org.xmlmiddleware.db.JDBC1DataSource";
    private static String JDBC2DATASOURCE = "org.xmlmiddleware.db.JDBC2DataSource";
    private static String DEFAULT = "Default";
@@ -625,7 +626,7 @@ public class Transfer extends PropertyProcessor
    public void deleteDocument(Properties configProps, String mapFilename, String actionFilename, String filterFilename, Hashtable params)
       throws Exception
    {
-      Map          map;
+      XMLDBMSMap   map;
       TransferInfo transferInfo;
       Actions      actions;
       FilterSet    filterSet;
@@ -798,7 +799,7 @@ public class Transfer extends PropertyProcessor
    private FilterSet storeDocumentInternal(Properties configProps, String mapFilename, String actionFilename, InputSource src)
       throws Exception
    {
-      Map          map;
+      XMLDBMSMap   map;
       TransferInfo transferInfo;
       Actions      actions;
       Document     doc;
@@ -822,7 +823,7 @@ public class Transfer extends PropertyProcessor
    private Document retrieveDocumentInternal(Properties configProps, String mapFilename, String filterFilename, Hashtable params)
       throws Exception
    {
-      Map          map;
+      XMLDBMSMap   map;
       TransferInfo transferInfo;
       FilterSet    filterSet;
 
@@ -844,7 +845,7 @@ public class Transfer extends PropertyProcessor
    private Document retrieveDocumentInternal(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params)
       throws Exception
    {
-      Map          map;
+      XMLDBMSMap   map;
       Hashtable    resultSets;
       TransferInfo transferInfo;
       FilterSet    filterSet;
@@ -1406,7 +1407,7 @@ public class Transfer extends PropertyProcessor
       }
    }
 
-   private TransferInfo createTransferInfo(Map map)
+   private TransferInfo createTransferInfo(XMLDBMSMap map)
    {
       TransferInfo transferInfo;
       Enumeration  dbNames;
@@ -1459,12 +1460,12 @@ public class Transfer extends PropertyProcessor
       return keyGen;
    }
 
-   private Map createMap(String mapFilename)
+   private XMLDBMSMap createMap(String mapFilename)
       throws Exception
    {
       MapCompiler compiler;
       String      url;
-      Map         map;
+      XMLDBMSMap  map;
 
       // Build a URL string from the map file name. See PropertyProcessor.buildURLString
       // for details.
@@ -1472,9 +1473,9 @@ public class Transfer extends PropertyProcessor
       url = buildURLString(null, mapFilename);
 
       // Check if we have already compiled the map file. If so, use the cached
-      // Map object. If not create a new map compiler and compile the map file.
+      // XMLDBMSMap object. If not create a new map compiler and compile the map file.
 
-      map = (Map)fileObjects.get(url);
+      map = (XMLDBMSMap)fileObjects.get(url);
       if (map == null)
       {
          compiler = new MapCompiler(utils.getXMLReader());
@@ -1484,7 +1485,7 @@ public class Transfer extends PropertyProcessor
       return map;
    }
 
-   private Actions createActions(Map map, String actionFilename)
+   private Actions createActions(XMLDBMSMap map, String actionFilename)
       throws Exception
    {
       ActionCompiler compiler;
@@ -1509,7 +1510,7 @@ public class Transfer extends PropertyProcessor
       return actions;
    }
 
-   private FilterSet createFilterSet(Map map, String filterFilename)
+   private FilterSet createFilterSet(XMLDBMSMap map, String filterFilename)
       throws Exception
    {
       FilterCompiler compiler;

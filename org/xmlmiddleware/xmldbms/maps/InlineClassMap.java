@@ -19,7 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.xmlutils.*;
 
 /**
  * Inlines an element type that might otherwise be mapped as a class;

@@ -19,6 +19,8 @@
 
 package org.xmlmiddleware.conversions;
 
+import org.xmlmiddleware.conversions.formatters.*;
+
 import java.sql.Types;
 
 /**

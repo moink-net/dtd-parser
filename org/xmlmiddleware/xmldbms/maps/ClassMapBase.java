@@ -19,9 +19,9 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.XMLName;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import org.xmlmiddleware.xmlutils.*;
+
+import java.util.*;
 
 /**
  * Base class for ClassMap and InlineClassMap; <a href="../readme.htm#NotForUse">not for

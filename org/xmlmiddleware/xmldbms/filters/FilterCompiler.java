@@ -19,19 +19,14 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.utils.TokenList;
-import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.xmldbms.maps.Map;
+import org.xmlmiddleware.utils.*;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import java.io.IOException;
-import java.util.Hashtable;
+import java.io.*;
+import java.util.*;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import org.xml.sax.*;
 
 /**
  * Compiles a filter document into a FilterSet object.
@@ -145,7 +140,7 @@ public class FilterCompiler implements ContentHandler
     * @exception SAXException Thrown if the filter document contains an error.
     * @exception IOException Thrown if an IO error occurs.
     */
-   public FilterSet compile(Map map, InputSource src)
+   public FilterSet compile(XMLDBMSMap map, InputSource src)
       throws SAXException, IOException
    {
       // Check the arguments.

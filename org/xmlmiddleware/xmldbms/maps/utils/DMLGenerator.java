@@ -20,7 +20,7 @@
 package org.xmlmiddleware.xmldbms.maps.utils;
 
 import org.xmlmiddleware.xmldbms.maps.*;
-import java.lang.*;
+
 import java.sql.*;
 import java.util.*;
 

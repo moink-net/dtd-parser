@@ -19,8 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Lists inlined elements that need to be inserted;

@@ -19,12 +19,9 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.Table;
+import org.xmlmiddleware.xmldbms.maps.*;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * Base class for RootFilter and ResultSetFilter; contains TableFilters.
@@ -40,8 +37,8 @@ public class FilterBase
    // Class variables
    //*********************************************************************
 
-   protected Map       map;
-   private   Hashtable tableFilters = new Hashtable();
+   protected XMLDBMSMap map;
+   private   Hashtable  tableFilters = new Hashtable();
 
    //*********************************************************************
    // Constructors
@@ -50,9 +47,9 @@ public class FilterBase
    /**
     * Construct a new FilterBase object.
     *
-    * @param map The Map to which the filter applies.
+    * @param map The XMLDBMSMap to which the filter applies.
     */
-   protected FilterBase(Map map)
+   protected FilterBase(XMLDBMSMap map)
    {
       this.map = map;
    }

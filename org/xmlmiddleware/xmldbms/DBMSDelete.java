@@ -19,10 +19,11 @@
 
 package org.xmlmiddleware.xmldbms;
 
-import org.xmlmiddleware.utils.*;
 import org.xmlmiddleware.xmldbms.actions.*;
+import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.filters.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
 import java.sql.*;
 import java.util.*;
@@ -30,8 +31,8 @@ import java.util.*;
 /**
  * Deletes data from the database.
  *
- * <p>DBMSDelete deletes data from the database according to particular Map,
- * FilterSet, and Actions objects. The Map and FilterSet objects define the
+ * <p>DBMSDelete deletes data from the database according to particular XMLDBMSMap,
+ * FilterSet, and Actions objects. The XMLDBMSMap and FilterSet objects define the
  * hierarchy of rows that DBMSDelete processes. The Actions object defines
  * whether DBMSDelete deletes or ignores these rows. (It may be helpful to
  * think of DBMSDelete as being almost identical to DBMSToDOM, except that
@@ -41,7 +42,7 @@ import java.util.*;
  * related records.</p>
  *
  * <pre>
- *    // Create the Map object with a user-defined function.
+ *    // Create the XMLDBMSMap object with a user-defined function.
  *    map = createMap("orders.map");
  *    <br />
  *    // Create an Actions object with a user-defined function.
@@ -83,7 +84,7 @@ public class DBMSDelete
    // ************************************************************************
 
    private int          commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
-   private Map          map = null;
+   private XMLDBMSMap   map = null;
    private TransferInfo transferInfo = null;
    private Actions      actions;
    private FilterBase   filterBase;

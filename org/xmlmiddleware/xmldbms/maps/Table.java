@@ -21,10 +21,10 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.Sort;
+import org.xmlmiddleware.utils.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * Describes a table; <a href="../readme.html#NotForUse">not for general

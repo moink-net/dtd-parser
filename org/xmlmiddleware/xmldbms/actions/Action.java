@@ -19,14 +19,10 @@
 
 package org.xmlmiddleware.xmldbms.actions;
 
-import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.xmldbms.maps.ClassMap;
-import org.xmlmiddleware.xmldbms.maps.Column;
-import org.xmlmiddleware.xmldbms.maps.PropertyMap;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * An action to take on an element type mapped as a class. <b>For internal use.</b>

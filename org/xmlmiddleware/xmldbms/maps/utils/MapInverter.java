@@ -19,31 +19,15 @@
 
 package org.xmlmiddleware.xmldbms.maps.utils;
 
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import org.xmlmiddleware.xmldbms.maps.ClassMap;
-import org.xmlmiddleware.xmldbms.maps.ClassMapBase;
-import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.ColumnMap;
-import org.xmlmiddleware.xmldbms.maps.ElementInsertionList;
-import org.xmlmiddleware.xmldbms.maps.ElementInsertionMap;
-import org.xmlmiddleware.xmldbms.maps.InlineClassMap;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.MapException;
-import org.xmlmiddleware.xmldbms.maps.OrderInfo;
-import org.xmlmiddleware.xmldbms.maps.PropertyMap;
-import org.xmlmiddleware.xmldbms.maps.PropertyMapBase;
-import org.xmlmiddleware.xmldbms.maps.PropertyTableMap;
-import org.xmlmiddleware.xmldbms.maps.RelatedClassMap;
-import org.xmlmiddleware.xmldbms.maps.RelatedClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.Table;
-
-import java.util.Enumeration;
+import java.util.*;
 
 /**
- * Invert the database-centric or XML-centric map objects in a Map.
+ * Invert the database-centric or XML-centric map objects in an XMLDBMSMap.
  *
- * <p>A Map is the root of a graph of map objects. ClassMap, PropertyMap,
+ * <p>An XMLDBMSMap is the root of a graph of map objects. ClassMap, PropertyMap,
  * InlineClassMap, and RelatedClassMap objects form an XML-centric view of the map.
  * That is, they map XML elements, attributes, and PCDATA to database structures.
  * ClassTableMap, PropertyTableMap, ColumnMap, ElementInsertionList, ElementInsertionMap,
@@ -118,11 +102,11 @@ public class MapInverter
     *    objects. This indicates a programming error, as it means the XML-centric objects
     *    are invalid.
     */
-   public void createDatabaseView(Map map)
+   public void createDatabaseView(XMLDBMSMap map)
       throws MapException
    {
       if (map == null)
-         throw new IllegalStateException("Map object must be set before the database view can be created.");
+         throw new IllegalStateException("XMLDBMSMap object must be set before the database view can be created.");
 
       map.removeAllClassTableMaps();
       invertClassMaps(map);
@@ -138,11 +122,11 @@ public class MapInverter
     *    This indicates a programming error, as it means the database-centric objects
     *    are invalid.
     */
-   public void createXMLView(Map map)
+   public void createXMLView(XMLDBMSMap map)
       throws MapException
    {
       if (map == null)
-         throw new IllegalStateException("Map object must be set before the XML view can be created.");
+         throw new IllegalStateException("XMLDBMSMap object must be set before the XML view can be created.");
 
       map.removeAllClassMaps();
       invertClassTableMaps(map);
@@ -152,7 +136,7 @@ public class MapInverter
    // Private methods -- inverting XML view
    //**************************************************************************
 
-   private void invertClassMaps(Map map)
+   private void invertClassMaps(XMLDBMSMap map)
       throws MapException
    {
       Enumeration classMaps;
@@ -164,7 +148,7 @@ public class MapInverter
       }
    }
 
-   private void invertClassMap(Map map, ClassMap classMap)
+   private void invertClassMap(XMLDBMSMap map, ClassMap classMap)
       throws MapException
    {
       // Create a ClassTableMap from a ClassMap.
@@ -182,7 +166,7 @@ public class MapInverter
 
       // Get/create the ClassTableMap for the table. Note that this might already
       // have been created when inverting a RelatedClassMap, so we use
-      // Map.createClassTableMap().
+      // XMLDBMSMap.createClassTableMap().
 
       newClassTableMap = map.createClassTableMap(classMap.getTable());
 
@@ -204,7 +188,7 @@ public class MapInverter
       invertMarkupMaps(map, newClassTableMap, classMap, ElementInsertionList.create());
    }
 
-   private void invertMarkupMaps(Map map, ClassTableMap newClassTableMap, ClassMapBase classMapBase, ElementInsertionList elementInsertionList)
+   private void invertMarkupMaps(XMLDBMSMap map, ClassTableMap newClassTableMap, ClassMapBase classMapBase, ElementInsertionList elementInsertionList)
       throws MapException
    {
       // Process the child maps of a ClassMap or InlineClassMap.
@@ -321,7 +305,7 @@ public class MapInverter
       }
    }
 
-   private void invertRelatedClassMap(Map map, ClassTableMap newClassTableMap, RelatedClassMap relatedClassMap, ElementInsertionList elementInsertionList)
+   private void invertRelatedClassMap(XMLDBMSMap map, ClassTableMap newClassTableMap, RelatedClassMap relatedClassMap, ElementInsertionList elementInsertionList)
       throws MapException
    {
       // Create a RelatedClassTableMap from a RelatedClassMap.
@@ -330,7 +314,7 @@ public class MapInverter
       RelatedClassTableMap newRelatedClassTableMap;
 
       // Get/create the ClassTableMap for the related table. Note that this might already
-      // have been created when inverting a ClassMap, so we use Map.createClassTableMap(). 
+      // have been created when inverting a ClassMap, so we use XMLDBMSMap.createClassTableMap(). 
 
       newChildClassTableMap = map.createClassTableMap(relatedClassMap.getClassMap().getTable());
 
@@ -352,7 +336,7 @@ public class MapInverter
       }
    }
 
-   private void invertInlineClassMap(Map map, ClassTableMap newClassTableMap, InlineClassMap inlineClassMap, ElementInsertionList elementInsertionList)
+   private void invertInlineClassMap(XMLDBMSMap map, ClassTableMap newClassTableMap, InlineClassMap inlineClassMap, ElementInsertionList elementInsertionList)
       throws MapException
    {
       // The InlineClassMaps in a ClassMap form a tree. That is, a given ClassMap or
@@ -398,7 +382,7 @@ public class MapInverter
    // Private methods -- inverting database view
    //**************************************************************************
 
-   private void invertClassTableMaps(Map map)
+   private void invertClassTableMaps(XMLDBMSMap map)
       throws MapException
    {
       Enumeration classTableMaps;
@@ -410,7 +394,7 @@ public class MapInverter
       }
    }
 
-   private void invertClassTableMap(Map map, ClassTableMap classTableMap)
+   private void invertClassTableMap(XMLDBMSMap map, ClassTableMap classTableMap)
       throws MapException
    {
       // Create a ClassMap from a ClassTableMap.
@@ -421,7 +405,7 @@ public class MapInverter
 
       // Get/create the ClassMap for the element type. Note that this might already
       // have been created when inverting a RelatedClassTableMap, so we use
-      // Map.createClassMap().
+      // XMLDBMSMap.createClassMap().
 
       newClassMap = map.createClassMap(classTableMap.getElementTypeName());
 
@@ -562,7 +546,7 @@ public class MapInverter
       }
    }
 
-   private void invertRelatedClassTableMaps(Map map, ClassMap newClassMap, Enumeration relatedClassTableMaps)
+   private void invertRelatedClassTableMaps(XMLDBMSMap map, ClassMap newClassMap, Enumeration relatedClassTableMaps)
       throws MapException
    {
       RelatedClassTableMap  relatedClassTableMap;
@@ -589,7 +573,7 @@ public class MapInverter
       }
    }
 
-   private void invertRelatedClassTableMap(Map map, ClassMapBase newClassMapBase, RelatedClassTableMap relatedClassTableMap)
+   private void invertRelatedClassTableMap(XMLDBMSMap map, ClassMapBase newClassMapBase, RelatedClassTableMap relatedClassTableMap)
       throws MapException
    {
       // Create a RelatedClassMap from a RelatedClassTableMap.
@@ -611,7 +595,7 @@ public class MapInverter
       // relatedClassTableMap.getClassTableMap().getElementTypeName(). For example, this
       // occurs when one element type (in the RelatedClassTableMap object) uses the
       // ClassMap for another element type (in the pointed-to ClassTableMap object). We
-      // use Map.createClassMap() to get/create the ClassMap, since it might already have
+      // use XMLDBMSMap.createClassMap() to get/create the ClassMap, since it might already have
       // been created when inverting a ClassTableMap.
 
       usedClassMap = map.createClassMap(relatedClassTableMap.getClassTableMap().getElementTypeName());

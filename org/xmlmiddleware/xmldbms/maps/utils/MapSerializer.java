@@ -24,45 +24,20 @@
 
 package org.xmlmiddleware.xmldbms.maps.utils;
 
-import org.xmlmiddleware.db.JDBCTypes;
-import org.xmlmiddleware.utils.Sort;
-import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.utils.XMLWriter;
+import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.utils.*;
+import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmldbms.maps.factories.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import org.xmlmiddleware.conversions.StringFormatter;
-import org.xmlmiddleware.conversions.helpers.DateFormatter;
-import org.xmlmiddleware.conversions.helpers.NumberFormatter;
-
-import org.xmlmiddleware.xmldbms.maps.ClassMap;
-import org.xmlmiddleware.xmldbms.maps.ClassMapBase;
-import org.xmlmiddleware.xmldbms.maps.Column;
-import org.xmlmiddleware.xmldbms.maps.InlineClassMap;
-import org.xmlmiddleware.xmldbms.maps.Key;
-import org.xmlmiddleware.xmldbms.maps.LinkInfo;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.MapException;
-import org.xmlmiddleware.xmldbms.maps.OrderInfo;
-import org.xmlmiddleware.xmldbms.maps.PropertyMap;
-import org.xmlmiddleware.xmldbms.maps.RelatedClassMap;
-import org.xmlmiddleware.xmldbms.maps.Table;
-
-import org.xmlmiddleware.xmldbms.maps.factories.MapConst;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.sql.DatabaseMetaData;
-import java.sql.Types;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Stack;
-import java.util.Vector;
+import java.io.*;
+import java.sql.*;
+import java.text.*;
+import java.util.*;
 
 /**
- * Serializes a Map object to a character stream.
+ * Serializes an XMLDBMSMap object to a character stream.
  *
  * <p>If you want to use a specific encoding, the Writer must be an OutputStreamWriter
  * or a subclass of an OutputStreamWriter. For example, you might use the following
@@ -128,11 +103,11 @@ public class MapSerializer extends XMLWriter
    // Variables
    //**************************************************************************
 
-   private Map       map;
-   private Hashtable uris = null;
-   private Hashtable prefixes = null;
-   private Hashtable defaultFormatters = new Hashtable();
-   private Hashtable formatterNames = new Hashtable();
+   private XMLDBMSMap map;
+   private Hashtable  uris = null;
+   private Hashtable  prefixes = null;
+   private Hashtable  defaultFormatters = new Hashtable();
+   private Hashtable  formatterNames = new Hashtable();
 
    //**************************************************************************
    // Constructors
@@ -164,7 +139,7 @@ public class MapSerializer extends XMLWriter
     * Use the specified prefixes.
     *
     * @param prefixes An array of namespace prefixes. If this is null, then
-    *    serialize() uses the prefixes in the Map.
+    *    serialize() uses the prefixes in the XMLDBMSMap.
     * @param uris An array of namespace URIs corresponding to the prefixes in
     *    the prefixes argument.
    **/
@@ -190,14 +165,14 @@ public class MapSerializer extends XMLWriter
    }
 
    /**
-    * Serialize a Map using the XML-DBMS mapping language.
+    * Serialize an XMLDBMSMap using the XML-DBMS mapping language.
     *
     * <p>No system or public ID is written in the DOCTYPE statement.</p>
     *
-    * @param map The Map.
+    * @param map The XMLDBMSMap.
     * @exception IOException Thrown if an I/O exception occurs.
     */
-   public void serialize(Map map)
+   public void serialize(XMLDBMSMap map)
       throws IOException, MapException
    {
       this.map = map;
@@ -205,15 +180,15 @@ public class MapSerializer extends XMLWriter
    }
 
    /**
-    * Serialize a Map using the XML-DBMS mapping language.
+    * Serialize an XMLDBMSMap using the XML-DBMS mapping language.
     *
-    * @param map The Map.
+    * @param map The XMLDBMSMap.
     * @param systemID System ID of the DTD. If this is null, "xmldbms2.dtd" is used.
     * @param publicID Public ID of the DTD. May be null.
     * @exception IOException Thrown if an I/O exception occurs.
     * @exception MapException Thrown if a prefix was not found for a URI.
     */
-   public void serialize(Map map, String systemID, String publicID)
+   public void serialize(XMLDBMSMap map, String systemID, String publicID)
       throws IOException, MapException
    {
       this.map = map;
@@ -793,7 +768,7 @@ public class MapSerializer extends XMLWriter
       String      prefix;
 
       // If the application specified a particular set of prefixes with
-      // setPrefixes(), use these. Otherwise, use the prefixes and URIs in the Map.
+      // setPrefixes(), use these. Otherwise, use the prefixes and URIs in the XMLDBMSMap.
 
       uris = this.uris;
       if (uris == null)

@@ -1,12 +1,29 @@
+// This software is in the public domain.
+//
+// The software is provided "as is", without warranty of any kind,
+// express or implied, including but not limited to the warranties
+// of merchantability, fitness for a particular purpose, and
+// noninfringement. In no event shall the author(s) be liable for any
+// claim, damages, or other liability, whether in an action of
+// contract, tort, or otherwise, arising from, out of, or in connection
+// with the software or the use or other dealings in the software.
+//
+// Parts of this software were originally developed in the Database
+// and Distributed Systems Group at the Technical University of
+// Darmstadt, Germany:
+//
+//    http://www.informatik.tu-darmstadt.de/DVS1/
+
+// Version 2.0
+// Changes from version 1.1: Rewritten in version 2.0
 
 package org.xmlmiddleware.xmldbms;
 
-import java.lang.*;
-import java.sql.*;
-import java.util.*;
-
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.conversions.*;
+
+import java.sql.*;
+import java.util.*;
 
 /**
  * Caches data for a single row. For internal use.
@@ -132,6 +149,7 @@ public class Row
       // (b) Retrieves the columns in ascending order, which is needed for interoperability.
 
       rsColumns = table.getResultSetColumns();
+
       for (int i = 0; i < rsColumns.length; i++)
       {
          // Get the next column value.

@@ -19,10 +19,9 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.XMLName;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import org.xmlmiddleware.xmlutils.*;
+
+import java.util.*;
 
 /**
  * Maps a table to a class; <a href="../readme.htm#NotForUse">
@@ -34,7 +33,7 @@ import java.util.Vector;
  * methods require linear searches of one sort or another. This means that
  * map factories will be slower, but data transfer software will be faster.</p>
  *
- * <p>ClassTableMaps are stored in the Map object and in RelatedClassTableMap
+ * <p>ClassTableMaps are stored in the XMLDBMSMap object and in RelatedClassTableMap
  * objects.</p>
  *
  * @author Ronald Bourret, 1998-9, 2001
@@ -149,7 +148,7 @@ public class ClassTableMap extends MapBase
     * is useful if you want the map objects to preserve inheritance information
     * but want to store the data for the class in a single table, rather than in a
     * base table and a class table. Inheritance information can then be used elsewhere,
-    * such as when an XML Schema is generated from a Map.</p>
+    * such as when an XML Schema is generated from an XMLDBMSMap.</p>
     *
     * @param baseLinkInfo The LinkInfo. The "parent" table is the base table.
     *    Null if the base table is not used.

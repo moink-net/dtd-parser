@@ -19,8 +19,8 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.utils.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
 import java.util.*;
 
@@ -50,12 +50,12 @@ public class FilterSet
    // Class variables
    //*********************************************************************
 
-   private Map       map;
-   private Vector    wrapperNames = new Vector();
-   private Vector    filters = new Vector();
-   private Hashtable uris = new Hashtable();              // Indexed by prefix
-   private Hashtable prefixes = new Hashtable();          // Indexed by URI
-   private Hashtable rsNames = new Hashtable();           // Indexed by result set name
+   private XMLDBMSMap map;
+   private Vector     wrapperNames = new Vector();
+   private Vector     filters = new Vector();
+   private Hashtable  uris = new Hashtable();              // Indexed by prefix
+   private Hashtable  prefixes = new Hashtable();          // Indexed by URI
+   private Hashtable  rsNames = new Hashtable();           // Indexed by result set name
 
    //*********************************************************************
    // Constants
@@ -74,9 +74,9 @@ public class FilterSet
    /**
     * Construct a new FilterSet object.
     *
-    * @param map The Map to which the filter set applies.
+    * @param map The XMLDBMSMap to which the filter set applies.
     */
-   public FilterSet(Map map)
+   public FilterSet(XMLDBMSMap map)
    {
       this.map = map;
    }

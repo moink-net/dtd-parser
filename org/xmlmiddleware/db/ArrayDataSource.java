@@ -19,13 +19,12 @@
 
 package org.xmlmiddleware.db;
 
-import java.lang.*;
-import java.sql.*;
-import java.io.*;
-import javax.sql.*;
-import java.util.*;
-
 import org.xmlmiddleware.utils.*;
+
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+import javax.sql.*;
 
 /**
  * Implements a JDBC 2.0 DataSource for an array of connections.

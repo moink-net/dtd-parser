@@ -19,9 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.Table;
+import org.xmlmiddleware.xmldbms.maps.*;
 
 /**
  * A filter to retrieve a document fragment based on a condition on a root
@@ -46,9 +44,9 @@ public class RootFilter extends FilterBase
    /**
     * Construct a new RootFilter object.
     *
-    * @param map The Map to which the filter applies.
+    * @param map The XMLDBMSMap to which the filter applies.
     */
-   protected RootFilter(Map map)
+   protected RootFilter(XMLDBMSMap map)
    {
       super(map);
    }

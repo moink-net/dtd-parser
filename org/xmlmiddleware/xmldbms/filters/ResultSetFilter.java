@@ -19,8 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.Table;
+import org.xmlmiddleware.xmldbms.maps.*;
 
 /**
  * A filter to retrieve a document fragment based on a result set. <b>For internal use.</b>
@@ -54,9 +53,9 @@ public class ResultSetFilter extends FilterBase
    /**
     * Construct a new ResultSetFilter object.
     *
-    * @param map The Map to which the filter applies.
+    * @param map The XMLDBMSMap to which the filter applies.
     */
-   protected ResultSetFilter(Map map, String name)
+   protected ResultSetFilter(XMLDBMSMap map, String name)
    {
       super(map);
       this.name = name;

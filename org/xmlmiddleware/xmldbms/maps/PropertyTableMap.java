@@ -19,7 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.xmlutils.*;
 
 /**
  * Maps a column in a property table to an element type, attribute, or PCDATA; <a 

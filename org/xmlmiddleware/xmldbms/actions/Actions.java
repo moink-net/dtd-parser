@@ -19,12 +19,10 @@
 
 package org.xmlmiddleware.xmldbms.actions;
 
-import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.xmldbms.maps.ClassMap;
-import org.xmlmiddleware.xmldbms.maps.Map;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * A set of Actions to be taken on an XML document.
@@ -55,9 +53,9 @@ public class Actions
    // Class variables
    //*********************************************************************
 
-   private Hashtable actions;
-   private Map       map;
-   private Action    defaultAction = null;
+   private Hashtable  actions;
+   private XMLDBMSMap map;
+   private Action     defaultAction = null;
 
    //*********************************************************************
    // Constructors
@@ -66,9 +64,9 @@ public class Actions
    /**
     * Construct a new Actions object.
     *
-    * @param map The Map to which the actions apply.
+    * @param map The XMLDBMSMap to which the actions apply.
     */
-   public Actions(Map map)
+   public Actions(XMLDBMSMap map)
    {
       actions = new Hashtable();
       this.map = map;

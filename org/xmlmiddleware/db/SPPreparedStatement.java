@@ -19,12 +19,11 @@
 
 package org.xmlmiddleware.db;
 
-import java.lang.*;
-import java.util.*;
-import java.sql.*;
 import java.io.*;
-import javax.sql.*;
 import java.math.BigDecimal;
+import java.sql.*;
+import java.util.*;
+import javax.sql.*;
 
 /**
  * Wraps a pooled statement.

@@ -22,11 +22,10 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import java.sql.Types;
-import java.sql.DatabaseMetaData;
+import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.db.*;
 
-import org.xmlmiddleware.db.JDBCTypes;
-import org.xmlmiddleware.conversions.StringFormatter;
+import java.sql.*;
 
 /**
  * Describes a column; <a href="../readme.html#NotForUse">not for general
@@ -337,7 +336,7 @@ public class Column extends MapBase
     * Get the column formatting object.
     *
     * <p>This method returns an object that implements the
-    * org.xmlmiddleware.conversions.StringFormatter interface.</p>
+    * org.xmlmiddleware.conversions.formatters.StringFormatter interface.</p>
     *
     * @return The formatting object. For a correctly initialized Column object, this
     *    will never be null.
@@ -351,7 +350,7 @@ public class Column extends MapBase
     * Set the column formatting object.
     *
     * <p>The formatting object must implement the
-    * org.xmlmiddleware.conversions.StringFormatter interface.</p>
+    * org.xmlmiddleware.conversions.formatters.StringFormatter interface.</p>
     *
     * <p><b>WARNING!</b> Map factories must set a formatter for each column.</p>
     *

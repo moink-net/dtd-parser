@@ -19,10 +19,9 @@
 
 package org.xmlmiddleware.db;
 
-import javax.sql.*;
-import java.sql.*;
 import java.io.*;
-import java.lang.*;
+import java.sql.*;
+import javax.sql.*;
 
 /**
  * Implements a DataSource with statement pooling over a DataSource

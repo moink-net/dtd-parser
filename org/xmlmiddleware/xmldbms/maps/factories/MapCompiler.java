@@ -24,51 +24,22 @@
 
 package org.xmlmiddleware.xmldbms.maps.factories;
 
-import org.xmlmiddleware.db.JDBCTypes;
-import org.xmlmiddleware.utils.TokenList;
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.utils.*;
+import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmldbms.maps.utils.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import org.xmlmiddleware.conversions.StringFormatter;
-import org.xmlmiddleware.conversions.helpers.NumberFormatter;
-import org.xmlmiddleware.conversions.helpers.DateFormatter;
+import org.xml.sax.*;
 
-import org.xmlmiddleware.xmldbms.maps.ClassMap;
-import org.xmlmiddleware.xmldbms.maps.Column;
-import org.xmlmiddleware.xmldbms.maps.InlineClassMap;
-import org.xmlmiddleware.xmldbms.maps.Key;
-import org.xmlmiddleware.xmldbms.maps.LinkInfo;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.MapException;
-import org.xmlmiddleware.xmldbms.maps.OrderInfo;
-import org.xmlmiddleware.xmldbms.maps.PropertyMap;
-import org.xmlmiddleware.xmldbms.maps.RelatedClassMap;
-import org.xmlmiddleware.xmldbms.maps.Table;
-
-import org.xmlmiddleware.xmldbms.maps.utils.MapInverter;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.Locator;
-import org.xml.sax.XMLReader;
-import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.sql.DatabaseMetaData;
-import java.sql.Types;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Locale;
-import java.util.Stack;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.io.*;
+import java.sql.*;
+import java.text.*;
+import java.util.*;
 
 /**
- * Compile a map document into a Map object.
+ * Compile a map document into an XMLDBMSMap object.
  *
  * <p>MapCompiler assumes that the mapping document is valid. If
  * it is not, the class will either generate garbage or throw an exception. One
@@ -82,7 +53,7 @@ import java.util.Vector;
  *    // Instantiate a new map compiler and set the XMLReader.
  *    compiler = new MapCompiler(xmlReader);<br />
  *
- *    // Compile sales.map into a Map object.
+ *    // Compile sales.map into an XMLDBMSMap object.
  *    map = compiler.compile(new InputSource(new FileReader("sales.map")));<br />
  * </pre>
  *
@@ -172,7 +143,7 @@ public class MapCompiler
    private Hashtable       formatTypes = new Hashtable();
 
    // State variables -- map
-   private Map             map;
+   private XMLDBMSMap       map;
 
    // State variables -- databases
    private String           databaseName, catalogName, schemaName;
@@ -230,13 +201,13 @@ public class MapCompiler
    //**************************************************************************
 
    /**
-    * Compile a map document into a Map object.
+    * Compile a map document into an XMLDBMSMap object.
     *
     * @param src A SAX InputSource for the mapping document.
-    * @return The Map object
+    * @return The XMLDBMSMap object
     * @exception MapException Thrown if the mapping document contains an error.
     */
-   public Map compile(InputSource src)
+   public XMLDBMSMap compile(InputSource src)
       throws MapException
    {
       Exception e;
@@ -277,7 +248,7 @@ public class MapCompiler
       inverter = new MapInverter();
       inverter.createDatabaseView(map);
 
-      // Return the Map object.
+      // Return the XMLDBMSMap object.
 
       return map;
    }
@@ -305,7 +276,7 @@ public class MapCompiler
       classTables.clear();
       formatTypes.clear();
 
-      map = new Map();
+      map = new XMLDBMSMap();
       inlineClassMap = null;
    }
 
@@ -1437,8 +1408,8 @@ public class MapCompiler
    {
       String tableName;
 
-      // Get the table name, create a new table, and add it to the Map. We use
-      // Map.addTable because it will throw an exception if the table has already
+      // Get the table name, create a new table, and add it to the XMLDBMSMap. We use
+      // XMLDBMSMap.addTable because it will throw an exception if the table has already
       // been created.
 
       tableName = getAttrValue(attrs, MapConst.ATTR_NAME);

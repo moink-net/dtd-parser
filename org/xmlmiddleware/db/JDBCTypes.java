@@ -16,8 +16,8 @@
 
 package org.xmlmiddleware.db;
 
-import org.xmlmiddleware.utils.InvertedTokenList;
-import org.xmlmiddleware.utils.TokenList;
+import org.xmlmiddleware.utils.*;
+
 import java.sql.Types;
 
 /**

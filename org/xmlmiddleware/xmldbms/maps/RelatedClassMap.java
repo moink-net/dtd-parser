@@ -20,7 +20,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.xmlutils.*;
 
 /**
  * Maps a reference to an element type-as-class to a property in another class;

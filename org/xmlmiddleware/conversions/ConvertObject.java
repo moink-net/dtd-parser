@@ -19,11 +19,10 @@
 
 package org.xmlmiddleware.conversions;
 
+import org.xmlmiddleware.conversions.formatters.*;
+
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 
 /**
  * Converts from Objects to other data types.

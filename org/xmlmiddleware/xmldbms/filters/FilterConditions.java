@@ -19,12 +19,9 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.xmldbms.maps.Table;
-import org.xmlmiddleware.xmldbms.maps.Column;
+import org.xmlmiddleware.xmldbms.maps.*;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Container for the WHERE clause conditions of a filter. <b>For internal use.</b>

@@ -19,12 +19,11 @@
 
 package org.xmlmiddleware.db;
 
-import java.lang.*;
-import java.util.*;
-import java.sql.*;
-import javax.sql.*;
-
 import org.xmlmiddleware.utils.*;
+
+import java.sql.*;
+import java.util.*;
+import javax.sql.*;
 
 /**
  * Implements a connection pool.

@@ -19,16 +19,11 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.utils.XMLWriter;
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import org.xmlmiddleware.xmldbms.maps.Table;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.io.*;
+import java.util.*;
 
 /**
  * Serializes a FilterSet object to a character stream.

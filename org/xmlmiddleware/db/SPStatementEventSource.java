@@ -19,7 +19,6 @@
 
 package org.xmlmiddleware.db;
 
-import java.lang.*;
 import java.sql.*;
 
 /**

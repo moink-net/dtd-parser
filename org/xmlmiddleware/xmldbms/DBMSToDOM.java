@@ -24,14 +24,12 @@
 
 package org.xmlmiddleware.xmldbms;
 
-import org.xmlmiddleware.conversions.StringFormatter;
-import org.xmlmiddleware.conversions.ConversionException;
-import org.xmlmiddleware.domutils.FragmentBuilder;
-import org.xmlmiddleware.domutils.ParserUtils;
-import org.xmlmiddleware.domutils.ParserUtilsException;
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.filters.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmlutils.*;
 
 import org.w3c.dom.*;
 
@@ -48,7 +46,7 @@ import java.util.Vector;
  * Transfers data from the database to a DOM tree.
  *
  * <p>DBMSToDOM transfers data from the database to a DOM tree according
- * to a particular Map and FilterSet. The map provides the general structural
+ * to a particular XMLDBMSMap and FilterSet. The map provides the general structural
  * mapping from the database to XML; the filters specify exactly which data
  * are to be transferred. In addition, DBMSToDOM can transfer data from
  * application-constructed result sets to XML.</p>
@@ -58,7 +56,7 @@ import java.util.Vector;
  * uses sales order number as a parameter:</p>
  *
  * <pre>
- *    // Create the Map object with a user-defined function.
+ *    // Create the XMLDBMSMap object with a user-defined function.
  *
  *    map = createMap("orders.map");
  *
@@ -97,7 +95,7 @@ public class DBMSToDOM
    // Private variables
    // ************************************************************************
 
-   private Map          map;
+   private XMLDBMSMap   map;
    private FilterBase   filterBase;
    private Document     doc;
 

@@ -19,11 +19,11 @@
 
 package org.xmlmiddleware.db;
 
-import java.lang.*;
-import java.sql.*;
-import javax.sql.*;
-import java.util.*;
 import org.xmlmiddleware.utils.*;
+
+import java.sql.*;
+import java.util.*;
+import javax.sql.*;
 
 /**
  * Implements a statement pool.

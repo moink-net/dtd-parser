@@ -19,14 +19,13 @@
 
 package org.xmlmiddleware.db;
 
-import java.lang.*;
+import org.xmlmiddleware.utils.*;
+
+import java.io.*;
 import java.sql.*;
 import java.util.*;
-import javax.sql.*;
 import javax.naming.*;
-import java.io.*;
-
-import org.xmlmiddleware.utils.*;
+import javax.sql.*;
 
 /**
  * Implements a JDBC 2.0 DataSource that pools connections and statements
