@@ -19,52 +19,42 @@ package org.xmlmiddleware.xmldbms.maps;
 import org.xmlmiddleware.utils.XMLName;
 
 /**
- * Inserts an element between the class table element and a child element;
+ * Describes a wrapper element that needs to be inserted;
  * <a href="../readme.htm#NotForUse">not for general use</a>.
  *
  * <p>ElementInsertionMap contains information about an element that is to be
- * inserted between a class table element and an element for a column, related
- * class table, or related property table. It is used to reconstruct elements
- * that are "inlined" with InlineClassMap. Note that it is essentially the
- * opposite of InlineClassMap, rather than providing parallel functionality in
+ * inserted between a class table element and an element, attribute, or PCDATA
+ * for a column, related class table, or property table. When retrieving data
+ * from the database, it is used to reconstruct elements that were eliminated
+ * with WrapperClassMap.</p>
+ *
+ * <p>Note that an ElementInsertionMap is closer to being the opposite of a
+ * WrapperClassMap than it is to providing parallel functionality in
  * the database-centric view of a map. That is, it reconstructs elements, rather
- * than inlining child tables.</p>
+ * than treating child tables as "wrapper" tables.</p>
  *
- * <p>ElementInsertionMap inherits from ClassTableMapBase. See that class for methods to
- * get the element type name, and to manipulate child maps (column maps, related
- * class table maps, related property table maps, and ElementInsertionMaps).
- * ElementInsertionMap provides methods for getting and setting order information.</p>
- *
- * <p>ElementInsertionMaps are stored in ClassTableMaps and ElementInsertionMaps.</p>
+ * <p>ElementInsertionMaps are stored in ElementInsertionLists.</p>
  *
  * @author Ronald Bourret, 1998-9, 2001
  * @version 2.0
  */
 
-public class ElementInsertionMap extends ClassTableMapBase
+public class ElementInsertionMap extends MapBase
 {
    // ********************************************************************
    // Variables
    // ********************************************************************
 
-   // The following variables are inherited from ClassTableMapBase
-
-//   private XMLName   elementTypeName = null;
-//   private Hashtable columnMaps = new Hashtable();
-//   private Hashtable relatedClassTableMaps = new Hashtable();
-//   private Hashtable relatedPropTableMaps = new Hashtable();
-//   private Hashtable elementInsertionMaps = new Hashtable();
-
-   // The following variables are new to ElementInsertionMap
-
+   private XMLName   elementTypeName = null;
    private OrderInfo orderInfo = null;
 
    // ********************************************************************
    // Constructor
    // ********************************************************************
 
-   private ElementInsertionMap()
+   private ElementInsertionMap(XMLName elementTypeName)
    {
+      this.elementTypeName = elementTypeName;
    }
 
    /**
@@ -77,9 +67,7 @@ public class ElementInsertionMap extends ClassTableMapBase
     */
    public static ElementInsertionMap create(String uri, String localName)
    {
-      ElementInsertionMap elementInsertionMap = new ElementInsertionMap();
-      elementInsertionMap.setElementTypeName(uri, localName);
-      return elementInsertionMap;
+      return new ElementInsertionMap(XMLName.create(uri, localName));
    }
 
    /**
@@ -91,9 +79,8 @@ public class ElementInsertionMap extends ClassTableMapBase
     */
    public static ElementInsertionMap create(XMLName elementTypeName)
    {
-      ElementInsertionMap elementInsertionMap = new ElementInsertionMap();
-      elementInsertionMap.setElementTypeName(elementTypeName);
-      return elementInsertionMap;
+      checkArgNull(elementTypeName, ARG_ELEMENTTYPENAME);
+      return new ElementInsertionMap(elementTypeName);
    }
 
    // ********************************************************************
@@ -101,13 +88,27 @@ public class ElementInsertionMap extends ClassTableMapBase
    // ********************************************************************
 
    // ********************************************************************
+   // Element type name
+   // ********************************************************************
+
+   /**
+    * Get the name of the element type or attribute being mapped.
+    *
+    * @return The element type or attribute name. Null if PCDATA is mapped.
+    */
+   public final XMLName getElementTypeName()
+   {
+      return elementTypeName;
+   }
+
+   // ********************************************************************
    // Order information
    // ********************************************************************
 
    /**
-    * Get the information used to order the inserted element in its parent.
+    * Get the information used to order the wrapper element in its parent.
     *
-    * @return The order information. Null if the inserted element is not ordered.
+    * @return The order information. Null if the wrapper element is not ordered.
     */
    public final OrderInfo getOrderInfo()
    {
@@ -115,9 +116,9 @@ public class ElementInsertionMap extends ClassTableMapBase
    }
 
    /**
-    * Set the information used to order the inserted element in its parent.
+    * Set the information used to order the wrapper element in its parent.
     *
-    * @param orderInfo The order information. Null if the inserted elementfs is not ordered.
+    * @param orderInfo The order information. Null if the wrapper element is not ordered.
     */
    public void setOrderInfo(OrderInfo orderInfo)
    {

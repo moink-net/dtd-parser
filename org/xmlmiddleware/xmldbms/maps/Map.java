@@ -93,7 +93,6 @@ import java.util.Hashtable;
  *    ColumnMap
  *    PropertyTableMap
  *    RelatedClassTableMap
- *    ElementInsertionMap
  * </pre>
  *
  * The following classes are shared by both views:</p>
@@ -128,9 +127,7 @@ import java.util.Hashtable;
  *       RelatedMapBase
  *          RelatedClassMap
  *          RelatedClassTableMap
- *       ClassTableMapBase
- *          ClassTableMap
- *          ElementInsertionMap
+ *       ClassTableMap
  *
  *       Table
  *       Column
@@ -183,7 +180,7 @@ import java.util.Hashtable;
  *             Column...
  *             LinkInfo...
  *             OrderInfo... (optional)
- *          RelatedClassTableMap (hashtable of)
+ *          RelatedClassTableMap (vector of)
  *             ClassTableMap...
  *             LinkInfo...
  *             OrderInfo... (optional)
@@ -347,14 +344,13 @@ public class Map extends MapBase
 
    //  Options
 
-   private boolean emptyStringIsNull = false;
+   private boolean   emptyStringIsNull = false;
    private Hashtable dateFormats = new Hashtable();     // Indexed by format name
    private Hashtable timeFormats = new Hashtable();     // Indexed by format name
    private Hashtable datetimeFormats = new Hashtable(); // Indexed by format name
    private Hashtable numberFormats = new Hashtable();   // Indexed by format name
    private Hashtable classMaps = new Hashtable();       // Indexed by universal name
    private Hashtable classTableMaps = new Hashtable();  // Indexed by table name
-   private Hashtable propTableMaps = new Hashtable();   // Indexed by table name
    private Hashtable tables = new Hashtable();          // Indexed by table name
    private Hashtable uris = new Hashtable();            // Indexed by prefix
    private Hashtable prefixes = new Hashtable();        // Indexed by URI
@@ -384,7 +380,7 @@ public class Map extends MapBase
     */
    public final boolean emptyStringIsNull()
    {
-      // Idea from Richard Sullivan */
+      // Idea from Richard Sullivan
       return emptyStringIsNull;
    }
 
@@ -1091,11 +1087,8 @@ public class Map extends MapBase
     * @param table The Table being mapped.
     *
     * @return The ClassTableMap for the table.
-    * @exception MapException Thrown if the table has already been mapped as a
-    *    property table.
     */
    public ClassTableMap createClassTableMap(Table table)
-      throws MapException
    {
       ClassTableMap classTableMap;
       String        name;
@@ -1107,7 +1100,6 @@ public class Map extends MapBase
       {
          classTableMap = ClassTableMap.create(table);
          classTableMaps.put(name, classTableMap);
-         classTableMap.parentMap = this;
       }
       return classTableMap;
    }
@@ -1116,25 +1108,19 @@ public class Map extends MapBase
     * Add a ClassTableMap for a table.
     *
     * @param classTableMap ClassTableMap for the table. Must not be null.
-    * @exception MapException Thrown if the table has already been mapped, if the
-    *    ClassTableMap has already been used in another Map, or if the ClassTableMap
-    *    maps an element type that has already been mapped.
+    * @exception MapException Thrown if the table has already been mapped.
     */
    public void addClassTableMap(ClassTableMap classTableMap)
       throws MapException
    {
       String name;
+      Object o;
 
       checkArgNull(classTableMap, ARG_CLASSTABLEMAP);
       name = classTableMap.getTable().getUniversalName();
       o = classTableMaps.get(name);
       if (o != null)
-         throw new MapException("Table already mapped as class table: " + name);
-      if (classTableMap.parentMap != null)
-         throw new MapException("The ClassTableMap is used in another Map.");
-      if (xmlNameInClassTableMap(classTableMap.getElementTypeName()))
-         throw MapException("ClassTableMap maps an element type that has already been mapped: " + classTableMap.getElementTypeName().getUniversalName());
-      classTableMap.parentMap = this;
+         throw new MapException("Table already mapped: " + name);
       classTableMaps.put(name, classTableMap);
    }
 
@@ -1158,7 +1144,6 @@ public class Map extends MapBase
       classTableMap = (ClassTableMap)classTableMaps.remove(name);
       if (classTableMap == null)
          throw new MapException("Table not mapped as a class table: " + name);
-      classTableMap.parentMap = null;
    }
 
    /**
@@ -1166,15 +1151,6 @@ public class Map extends MapBase
     */
    public void removeAllClassTableMaps()
    {
-      Enumeration   enum;
-      ClassTableMap classTableMap;
-
-      enum = classTableMaps.elements();
-      while (enum.hasMoreElements())
-      {
-         classTableMap = (ClassTableMap)enum.nextElement();
-         classTableMap.parentMap = null;
-      }
       classTableMaps.clear();
    }
 
@@ -1289,29 +1265,6 @@ public class Map extends MapBase
    public void removeAllTables()
    {
       tables.clear();
-   }
-
-   //**************************************************************************
-   // Package methods
-   //**************************************************************************
-
-   boolean xmlNameInClassTableMap(XMLName newElementTypeName)
-   {
-      Enumeration tableMapsEnum;
-      XMLName     elementTypeName;
-
-      if (newElementTypeName == null) return false;
-
-      tableMapsEnum = getTableMaps();
-      while (tableMapsEnum.hasMoreElements())
-      {
-         elementTypeName = ((TableMap)tableMapsEnum.nextElement()).getElementTypeName();
-         if (elementTypeName != null)
-         {
-            if (elementTypeName.equals(newElementTypeName)) return true;
-         }
-      }
-      return false;
    }
 
    //**************************************************************************

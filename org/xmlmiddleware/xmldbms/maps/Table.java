@@ -227,6 +227,16 @@ public class Table extends MapBase
    // ********************************************************************
 
    /**
+    * Get number of Columns.
+    *
+    * @return The number of Columns. 
+    */
+   public final int getNumberofColumns()
+   {
+      return columns.size();
+   }
+
+   /**
     * Get a Column.
     *
     * @param columnName Name of the column.

@@ -302,8 +302,8 @@ public class MapFactory_MapDocument
 
       // Create the database-centric view of the map.
 
-      inverter = new MapInverter(map);
-      inverter.createDatabaseView();
+      inverter = new MapInverter();
+      inverter.createDatabaseView(map);
 
       // Return the Map object.
 

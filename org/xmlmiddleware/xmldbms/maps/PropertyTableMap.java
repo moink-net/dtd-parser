@@ -26,7 +26,7 @@ import org.xmlmiddleware.utils.XMLName;
  * get the column and to get and set the element type name, order information,
  * and attribute multi-valuedness.</p>
  *
- * <p>PropertyTableMaps are stored in ClassTableMaps and ElementInsertionMaps.</p>
+ * <p>PropertyTableMaps are stored in ClassTableMaps.</p>
  *
  *
  * @author Ronald Bourret, 2001
@@ -49,10 +49,9 @@ public class PropertyTableMap extends PropertyMapBase
 
    // The following variables are new to PropertyTableMap
 
-   private LinkInfo linkInfo = null;
-   private Table    table = null;
-
-   ClassTableMap parentClassTableMap = null;
+   private LinkInfo             linkInfo = null;
+   private Table                table = null;
+   private ElementInsertionList elementInsertionList = null;
 
    // ********************************************************************
    // Constructors
@@ -93,11 +92,8 @@ public class PropertyTableMap extends PropertyMapBase
     *    Must be null for PCDATA.
     * @param type Type of the XML construct to which the column mapped. One of
     *    ColumnMap.ELEMENTTYPE, ColumnMap.ATTRIBUTE, or ColumnMap.PCDATA.
-    * @exception MapException Thrown if the element type, attribute, or PCDATA has
-    *    already been mapped.
     */
    public void setXMLName(String uri, String localName, int type)
-      throws MapException
    {
       setXMLName(XMLName.create(uri, localName), type);
    }
@@ -109,17 +105,9 @@ public class PropertyTableMap extends PropertyMapBase
     *    Must be null for PCDATA.
     * @param type Type of the XML construct to which the column mapped. One of
     *    ColumnMap.ELEMENTTYPE, ColumnMap.ATTRIBUTE, or ColumnMap.PCDATA.
-    * @exception MapException Thrown if the element type, attribute, or PCDATA has
-    *    already been mapped.
     */
    public void setXMLName(XMLName xmlName, int type)
-      throws MapException
    {
-      if (parentClassTableMap != null)
-      {
-         if (parentClassTableMap.xmlNameInDBPropertyMap(xmlName, type))
-            throw new MapException(getXMLObjectName(type) + xmlName.getUniversalName() + " already mapped in the ClassTableMap for " + parentClassTableMap.getTable().getUniversalName()
-      }
       super.setXMLName(xmlName, type);
    }
 
@@ -175,4 +163,32 @@ public class PropertyTableMap extends PropertyMapBase
       this.linkInfo = linkInfo;
    }
 
+   // ********************************************************************
+   // Element insertion list
+   // ********************************************************************
+
+   /**
+    * Get the list of inserted wrapper elements, if any.
+    *
+    * <p>If this table is mapped to an element or PCDATA, the element or
+    * PCDATA is constructed as a child of the last element in the list.
+    * If this table is mapped to an attribute, the attribute is constructed
+    * on the last element in the list.</p>
+    *
+    * @return The ElementInsertionList. May be null.
+    */
+   public ElementInsertionList getElementInsertionList()
+   {
+      return elementInsertionList;
+   }
+
+   /**
+    * Set the list of inserted wrapper elements, if any.
+    *
+    * @param elementInsertionList The ElementInsertionList. May be null.
+    */
+   public void setElementInsertionList(ElementInsertionList elementInsertionList)
+   {
+      this.elementInsertionList = elementInsertionList;
+   }
 }

@@ -217,24 +217,4 @@ public class PropertyMapBase extends MapBase
          throw new IllegalStateException("Cannot call setAttributeIsMultiValued(boolean) on PropertyMaps for element types or PCDATA.");
       this.multiValued = multiValued;
    }
-
-   // ********************************************************************
-   // Package methods
-   // ********************************************************************
-
-   String getXMLObjectName(int type)
-   {
-      switch(type)
-      {
-         case PropertyMapBase.ELEMENTTYPE:
-            return "Element type ";
-
-         case PropertyMapBase.ATTRIBUTE:
-             return "Attribute ";
-
-         case PropertyMapBase.ELEMENTTYPE:
-            return "PCDATA ";
-      }
-      return null;
-   }
 }
