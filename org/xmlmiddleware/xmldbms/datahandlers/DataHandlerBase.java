@@ -18,24 +18,33 @@ import javax.sql.*;
  * @author Sean Walter
  * @version 2.0
  */
-abstract class DataHandlerBase
+public abstract class DataHandlerBase
     implements DataHandler
 {
     // ************************************************************************
     // Variables used by this and child classes
     // ************************************************************************
 
-    // The connection used 
-    protected Connection m_connection = null;
+    /**
+     * The connection.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
+     */
+    public Connection m_connection = null;
 
-    // Used to generate SQL statements
-    protected DMLGenerator m_dml = null;
+    /**
+     * The DMLGenerator used to generate SQL statements.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
+     */
+    public DMLGenerator m_dml = null;
 
-    // TODO: Is SQLStrings really necessary?
-    protected SQLStrings m_strings = null;
-
-
-
+    /**
+     * The SQLStrings object used to cache the string form of SQL statements.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
+     */
+    public SQLStrings m_strings = null;
 
     // ************************************************************************
     // Private variables
@@ -58,7 +67,7 @@ abstract class DataHandlerBase
     /**
      * Creates a DataHandlerBase
      */
-    protected DataHandlerBase()
+    public DataHandlerBase()
     {
     }
 
@@ -294,7 +303,12 @@ abstract class DataHandlerBase
     // Helper methods. Also used by base classes
     // ************************************************************************
 
-    protected void checkState()
+    /**
+     * Checks whether the DataHandler has been initialized.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
+     */
+    public void checkState()
     {
         if (m_connection == null)
             throw new IllegalStateException("Invalid state. DataHandler has not been initialized.");
@@ -303,8 +317,10 @@ abstract class DataHandlerBase
     /** 
      * To be called after a statement that modifies the database
      * has been executed.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected void executedStatement()
+    public void executedStatement()
     {
         if(m_commitMode == COMMIT_AFTERDOCUMENT)
         {
@@ -316,9 +332,11 @@ abstract class DataHandlerBase
 
 
     /**
-     * Makes a SELECT statement
+     * Makes a SELECT statement.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected PreparedStatement makeSelect(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
+    public PreparedStatement makeSelect(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
         throws SQLException
     {
         // These can be cached. Use SQLStrings
@@ -345,8 +363,10 @@ abstract class DataHandlerBase
 
     /**
      * Makes an INSERT statement
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected PreparedStatement makeInsert(Table table, Row row)
+    public PreparedStatement makeInsert(Table table, Row row)
         throws SQLException
     {
         // NOTE: The PreparedStatements returned cannot be cached, as the row
@@ -382,8 +402,10 @@ abstract class DataHandlerBase
 
     /**
      * Makes an UPDATE statement.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected PreparedStatement makeUpdate(Table table, Row row, Column[] cols)
+    public PreparedStatement makeUpdate(Table table, Row row, Column[] cols)
         throws SQLException
     { 
         // NOTE: The PreparedStatements returned cannot be cached, as the row
@@ -441,8 +463,10 @@ abstract class DataHandlerBase
 
     /**
      * Makes a DELETE statement.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected PreparedStatement makeDelete(Table table, Row row, Key key)
+    public PreparedStatement makeDelete(Table table, Row row, Key key)
         throws SQLException
     {
         if(key == null)
@@ -464,8 +488,10 @@ abstract class DataHandlerBase
 
     /**
      * Makes a DELETE statement
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected PreparedStatement makeDelete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
+    public PreparedStatement makeDelete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
         throws SQLException
     {
         // These can be cached. Use SQLStrings
@@ -492,8 +518,10 @@ abstract class DataHandlerBase
 
     /**
      * Get the columns in a table that need refreshing
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected Column[] getRefreshCols(Table table)
+    public Column[] getRefreshCols(Table table)
     {
         if(m_refreshCols.contains(table))
             return (Column[])m_refreshCols.get(table);
@@ -533,8 +561,10 @@ abstract class DataHandlerBase
 
     /** 
      * Creates a key for a single column.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected Key createColumnKey(String colName, int type)
+    public Key createColumnKey(String colName, int type)
     {
         Column[] keyCols = { Column.create(colName) };
         keyCols[0].setType(type);
@@ -550,8 +580,10 @@ abstract class DataHandlerBase
     /**
      * Retrieves a driver PreparedStatement from a 
      * possibly wrapped one.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
      */
-    protected PreparedStatement getRawStatement(PreparedStatement stmt)
+    public PreparedStatement getRawStatement(PreparedStatement stmt)
     {
         if(stmt instanceof SPPreparedStatement)
             return ((SPPreparedStatement)stmt).getUnderlyingStatement();
@@ -559,7 +591,12 @@ abstract class DataHandlerBase
             return stmt;
     }
 
-    protected void setColumnValue(Row row, Column column, Object val)
+    /**
+     * Sets a column value in a Row.
+     *
+     * <p>For use by DataHandlerBase and child classes only.</p>
+     */
+    public void setColumnValue(Row row, Column column, Object val)
         throws SQLException
     {
         try
