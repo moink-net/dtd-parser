@@ -1,0 +1,517 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+   <title>XML-DBMS, Version 1.1</title>
+</head>
+<body>
+
+<center>
+<h1>XML-DBMS, Version 1.1</h1>
+<h2>Java Packages for Transferring Data between<br />XML Documents and Relational Databases</h2>
+</center>
+
+<h2>Contents</h2>
+
+<p>
+<a href="#ObjectView"/>3.0 An Object View of an XML Document</a><br />
+<a href="#Maps"/>4.0 Mapping XML Documents to the Database</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Lang"/>4.1 The XML-DBMS Mapping Language</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapDocs"/>4.2 Creating Map Documents</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Identifiers"/>4.3 Table and Column Names</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangClass"/>4.4 Mapping Classes (Element Types) to Tables</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangProp"/>4.5 Mapping Properties (Attributes and Element Types) to Columns</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangRel"/>4.6 Mapping Inter-Class Relationships (Element Hierarchy)</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangElim"/>4.7 Eliminating Unwanted Root Elements</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangMixedI"/>4.8 Mapping Mixed Content, Part I</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangMixedII"/>4.9 Mapping Mixed Content, Part II</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangResult"/>4.10 Mapping Classes (Element Types) to Result Sets</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangNS"/>4.11 Using Namespaces</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Nulls"/>4.12 Handling Null Values</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangDateTime"/>4.13 Date, Time, and Timestamp Formats</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangQuery"/>4.14 The XML-DBMS Mapping Language as a Query Language</a><br />
+</p>
+
+<h2><a name="ObjectView"/>3.0 An Object View of an XML Document</h2>
+
+<p>XML-DBMS views an XML document as a tree of objects and then uses an object-relational mapping to map these objects to a relational database. In this view, element types generally correspond to classes and attributes and PCDATA correspond to properties. Child element types are generally viewed as pointed-to classes; that is, an interclass relationship exists between the classes corresponding to parent and child element types.</p>
+
+<p>For example, consider the following XML document:</p>
+
+<pre>
+   &lt;SalesOrder SONumber="12345"&gt;
+      &lt;Customer CustNumber="543"&gt;
+         &lt;CustName&gt;ABC Industries&lt;/CustName&gt;
+         &lt;Street&gt;123 Main St.&lt;/Street&gt;
+         &lt;City&gt;Chicago&lt;/City&gt;
+         &lt;State&gt;IL&lt;/State&gt;
+         &lt;PostCode&gt;60609&lt;/PostCode&gt;
+      &lt;/Customer&gt;
+      &lt;OrderDate&gt;981215&lt;/OrderDate&gt;
+      &lt;Line LineNumber="1"&gt;
+         &lt;Part PartNumber="123"&gt;
+            &lt;Description&gt;
+               &lt;P&gt;&lt;B&gt;Turkey wrench:&lt;/B&gt;&lt;BR /&gt;
+               Stainless steel, one-piece construction,
+               lifetime guarantee.&lt;/P&gt;
+            &lt;/Description&gt;
+            &lt;Price&gt;9.95&lt;/Price&gt;
+         &lt;/Part&gt;
+         &lt;Quantity&gt;10&lt;/Quantity&gt;
+      &lt;/Line&gt;
+      &lt;Line LineNumber="2"&gt;
+         &lt;Part PartNumber="456"&gt;
+            &lt;Description&gt;
+               &lt;P&gt;&lt;B&gt;Stuffing separator:&lt;B&gt;&lt;BR /&gt;
+               Aluminum, one-year guarantee.&lt;/P&gt;
+            &lt;/Description&gt;
+            &lt;Price&gt;13.27&lt;/Price&gt;
+         &lt;/Part&gt;
+         &lt;Quantity&gt;5&lt;/Quantity&gt;
+      &lt;/Line&gt;
+   &lt;/SalesOrder&gt;
+</pre>
+
+<p>This could be viewed as a tree of objects from four classes -- SalesOrder, Customer, Line, and Part -- as shown in the following diagram:</p>
+
+<pre>
+                     SalesOrder
+                    /    |    \
+             Customer   Line   Line
+                         |      |
+                        Part   Part
+</pre>
+
+<p>It is important to understand that the tree of objects is not the Document Object Model (DOM). The reason for this is that the DOM models the document itself and not the data in the document. For example, the above XML document would form the following DOM tree:</p>
+
+<pre>
+                      Element
+                _____/  / \  \_____
+               /       /   \       \
+            Attr  Element Element  Element
+
+                        etc.
+</pre>
+
+<p>The view of element types as classes is not absolute: element types can also be viewed as properties of their parent element type-as-class. This is most useful when an element type contains only PCDATA. For example, the OrderDate element is best viewed as a property of the SalesOrder class.</p>
+
+<p>However, it is useful in other cases as well. For example, consider the Description element type, which contains a description written in XHTML. Although this description has subelements such as &lt;B&gt; and &lt;P&gt;, these subelements cannot be meaningfully interpreted on their own. Therefore, it makes more sense to view the element type as a single value (property) of the Part class rather than as a separate class.</p>
+
+<p>For a more complete introduction to the object-relational mapping used by XML-DBMS, see the "Object-Relational Mapping" section in <a href="http://www.xml.com/pub/a/2001/05/09/dtdtodbs.html">"Mapping DTDs to Databases"</a>.</p>
+
+<h2><a name="Maps"/>4.0 Mapping XML Documents to the Database</h2>
+
+<p>As part of setting up XML-DBMS on your system, you need to specify how element types, attributes, and PCDATA are viewed, as well as how to map this view to the database. The most common way to specify the mapping is to create a map document using the <a href="#Lang">XML-DBMS mapping language</a>. Internally, this is "compiled" into a <a href="#MapObjects">Map object</a> by a <a href="#MapFactory_MapDocument">map factory</a>.</p>
+
+<p>If you are using XML-DBMS from the GUI or from the command line, or if you are using XML-DBMS programmatically by passing properties to the Transfer class or calling the TransferEngine API, you don't need to worry about map objects or map factories. All you need to do is create a map document and pass its name to XML-DBMS using the appropriate property or method.</p>
+
+<p>If you are using XML-DBMS programmatically and writing directly to the low-level API, you will have to do more work. Specifically, you need to call a map factory to get a Map object and then pass this Map object to the classes that transfer data. One advantage of this is that you can reuse the Map object, thus saving you from having to recompile the map document each time you want to transfer the data in a particular class of documents.</p>
+
+<h3><a name="Lang"/>4.1 The XML-DBMS Mapping Language</h3>
+
+<p>The XML-DBMS mapping language is a simple, XML-based language that describes both how to construct an object view for an XML document and how to map this view to a relational schema.</p>
+
+<p>We will introduce the main parts of the language in a series of examples. These use the XML documents and tables described in sections B.1, "<a href="#SalesSample">Sales Sample</a>" and B.2, "<a href="#ProdSample">Product Description Sample</a>". For complete information about the XML-DBMS mapping language, see the <a href="xmldbms.dtd">mapping language DTD</a>.</p>
+
+<h3><a name="MapDocs"/>4.2 Creating Map Documents</h3>
+
+<p>You generally need to create map documents by hand. The reason for this is that mapping an XML document to a database is an art, not a science, and any algorithm that generates a map automatically is necessarily inexact.</p>
+
+<p>If you have a DTD or <a href="http://www.w3.org/TR/NOTE-ddml">DDML (Data Definition Markup Language)</a> file, you can use the GenerateMap tool to help you get started. This creates a map document and a list of CREATE TABLE statements for tables in which to store your data. You then generally need to modify this to get a useful map document and tables; see below for details.</p>
+
+<p>For example, the following command uses GenerateMap with the Xerces parser, the ODBC data source named xmldbms, and the catalog.dtd file:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.GenerateMap
+         File=xerces.props File=mydb.props Password=ronpwd
+         Action=CreateMapFromDTD SchemaFile=catalog.dtd OrderColumns=No
+</pre>
+
+<p>For a list of the properties you can use with GenerateMap, see section A.6, <a href="#PropsGenMap">GenerateMap Properties</a>. For more information about using properties, see section 5.1, <a href="#PropFiles">Using Property Files</a> and section 5.2, <a href="#PropFinePrint">Properties: The Fine Print</a>.</p>
+
+<p>The map document and CREATE TABLE statements generated by GenerateMap are less than perfect and in almost all cases you will need to modify them by hand. For example, GenerateMap:</p>
+
+<ul>
+<li>Often generates table and column names that use the a href="#Identifiers">wrong case</a> and need to be changed.</li>
+<li>Cannot identify elements or attributes that contain a primary key and therefore assumes that the primary key is always generated by XML-DBMS.</li>
+<li>Always assumes the unique (candidate) key used to link two tables is in the table of the parent element type. This is not always true.</li>
+<li>Does not add (NOT) NULL, PRIMARY KEY, or FOREIGN KEY constraints to its CREATE TABLE statements. Of these, NULL constraints are crucial, as optional elements and attributes are represented by nullable columns and the lack of a NULL constraint will cause an insert error.</li>
+<li>Either always generates or never generates order columns. You might want to use order columns only some of the time.</li>
+</ul>
+
+<p>A larger problem is the use of <i>wrapper</i> elements in XML. These elements serve only to group children in an XML document and do not represent data structures per se. While wrapper elements makes sense in XML, they result in inefficient storage in the database in the form of intermediate tables that do nothing more than link two other tables.</p>
+
+<p>Part of creating a map document is deciding what XML element types constitute classes in your data model (and therefore tables in the database) and what element types are merely markup (and therefore should be removed by XSLT before transferring data to the database and inserted by XSLT after transferring data from the database). For more information about this problem, see the discussion of wrapper elements at the end of Section 5, "Generating DTDs from Relational Schema and Vice Versa" in <a href="http://www.rpbourret.com/xml/XMLAndDatabases.htm#generating">XML and Databases</a>.
+
+<h3><a name="Identifiers"/>4.3 Table and Column Names</h3>
+
+<p><b>IMPORTANT:</b> Table and column names in the map document must <b>exactly match</b> the names stored in the database. A frequent mistake is to use a different case in the map document than is used in the database. This happens because some databases (notably Oracle) convert table and column names in a CREATE TABLE statement to all upper or all lower case.</p>
+
+<p>For example, suppose you use the name Sales in a CREATE TABLE statement. The database might store this name as SALES, in which case you must use the name SALES in your map document. If you use the name Sales, you will get an error similar to the following:</p>
+
+<pre>
+de.tudarmstadt.ito.xmldbms.InvalidMapException: Table not found: Sales
+         at de.tudarmstadt.ito.xmldbms.Map.addColumnMetadata(Map.java:1711)
+         at de.tudarmstadt.ito.xmldbms.Map.getTableMetadata(Map.java:1587)
+         at de.tudarmstadt.ito.xmldbms.Map.initColumnMetadata(Map.java:229)
+         at de.tudarmstadt.ito.xmldbms.mapfactories.MapFactory_MapDocument.createMap(MapFactory_MapDocument.java:335)
+         at Transfer.createMap(Transfer.java:186)
+         at Transfer.toDBMS(Transfer.java:124)
+         at Transfer.main(Transfer.java:91)
+</pre>
+
+<p>To find out how your database stores names, see the documentation for your database.</p>
+
+<h3><a name="LangClass"/>4.4 Mapping Classes (Element Types) to Tables</h3>
+
+<p>Element types with element content are usually viewed as classes and mapped to a table. For example, the following declares the SalesOrder element type to be a class and maps it to the Sales table:</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Sales"/&gt;
+      &lt;/ToClassTable&gt;
+      ...property maps...
+      ...related class maps...
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>The ClassMap element contains all of the information needed to map a single class (element type), including the table to which the class is mapped, the maps for each property in the class, a list of related classes, and a list of passed-through child classes.</p>
+
+<p>The ElementType element identifies the element type (class) being mapped and the ToClassTable element gives the name of the table to which the class is mapped.</p>
+
+<h3><a name="LangProp"/>4.5 Mapping Properties (Attributes and Element Types) to Columns</h3>
+
+<p>Single-valued attributes and element types with PCDATA-only content are usually viewed as properties and mapped to columns. For example, the following declares the SONumber attribute and the OrderDate element type (when SalesOrder is its parent) to be properties and maps them to the Number and Date columns, respectively. These maps are nested inside the class map for SalesOrder.</p>
+
+<pre>
+   &lt;PropertyMap&gt;
+      &lt;Attribute Name="SONumber"/&gt;
+      &lt;ToColumn&gt;
+         &lt;Column Name="Number"/&gt;
+      &lt;/ToColumn&gt;
+   &lt;/PropertyMap&gt;
+
+   &lt;PropertyMap&gt;
+      &lt;ElementType Name="OrderDate"/&gt;
+      &lt;ToColumn&gt;
+         &lt;Column Name="Date"/&gt;
+      &lt;/ToColumn&gt;
+   &lt;/PropertyMap&gt;
+</pre>
+
+<p>The Attribute and ElementType elements identify the properties being mapped and the ToColumn elements state that they are being mapped to columns. These columns are understood to be in the table to which the class (SalesOrder) is mapped.</p>
+
+<h3><a name="LangRel"/>4.6 Mapping Inter-Class Relationships (Element Hierarchy)</h3>
+
+<p>When a child element type is viewed as a class, its relationship with its parent element type must be stated in the map of the parent class. For example, the following declares that Line is related to the SalesOrder class. This map is nested inside the class map for SalesOrder; the actual mapping of the Line class (element type) is separate.</p>
+
+<pre>
+   &lt;RelatedClass KeyInParentTable="Candidate"&gt;
+      &lt;ElementType Name="Line"/&gt;
+      &lt;CandidateKey Generate="No"&gt;
+         &lt;Column Name="Number"/&gt;
+      &lt;CandidateKey/&gt;
+      &lt;ForeignKey&gt;
+         &lt;Column Name="SONumber"/&gt;
+      &lt;/ForeignKey&gt;
+      &lt;OrderColumn Name="Number" Generate="No"/&gt;
+   &lt;/RelatedClass&gt;
+</pre>
+
+<p>The ElementType element gives the name of the related class and the KeyInParentTable attribute states that the candidate key used to join the tables is in the parent (Sales) table. CandidateKey and ForeignKey give the columns in these keys, which must match in number and type. The Generate attribute of CandidateKey tells the system whether to generate the key. This allows us to preserve keys that have business meaning and generate object identifiers when no such keys exist. In this case, we do not generate the key because we have mapped the SONumber attribute of the SalesOrder element type to the candidate key column (Sales.Number).</p>
+
+<p>The (optional) OrderColumn element gives the name of the column that contains information about the order in which Line elements appear in the SalesOrder element. Because this column must appear in the table on the "many" side of the relationship, Number refers to the Lines.Number column, not the Sales.Number column. The Generate attribute of the OrderColumn element tells the system whether to generate the order value. In this case, we do not generate the order value because we will separately map the LineNumber attribute of the Line element type to the order column (Lines.Number).</p>
+
+<h3><a name="LangElim"/>4.7 Eliminating Unwanted Root Elements</h3>
+
+<p>Root elements sometimes exist only because XML requires a single root element. For example, in our sales order language, we would like to store multiple sales orders in a single document. To do this, we need the Orders element to encapsulate multiple SalesOrder elements. However, there is no structure in the database corresponding to the Orders element and we would like to eliminate it. For example, the following states that the Orders element type is to be ignored.</p>
+
+<pre>
+   &lt;IgnoreRoot&gt;
+      &lt;ElementType Name="Orders"/&gt;
+      &lt;PseudoRoot&gt;
+         &lt;ElementType Name="SalesOrder"/&gt;
+         &lt;CandidateKey Generate="No"&gt;
+            &lt;Column Name="Number"/&gt;
+         &lt;/CandidateKey&gt;
+      &lt;/PseudoRoot&gt;
+   &lt;/IgnoreRoot&gt;
+</pre>
+
+<p>The first ElementType element gives the element type to be ignored. The PseudoRoot element introduces an element type (SalesOrder) to serve as a root in its place; there can be multiple pseudo-roots. The (optional) CandidateKey element gives the key to be used when retrieving data from the database; not shown is an option OrderColumn element that gives the order in which the SalesOrder elements are to be retrieved.</p>
+
+<p>Ignored root elements are reconstructed when retrieving data from the database.</p>
+
+<h3><a name="LangMixedI"/>4.8 Mapping Mixed Content, Part I</h3>
+
+<p>Mixed content consists of both PCDATA and elements, such as in our document language. The order in which the PCDATA and elements appear is usually important, so we usually need to keep order information for the PCDATA as well as each element. For example, the following maps the Name element type to the Name column in the Product table and stores system-generated order information in the NameOrder column; this map is nested inside the class map for the Product element type.</p>
+
+<pre>
+   &lt;PropertyMap&gt;
+      &lt;ElementType Name="Name"/&gt;
+      &lt;ToColumn&gt;
+         &lt;Column Name="Name"/&gt;
+      &lt;/ToColumn&gt;
+      &lt;OrderColumn Name="NameOrder" Generate="Yes"/&gt;
+   &lt;/PropertyMap&gt;
+</pre>
+
+<p>Because PCDATA can occur multiple times in mixed content, it is usually mapped to a separate table. For example, the following maps the PCDATA from the Para element type to the ParaPCDATA table; this map is nested inside the class map for the Para element type.</p>
+
+<pre>
+   &lt;PropertyMap&gt;
+      &lt;PCDATA/&gt;
+      &lt;ToPropertyTable KeyInParentTable="Candidate"&gt;
+         &lt;Table Name="ParaPCDATA"/&gt;
+         &lt;CandidateKey Generate="Yes"&gt;
+            &lt;Column Name="ParaID"/&gt;
+         &lt;/CandidateKey&gt;
+         &lt;ForeignKey&gt;
+            &lt;Column Name="ParaFK"/&gt;
+         &lt;/ForeignKey&gt;
+         &lt;Column Name="ParaPCDATA"/&gt;
+         &lt;OrderColumn Name="ParaPCDATAOrder" Generate="Yes"/&gt;
+      &lt;/ToPropertyTable&gt;
+   &lt;/PropertyMap&gt;
+</pre>
+
+<p>The ToPropertyTable element states that the table contains only property values, not a class. In addition to giving the candidate and foreign keys needed to retrieve PCDATA values from the table, we give the names of the columns (ParaPCDATA and ParaPCDATAOrder) in which the PCDATA and order information are stored. Notice that we ask the system to generate both the candidate key (ParaID) and the order information; this is because the document does not contain this information. For more information about generating keys, see section 7.3, "<a href="#KeyGenerators">Key (Object ID) Generators</a>".</p>
+
+<h3><a name="LangMixedII"/>4.9 Mapping Mixed Content, Part II</h3>
+
+<p>As you may have noticed, the product description document requires many more tables and more columns per property than the sales order document. This is because the product description document is an example of a <i>document-centric</i> document, while the sales order document is an example of a <i>data-centric</i> document.</p>
+
+<p>Document-centric documents, such as books, email, advertisements, and many XHTML documents, are designed for human consumption. They are characterized by less predictable structures, coarser-grained data (the smallest independent unit of data is usually at the level of document fragments or the whole document), and large amounts of mixed content and the order in which sibling elements and PCDATA occurs is usually significant. Because order is usually signficant and element types-as-properties and PCDATA generally can occur multiple times in their parent (thus requiring storage in separate tables), document-centric documents require a more complex structure in the database.</p>
+
+<p>Data-centric documents tend to describe discrete pieces of data and are typically used to transfer data between applications and data stores. They are characterized by fairly regular structure, fine-grained data (the smallest independent unit of data is usually at the attribute or PCDATA-only element level), and little or no mixed content. The order in which sibling elements and PCDATA occurs is usually not significant. Because of their regular structure and the unimportance of order, data-centric documents require a less complex structure in the database.</p>
+
+</p>XML-DBMS and the object-relational mapping it uses are designed for use with data-centric documents. Although it can be used with document-centric documents, the mapping is inefficient and unlikely to provide good performance. If you have document-centric documents, you have three choices:</p>
+
+<ul>
+<li>Use a native XML database instead of XML-DBMS. For more information, see section 6.2 in <a href="http://www.rpbourret.com/xml/XMLAndDatabases.htm#nativedb">XML and Databases</a>.</li>
+<li>Map your documents as described in the previous section and accept the slow performance.</li>
+<li>Map element types with element-only content as classes and element types with mixed content as properties.</li>
+</ul>
+
+<p> The last choice is useful for documents that contain a mixture of data-centric and document-centric content. For example, the sales order document contains a Description element that contains mixed content; the rest of the sales order document contains element-only content. Because the Description element only makes sense as a whole -- that is, its individual pieces do not make sense when examined separately -- it is reasonable to store it in a single column. (This is a data-centric view of the Description element.)</p>
+
+<p>To do this, we simply view the Description element as a property and map it with a PropertyMap element:</p>
+
+<pre>
+   &lt;PropertyMap&gt;
+      &lt;ElementType Name="Description"/&gt;
+      &lt;ToColumn&gt;
+         &lt;Column Name="Description"/&gt;
+      &lt;/ToColumn&gt;
+   &lt;/PropertyMap&gt;
+</pre>
+
+<p>When a Description element is stored in the database, its content is serialized as XML. For example, the following Description element:</p>
+
+<pre>
+   &lt;Description&gt;
+      &lt;P&gt;&lt;B&gt;Turkey wrench:&lt;/B&gt;&lt;BR /&gt;
+      Stainless steel, one-piece construction,
+      lifetime guarantee.&lt;/P&gt;
+   &lt;/Description&gt;
+</pre>
+
+<p>is stored in the Description column as:</p>
+
+<pre>
+      &lt;P&gt;&lt;B&gt;Turkey wrench:&lt;/B&gt;&lt;BR /&gt;
+      Stainless steel, one-piece construction,
+      lifetime guarantee.&lt;/P&gt;
+</pre>
+
+<h3><a name="LangResult"/>4.10 Mapping Classes (Element Types) to Result Sets</h3>
+
+<p>Normally, when you retrieve data from the database, you specify the key values of the rows in the root table that you want to include in the XML document. XML-DBMS also allows you to create an XML document from a result set. This might be a result set over a table that you have already mapped. For example, rather than creating an XML document from sales orders with specific numbers, you want to create an XML document from all the sales orders with a certain customer number. It might also be a result set you have created for some other purpose and want to serialize as XML.</p>
+
+<p>For example, the following fragment of the <a href="#SalesSample">sales_rs1.map</a> sample map could be used to retrieve data just from a result set built over the Sales table, such as with the statement SELECT * FROM Sales. Note that it does not contain any RelatedClass elements.</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Result Set"/&gt;
+      &lt;/ToClassTable&gt;
+      ...property maps...
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>Now suppose you wanted to retrieve data from a result set created by joining two tables, such as the following:</p>
+
+<pre>
+   SELECT Sales.CustNumber,
+          Sales.Number,
+          Sales.Date,
+          Lines.SONumber,
+          Lines.Part,
+          Lines.Number AS LineNumber
+   FROM Sales JOIN Lines ON Sales.Number = Lines.SONumber
+</pre>
+
+<p>The following fragment of the <a href="#SalesSample">sales_rs2.map</a> sample map maps this to an XML document:</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Result Set"/&gt;
+      &lt;/ToClassTable&gt;
+      &lt;PropertyMap&gt;
+         &lt;Attribute Name="Line"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="LineNumber"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+      &lt;PropertyMap&gt;
+         &lt;ElementType Name="Customer"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="CustNumber"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+      &lt;PropertyMap&gt;
+         &lt;Attribute Name="SONumber"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="Number"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+      &lt;PropertyMap&gt;
+         &lt;ElementType Name="OrderDate"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="Date"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+      &lt;PropertyMap&gt;
+         &lt;ElementType Name="PartNumber"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="Part"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>There are two important things to notice here. First, column names in the map file are the column names in the result set. Thus, while the Lines.Part column has a column name of Part, the Lines.Number column has a column name of LineNumber due to the use of an AS clause in the select list. LineNumber is used in the map.</p>
+
+<p>Second, because the relationship between the Sales and Lines tables is one to many, the Sales.CustNumber, Sales.Number, Sales.Date, and Lines.SONumber columns will be repeated in the result set and therefore will be repeated in the XML document. That is, XML-DBMS treats a result set like any other table and creates one element, containing all child elements and attributes, for each row in the result set. It does not attempt to nest data that is repeated from row to row due to a join.</p>
+
+<p>Since this is unlikely to be what you want, the solution is to only map the Sales table as a result set, then let XML-DBMS join it to other tables based on the information in the map. For example, suppose you wanted to retrieve all sales orders for customer number 543. You could create a result set from the following SELECT statement:</p>
+
+<pre>
+   SELECT * FROM Sales WHERE CustNumber='543'
+</pre>
+
+<p>and map it with the <a href="#SalesSample">sales_rs3.map</a> sample map. This map is identical to the sales.map sample map, except that it uses the table name "Result Set" instead of Sales, as shown in the following fragment:</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Result Set"/&gt;
+      &lt;/ToClassTable&gt;
+      ... property maps for the Number and Date columns ...
+      ... related class maps for the Lines and Customers tables ...
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>Note that while this strategy allows you to specify a WHERE clause over the root table, it does not allow you to similarly restrict the rows in other tables in the hierarchy. The long term solution for this is probably an implementation of XPath or other XML query language in XML-DBMS. Do not expect to see this any time soon.</p>
+
+<h3><a name="LangNS"/>4.11 Using Namespaces</h3>
+
+<p>Namespaces are supported through Namespace elements, which declare the prefixes and URIs used in the Name attributes of ElementType and Attribute elements. (Note that these prefixes are separate from those declared with xmlns attributes.) For example, suppose the sales order language has a namespace URI of http://ito.tu-darmstadt.de/xmldbms/sales. The map document might contain the following Namespace element, which states that the sales prefix is used in the map document to identify element types and attributes from this namespace.</p>
+
+<pre>
+   &lt;Namespace Prefix="sales" URI="http://ito.tu-darmstadt.de/xmldbms/sales"/&gt;
+</pre>
+
+<p>Thus, when mapping the SalesOrder element type, the following reference is used:</p>
+
+<pre>
+   &lt;ElementType Name="sales:SalesOrder"/&gt;
+</pre>
+
+<p>As with namespaces in XML documents, unprefixed attribute names referenced in the Name attribute of the Attribute element type do not belong to any XML namespace. (For those of you who are confused by this statement, remember that such attribute names must be unique within their element type; this is a requirement imposed by the XML specification and has nothing to do with XML namespaces.) For example, in the following class map, the SONumber attribute is assumed to belong to the SalesOrder element type; it does not belong to any XML namespace.</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="sales:SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Sales"/&gt;
+      &lt;/ToClassTable&gt;
+      &lt;PropertyMap&gt;
+         &lt;Attribute Name="SONumber"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="Number"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>Prefixes used in the map document do not need to match those used in instance documents. All that is important is that the namespace URIs are the same. Currently, Namespace elements do not support empty prefixes; that is, you cannot declare a namespace URI that will be associated with unprefixed element type and attribute names in the map document.</p>
+
+<p>Whether a document using namespaces can actually be processed depends on the DOM implementation being used. For more information, see section 7.1, "<a href="#Namespaces">XML Namespaces</a>".</p>
+
+<h3><a name="Nulls"/>4.12 Handling Null Values</h3>
+
+<p>A null value is a value that simply isn't there. This is very different from a value of 0 (for numbers) or zero length (for a string). For example, suppose you have data collected from a weather station. If the thermometer isn't working, a null value is stored in the database rather than a 0, which would mean something different altogether.</p>
+
+<p>XML also supports the concept of null data through optional element types and attributes. If the value of an optional element type or attribute is null, it simply isn't included in the document. As with databases, empty elements or attributes containing zero length strings are not null: their value is a zero-length string.</p>
+
+<p>In spite of this definition of null values, it is quite likely that XML documents will use empty (zero-length) strings to represent null values. Because of this, the EmptyStringIsNull element can be used to state how empty strings are treated. If it is present, empty strings are treated in the same way as null values. If it is absent, empty strings are treated as strings. For example, the following states that empty strings should be treated as nulls.
+
+<pre>
+   &lt;EmptyStringIsNull/&gt;
+</pre>
+
+<p>The EmptyStringIsNull element is nested inside the Options element. Note that it applies only to element types and attributes mapped as propertys. An empty element-as-class with no attributes results in a row of all NULLs in the database.</p>
+
+<h3><a name="LangDateTime"/>4.13 Date, Time, and Timestamp Formats</h3>
+
+<p>Because XML documents are international, it is likely that you will encounter a variety of date, time, and timestamp formats. You can specify the formats to use with the DateTimeFormats element, which contains an optional Locale element and a Patterns element that specifies the actual formatting patterns to use. For example, the following specifies that dates use the "dd.MM.yy" format (e.g. 29.10.58), times use the "HH:mm" format (e.g. 18:37), and timestamps use the "MMM d, yyyy h:mm a" (e.g. February 9, 1962 6:35 AM).
+
+<pre>
+   &lt;DateTimeFormats&gt;
+      &lt;Patterns Date="HH:mm" Time="HH:mm" Timestamp="MMM d, yyyy h:mm"/&gt;
+   &lt;/DateTimeFormats&gt;
+</pre>
+
+<p>Like EmptyStringIsNull, the DateTimeFormats element is nested inside the Options element. The formats used are defined in the java.text.DateFormat and java.text.SimpleDateFormat classes.</p>
+
+<h3><a name="LangQuery"/>4.14 The XML-DBMS Mapping Language as a Query Language</h3>
+
+<p>The XML-DBMS mapping language can be thought of as a very simplistic query language. That is, when inserting data into the database, it is equivalent to a parameterized INSERT statement, with "parameter" values coming from the XML document. When retrieving data from the database, it is equivalent to a SELECT statement, with RelatedClass elements equivalent to joins.</p>
+
+<p>Thinking of the mapping language as a query language is useful, since it demonstrates that there can be multiple mappings between XML documents and a given table hierarchy in the database. This is less important when inserting data. The reason is that documents are not required to contain all of the elements and attributes mapped in a given map document. Like parameters in an INSERT statement for which there is no data, elements and attributes mapped in the map document but for which no data is provided in the XML document simply result in NULL values in the database, or no values at all, if an entire row would be NULL.</p>
+
+<p>Viewing the mapping language as a query language is more important when retrieving data from the database. This is because each element or attribute mapped in the map document results in an element or attribute in the XML document, just as columns and tables in a SELECT statement result in values in the result set.</p>
+
+<p>As a result, a single map document can be used to insert data from all XML documents that match a given DTD. (Remember that any element type in a DTD can be the root element type.) On the other hand, each different "view" of the data in a given table hierarchy requires a different map document.</p>
+
+<p>For example, consider the sample sales order document. This can be inserted and retrieved by a single map document. Now suppose that the Description element was optional. An XML document that did not contain a Description element could be inserted using a map document that maps the Description element. However, the converse is not true. Constructing an XML document that did not contain a Description element would require a map document that did not map the Description element.</p>
+
+<h2><a name="UsingProg"/>6.0 Transferring Data Programmatically</h2>
+
+<p>XML-DBMS is middleware. That is, it sits between an application and the database and is used by the application to transfer data between an XML document and the database. You have already seen one example of an XML-DBMS application: the Transfer tool. This application accepts property/value pairs on the command line and calls lower-level XML-DBMS classes to transfer data according to those properties.</p>
+
+<p>In this section, we will look at how you can use XML-DBMS to transfer data in your own applications. XML-DBMS can be used programmatically at three different levels: a properties-driven interface and high-level API, a mid-level API, and a low-level API. These are layered on top of each other as follows:</p>
+
+<pre>
+              GUI, command line, or other application
+                                |            <========= Properties-driven interface,
+                                |                       High-level API
+                            Transfer
+                                |            <========= Mid-level API
+                          TransferEngine
+                         /      |       \    <========= Low-level API
+   MapFactory_MapDocument   DOMToDBMS   DBMSToDOM
+</pre>
+
+<p>Since the bottom layer actually transfers data, you can use any of the these APIs. Obviously, the lower you go, the more work you have to do and the more control you get for your efforts. For many (most?) applications, calling Transfer is adequate.</p>
+
+</body>
+</html>
+
