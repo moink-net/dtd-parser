@@ -1,0 +1,124 @@
+<?xml version='1.0' ?>
+<!--
+     This sample shows how to map mixed content. A BookReview element
+     has the following content:
+
+        <!ELEMENT BookReview (#PCDATA | b | a)>
+        <!ATTLIST BookReview
+                  Title CDATA #REQUIRED
+                  Author CDATA #IMPLIED>
+        <!ELEMENT b (#PCDATA)>
+        <!ELEMENT a (#PCDATA)>
+        <!ATTLIST a
+                  href CDATA #REQUIRED>
+
+     The mapping preserves order in columns in the database.
+
+     As has been noted elsewhere, the mapping used by XML-DBMS is
+     very inefficient for mixed content.
+-->     
+
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
+
+<XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
+   <Databases>
+      <Database Name="Default" QuoteIdentifiers="Yes">
+         <Catalog>
+            <Schema>
+               <Table Name="BookReviews">
+                  <Column Name="Title" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="Author" DataType="VARCHAR" Length="30" Nullable="Yes"/>
+                  <Column Name="ID" DataType="BIGINT" Nullable="No"/>
+                  <PrimaryKey KeyGenerator="Database">
+                     <UseColumn Name="ID"/>
+                  </PrimaryKey>
+               </Table>
+               <Table Name="PCDATA">
+                  <Column Name="ReviewID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="PCDATA" DataType="LONGVARCHAR" Nullable="No"/>
+                  <Column Name="PCDATAOrder" DataType="INTEGER" Nullable="No"/>
+                  <ForeignKey Name="Review_FK">
+                     <UseColumn Name="ReviewID"/>
+                  </ForeignKey>
+               </Table>
+               <Table Name="b">
+                  <Column Name="ReviewID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="b" DataType="LONGVARCHAR" Nullable="No"/>
+                  <Column Name="bOrder" DataType="INTEGER" Nullable="No"/>
+                  <ForeignKey Name="Review_FK">
+                     <UseColumn Name="ReviewID"/>
+                  </ForeignKey>
+               </Table>
+               <Table Name="a">
+                  <Column Name="ReviewID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="aPCDATA" DataType="LONGVARCHAR" Nullable="No"/>
+                  <Column Name="aOrder" DataType="INTEGER" Nullable="No"/>
+                  <Column Name="href" DataType="VARCHAR" Length="1024" Nullable="No"/>
+                  <ForeignKey Name="Review_FK">
+                     <UseColumn Name="ReviewID"/>
+                  </ForeignKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+   </Databases>
+   <Maps>
+      <ClassMap>
+         <ElementType Name="BookReview"/>
+         <ToClassTable Name="BookReviews"/>
+         <PropertyMap>
+            <Attribute Name="Title"/>
+            <ToColumn Name="Title"/>
+         </PropertyMap>
+         <PropertyMap>
+            <Attribute Name="Author"/>
+            <ToColumn Name="Author"/>
+         </PropertyMap>
+         <PropertyMap>
+            <PCDATA/>
+            <ToPropertyTable Name="PCDATA" KeyInParentTable="Unique">
+               <UseUniqueKey Name="Primary Key" />
+               <UseForeignKey Name="Review_FK" />
+            </ToPropertyTable>
+            <ToColumn Name="PCDATA"/>
+            <Order>
+               <UseColumn Name="PCDATAOrder" />
+               <Generate />
+            </Order>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="b"/>
+            <ToPropertyTable Name="b" KeyInParentTable="Unique">
+               <UseUniqueKey Name="Primary Key" />
+               <UseForeignKey Name="Review_FK" />
+            </ToPropertyTable>
+            <ToColumn Name="b"/>
+            <Order>
+               <UseColumn Name="bOrder" />
+               <Generate />
+            </Order>
+         </PropertyMap>
+         <RelatedClass KeyInParentTable="Unique">
+            <ElementType Name="a"/>
+            <UseUniqueKey Name="Primary Key"/>
+            <UseForeignKey Name="Review_FK"/>
+            <Order>
+               <UseColumn Name="aOrder" />
+               <Generate />
+            </Order>
+         </RelatedClass>
+      </ClassMap>
+      <ClassMap>
+         <ElementType Name="a"/>
+         <ToClassTable Name="a"/>
+         <PropertyMap>
+            <Attribute Name="href"/>
+            <ToColumn Name="href"/>
+         </PropertyMap>
+         <PropertyMap>
+            <PCDATA/>
+            <ToColumn Name="aPCDATA"/>
+         </PropertyMap>
+      </ClassMap>
+   </Maps>
+</XMLToDBMS>

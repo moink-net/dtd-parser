@@ -1,0 +1,142 @@
+<?xml version='1.0' ?>
+<!--
+     This sample shows how to "inline" child elements. It uses the
+     following DTD:
+
+        <!ELEMENT Book (Title, Author)>
+        <!ELEMENT Title (#PCDATA)>
+        <!ELEMENT Author (FirstName, LastName, Address)>
+        <!ELEMENT FirstName (#PCDATA)>
+        <!ELEMENT LastName (#PCDATA)>
+        <!ELEMENT Address (Street, City, State, PostCode)>
+        <!ELEMENT Address
+                  PostCode CDATA #REQUIRED>
+        <!ELEMENT Street (#PCDATA)>
+        <!ELEMENT City (#PCDATA)>
+        <!ELEMENT State (#PCDATA)>
+
+     The mapping inlines the Author element and recursively
+     inlines the Address element, so the children of both are
+     treated as if they were children of the Book element. That is,
+     a document that looks like this:
+
+        <Book>
+           <Title>Using XML-DBMS</Title>
+           <Author>
+              <FirstName>Ronald</FirstName>
+              <LastName>Bourret</LastName>
+              <Address PostCode="95041">
+                 <Street>PO Box 729</Street>
+                 <City>Mt. Hermon</City>
+                 <State>CA</State>
+              </Address>
+           </Author>
+        </Book>
+
+     is treated as if it were this:
+
+        <Book PostCode="95041">
+           <Title>Using XML-DBMS</Title>
+           <FirstName>Ronald</FirstName>
+           <LastName>Bourret</LastName>
+           <Street>PO Box 729</Street>
+           <City>Mt. Hermon</City>
+           <State>CA</State>
+        </Book>
+
+     Note that attributes can be inlined, just like simple child
+     elements. Not shown (but also possible) are inlining PCDATA
+     and related classes.
+
+     The mapping preserves order through the use of fixed order
+     values. Note that these are relative to their parent - either
+     the Book element or the inlined Author or Address elements.
+-->     
+
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
+
+<XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
+   <Databases>
+      <Database Name="Default" QuoteIdentifiers="Yes">
+         <Catalog>
+            <Schema>
+               <Table Name="Books">
+                  <Column Name="Title" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="AuthorFirstName" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="AuthorLastName" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="AuthorStreet" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="AuthorCity" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="AuthorState" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="AuthorPostCode" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <PrimaryKey>
+                     <UseColumn Name="Title"/>
+                     <UseColumn Name="AuthorLastName"/>
+                     <UseColumn Name="AuthorFirstName"/>
+                  </PrimaryKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+   </Databases>
+   <Maps>
+      <ClassMap>
+         <ElementType Name="Book"/>
+         <ToClassTable Name="Books"/>
+         <PropertyMap>
+            <ElementType Name="Title"/>
+            <ToColumn Name="Title"/>
+            <Order>
+               <FixedOrder Value="1" />
+            </Order>
+         </PropertyMap>
+         <InlineMap>
+            <ElementType Name="Author"/>
+            <PropertyMap>
+               <ElementType Name="FirstName"/>
+               <ToColumn Name="AuthorFirstName"/>
+               <Order>
+                  <FixedOrder Value="1" />
+               </Order>
+            </PropertyMap>
+            <PropertyMap>
+               <ElementType Name="LastName"/>
+               <ToColumn Name="AuthorLastName"/>
+               <Order>
+                  <FixedOrder Value="2" />
+               </Order>
+            </PropertyMap>
+            <InlineMap>
+               <ElementType Name="Address"/>
+               <PropertyMap>
+                  <ElementType Name="Street"/>
+                  <ToColumn Name="AuthorStreet"/>
+                  <Order>
+                     <FixedOrder Value="1" />
+                  </Order>
+               </PropertyMap>
+               <PropertyMap>
+                  <ElementType Name="City"/>
+                  <ToColumn Name="AuthorCity"/>
+                  <Order>
+                     <FixedOrder Value="2" />
+                  </Order>
+               </PropertyMap>
+               <PropertyMap>
+                  <ElementType Name="State"/>
+                  <ToColumn Name="AuthorState"/>
+                  <Order>
+                     <FixedOrder Value="3" />
+                  </Order>
+               </PropertyMap>
+               <PropertyMap>
+                  <Attribute Name="PostCode"/>
+                  <ToColumn Name="AuthorPostCode"/>
+               </PropertyMap>
+            </InlineMap>
+            <Order>
+               <FixedOrder Value="2" />
+            </Order>
+         </InlineMap>
+      </ClassMap>
+   </Maps>
+</XMLToDBMS>
