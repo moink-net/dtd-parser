@@ -53,7 +53,7 @@ import java.sql.*;
  * <p>Result sets are index-based and must be accessed in ascending order for
  * interoperability reasons. To make this possible, each Column is given a
  * result set index and the Table that owns the Column can return the Columns
- * as an array sorted by result set index. This array must be used when (a)
+ * as a Vector sorted by result set index. This Vector must be used when (a)
  * building SELECT statements to retrieve the columns in the table, and (b)
  * when retrieving column values from those result sets.</p>
  *

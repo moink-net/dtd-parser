@@ -1131,14 +1131,10 @@ public class MapCompiler
 
    private void processKeyEnd()
    {
-      Column[] columns;
+      // Set the key columns to a clone of keyColumns. We use a clone because
+      // keyColumns is a global variable that we reuse.
 
-      columns = new Column[keyColumns.size()];
-      for (int i = 0; i < columns.length; i++)
-      {
-         columns[i] = (Column)keyColumns.elementAt(i);
-      }
-      key.setColumns(columns);
+      key.setColumns((Vector)keyColumns.clone());
    }
 
    private void processLocale(Attributes attrs)
@@ -1311,8 +1307,7 @@ public class MapCompiler
    private void processPrimaryKey(Attributes attrs)
       throws XMLMiddlewareException
    {
-      String name, keyGenerator;
-      int    generate;
+      String name;
 
       // Initialize the keyColumns Vector.
 
@@ -1327,21 +1322,7 @@ public class MapCompiler
 
       // Set the key generation.
 
-      keyGenerator = getAttrValue(attrs, MapConst.ATTR_KEYGENERATOR);
-      if (keyGenerator == null)
-      {
-         generate = Key.DOCUMENT;
-      }
-      else if (keyGenerator.equals(MapConst.VALUE_DATABASE))
-      {
-         generate = Key.DATABASE;
-         keyGenerator = null;
-      }
-      else
-      {
-         generate = Key.KEYGENERATOR;
-      }
-      key.setKeyGeneration(generate, keyGenerator);
+      setKeyGeneration(key, attrs);
    }
 
    private void processPropertyMap(Attributes attrs)
@@ -1552,6 +1533,10 @@ public class MapCompiler
       name = getAttrValue(attrs, MapConst.ATTR_NAME);
       key = Key.createUniqueKey(name);
       table.addUniqueKey(key);
+
+      // Set the key generation.
+
+      setKeyGeneration(key, attrs);
    }
 
    private void processUseBaseTable(Attributes attrs)
@@ -1856,6 +1841,31 @@ public class MapCompiler
 
          map.setDefaultFormatter(type, formatter);
       }
+   }
+
+   private void setKeyGeneration(Key key, Attributes attrs)
+      throws XMLMiddlewareException
+   {
+      String keyGenerator;
+      int    generate;
+
+      // Set the key generation.
+
+      keyGenerator = getAttrValue(attrs, MapConst.ATTR_KEYGENERATOR);
+      if (keyGenerator == null)
+      {
+         generate = Key.DOCUMENT;
+      }
+      else if (keyGenerator.equals(MapConst.VALUE_DATABASE))
+      {
+         generate = Key.DATABASE;
+         keyGenerator = null;
+      }
+      else
+      {
+         generate = Key.KEYGENERATOR;
+      }
+      key.setKeyGeneration(generate, keyGenerator);
    }
 
    private void resolveFKWrappers()

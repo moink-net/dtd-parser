@@ -526,12 +526,12 @@ public class DDLGenerator
    {
       StringBuffer sb = new StringBuffer();
       boolean      needComma = false;
-      Column[]     columns;
+      Vector       columns;
 
       columns = key.getColumns();
-      for (int i = 0; i < columns.length; i++)
+      for (int i = 0; i < columns.size(); i++)
       {
-         sb.append(getColumnName(columns[i], needComma));
+         sb.append(getColumnName((Column)columns.elementAt(i), needComma));
          needComma = true;
       }
       return sb.toString();

@@ -37,12 +37,12 @@ public class FilterConditions
    // Class variables
    //*********************************************************************
 
-   private Table     table;
-   private Vector    conditions = new Vector();
-   private String[]  parsedConditions = null;
-   private Vector    paramNames = new Vector(), paramColumns = new Vector();
-   private Object[]  paramValues;
-   private Column[]  columns;
+   private Table    table;
+   private Vector   conditions = new Vector();
+   private String[] parsedConditions = null;
+   private Vector   paramNames = new Vector(), paramColumns = new Vector();
+   private Vector   paramValues;
+   private Vector   realParamColumns;
    private Hashtable vectorConditions = new Hashtable(), params = new Hashtable();
    private String    whereCondition;
    private boolean   parseConditions = true, parseVectorConditions = true;
@@ -215,11 +215,11 @@ public class FilterConditions
     * @exception XMLMiddlewareException Thrown if a named parameter is found in
     *    a condition but no corresponding column is found in the table.
     */
-   public final Column[] getColumns()
+   public final Vector getColumns()
       throws XMLMiddlewareException
    {
       parse();
-      return columns;
+      return realParamColumns;
    }
 
    /**
@@ -231,7 +231,7 @@ public class FilterConditions
     * @exception XMLMiddlewareException Thrown if a named parameter is found in
     *    a condition but no corresponding column is found in the table.
     */
-   public final Object[] getParameterValues()
+   public final Vector getParameterValues()
       throws XMLMiddlewareException
    {
       parse();
@@ -251,7 +251,7 @@ public class FilterConditions
    {
       if (parseConditions)
       {
-         // Initialize global arrays.
+         // Initialize global variables.
 
          parsedConditions = new String[conditions.size()];
 
@@ -516,43 +516,49 @@ public class FilterConditions
    {
       // Build parallel lists of parameter values and Column objects.
 
-      Vector v, values = new Vector(), cols = new Vector();
+      Vector v;
       Object paramValue;
       Column column;
-      int    numParams;
+
+      // Allocate new Vectors for the parameter columns and values.
+
+      realParamColumns = new Vector();
+      paramValues = new Vector();
+
+      // Build the vectors of parameter values and columns.
 
       for (int i = 0; i < paramNames.size(); i++)
       {
          paramValue = params.get(paramNames.elementAt(i));
          column = (Column)paramColumns.elementAt(i);
+
          if (paramValue instanceof Vector)
          {
+            // If a parameter value is a Vector, then we expand this into
+            // individual values. For each value, we need to add the Column
+            // object to the parallel list of columns.
+
             v = (Vector)paramValue;
             for (int j = 0; j < v.size(); j++)
             {
-               values.addElement(v.elementAt(j));
-               cols.addElement(column);
+               paramValues.addElement(v.elementAt(j));
+               realParamColumns.addElement(column);
             }
          }
          else
          {
-            values.addElement(paramValue);
-            cols.addElement(column);
+            paramValues.addElement(paramValue);
+            realParamColumns.addElement(column);
          }
       }
 
-      numParams = values.size();
-      if (numParams > 0)
-      {
-         paramValues = new Object[numParams];
-         values.copyInto(paramValues);
-         columns = new Column[numParams];
-         cols.copyInto(columns);
-      }
-      else
+      // If there are no parameters, set the Vectors of parameter values and
+      // columns to null.
+
+      if (paramValues.size() == 0)
       {
          paramValues = null;
-         columns = null;
+         realParamColumns = null;
       }
    }
 }

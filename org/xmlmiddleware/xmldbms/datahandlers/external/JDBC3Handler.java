@@ -24,6 +24,7 @@ import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import java.sql.*;
+import java.util.*;
 import javax.sql.*;
 
 /**
@@ -81,8 +82,8 @@ public class JDBC3Handler
 
       databaseModified();
 
-      Column[] dbGeneratedCols = getDBGeneratedKeyCols(table);
-      if(dbGeneratedCols.length > 0)
+      Vector dbGeneratedCols = getDBGeneratedKeyCols(table);
+      if(dbGeneratedCols.size() > 0)
       {
          ResultSet rsGen = stmt.getGeneratedKeys();
 

@@ -212,14 +212,14 @@ public class HighLow implements KeyGenerator
     * <p>This method is called by DOMToDBMS. Applications using DOMToDBMS
     * do not need to call this method.</p>
     *
-    * @return The key as an array of Objects.
+    * @return The key as a Vector of Objects.
     * @exception XMLMiddlewareException Thrown if the high key table is not initialized
     *                         or if a SQLException occurs.
     */
 
-   public Object[] generateKey() throws XMLMiddlewareException
+   public Vector generateKey() throws XMLMiddlewareException
    {
-      Object[] pk = new Object[1];
+      Vector pk = new Vector();
 
       if (highKeyValue == -1)
          throw new IllegalStateException("Key generator HighLow not initialized.");
@@ -236,7 +236,7 @@ public class HighLow implements KeyGenerator
          }
       }
 
-      pk[0] = new Integer(highKeyValue + lowKeyValue++);
+      pk.addElement(new Integer(highKeyValue + lowKeyValue++));
       return pk;
    }
 

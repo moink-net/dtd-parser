@@ -1106,12 +1106,12 @@ public class MapSerializer extends XMLWriter
       writeElementStart(MapConst.ELEM_USECOLUMN, 1, true);
    }
 
-   private void writeUseColumns(Column[] columns)
+   private void writeUseColumns(Vector columns)
       throws IOException
    {
-      for (int i = 0; i < columns.length; i++)
+      for (int i = 0; i < columns.size(); i++)
       {
-         writeUseColumn(columns[i]);
+         writeUseColumn((Column)columns.elementAt(i));
       }
    }
 

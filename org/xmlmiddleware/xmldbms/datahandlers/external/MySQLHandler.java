@@ -121,9 +121,9 @@ public class MySQLHandler
 
       databaseModified();
 
-      Column[] dbGeneratedCols = getDBGeneratedKeyCols(table);
+      Vector dbGeneratedCols = getDBGeneratedKeyCols(table);
 
-      if(dbGeneratedCols.length > 0)
+      if(dbGeneratedCols.size() > 0)
       {
          org.gjt.mm.mysql.Statement mysqlStmt =
                (org.gjt.mm.mysql.Statement)getRawStatement(stmt);
@@ -134,12 +134,15 @@ public class MySQLHandler
 
          // If that's the only column to be retrieved...
 
-         if((dbGeneratedCols.length == 1) &&
-            dbGeneratedCols[0].getName().equalsIgnoreCase(key.getColumns()[0].getName()))
+         Column dbGenColumn = (Column)dbGeneratedCols.elementAt(0);
+         Column keyColumn = (Column)key.getColumns().elementAt(0);
+
+         if((dbGeneratedCols.size() == 1) &&
+            dbGenColumn.getName().equalsIgnoreCase(keyColumn.getName()))
          {
             // ... then just set that column
 
-            setColumnValue(row, dbGeneratedCols[0], lastInsert);
+            setColumnValue(row, dbGenColumn, lastInsert);
          }
          else
          {
@@ -150,7 +153,7 @@ public class MySQLHandler
 
             // Put the last insert value in
 
-            Parameters.setParameter(selStmt, 1, key.getColumns()[0], lastInsert);
+            Parameters.setParameter(selStmt, 1, keyColumn, lastInsert);
 
             // Execute it
 
@@ -161,9 +164,10 @@ public class MySQLHandler
 
             // Set them in the row
 
-            for(int i = 0; i < dbGeneratedCols.length; i++)
+            for(int i = 0; i < dbGeneratedCols.size(); i++)
             {
-               setColumnValue(row, dbGeneratedCols[i], rs.getObject(dbGeneratedCols[i].getName()));
+               Column column = (Column)dbGeneratedCols.elementAt(i);
+               setColumnValue(row, column, rs.getObject(column.getName()));
             }
          }
       }

@@ -80,9 +80,9 @@ public class OracleHandler
 
       // This is a list of columns you need to retrieve from the database
 
-      Column[] dbGeneratedCols = getDBGeneratedKeyCols(table);
+      Vector dbGeneratedCols = getDBGeneratedKeyCols(table);
 
-      if(dbGeneratedCols.length > 0)
+      if(dbGeneratedCols.size() > 0)
       {
          // IMPL: Test that this is actually a statement from Oracle, like so:
          // if(!(stmt instanceof oracle.whatever.Statement))

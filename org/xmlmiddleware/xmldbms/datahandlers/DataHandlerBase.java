@@ -255,7 +255,7 @@ public abstract class DataHandlerBase
     *    Row object unless they are nullable.
     * @exception SQLException Thrown if a database error occurs.
     */
-   public void update(Table table, Row row, Column[] cols)
+   public void update(Table table, Row row, Vector cols)
       throws SQLException
    {
       checkState();
@@ -338,7 +338,7 @@ public abstract class DataHandlerBase
     *   are no parameters.
     * @exception SQLException Thrown if a database error occurs.
     */
-   public void delete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
+   public void delete(Table table, Key key, Vector keyValue, String where, Vector paramColumns, Vector paramValues)
       throws SQLException
    {
       checkState();
@@ -375,7 +375,7 @@ public abstract class DataHandlerBase
     * @return The result set.
     * @exception SQLException Thrown if a database error occurs.
     */
-   public ResultSet select(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
+   public ResultSet select(Table table, Key key, Vector keyValue, String where, Vector paramColumns, Vector paramValues, OrderInfo orderInfo)
       throws SQLException
    {
       checkState();
@@ -415,23 +415,25 @@ needs to solve.
       // remove from the insert list. Certain DBMS have problems
       // otherwise.
 
-      Column[] dbGeneratedCols = getDBGeneratedKeyCols(table);
-      for(int i = 0; i < dbGeneratedCols.length; i++)
+      Vector dbGeneratedCols = getDBGeneratedKeyCols(table);
+      for(int i = 0; i < dbGeneratedCols.size(); i++)
       {
-         if(colVec.contains(dbGeneratedCols[i]) &&
-            (row.getColumnValue(dbGeneratedCols[i]) == null))
+         Column col = (Column)dbGeneratedCols.elementAt(i)
+         if(colVec.contains(col) &&
+            (row.getColumnValue(col) == null))
          {
-            colVec.removeElement(dbGeneratedCols[i]);
+            colVec.removeElement(col);
          }
       }
 
+???
       Column[] cols = new Column[colVec.size()];
       colVec.copyInto(cols);
 */
 
       // Get a list of the columns that have values in the row.
 
-      Column[] cols = row.getColumnArrayFor(table);
+      Vector cols = row.getColumnVectorFor(table);
 
       // Build the INSERT statement
 
@@ -455,11 +457,10 @@ needs to solve.
     * @return The prepared UPDATE statement
     * @exception SQLException Thrown if a database error occurs.
     */
-   public PreparedStatement buildUpdate(Table table, Row row, Column[] cols)
+   public PreparedStatement buildUpdate(Table table, Row row, Vector cols)
       throws SQLException
    {
-      Column[]          priCols, keyCols;
-      Vector            colVec;
+      Vector            priCols, keyCols, colVec;
       Hashtable         colHash;
       int               i;
       Enumeration       e;
@@ -489,10 +490,10 @@ needs to solve.
          
          // Remove the primary key columns. We don't update primary keys.
 
-         for(i = 0; i < priCols.length; i++)
+         for(i = 0; i < priCols.size(); i++)
          {
-            if(colHash.remove(priCols[i]) == null)
-               throw new SQLException("[xmldbms] When updating data, you must supply values for all primary key columns. No value supplied for the " + priCols[i].getName() + " column.");
+            if(colHash.remove(priCols.elementAt(i)) == null)
+               throw new SQLException("[xmldbms] When updating data, you must supply values for all primary key columns. No value supplied for the " + ((Column)priCols.elementAt(i)).getName() + " column.");
          }
 
          // Remove the unique key columns. We don't update unique keys.
@@ -501,20 +502,20 @@ needs to solve.
          while(e.hasMoreElements())
          {
             keyCols = ((Key)e.nextElement()).getColumns();
-            for(i = 0; i < keyCols.length; i++)
+            for(i = 0; i < keyCols.size(); i++)
             {
-               colHash.remove(keyCols[i]);
+               colHash.remove(keyCols.elementAt(i));
             }
          }
 
-         // Copy the remaining columns for the table into an array.
+         // Copy the remaining columns for the table into a vector.
 
-         cols = new Column[colHash.size()];
+         cols = new Vector(colHash.size());
          e = colHash.keys();
          i = 0;
          while (e.hasMoreElements())
          {
-            cols[i++] = (Column)e.nextElement();
+            cols.addElement(e.nextElement());
          }
       }
 
@@ -529,7 +530,7 @@ needs to solve.
 
       // And the parameters for the WHERE clause
 
-      Parameters.setParameters(stmt, cols.length, priCols, row.getColumnValues(priCols));
+      Parameters.setParameters(stmt, cols.size(), priCols, row.getColumnValues(priCols));
 
       // Return the statement ready for execution
 
@@ -565,7 +566,7 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
 
       // Set the parameters
 
-      Column[] cols = key.getColumns();
+      Vector cols = key.getColumns();
       Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
 
       // Return the prepared statement
@@ -586,7 +587,7 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
     * @return The prepared DELETE statement
     * @exception SQLException Thrown if a database error occurs.
     */
-   public PreparedStatement buildDelete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
+   public PreparedStatement buildDelete(Table table, Key key, Vector keyValue, String where, Vector paramColumns, Vector paramValues)
       throws SQLException
    {
       // These can be cached. Use SQLStrings
@@ -602,9 +603,9 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
       int start = 0;
       if (key != null)
       {
-         Column[] keyColumns = key.getColumns();
+         Vector keyColumns = key.getColumns();
          Parameters.setParameters(stmt, 0, keyColumns, keyValue);
-         start = keyColumns.length;
+         start = keyColumns.size();
       }
       if (paramColumns != null)
       {
@@ -631,7 +632,7 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
     * @return The prepared SELECT statement
     * @exception SQLException Thrown if a database error occurs.
     */
-   public PreparedStatement buildSelect(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
+   public PreparedStatement buildSelect(Table table, Key key, Vector keyValue, String where, Vector paramColumns, Vector paramValues, OrderInfo orderInfo)
       throws SQLException
    {
       // These can be cached. Use SQLStrings
@@ -647,9 +648,9 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
       int start = 0;
       if (key != null)
       {
-         Column[] keyColumns = key.getColumns();
+         Vector keyColumns = key.getColumns();
          Parameters.setParameters(stmt, 0, keyColumns, keyValue);
-         start = keyColumns.length;
+         start = keyColumns.size();
       }
       if (paramColumns != null)
       {
@@ -698,11 +699,11 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
     * @param table The table for which to get columns.
     * @return The columns. May be empty.
     */
-   public Column[] getDBGeneratedKeyCols(Table table)
+   public Vector getDBGeneratedKeyCols(Table table)
    {
       // If we have already gotten the columns, just return them.
 
-      if(m_refreshCols.contains(table)) return (Column[])m_refreshCols.get(table);
+      if(m_refreshCols.contains(table)) return (Vector)m_refreshCols.get(table);
 
       // Allocate a new Vector.
 
@@ -716,10 +717,10 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
       {
          if (priKey.getKeyGeneration() == Key.DATABASE)
          {
-            Column[] priCols = priKey.getColumns();
-            for(int i = 0; i < priCols.length; i++)
+            Vector priCols = priKey.getColumns();
+            for(int i = 0; i < priCols.size(); i++)
             {
-               colVec.addElement(priCols[i]);
+               colVec.addElement(priCols.elementAt(i));
             }
          }
       }
@@ -732,23 +733,19 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
          Key key = (Key)e.nextElement();
          if(key.getKeyGeneration() == Key.DATABASE)
          {
-            Column[] keyCols = key.getColumns();
-            for(int i = 0; i < keyCols.length; i++)
+            Vector keyCols = key.getColumns();
+            for(int i = 0; i < keyCols.size(); i++)
             {
-               colVec.addElement(keyCols[i]);
+               colVec.addElement(keyCols.elementAt(i));
             }
          }
       }
 
-      // Copy the columns into an array, stored the array for later use,
-      // and return it.
+      // Store the Vector for later use and return it.
 
-      Column[] cols = new Column[colVec.size()];
-      colVec.copyInto(cols);
+      m_refreshCols.put(table, colVec);
 
-      m_refreshCols.put(table, cols);
-
-      return cols;
+      return colVec;
    }
 
    /**
@@ -760,15 +757,19 @@ RPB - Nobody uses this, so let's delete it and force people to pass the primary 
     */
    public Key createColumnKey(String colName, int type)
    {
-      // Create a single column array.
+      Column keyColumn;
+      Vector keyColumns = new Vector(1);
 
-      Column[] keyCols = { Column.create(colName) };
-      keyCols[0].setType(type);
+      // Create a single column vector.
+
+      keyColumn = Column.create(colName);
+      keyColumn.setType(type);
+      keyColumns.addElement(keyColumn);
 
       // Make a key out of it
 
       Key key = Key.createPrimaryKey(null);
-      key.setColumns(keyCols);
+      key.setColumns(keyColumns);
 
       // Return the key
 

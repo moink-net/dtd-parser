@@ -682,13 +682,13 @@ public class DBMSDelete
 
    class RowInfo
    {
-      int      action;
-      Table    table;
-      Key      key = null;
-      Object[] keyValue = null;
-      String   where = null;
-      Column[] columns = null;
-      Object[] params = null;
+      int    action;
+      Table  table;
+      Key    key = null;
+      Vector keyValue = null;
+      String where = null;
+      Vector columns = null;
+      Vector params = null;
 
       RowInfo(int action, Table table, LinkInfo linkInfo, Row parentRow, FilterConditions filterConditions)
          throws XMLMiddlewareException

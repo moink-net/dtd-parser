@@ -32,11 +32,12 @@ import org.xmlmiddleware.xmldbms.maps.*;
 import java.io.*;
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.*;
 
 /**
  * Sets parameters in an SQL statement.
  *
- * <p>The methods in this class assume that the arrays of parameter values and
+ * <p>The methods in this class assume that the Vectors of parameter values and
  * Columns are in the same order as the parameters in the SQL statement.</p>
  *
  * <p>Methods that require parameter values to be of the default object type
@@ -67,7 +68,7 @@ public class Parameters
    //**************************************************************************
 
    /**
-    * Set parameters from an array of values.
+    * Set parameters from an Vector of values.
     *
     * <p>For best performance, parameter values should be of the default object type
     * for the parameter type.</p>
@@ -75,18 +76,18 @@ public class Parameters
     * @param p Prepared SQL statement
     * @param offset Offset into the list of parameters in the prepared statement.
     *   To start with the first parameter, use an offset of 0.
-    * @param columns An array of Column objects corresponding to the parameters.
+    * @param columns A Vector of Column objects corresponding to the parameters.
     * @param values Parameter values.
     * @exception SQLException A database error occurred while setting
     *  the parameter.
     */
 
-   public static void setParameters(PreparedStatement p, int offset, Column[] columns, Object[] values)
+   public static void setParameters(PreparedStatement p, int offset, Vector columns, Vector values)
       throws SQLException
    {
-     for (int i = 0; i < values.length; i++)
+     for (int i = 0; i < values.size(); i++)
      {
-       setParameter(p, i + offset + 1, columns[i], values[i]);
+       setParameter(p, i + offset + 1, (Column)columns.elementAt(i), values.elementAt(i));
      }
    }
 
@@ -235,7 +236,7 @@ public class Parameters
    }
 
    /**
-    * Set parameters from an array of values, converting the object type first
+    * Set parameters from a Vector of values, converting the object type first
     * if necessary.
     *
     * <p>This method checks the object type of the parameter values and performs
@@ -246,18 +247,18 @@ public class Parameters
     * @param p Prepared SQL statement
     * @param offset Offset into the list of parameters in the prepared statement.
     *   To start with the first parameter, use an offset of 0.
-    * @param columns An array of Column objects corresponding to the parameters.
+    * @param columns A Vector of Column objects corresponding to the parameters.
     * @param values Parameter values.
     * @exception SQLException A database error occurred while setting
     *  the parameter.
     */
-   public static void convertAndSetParameters(PreparedStatement p, int offset, Column[] columns, Object[] values)
+   public static void convertAndSetParameters(PreparedStatement p, int offset, Vector columns, Vector values)
       throws SQLException
    {
-     for (int i = 0; i < values.length; i++)
-     {
-       convertAndSetParameter(p, i + offset + 1, columns[i], values[i]);
-     }
+      for (int i = 0; i < values.size(); i++)
+      {
+         convertAndSetParameter(p, i + offset + 1, (Column)columns.elementAt(i), values.elementAt(i));
+      }
    }
 
    /**

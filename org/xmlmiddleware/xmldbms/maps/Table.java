@@ -80,7 +80,7 @@ public class Table extends MapBase
    private String hashName = null;
 
    private Hashtable columns = new Hashtable();
-   private Column[]  rsColumns = null;
+   private Vector   rsColumns = null;
 
    private Key primaryKey = null;
    private Hashtable uniqueKeys = new Hashtable();
@@ -291,26 +291,34 @@ public class Table extends MapBase
     *
     * @return The columns
     */
-   public final Column[] getResultSetColumns()
+   public final Vector getResultSetColumns()
    {
       Enumeration enum;
       Column      column;
       long[]      rsIndexes;
+      Column[]    tempColumns;
+      int         i;
 
       if (rsColumns == null)
       {
          rsIndexes = new long[columns.size()];
-         rsColumns = new Column[columns.size()];
+         tempColumns = new Column[columns.size()];
 
          enum = columns.elements();
-         for (int i = 0; i < columns.size(); i++)
+         for (i = 0; i < columns.size(); i++)
          {
             column = (Column)enum.nextElement();
-            rsColumns[i] = column;
+            tempColumns[i] = column;
             rsIndexes[i] = (long)column.getResultSetIndex();
          }
 
-         Sort.sort(rsIndexes, rsColumns);
+         Sort.sort(rsIndexes, tempColumns);
+
+         rsColumns = new Vector(tempColumns.length);
+         for (i = 0; i < tempColumns.length; i++)
+         {
+            rsColumns.addElement(tempColumns[i]);
+         }
       }
 
       return rsColumns;

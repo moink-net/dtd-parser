@@ -19,15 +19,19 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
+import java.util.*;
+
 /**
  * Describes a key in a table; <a href="../readme.htm#NotForUse">not for
  * general use</a>.
  *
  * <p>The Key class contains the information describing a key in a table:
- * its name, an ordered list (array) of columns, its type (primary, unique,
- * or foreign), and, if the key is a primary key, whether to generate it.
- * Key names are arbitrary strings used to identify keys in map documents.
- * They are also used to name key constraints in CREATE TABLE statements.</p>
+ * its name, an ordered list (vector) of columns, its type (primary, unique,
+ * or foreign), and, if the key is a primary or unique key, whether to generate it.
+ * Key names are arbitrary strings used to identify keys in map documents. They
+ * must be unique within a key type in a table. Key names should be unique within
+ * a database, but this matters only when the map is used to generate CREATE TABLE
+ * statements and is not enforced.</p>
  *
  * <p>Keys are stored in Table and LinkInfo objects.</p>
  *
@@ -68,13 +72,13 @@ public class Key extends MapBase
    // Private variables
    // ********************************************************************
 
-   private String   name = null;
-   private int      type = UNKNOWN;
-   private int      generate = UNKNOWN;
-   private String   generatorName = null;
-   private Column[] columns = null;
-   private Table    pointsToTable = null; // Points to primary/unique key table
-   private Key      pointsToKey = null;   // Points to primary/unique key
+   private String name = null;
+   private int    type = UNKNOWN;
+   private int    generate = UNKNOWN;
+   private String generatorName = null;
+   private Vector columns = null;
+   private Table  pointsToTable = null; // Points to primary/unique key table
+   private Key    pointsToKey = null;   // Points to primary/unique key
 
    // ********************************************************************
    // Constructors
@@ -185,9 +189,9 @@ public class Key extends MapBase
     * means that XML-DBMS generates the key, using a KeyGenerator supplied by
     * application at run time. Key.DATABASE means that the database generates the key.</p>
     *
-    * <p>This method should only be called for primary keys -- that is, when getType()
-    * returns Key.PRIMARY_KEY. If getType() returns another value, the value returned
-    * by this method is undefined.</p>
+    * <p>This method should be called only for primary and unique keys -- that is,
+    * when getType() returns Key.PRIMARY_KEY or Key.UNIQUE_KEY. If getType() returns
+    * Key.FOREIGN_KEY, the value returned by this method is undefined.</p>
     *
     * @return How the key is generated.
     */
@@ -199,10 +203,10 @@ public class Key extends MapBase
    /**
     * Get the logical name of the key generator, if any.
     *
-    * <p>This method should only be called for primary keys that XML-DBMS generates
-    * -- that is, when getType() returns Key.PRIMARY_KEY and getKeyGeneration() returns
-    * Key.KEYGENERATOR. If either method returns another value, the value returned
-    * by this method is undefined.</p>
+    * <p>This method should be called only for primary and unique keys that XML-DBMS
+    * generates -- that is, when getType() returns Key.PRIMARY_KEY or Key.FOREIGN_KEY
+    * and getKeyGeneration() returns Key.KEYGENERATOR. If either method returns
+    * another value, the value returned by this method is undefined.</p>
     *
     * @return Logical key generator name.
     */
@@ -219,8 +223,8 @@ public class Key extends MapBase
     * means that XML-DBMS generates the key, using a KeyGenerator supplied by
     * application at run time. Key.DATABASE means that the database generates the key.</p>
     *
-    * <p>This method may only be called for primary keys. Call getType() to determine
-    * whether the key is primary.</p>
+    * <p>This method may be called only for primary and unique keys. Call getType() to
+    * determine if the key is a primary or unique key.</p>
     *
     * @param generate How the key is generated.
     * @param generatorName Logical name of the key generator. Must be non-null if
@@ -228,8 +232,8 @@ public class Key extends MapBase
     */
    public void setKeyGeneration(int generate, String generatorName)
    {
-      if (type != PRIMARY_KEY)
-         throw new IllegalStateException("This method can only be called for primary keys. Call getType() first to determine the key type.");
+      if (type == FOREIGN_KEY)
+         throw new IllegalStateException("This method cannot be called for foreign keys. Call getType() first to determine the key type.");
       if (((generate == KEYGENERATOR) && (generatorName == null)) ||
           ((generate != KEYGENERATOR) && (generatorName != null)))
          throw new IllegalArgumentException("The generatorName argument must be non-null if generate is Key.KEYGENERATOR and null otherwise.");
@@ -242,26 +246,26 @@ public class Key extends MapBase
    // ********************************************************************
 
    /**
-    * Get the list of columns in the key.
+    * Get the Vector of columns in the key.
     *
-    * @return The columns in the key.
+    * @return A Vector of the columns in the key.
     */
-   public final Column[] getColumns()
+   public final Vector getColumns()
    {
       return columns;
    }
 
    /**
-    * Set the list of columns in the key.
+    * Set the Vector of columns in the key.
     *
-    * @param columns The columns in the key.
+    * @param columns The Vector of columns in the key.
     */
-   public void setColumns(Column[] columns)
+   public void setColumns(Vector columns)
    {
       if (columns != null)
       {
-         if (columns.length == 0)
-            throw new IllegalArgumentException("Columns array must have non-zero length.");
+         if (columns.size() == 0)
+            throw new IllegalArgumentException("Columns vector must have non-zero length.");
       }
       this.columns = columns;
    }
@@ -273,35 +277,35 @@ public class Key extends MapBase
    /**
     * Get the Table to which a foreign key points.
     *
-    * <p>This method may only be called for foreign keys.</p>
+    * <p>This method may be called only for foreign keys.</p>
     *
     * @return The Table
     */
    public final Table getRemoteTable()
    {
       if (type != FOREIGN_KEY)
-         throw new IllegalStateException("This method may only be called for foreign keys.");
+         throw new IllegalStateException("This method may be called only for foreign keys.");
       return pointsToTable;
    }
 
    /**
     * Get the Key to which a foreign key points.
     *
-    * <p>This method may only be called for foreign keys.</p>
+    * <p>This method may be called only for foreign keys.</p>
     *
     * @return The Key
     */
    public final Key getRemoteKey()
    {
       if (type != FOREIGN_KEY)
-         throw new IllegalStateException("This method may only be called for foreign keys.");
+         throw new IllegalStateException("This method may be called only for foreign keys.");
       return pointsToKey;
    }
 
    /**
     * Set the Table and Key to which a foreign key points.
     *
-    * <p>This method may only be called for foreign keys.</p>
+    * <p>This method may be called only for foreign keys.</p>
     *
     * @param remoteTable The Table
     * @param remoteKey The Key. Must be a primary or unique key.
@@ -313,7 +317,7 @@ public class Key extends MapBase
       Key    actualRemoteKey;
 
       if (type != FOREIGN_KEY)
-         throw new IllegalStateException("This method may only be called for foreign keys.");
+         throw new IllegalStateException("This method may be called only for foreign keys.");
 
       // Check that the remote key is actually in the remote table.
 

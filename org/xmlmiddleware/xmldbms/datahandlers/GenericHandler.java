@@ -85,9 +85,9 @@ public class GenericHandler
 
       databaseModified();
 
-      Column[] dbGeneratedCols = getDBGeneratedKeyCols(table);
+      Vector dbGeneratedCols = getDBGeneratedKeyCols(table);
 
-      if(dbGeneratedCols.length > 0)
+      if(dbGeneratedCols.size() > 0)
       {
          // Yes this is hokey! I'll say it again. It's H-O-K-E-Y!
          // But it's the best we could come up with.
@@ -97,25 +97,22 @@ public class GenericHandler
 
          Vector colVec = row.getColumnVectorFor(table);
 
-         for(int i = 0; i < dbGeneratedCols.length; i++)
+         for(int i = 0; i < dbGeneratedCols.size(); i++)
          {
-            colVec.removeElement(dbGeneratedCols[i]);
+            colVec.removeElement(dbGeneratedCols.elementAt(i));
          }
-
-         Column[] selCols = new Column[colVec.size()];
-         colVec.copyInto(selCols);
 
          // SELECT using those columns as a WHERE clause
 
          Key key = Key.createUniqueKey(FAKE);
-         key.setColumns(selCols);
+         key.setColumns(colVec);
 
          String sql = getDMLGenerator().getSelect(table, key, dbGeneratedCols);
          PreparedStatement selStmt = getConnection().prepareStatement(sql);
 
          // Set the parameters
 
-         Parameters.setParameters(selStmt, 0, selCols, row.getColumnValues(selCols));
+         Parameters.setParameters(selStmt, 0, colVec, row.getColumnValues(colVec));
 
          // Execute it
 
@@ -127,9 +124,10 @@ public class GenericHandler
 
          // Set them in the row
 
-         for(int i = 0; i < dbGeneratedCols.length; i++)
+         for(int i = 0; i < dbGeneratedCols.size(); i++)
          {
-            setColumnValue(row, dbGeneratedCols[i], rs.getObject(dbGeneratedCols[i].getName()));
+            Column col = (Column)dbGeneratedCols.elementAt(i);
+            setColumnValue(row, col, rs.getObject(col.getName()));
          }
 
          // If more than one row then error.

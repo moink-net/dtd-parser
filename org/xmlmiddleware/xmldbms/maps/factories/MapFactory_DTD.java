@@ -785,10 +785,11 @@ public class MapFactory_DTD
    private Table createTable(String name)
       throws XMLMiddlewareException, SQLException
    {
-      Table    table;
-      String   tableName, pkName;
-      Key      pk;
-      Column[] pkColumns = new Column[1];
+      Table  table;
+      String tableName, pkName;
+      Key    pk;
+      Column column;
+      Vector pkColumns = new Vector(1);
 
       // Check the table name, then create the table. Note that we need
       // to be careful not to check the same table name twice, since that
@@ -803,7 +804,8 @@ public class MapFactory_DTD
 
       pkName = checker.checkConstraintName(tableName + PK);
       pk = table.createPrimaryKey(pkName);
-      pkColumns[0] = createColumn(table, tableName + PK, Types.INTEGER, 0, DatabaseMetaData.columnNoNulls);
+      column = createColumn(table, tableName + PK, Types.INTEGER, 0, DatabaseMetaData.columnNoNulls);
+      pkColumns.addElement(column);
       pk.setColumns(pkColumns);
       pk.setKeyGeneration(Key.KEYGENERATOR, HIGHLOW);
 
@@ -840,9 +842,10 @@ public class MapFactory_DTD
    private LinkInfo createLinkInfo(Table pkTable, Table fkTable)
       throws XMLMiddlewareException
    {
-      String   pkTableName, fkName;
-      Key      pk, fk;
-      Column[] fkColumns = new Column[1];
+      String pkTableName, fkName;
+      Key    pk, fk;
+      Column column;
+      Vector fkColumns = new Vector(1);
 
       // Create a link between the two tables. Both tables are assumed to
       // already have a primary key, but a foreign key needs to be constructed
@@ -857,7 +860,8 @@ public class MapFactory_DTD
 
       fkName = checker.checkConstraintName(pkTableName + FK);
       fk = fkTable.createForeignKey(fkName);
-      fkColumns[0] = createColumn(fkTable, pkTableName + FK, Types.INTEGER, 0, DatabaseMetaData.columnNoNulls);
+      column = createColumn(fkTable, pkTableName + FK, Types.INTEGER, 0, DatabaseMetaData.columnNoNulls);
+      fkColumns.addElement(column);
       fk.setColumns(fkColumns);
       fk.setRemoteKey(pkTable, pk);
 

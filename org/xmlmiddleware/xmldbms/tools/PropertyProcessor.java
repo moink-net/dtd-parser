@@ -70,7 +70,7 @@ public class PropertyProcessor
     * <p>The syntax of each string is:</p>
     *
     * <pre>
-    *    <property>=<value>
+    *    &lt;property>=&lt;value>
     * </pre>
     *
     * @param props The Properties object to add the new properties to

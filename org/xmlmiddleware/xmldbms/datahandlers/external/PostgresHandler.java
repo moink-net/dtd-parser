@@ -24,6 +24,7 @@ import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import java.sql.*;
+import java.util.*;
 import javax.sql.*;
 
 /**
@@ -104,9 +105,9 @@ public class PostgresHandler
 
       databaseModified();
 
-      Column[] dbGeneratedCols = getDBGeneratedKeyCols(table);
+      Vector dbGeneratedCols = getDBGeneratedKeyCols(table);
 
-      if(dbGeneratedCols.length > 0)
+      if(dbGeneratedCols.size() > 0)
       {
          org.postgresql.Statement psqlStmt =
                (org.postgresql.Statement)getRawStatement(stmt);
@@ -133,9 +134,10 @@ public class PostgresHandler
 
          // Set them in the row
 
-         for(int i = 0; i < dbGeneratedCols.length; i++)
+         for(int i = 0; i < dbGeneratedCols.size(); i++)
          {
-            setColumnValue(row, dbGeneratedCols[i], rs.getObject(dbGeneratedCols[i].getName()));
+            Column column = (Column)dbGeneratedCols.elementAt(i);
+            setColumnValue(row, column, rs.getObject(column.getName()));
          }
       }
    }

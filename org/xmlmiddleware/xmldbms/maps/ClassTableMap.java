@@ -29,10 +29,7 @@ import java.util.*;
  * not for general use</a>.
  *
  * <p>ClassTableMap contains information about a table that is viewed as a
- * class and mapped to an element type. It is optimized for returning arrays
- * of ColumnMaps, PropertyTableMaps, and RelatedClassTableMaps; most other
- * methods require linear searches of one sort or another. This means that
- * map factories will be slower, but data transfer software will be faster.</p>
+ * class and mapped to an element type.</p>
  *
  * <p>ClassTableMaps are stored in the XMLDBMSMap object and in RelatedClassTableMap
  * objects.</p>

@@ -128,13 +128,13 @@ public class Row
     * @param columns Columns for which to set values.
     * @param values Values to set.
     */
-   public void setColumnValues(Column[] columns, Object[] values)
+   public void setColumnValues(Vector columns, Vector values)
    {
       // Typically, this is used to set a multi-column key value.
 
-      for(int i = 0; i < columns.length; i++)
+      for(int i = 0; i < columns.size(); i++)
       {
-         setColumnValue(columns[i], values[i]);
+         setColumnValue((Column)columns.elementAt(i), values.elementAt(i));
       }
    }
 
@@ -147,8 +147,9 @@ public class Row
    public void setColumnValues(ResultSet rs, Table table, boolean emptyStringIsNull)
       throws SQLException
    {
-      Column[] rsColumns;
-      Object   o;
+      Vector rsColumns;
+      Column column;
+      Object o;
 
       // Loop through the columns in the result set and set the corresponding
       // values in the Row. We use Table.getResultSetColumns() since this:
@@ -157,11 +158,12 @@ public class Row
 
       rsColumns = table.getResultSetColumns();
 
-      for (int i = 0; i < rsColumns.length; i++)
+      for (int i = 0; i < rsColumns.size(); i++)
       {
          // Get the next column value.
 
-         o = rs.getObject(rsColumns[i].getResultSetIndex());
+         column = (Column)rsColumns.elementAt(i);
+         o = rs.getObject(column.getResultSetIndex());
 
          // If the column value is NULL, set it to an EMPTYSTRING or null.
 
@@ -198,7 +200,7 @@ public class Row
             // since JDBC doesn't define conversions between binary data and other
             // kinds of data.
 
-            int type = rsColumns[i].getType();
+            int type = column.getType();
             if (JDBCTypes.typeIsChar(type))
             {
                o = out.toString();
@@ -208,7 +210,7 @@ public class Row
                o = new ByteArray(out.toByteArray());
             }
             else
-               throw new SQLException("[XML-DBMS] The driver returned data for the " + rsColumns[i].getName() + " column as an InputStream. JDBC does not support conversions from stream (byte) data to " + JDBCTypes.getName(type) + ".");
+               throw new SQLException("[XML-DBMS] The driver returned data for the " + column.getName() + " column as an InputStream. JDBC does not support conversions from stream (byte) data to " + JDBCTypes.getName(type) + ".");
          }
          else if (o instanceof String)
          {
@@ -232,7 +234,7 @@ public class Row
 
          // Set the column value.
 
-         setColumnValue(rsColumns[i], o);
+         setColumnValue(column, o);
       }
    }
 
@@ -242,15 +244,15 @@ public class Row
     * @param columns Columns for which to get values.
     * @return Returned values.
     */
-   public Object[] getColumnValues(Column[] columns)
+   public Vector getColumnValues(Vector columns)
    {
       // Typically, this is used to get a multi-column key value.
 
-      Object[] values = new Object[columns.length];
+      Vector values = new Vector(columns.size());
 
-      for(int i = 0; i < columns.length; i++)
+      for(int i = 0; i < columns.size(); i++)
       {
-         values[i] = getColumnValue(columns[i]);
+         values.addElement(getColumnValue((Column)columns.elementAt(i)));
       }
 
       return values;
@@ -284,24 +286,6 @@ public class Row
    }
 
    /**
-    * Get an array of Column objects for the values in this row that apply
-    * to a given table.
-    *
-    * <p>This method only returns Columns for values (including null values)
-    * that have explicitly been set.</p>
-    *
-    * @param table The table.
-    * @return An array of Column objects. May be zero length.
-    */
-   public Column[] getColumnArrayFor(Table table)
-   {
-      Vector   cols = getColumnVectorFor(table);
-      Column[] array = new Column[cols.size()];
-      cols.copyInto(array);
-      return array;
-   }
-
-   /**
     * Whether a column has a value (including null).
     *
     * @param column Column to test.
@@ -319,14 +303,14 @@ public class Row
     * @param columns Columns to test.
     * @return Whether all column have values.
     */
-   boolean areColumnsSet(Column[] columns)
+   boolean areColumnsSet(Vector columns)
    {
       // Generally, this is used with an assumption that if any columns
       // in a key are emtpy, the key has not been set.
 
-      for(int i = 0; i < columns.length; i++)
+      for(int i = 0; i < columns.size(); i++)
       {
-         if(!isColumnSet(columns[i]))
+         if(!isColumnSet((Column)columns.elementAt(i)))
             return false;
       }
 

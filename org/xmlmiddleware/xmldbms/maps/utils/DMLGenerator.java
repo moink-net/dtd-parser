@@ -143,7 +143,7 @@ public class DMLGenerator
     *    all columns are included.
     * @return The INSERT string.
     */
-   public String getInsert(Table t, Column[] cols)
+   public String getInsert(Table t, Vector cols)
    {
       StringBuffer insert = new StringBuffer(1000);
 
@@ -166,9 +166,9 @@ public class DMLGenerator
       }
       else
       {
-         for(int i = 0; i < cols.length; i++)
+         for(int i = 0; i < cols.size(); i++)
          {
-            insert.append(makeColumnName(cols[i], (numCols != 0)));
+            insert.append(makeColumnName((Column)cols.elementAt(i), (numCols != 0)));
             numCols++;
          }
       }
@@ -222,7 +222,7 @@ public class DMLGenerator
     * @param cols The columns to select.
     * @return The SELECT string.
     */
-   public String getSelect(Table t, Key key, Column[] cols)
+   public String getSelect(Table t, Key key, Vector cols)
    {
       return buildSelect(t, makeWhereLink(key.getColumns()), cols, null);
    }
@@ -260,7 +260,7 @@ public class DMLGenerator
     * @param cols The columns to update. If this is null, all columns are included.
     * @return The UPDATE string.
     */
-   public String getUpdate(Table t, Key key, Column[] cols)
+   public String getUpdate(Table t, Key key, Vector cols)
    {
       StringBuffer update = new StringBuffer(1000);
       boolean      first = true;
@@ -275,12 +275,12 @@ public class DMLGenerator
       if(cols != null)
       {
          // Add column names.
-         for(int i = 0; i < cols.length; i++)
+         for(int i = 0; i < cols.size(); i++)
          {
             if(!first)
                update.append(COMMA);
                
-            update.append(makeColumnName(cols[i], false));
+            update.append(makeColumnName((Column)cols.elementAt(i), false));
             update.append(EQUALSPARAM);
 
             first = false;   
@@ -416,7 +416,7 @@ public class DMLGenerator
    //**************************************************************************
 
    protected String buildSelect(Table t, String whereLink, 
-                                Column[] valueColumns, OrderInfo order)
+                                Vector valueColumns, OrderInfo order)
    {
       StringBuffer select = new StringBuffer(1000);
       boolean comma = false;
@@ -424,10 +424,11 @@ public class DMLGenerator
       select.append(SELECT);
       
       // Add value column names.
-      for(int i = 0; i < valueColumns.length; i++)
+      for(int i = 0; i < valueColumns.size(); i++)
       {
-         if (valueColumns[i].getType() == Types.NULL) continue;
-         select.append(makeColumnName(valueColumns[i], comma));
+         Column col = (Column)valueColumns.elementAt(i);
+         if (col.getType() == Types.NULL) continue;
+         select.append(makeColumnName(col, comma));
          comma = true;
       }
       
@@ -447,19 +448,19 @@ public class DMLGenerator
       return select.toString();
    }
 
-   protected String makeWhereLink(Column[] keyColumns)
+   protected String makeWhereLink(Vector keyColumns)
    {
       // Add WHERE clause.
       StringBuffer where = new StringBuffer(1000);
 
       where.append(WHERE);
 
-      for(int i = 0; i < keyColumns.length; i++)
+      for(int i = 0; i < keyColumns.size(); i++)
       {
          if(i != 0)
             where.append(AND);
       
-         where.append(makeColumnName(keyColumns[i], false));
+         where.append(makeColumnName((Column)keyColumns.elementAt(i), false));
          where.append(EQUALSPARAM);
       }
 

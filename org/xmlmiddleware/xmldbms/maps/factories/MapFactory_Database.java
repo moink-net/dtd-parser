@@ -733,7 +733,7 @@ public class MapFactory_Database
    {
       Enumeration foreignKeys;
       Key         foreignKey;
-      Column[]    fkColumns;
+      Vector      fkColumns;
       Hashtable   fkColumnNames = new Hashtable();
       ResultSet   rs;
       String      columnName;
@@ -750,9 +750,9 @@ public class MapFactory_Database
       {
          foreignKey = (Key)foreignKeys.nextElement();
          fkColumns = foreignKey.getColumns();
-         for (int i = 0; i < fkColumns.length; i++)
+         for (int i = 0; i < fkColumns.size(); i++)
          {
-            fkColumnNames.put(fkColumns[i].getName(), o);
+            fkColumnNames.put(((Column)fkColumns.elementAt(i)).getName(), o);
          }
       }
 
@@ -779,6 +779,7 @@ public class MapFactory_Database
          {
             column.setLength(len);
          }
+
          column.setNullability(rs.getInt(11));
          column.setFormatter(map.getDefaultFormatter(type));
 
@@ -937,10 +938,10 @@ public class MapFactory_Database
       ResultSet rs;
       String    pkColumnName, pkName;
       short     keySeq;
-      int       iKeySeq;
+      int       iKeySeq, i;
       Key       primaryKey = null;
-      Column[]  pkColumns;
-      Vector    pkColumnNames = new Vector(), keySeqs = new Vector();
+      Column[]  pkColumnArray;
+      Vector    pkColumnNames = new Vector(), keySeqs = new Vector(), pkColumns;
 
       // Get the result set containing the primary key columns.
 
@@ -971,18 +972,25 @@ public class MapFactory_Database
       rs.close();
 
       // If a primary key object was created, allocate an array for the primary
-      // key columns and place each column in its correct position in the array,
-      // then set the array of columns in the Key. (No primary key object is created
-      // if the table does not have a primary key.)
+      // key columns and place each column in its correct position in the array.
+      // Next, create a Vector from this array and set the Vector of columns in
+      // the Key. We have to create the array first because the columns are
+      // returned in column name order, not key sequence order. (No primary key
+      // object is created if the table does not have a primary key.)
 
       if (primaryKey != null)
       {
-         pkColumns = new Column[pkColumnNames.size()];
-         for (int i = 0; i < pkColumnNames.size(); i++)
+         pkColumnArray = new Column[pkColumnNames.size()];
+         for (i = 0; i < pkColumnNames.size(); i++)
          {
             iKeySeq = ((Integer)keySeqs.elementAt(i)).intValue();
             pkColumnName = (String)pkColumnNames.elementAt(i);
-            pkColumns[iKeySeq - 1] = table.createColumn(pkColumnName);
+            pkColumnArray[iKeySeq - 1] = table.createColumn(pkColumnName);
+         }
+         pkColumns = new Vector(pkColumnArray.length);
+         for (i = 0; i < pkColumnArray.length; i++)
+         {
+            pkColumns.addElement(pkColumnArray[i]);
          }
          primaryKey.setColumns(pkColumns);
       }
@@ -1083,8 +1091,8 @@ public class MapFactory_Database
             {
                // Set the key columns in the previous keys.
 
-               setKeyColumnArray(fkTable, fkColumnNames, foreignKey);
-               setKeyColumnArray(pkTable, pkColumnNames, primaryKey);
+               setKeyColumns(fkTable, fkColumnNames, foreignKey);
+               setKeyColumns(pkTable, pkColumnNames, primaryKey);
             }
 
             // Create the primary key table and the primary key. We use XMLDBMSMap.createTable
@@ -1146,26 +1154,26 @@ public class MapFactory_Database
 
       if (foreignKey != null)
       {
-         setKeyColumnArray(fkTable, fkColumnNames, foreignKey);
-         setKeyColumnArray(pkTable, pkColumnNames, primaryKey);
+         setKeyColumns(fkTable, fkColumnNames, foreignKey);
+         setKeyColumns(pkTable, pkColumnNames, primaryKey);
       }
    }
 
-   private void setKeyColumnArray(Table table, Vector columnNames, Key key)
+   private void setKeyColumns(Table table, Vector columnNames, Key key)
    {
-      // This method just converts a Vector of column names into an array
-      // of Columns, then sets this array on the key.
+      // This method just converts a Vector of column names into an Vector
+      // of Columns, then sets this Vector on the key.
 
-      Column[] columnArray;
-      Column   column;
+      Vector columns;
+      Column column;
 
-      columnArray = new Column[columnNames.size()];
-      for (int i = 0; i < columnArray.length; i++)
+      columns = new Vector(columnNames.size());
+      for (int i = 0; i < columnNames.size(); i++)
       {
          column = table.createColumn((String)columnNames.elementAt(i));
-         columnArray[i] = column;
+         columns.addElement(column);
       }
-      key.setColumns(columnArray);
+      key.setColumns(columns);
    }
 
    //**************************************************************************

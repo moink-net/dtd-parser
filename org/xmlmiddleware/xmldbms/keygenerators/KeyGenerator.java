@@ -77,11 +77,11 @@ public interface KeyGenerator
 	* <p>This method is called by DOMToDBMS. Applications using DOMToDBMS
 	* do not need to call this method.</p>
 	* 
-	* @return The key as an array of Objects.
+	* @return The key as a Vector of Objects.
 	* @exception XMLMiddlewareException An error occured while generating the key.
 	*/
 
-   public Object[] generateKey() throws XMLMiddlewareException;      
+   public Vector generateKey() throws XMLMiddlewareException;      
 
    /**
 	* Closes a key generator.

@@ -152,7 +152,7 @@ import java.util.*;
  *          Table
  *             Column (hashtable of)
  *             Key (hashtables of)
- *                Column (array of)
+ *                Column (Vector of)
  *          ClassMap... (for used class map, optional)
  *          ClassMap... (for base class, optional)
  *          PropertyMap (hashtables of)

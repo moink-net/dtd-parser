@@ -23,6 +23,7 @@ import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import java.sql.*;
+import java.util.*;
 import javax.sql.*;
 
 /**
@@ -173,7 +174,7 @@ public interface DataHandler
     *    columns that have values in the Row object are updated.
     * @exception SQLException Thrown if a database error occurs.
     */
-   public void update(Table table, Row row, Column[] columns)
+   public void update(Table table, Row row, Vector columns)
       throws SQLException;
 
    /**
@@ -231,7 +232,7 @@ public interface DataHandler
     *   are no parameters.
     * @exception SQLException Thrown if a database error occurs.
     */
-   public void delete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
+   public void delete(Table table, Key key, Vector keyValue, String where, Vector paramColumns, Vector paramValues)
       throws SQLException;
 
    /**
@@ -255,6 +256,6 @@ public interface DataHandler
     * @return The result set.
     * @exception SQLException Thrown if a database error occurs.
     */
-   public ResultSet select(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
+   public ResultSet select(Table table, Key key, Vector keyValue, String where, Vector paramColumns, Vector paramValues, OrderInfo orderInfo)
       throws SQLException;
 }

@@ -325,8 +325,7 @@ public class DBMSToDOM
       FilterConditions rootConditions;
       DataHandler      dataHandler;
       String           where;
-      Column[]         columns;
-      Object[]         params;
+      Vector           columns, params;
       ResultSet        rs;
 
       // Get the root table and the map for it.
@@ -558,13 +557,13 @@ public class DBMSToDOM
       ClassTableMap childClassTableMap;
       Table         childTable;
       LinkInfo      linkInfo;
-      Object[]      keyValue;
+      Vector        keyValue;
       Key           childKey;
       DataHandler   dataHandler;
       OrderInfo     orderInfo;
       String        where = null;
-      Column[]      columns = null;
-      Object[]      params = null;
+      Vector        columns = null;
+      Vector        params = null;
       ResultSet     rs;
 
       // Add any inlined elements between the class element and the elements
@@ -609,13 +608,13 @@ public class DBMSToDOM
       OrderedNode parentNode;
       Table       propTable;
       LinkInfo    linkInfo;
-      Object[]    keyValue;
+      Vector      keyValue;
       Key         propTableKey;
       DataHandler dataHandler;
       OrderInfo   rsOrderInfo;
       String      where = null;
-      Column[]    columns = null;
-      Object[]    params = null;
+      Vector      columns = null;
+      Vector      params = null;
       ResultSet   rs;
 
       // Add any inlined elements between the class element and the property elements.
