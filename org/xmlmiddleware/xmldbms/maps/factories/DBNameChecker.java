@@ -487,6 +487,10 @@ String tableName)
       char[] src, dest;
       int    len = 0;
 
+      // If the name is null, simply return it.
+
+      if (name == null) return null;
+
       // Allocate the src and dest arrays. Note that the dest array is
       // allocated for the maximum size -- as if every character needed
       // to be escaped.
