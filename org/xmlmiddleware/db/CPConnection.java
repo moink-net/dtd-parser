@@ -403,6 +403,10 @@ public class CPConnection
       throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
 
+   public Savepoint setSavepoint(String name)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
    public void rollback(Savepoint savepoint)
       throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
