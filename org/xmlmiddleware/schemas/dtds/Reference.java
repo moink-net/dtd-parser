@@ -35,7 +35,7 @@ public class Reference extends Particle
    // Variables
    // ********************************************************************
 
-   /** The referred-to element typo. */
+   /** The referred-to element type. */
    public ElementType elementType = null;
 
    // ********************************************************************

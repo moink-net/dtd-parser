@@ -295,11 +295,11 @@ public class Table extends MapBase
    {
       Enumeration enum;
       Column      column;
-      int[]       rsIndexes;
+      long[]      rsIndexes;
 
       if (rsColumns == null)
       {
-         rsIndexes = new int[columns.size()];
+         rsIndexes = new long[columns.size()];
          rsColumns = new Column[columns.size()];
 
          enum = columns.elements();
@@ -307,7 +307,7 @@ public class Table extends MapBase
          {
             column = (Column)enum.nextElement();
             rsColumns[i] = column;
-            rsIndexes[i] = column.getResultSetIndex();
+            rsIndexes[i] = (long)column.getResultSetIndex();
          }
 
          Sort.sort(rsIndexes, rsColumns);

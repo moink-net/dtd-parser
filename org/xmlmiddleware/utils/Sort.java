@@ -65,16 +65,16 @@ public class Sort
    }
 
    /**
-    * Sort an array of objects by integer.
+    * Sort an array of objects by long.
     *
     * <p>All sorting is done in the array passed to the method.</p>
     *
-    * @param keys The integers to sort on.
+    * @param keys The longs to sort on.
     * @param values The objects to sort.
     */
-   public static void sort(int[] keys, Object[] values)
+   public static void sort(long[] keys, Object[] values)
    {
-      int    key;
+      long   key;
       Object o;
 
       // Sort an array of values by the specified (String) keys.

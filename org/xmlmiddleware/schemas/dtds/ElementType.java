@@ -65,7 +65,12 @@ public class ElementType
    /** The XMLName of the element type. */
    public XMLName name;
 
-   /** The type of the content model. Must be one of the CONTENT_* constants. */
+   /**
+    * The type of the content model.
+    *
+    * <p> This must be one of the CONTENT_* constants. The default
+    * is CONTENT_UNKNOWN.</p>
+    */
    public int contentType = CONTENT_UNKNOWN;
 
    /**
