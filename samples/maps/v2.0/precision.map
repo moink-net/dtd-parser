@@ -5,7 +5,7 @@
 
 <XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
    <Databases>
-      <Database Name="Default" QuoteIdentifiers="Yes">
+      <Database Name="Default">
          <Catalog>
             <Schema>
                <Table Name="Prec">
