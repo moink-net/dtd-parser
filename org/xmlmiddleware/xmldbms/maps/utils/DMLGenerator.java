@@ -87,7 +87,7 @@ public class DMLGenerator
     * @param t The table. Must not be null.
     * @return The INSERT string.
     */
-   public String getInsert(Table t)
+   public String getInsert(Table t, Column[] cols)
       throws SQLException
    {
       StringBuffer insert = new StringBuffer(1000);
@@ -99,18 +99,30 @@ public class DMLGenerator
 
       insert.append(OPENPAREN);
 
-      int cols = 0;
+      int numCols = 0;
 
-      for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
+      if(cols == null)
       {
-         appendColumnName(insert, (Column)e.nextElement(), (cols != 0));
-         cols++;
+         for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
+         {
+            appendColumnName(insert, (Column)e.nextElement(), (numCols != 0));
+            numCols++;
+         }
       }
+      else
+      {
+         for(int i = 0; i < cols.length; i++)
+         {
+            appendColumnName(insert, cols[i], (numCols != 0));
+            numCols++;
+         }
+      }
+
       insert.append(CLOSEPAREN);
       
       insert.append(VALUES);
       insert.append(PARAM);
-      for (int i = 1; i < cols; i++)
+      for (int i = 1; i < numCols; i++)
       {
          insert.append(COMMAPARAM);
       }

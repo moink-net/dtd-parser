@@ -2,6 +2,7 @@
 package org.xmlmiddleware.xmldbms;
 
 import java.lang.*;
+import java.util.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 /**
@@ -10,17 +11,15 @@ import org.xmlmiddleware.xmldbms.maps.*;
 
 class Row
 {
-    class Empty
+    class Null
     {
-        Empty() 
-            {  }
+
     };
 
     // ********************************************************************
     // Variables
     // ********************************************************************
-
-    private Object[] columnValues;
+    private Hashtable m_columnValues;
 
     // ********************************************************************
     // Constructors
@@ -28,47 +27,10 @@ class Row
 
     /** 
      * Construct a Row 
-     *
-     * @param size Width of row.
      */
-    Row(int size)
+    Row()
     {
-        init(size);
-    }
-
-
-    /** 
-     * Construct a Row that can hold data for one row in the specified Table. 
-     *
-     * @param table The table.
-     */ 
-    Row(Table table)
-    {
-        init(table.getNumberofColumns());
-    }
-
-
-    /** 
-     * Construct a Row from an array of Objects. 
-     *
-     * @param columnValues The objects.
-     */
-    Row(Object[] vals)
-    {
-	    columnValues = vals;
-    }
-
-    
-    /**
-     * Helper construction method.
-     *
-     * @param size Width of row
-     */
-    private void init(int size)
-    {
-        columnValues = new Object[size];
-        while(size-- > 0)
-            columnValues[size] = new Empty();
+        m_columnValues = new Hashtable();
     }
 
 
@@ -80,23 +42,47 @@ class Row
 	 * Set a column value.
 	 *
 	 * @param column Column for which to set the value.
-	 * @param value Value to set.
+	 * @param value Value to set (null for a NULL value).
 	 */
     void setColumnValue(Column column, Object value)
     {
-	    columnValues[column.getRowIndex()] = value;
+        // Hashtable won't accept null objects, so we create
+        // a placeholder for NULL
+
+        if(value == null)
+            m_columnValues.put(column, new Null());
+        else
+	        m_columnValues.put(column, value);
     }   
 
     /**
 	 * Get a column value.
 	 *
 	 * @param column Column for which to get the value.
-	 * @return Returned value.
+	 * @return Returned value. Will return null if column not set or
+     *         value is null. @see haveColumn.
 	 */
     Object getColumnValue(Column column)
     {
-	    return columnValues[column.getRowIndex()];
-    }   
+        Object val = m_columnValues.get(column);
+
+        if(val == null || val instanceof Null)
+            return null;
+        else
+            return val;
+    }
+
+
+    /**
+     * Clear a column of a value.
+     *
+     * @param column Column to clear.
+     */
+    void clearColumnValue(Column column)
+    {
+        m_columnValues.remove(column);
+    }
+
 
     /**
 	 * Set multiple column values.
@@ -136,9 +122,9 @@ class Row
 	 * @param column Column to test.
 	 * @return Whether the column is null.
 	 */
-    boolean isNull(Column column)
+    boolean haveColumn(Column column)
     {
-        return columnValues[column.getRowIndex()] == null;
+        return m_columnValues.get(column) != null;
     }   
 
 
@@ -148,55 +134,16 @@ class Row
 	 * @param columns Columns to test.
 	 * @return Whether any column is null.
 	 */
-    boolean anyNull(Column[] columns)
+    boolean haveColumns(Column[] columns)
     {
 	    // Generally, this is used with an assumption that if any columns
 	    // in a key are null, the key has not been set.
 	    for(int i = 0; i < columns.length; i++)
-	    {
-		    if(columnValues[columns[i].getRowIndex()] == null) 
-                return true;
-	    }
-	  
-        return false;
+        {
+            if(!haveColumn(columns[i]))
+                return false;
+        }
+
+        return true;
     }   
-
-
-    /**
-     * Checks if a column is empty (ie: hasn't been set)
-     *
-     * @param column Column to test.
-     * @return Whether the column has been set or not.
-     */
-    boolean isEmpty(Column column)
-    {
-        return columnValues[column.getRowIndex()] instanceof Empty;
-    }
-
-    /**
-     * Set a column to empty
-     *
-     * @param column Column to set.
-     */
-    void setEmpty(Column column)
-    {
-        columnValues[column.getRowIndex()] = new Empty();
-    }
-
-    /**
-     * Checks whether any of the columns are not set
-     *
-	 * @param columns Columns to test.
-	 * @return Whether any column are empty.
-     */
-    boolean anyEmpty(Column[] columns)
-    {
-	    for(int i = 0; i < columns.length; i++)
-	    {
-		    if(columnValues[columns[i].getRowIndex()] instanceof Empty) 
-                return true;
-	    }
-	  
-        return false;
-    }
 }
