@@ -50,7 +50,7 @@ public class Action
    private Hashtable     updateElements = new Hashtable();
    private Hashtable     updateAttrs = new Hashtable();
    private PropertyMap   pcdataMap = null;
-   private Vector        updateColumns = null;
+   private Vector        updatePropMaps = null;
 
    //*********************************************************************
    // Constants
@@ -168,32 +168,36 @@ public class Action
       return (pcdataMap != null);
    }
 
-   public final Vector getUpdateColumns()
+   public final Vector getUpdatePropertyMaps()
    {
       Enumeration e;
 
-      if (updateColumns == null)
+      if (updatePropMaps == null)
       {
-         updateColumns = new Vector();
-
-         e = updateElements.elements();
-         while (e.hasMoreElements())
+         if ((updateElements.size() != 0) || (updateAttrs.size() != 0) || (pcdataMap != null))
          {
-            updateColumns.addElement((PropertyMap)e.nextElement());
+            updatePropMaps = new Vector();
+
+            e = updateElements.elements();
+            while (e.hasMoreElements())
+            {
+               updatePropMaps.addElement((PropertyMap)e.nextElement());
+            }
+
+            e = updateAttrs.elements();
+            while (e.hasMoreElements())
+            {
+               updatePropMaps.addElement((PropertyMap)e.nextElement());
+            }
+
+            if (pcdataMap != null)
+            {
+               updatePropMaps.addElement(pcdataMap);
+            }
          }
 
-         e = updateAttrs.elements();
-         while (e.hasMoreElements())
-         {
-            updateColumns.addElement((PropertyMap)e.nextElement());
-         }
-
-         if (pcdataMap != null)
-         {
-            updateColumns.addElement(pcdataMap);
-         }
       }
-      return updateColumns;
+      return updatePropMaps;
    }
 
    public void setUpdateProperty(String uri, String localName, int type)
@@ -236,7 +240,7 @@ public class Action
          default:
             throw new IllegalArgumentException("Invalid type: " + type);
       }
-      updateColumns = null;
+      updatePropMaps = null;
    }
 
    public void removeUpdateProperty(String uri, String localName, int type)
@@ -271,7 +275,7 @@ public class Action
          default:
             throw new IllegalArgumentException("Invalid type: " + type);
       }
-      updateColumns = null;
+      updatePropMaps = null;
    }
 
    public void removeAllUpdateProperties()
@@ -279,6 +283,6 @@ public class Action
       updateElements.clear();
       updateAttrs.clear();
       pcdataMap = null;
-      updateColumns = null;
+      updatePropMaps = null;
    }
 }
