@@ -1,32 +1,3 @@
-<!--
-This is the proposed DTD for XML-DBMS, version 2.0. This DTD
-includes virtually all features that anybody has requested
-since version 1.0 was released. Note that inclusion in the
-DTD does not mean that the feature will be implemented in 2.0
-- I have included them here so that the design will accomodate
-them easily in the future.
-
-Here is a list of new features and the probability they will be
-implemented in 2.0:
-
-   Primary keys in leaf tables:   100%
-   Eliminate root mappings:       100%
-   Database metadata in map:       75%
-   Order stored in map:            75%
-   Ascending or descending order:  75%
-   Per-property formatting:        75%
-   Number formats:                 75%
-   Per-table key generators:       75%
-   Casting:                        50-75%
-   Use of database generated keys: 50-75%
-   Heterogeneous joins:            50%
-   Pass-through:                   25-50%    // 100% in 2.x
-   Inheritance:                     0%
-
-I realize that this doesn't match everybody's priority list, but
-it is based partly on ease of implementation. For example, pass-
-through is not easy while per-property formatting is. -->
-
 <!-- Here is a list of names changed from the 1.0 DTD:
 
    CandidateKey => UseUniqueKey
@@ -299,6 +270,7 @@ they can be a series of tokens. -->
  -->
 
 <!ENTITY % DefaultForTypes "DefaultForTypes NMTOKENS #IMPLIED">
+<!ENTITY % FormatName "Name NMTOKEN #IMPLIED">
 <!ENTITY % Styles "(SHORT | MEDIUM | LONG | FULL)">
 <!ENTITY % DateStyle "DateStyle %Styles; #REQUIRED">
 <!ENTITY % TimeStyle "TimeStyle %Styles; #REQUIRED">
@@ -306,43 +278,43 @@ they can be a series of tokens. -->
 <!ELEMENT %p;DateFormat (%p;Locale?)>
 <!ATTLIST %p;DateFormat
           %DateStyle;
-          Name NMTOKEN #IMPLIED
+          %FormatName;
           %DefaultForTypes; >
 
 <!ELEMENT %p;DateTimeFormat (%p;Locale?)>
 <!ATTLIST %p;DateTimeFormat
           %DateStyle;
           %TimeStyle;
-          Name NMTOKEN #IMPLIED
+          %FormatName;
           %DefaultForTypes; >
 
 <!ELEMENT %p;TimeFormat (%p;Locale?)>
 <!ATTLIST %p;TimeFormat
           %TimeStyle;
-          Name NMTOKEN #IMPLIED
+          %FormatName;
           %DefaultForTypes; >
 
 <!ELEMENT %p;SimpleDateFormat (%p;Locale?)>
 <!ATTLIST %p;SimpleDateFormat
           Pattern CDATA #REQUIRED
-          Name NMTOKEN #IMPLIED
+          %FormatName;
           %DefaultForTypes; >
 
 <!ELEMENT %p;NumberFormat (%p;Locale)>
 <!ATTLIST %p;NumberFormat
-          Name NMTOKEN #IMPLIED
+          %FormatName;
           %DefaultForTypes; >
 
 <!ELEMENT %p;DecimalFormat (%p;Locale?)>
 <!ATTLIST %p;DecimalFormat
           Pattern CDATA #REQUIRED
-          Name NMTOKEN #IMPLIED
+          %FormatName;
           %DefaultForTypes; >
 
 <!ELEMENT %p;FormatClass EMPTY>
 <!ATTLIST %p;FormatClass
-          Name NMTOKEN #IMPLIED
           Class NMTOKEN #REQUIRED
+          %FormatName;
           %DefaultForTypes; >
 
 <!ELEMENT %p;Locale EMPTY>
@@ -962,6 +934,11 @@ they can be a series of tokens. -->
      Note that multiple properties from the same class cannot be
      mapped to the same property table. This might be allowed in
      the future.
+
+     Finally, note that the unique key when linking to the property
+     table is always in the parent (class) table. There are a few
+     instances where this might cause problems, but most of those
+     can be solved by mapping the child as a class.
 -->
 
 <!ELEMENT %p;ToPropertyTable (%p;UseUniqueKey, %p;UseForeignKey)>
@@ -970,7 +947,7 @@ they can be a series of tokens. -->
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
           Name CDATA #REQUIRED
-          KeyInParentTable (Unique | Foreign) #REQUIRED>
+          KeyInParentTable (Unique | Foreign) #FIXED "Unique">
 
 <!ELEMENT %p;ToColumn EMPTY>
 <!ATTLIST %p;ToColumn
