@@ -8,8 +8,11 @@
 // contract, tort, or otherwise, arising from, out of, or in connection
 // with the software or the use or other dealings in the software.
 //
-// This software was originally developed at the Technical University
-// of Darmstadt, Germany.
+// Parts of this software were originally developed in the Database
+// and Distributed Systems Group at the Technical University of
+// Darmstadt, Germany:
+//
+//    http://www.informatik.tu-darmstadt.de/DVS1/
 
 // Version 2.0
 // Changes from version 1.01: New in version 2.0.

@@ -8,8 +8,11 @@
 // contract, tort, or otherwise, arising from, out of, or in connection
 // with the software or the use or other dealings in the software.
 //
-// This software was originally developed at the Technical University
-// of Darmstadt, Germany.
+// Parts of this software were originally developed in the Database
+// and Distributed Systems Group at the Technical University of
+// Darmstadt, Germany:
+//
+//    http://www.informatik.tu-darmstadt.de/DVS1/
 
 // Version 2.0
 // Changes from version 1.01: New in version 2.0
@@ -24,343 +27,343 @@ import java.util.*;
 /**
  * Generate SELECT, UPDATE, INSERT, and DELETE strings.
  *
- * @author Sean, 2001
+ * @author Sean Walter, 2001
  * @version 2.0
  */
 
 public class DMLGenerator
 {
-	//**************************************************************************
-	// Constants
-	//**************************************************************************
+   //**************************************************************************
+   // Constants
+   //**************************************************************************
 
-	private final static String INSERT		= "INSERT INTO ";
-	private final static String VALUES		= " VALUES (";
-	private final static String UPDATE		= "UPDATE ";
-	private final static String SET		    = " SET ";
-	private final static String DELETE		= "DELETE ";
-	
-	private final static String PARAM			= "?";
-	private final static String COMMA			= ", ";
-	private final static String COMMAPARAM	= ", ?";
-	private final static String CLOSEPAREN	= ")";
-	private final static String OPENPAREN		= " (";
-	private final static String SPACE			= " ";
-	private final static String SELECT		= "SELECT ";
-	private final static String FROM			= " FROM ";
-	private final static String WHERE			= " WHERE ";
-	private final static String ORDERBY		= " ORDER BY ";
-	private final static String DESC			= " DESC";
-	private final static String AND			= " AND ";
-	private final static String EQUALSPARAM	= " = ?";
-	private final static String PERIOD		= ".";
+   private final static String INSERT      = "INSERT INTO ";
+   private final static String VALUES      = " VALUES (";
+   private final static String UPDATE      = "UPDATE ";
+   private final static String SET          = " SET ";
+   private final static String DELETE      = "DELETE ";
+   
+   private final static String PARAM         = "?";
+   private final static String COMMA         = ", ";
+   private final static String COMMAPARAM   = ", ?";
+   private final static String CLOSEPAREN   = ")";
+   private final static String OPENPAREN      = " (";
+   private final static String SPACE         = " ";
+   private final static String SELECT      = "SELECT ";
+   private final static String FROM         = " FROM ";
+   private final static String WHERE         = " WHERE ";
+   private final static String ORDERBY      = " ORDER BY ";
+   private final static String DESC         = " DESC";
+   private final static String AND         = " AND ";
+   private final static String EQUALSPARAM   = " = ?";
+   private final static String PERIOD      = ".";
 
-	//**************************************************************************
-	// Constructors
-	//**************************************************************************
+   //**************************************************************************
+   // Constructors
+   //**************************************************************************
 
-	/**
-	 * Construct a new DMLGenerator.
-	 *
-	 * @param meta A DatabaseMetaData object.
-	 */
-	public DMLGenerator(DatabaseMetaData meta)
-		throws SQLException
-	{
-		m_quote = meta.getIdentifierQuoteString();
-		m_isCatalogAtStart = meta.isCatalogAtStart();
-		m_catalogSeparator = meta.getCatalogSeparator();
-		m_useCatalog = meta.supportsCatalogsInDataManipulation();
-		m_useSchema = meta.supportsSchemasInDataManipulation();
-	}
+   /**
+    * Construct a new DMLGenerator.
+    *
+    * @param meta A DatabaseMetaData object.
+    */
+   public DMLGenerator(DatabaseMetaData meta)
+      throws SQLException
+   {
+      m_quote = meta.getIdentifierQuoteString();
+      m_isCatalogAtStart = meta.isCatalogAtStart();
+      m_catalogSeparator = meta.getCatalogSeparator();
+      m_useCatalog = meta.supportsCatalogsInDataManipulation();
+      m_useSchema = meta.supportsSchemasInDataManipulation();
+   }
 
-	//**************************************************************************
-	// Public methods
-	//**************************************************************************
+   //**************************************************************************
+   // Public methods
+   //**************************************************************************
 
-	/**
-	 * Returns an INSERT SQL string for the given table.
-	 *
-	 * @param t The table. Must not be null.
-	 * @return The INSERT string.
-	 */
-	public String getInsert(Table t)
-		throws SQLException
-	{
-		StringBuffer insert = new StringBuffer(1000);
+   /**
+    * Returns an INSERT SQL string for the given table.
+    *
+    * @param t The table. Must not be null.
+    * @return The INSERT string.
+    */
+   public String getInsert(Table t)
+      throws SQLException
+   {
+      StringBuffer insert = new StringBuffer(1000);
 
-		// Create the INSERT statement.
+      // Create the INSERT statement.
       
-		insert.append(INSERT);
-		appendTableName(insert, t);
+      insert.append(INSERT);
+      appendTableName(insert, t);
 
-		insert.append(OPENPAREN);
+      insert.append(OPENPAREN);
 
-		int cols = 0;
+      int cols = 0;
 
-		for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
-		{
-			appendColumnName(insert, (Column)e.nextElement(), (cols != 0));
-			cols++;
-		}
-		insert.append(CLOSEPAREN);
+      for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
+      {
+         appendColumnName(insert, (Column)e.nextElement(), (cols != 0));
+         cols++;
+      }
+      insert.append(CLOSEPAREN);
       
-		insert.append(VALUES);
-		insert.append(PARAM);
-		for (int i = 1; i < cols; i++)
-		{
-			insert.append(COMMAPARAM);
-		}
-		insert.append(CLOSEPAREN);
+      insert.append(VALUES);
+      insert.append(PARAM);
+      for (int i = 1; i < cols; i++)
+      {
+         insert.append(COMMAPARAM);
+      }
+      insert.append(CLOSEPAREN);
 
-		return insert.toString();
-	}
+      return insert.toString();
+   }
 
-	/**
-	 * Returns a "SELECT * WHERE key = ? ORDER BY ?" SQL string for a 
-	 * given table. 
-	 * 
-	 * @param t The table to select from. Must not be null.
-	 * @param key The key to restrict with.
-	 * @param order The sort information. May be null.
-	 * @return The SELECT string.
-	 */
-	public String getSelect(Table t, Key key, OrderInfo order)
-		throws SQLException
-	{
-		return buildSelect(true, t, key, order);
-	}
+   /**
+    * Returns a "SELECT * WHERE key = ? ORDER BY ?" SQL string for a 
+    * given table. 
+    * 
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with.
+    * @param order The sort information. May be null.
+    * @return The SELECT string.
+    */
+   public String getSelect(Table t, Key key, OrderInfo order)
+      throws SQLException
+   {
+      return buildSelect(true, t, key, order);
+   }
 
-	/**
-	 * Returns a "SELECT key WHERE key = ?" SQL string for a given table.
-	 *
-	 * @param t The table to select from. Must not be null.
-	 * @param key The key to restrict with.
-	 * @return The SELECT string.
-	 */
-	public String getSelect(Table t, Key key)
-		throws SQLException
-	{
-		return buildSelect(false, t, key, null);
-	}
+   /**
+    * Returns a "SELECT key WHERE key = ?" SQL string for a given table.
+    *
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with.
+    * @return The SELECT string.
+    */
+   public String getSelect(Table t, Key key)
+      throws SQLException
+   {
+      return buildSelect(false, t, key, null);
+   }
 
-	/**
-	 * Returns an UPDATE SQL string for a given table, key, and set of columns.
-	 *
-	 * @param t The table to update. Must not be null.
-	 * @param key The key to restrict with. Must not be null.
-	 * @param cols The columns to update. If this is null, all columns are included.
-	 * @return The UPDATE string.
-	 */
-	public String getUpdate(Table t, Key key, Column[] cols)
-		throws SQLException
-	{
-		StringBuffer update = new StringBuffer(1000);
-		boolean			first = true;
+   /**
+    * Returns an UPDATE SQL string for a given table, key, and set of columns.
+    *
+    * @param t The table to update. Must not be null.
+    * @param key The key to restrict with. Must not be null.
+    * @param cols The columns to update. If this is null, all columns are included.
+    * @return The UPDATE string.
+    */
+   public String getUpdate(Table t, Key key, Column[] cols)
+      throws SQLException
+   {
+      StringBuffer update = new StringBuffer(1000);
+      boolean         first = true;
 
-		update.append(UPDATE);
+      update.append(UPDATE);
 
-		// Add table name.
-		appendTableName(update, t);
+      // Add table name.
+      appendTableName(update, t);
 
-		update.append(SET);
+      update.append(SET);
       
-		if(cols != null)
-		{
-			// Add column names.
-			for(int i = 0; i < cols.length; i++)
-			{
-				if(first)
-					update.append(COMMA);
+      if(cols != null)
+      {
+         // Add column names.
+         for(int i = 0; i < cols.length; i++)
+         {
+            if(first)
+               update.append(COMMA);
 
-				appendColumnName(update, cols[i], false);
-				update.append(EQUALSPARAM);
-				first = false;	
-			}
-		}
-		else
-		{
-			// Add column names.
-			for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
-			{
-				if(first)
-					update.append(COMMA);
+            appendColumnName(update, cols[i], false);
+            update.append(EQUALSPARAM);
+            first = false;   
+         }
+      }
+      else
+      {
+         // Add column names.
+         for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
+         {
+            if(first)
+               update.append(COMMA);
 
-				appendColumnName(update, (Column)e.nextElement(), false);
-				update.append(EQUALSPARAM);
-				first = false;
-			}
-		}
+            appendColumnName(update, (Column)e.nextElement(), false);
+            update.append(EQUALSPARAM);
+            first = false;
+         }
+      }
 
-		appendWhereLink(update, key);
+      appendWhereLink(update, key);
 
-		return update.toString();
-	}	
+      return update.toString();
+   }   
 
-	/**
-	 * Returns a DELETE SQL string for a given table.
-	 *
-	 * @param t The table to delete from. Must not be null.
-	 * @param key The key to restrict with. Must not be null.
-	 * @return The DELETE string.
-	 */
-	public String getDelete(Table t, Key key)
-		throws SQLException
-	{
-		StringBuffer delete = new StringBuffer(1000);
-		boolean			first = true;
+   /**
+    * Returns a DELETE SQL string for a given table.
+    *
+    * @param t The table to delete from. Must not be null.
+    * @param key The key to restrict with. Must not be null.
+    * @return The DELETE string.
+    */
+   public String getDelete(Table t, Key key)
+      throws SQLException
+   {
+      StringBuffer delete = new StringBuffer(1000);
+      boolean         first = true;
 
-		delete.append(DELETE);
-		delete.append(FROM);
+      delete.append(DELETE);
+      delete.append(FROM);
 
-		// Add table name.
-		appendTableName(delete, t);
+      // Add table name.
+      appendTableName(delete, t);
 
-		appendWhereLink(delete, key);
+      appendWhereLink(delete, key);
       
-		return delete.toString();
-	}
+      return delete.toString();
+   }
 
-	//**************************************************************************
-	// Private/protected methods
-	//**************************************************************************
+   //**************************************************************************
+   // Private/protected methods
+   //**************************************************************************
 
-	protected String buildSelect(boolean row, Table t, Key key, OrderInfo order)
-	{
-		StringBuffer select = new StringBuffer(1000);
-		boolean first = true;
+   protected String buildSelect(boolean row, Table t, Key key, OrderInfo order)
+   {
+      StringBuffer select = new StringBuffer(1000);
+      boolean first = true;
 
-		select.append(SELECT);
+      select.append(SELECT);
       
-		if(row)
-		{
-			// Add column names.
-			for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
-			{
-				appendColumnName(select, (Column)e.nextElement(), first);
-				first = false;
-			}
-		}
-		else
-		{
-			// Add key column names.
-			for(int i = 0; i < key.getColumns().length; i++)
-			{
-				appendColumnName(select, key.getColumns()[i], first);
-				first = false;
-			}
-		}
-		
-		// Add table name.
+      if(row)
+      {
+         // Add column names.
+         for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
+         {
+            appendColumnName(select, (Column)e.nextElement(), first);
+            first = false;
+         }
+      }
+      else
+      {
+         // Add key column names.
+         for(int i = 0; i < key.getColumns().length; i++)
+         {
+            appendColumnName(select, key.getColumns()[i], first);
+            first = false;
+         }
+      }
       
-		select.append(FROM);
-		appendTableName(select, t);
+      // Add table name.
       
-		if(key != null)
-			appendWhereLink(select, key);
-
-		// Add ORDER BY clause. We sort in descending order because this
-		// gives us better performance in some cases. For more details,
-		// see DBMSToDOM.Order.insertChild, which really ought to be
-		// rewritten to use a binary search.
+      select.append(FROM);
+      appendTableName(select, t);
       
-		if(order != null)
-			appendOrderBy(select, order);
+      if(key != null)
+         appendWhereLink(select, key);
 
-		return select.toString();
-	}
-
-	protected void appendWhereLink(StringBuffer stmt, Key key)
-	{
-		// Add WHERE clause.
-		boolean first = false;
-
-		stmt.append(WHERE);
-
-		for(int i = 0; i < key.getColumns().length; i++)
-		{
-			if(i != 0)
-				stmt.append(AND);
+      // Add ORDER BY clause. We sort in descending order because this
+      // gives us better performance in some cases. For more details,
+      // see DBMSToDOM.Order.insertChild, which really ought to be
+      // rewritten to use a binary search.
       
-			appendColumnName(stmt, key.getColumns()[i], false);
-			stmt.append(EQUALSPARAM);
-		}
-	}
+      if(order != null)
+         appendOrderBy(select, order);
 
-	protected void appendOrderBy(StringBuffer stmt, OrderInfo order)
-	{
-		// Just return if we are using fixed order values
-		if (order.orderValueIsFixed()) return;
+      return select.toString();
+   }
 
-		// Add the ORDER BY clause
+   protected void appendWhereLink(StringBuffer stmt, Key key)
+   {
+      // Add WHERE clause.
+      boolean first = false;
 
-		stmt.append(ORDERBY);
-		appendColumnName(stmt, order.getOrderColumn(), false);
-		if(!order.isAscending())
-			stmt.append(DESC);
-	}
+      stmt.append(WHERE);
 
-	protected void appendColumnName(StringBuffer str, Column column, boolean comma)
-	{
-		if(comma)
-			str.append(COMMA);
+      for(int i = 0; i < key.getColumns().length; i++)
+      {
+         if(i != 0)
+            stmt.append(AND);
+      
+         appendColumnName(stmt, key.getColumns()[i], false);
+         stmt.append(EQUALSPARAM);
+      }
+   }
 
-		appendQuotedName(str, column.getName());
-	}
+   protected void appendOrderBy(StringBuffer stmt, OrderInfo order)
+   {
+      // Just return if we are using fixed order values
+      if (order.orderValueIsFixed()) return;
 
-	private void appendTableName(StringBuffer sb, Table table)
-	{
-		String catalog = null, schema;
+      // Add the ORDER BY clause
 
-		// 6/9/00, Ruben Lainez, Ronald Bourret
-		// Use the identifier m_quote character for the table name.
+      stmt.append(ORDERBY);
+      appendColumnName(stmt, order.getOrderColumn(), false);
+      if(!order.isAscending())
+         stmt.append(DESC);
+   }
 
-		if(m_useCatalog)
-		{
-			catalog = table.getCatalogName();
-			if((catalog != null) && (m_isCatalogAtStart))
-			{
-				appendQuotedName(sb, catalog);
-				sb.append(m_catalogSeparator);
-			}
-		}
+   protected void appendColumnName(StringBuffer str, Column column, boolean comma)
+   {
+      if(comma)
+         str.append(COMMA);
+
+      appendQuotedName(str, column.getName());
+   }
+
+   private void appendTableName(StringBuffer sb, Table table)
+   {
+      String catalog = null, schema;
+
+      // 6/9/00, Ruben Lainez, Ronald Bourret
+      // Use the identifier m_quote character for the table name.
+
+      if(m_useCatalog)
+      {
+         catalog = table.getCatalogName();
+         if((catalog != null) && (m_isCatalogAtStart))
+         {
+            appendQuotedName(sb, catalog);
+            sb.append(m_catalogSeparator);
+         }
+      }
  
-		if(m_useSchema)
-		{
-			schema = table.getSchemaName();
-			if(schema != null)
-			{
-				appendQuotedName(sb, schema);
-				sb.append(PERIOD);
-			}
-		}
+      if(m_useSchema)
+      {
+         schema = table.getSchemaName();
+         if(schema != null)
+         {
+            appendQuotedName(sb, schema);
+            sb.append(PERIOD);
+         }
+      }
  
-		appendQuotedName(sb, table.getTableName());
+      appendQuotedName(sb, table.getTableName());
  
-		if(m_useCatalog)
-		{
-			if((catalog != null) && (!m_isCatalogAtStart))
-			{
-				sb.append(m_catalogSeparator);
-				appendQuotedName(sb, catalog);
-			}
-		}
-	}
+      if(m_useCatalog)
+      {
+         if((catalog != null) && (!m_isCatalogAtStart))
+         {
+            sb.append(m_catalogSeparator);
+            appendQuotedName(sb, catalog);
+         }
+      }
+   }
  
-	private void appendQuotedName(StringBuffer sb, String name)
-	{
-		sb.append(m_quote);
-		sb.append(name);
-		sb.append(m_quote);
-	}
+   private void appendQuotedName(StringBuffer sb, String name)
+   {
+      sb.append(m_quote);
+      sb.append(name);
+      sb.append(m_quote);
+   }
 
-	//**************************************************************************
-	// Member variables
-	//**************************************************************************
+   //**************************************************************************
+   // Member variables
+   //**************************************************************************
 
-	protected String m_quote;
-	protected String m_catalogSeparator;
-	protected boolean m_isCatalogAtStart;
-	protected boolean m_useCatalog;
-	protected boolean m_useSchema;
+   protected String m_quote;
+   protected String m_catalogSeparator;
+   protected boolean m_isCatalogAtStart;
+   protected boolean m_useCatalog;
+   protected boolean m_useSchema;
 }
