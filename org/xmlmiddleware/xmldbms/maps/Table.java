@@ -507,7 +507,7 @@ public class Table extends MapBase
    public void addForeignKey(Key key)
       throws MapException
    {
-      addKey(uniqueKeys, key, Key.UNIQUE_KEY);
+      addKey(uniqueKeys, key, Key.FOREIGN_KEY);
    }
 
    /**
