@@ -583,8 +583,10 @@ public class MapSerializer extends XMLWriter
       throws IOException, MapException
    {
       writeElementStart(XMLDBMSConst.ELEM_INLINEMAP, 0, false);
+      writeElementType(inlineClassMap.getElementTypeName());
       writePropertyInlineRelatedMaps(inlineClassMap);
       writeOrder(inlineClassMap.getOrderInfo());
+      writeElementEnd(XMLDBMSConst.ELEM_INLINEMAP);
    }
 
    private void writeKey(Key key, String elementTypeName)
@@ -650,10 +652,12 @@ public class MapSerializer extends XMLWriter
    {
       attrs[0] = XMLDBMSConst.ATTR_VERSION;
       values[0] = XMLDBMSConst.DEF_VERSION;
+      attrs[1] = "xmlns";
+      values[1] = XMLDBMSConst.URI_XMLDBMSV2;
 
       writeXMLDecl();
       writeDOCTYPE(XMLDBMSConst.ELEM_XMLTODBMS, systemID, publicID);
-      writeElementStart(XMLDBMSConst.ELEM_XMLTODBMS, 1, false);
+      writeElementStart(XMLDBMSConst.ELEM_XMLTODBMS, 2, false);
    }
 
    private void writeNamespaces()

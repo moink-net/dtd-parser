@@ -402,4 +402,6 @@ public class XMLDBMSConst
 
    public static String VALUE_DATABASE = "Database";
    public static String VALUE_PRIMARYKEY = "Primary Key";
+
+   public static String URI_XMLDBMSV2 = "http://www.xmlmiddleware.org/xmldbms/v2";
 }

@@ -37,11 +37,11 @@ import org.xmlmiddleware.xmldbms.maps.PropertyMap;
 import org.xmlmiddleware.xmldbms.maps.RelatedClassMap;
 import org.xmlmiddleware.xmldbms.maps.Table;
 
-import org.xml.sax.AttributeList;
-import org.xml.sax.DocumentHandler;
+import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
-import org.xml.sax.Parser;
+import org.xml.sax.XMLReader;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -68,7 +68,7 @@ import java.util.Vector;
  *
  * <pre>
  *    // Instantiate a new map factory from a SAX parser.
- *    factory = new MapFactory_MapDocument(parser);<br />
+ *    factory = new MapFactory_MapDocument(xmlReader);<br />
  *
  *    // Create a Map from sales.map.
  *    map = factory.createMap(new InputSource(new FileReader("sales.map")));<br />
@@ -79,7 +79,7 @@ import java.util.Vector;
  */
 
 public class MapFactory_MapDocument
-   implements DocumentHandler
+   implements ContentHandler
 {
    // Constants
    //
@@ -151,7 +151,7 @@ public class MapFactory_MapDocument
    //**************************************************************************
 
    // General class variables
-   private Parser          parser = null;
+   private XMLReader       xmlReader = null;
    private TokenList       elementTokens, enumTokens;
    private Integer         state;
    private Stack           stateStack = new Stack();
@@ -210,11 +210,11 @@ public class MapFactory_MapDocument
    }
 
    /**
-    * Construct a new MapFactory_MapDocument and set the SAX parser.
+    * Construct a new MapFactory_MapDocument and set the SAX XMLReader (parser).
     */
-   public MapFactory_MapDocument(Parser parser)
+   public MapFactory_MapDocument(XMLReader xmlReader)
    {
-      this.parser = parser;
+      this.xmlReader = xmlReader;
       init();
    }
 
@@ -223,29 +223,29 @@ public class MapFactory_MapDocument
    //**************************************************************************
 
    /**
-    * Get the SAX Parser.
+    * Get the SAX XMLReader (parser).
     *
-    * @return The SAX Parser.
+    * @return The SAX XMLReader.
     */
-   public final Parser getParser()
+   public final XMLReader getXMLReader()
    {
-      return parser;
+      return xmlReader;
    }
 
    /**
-    * Set the SAX Parser.
+    * Set the SAX XMLReader (parser).
     *
-    * @param parser The SAX Parser.
+    * @param parser The SAX XMLReader.
     */
-   public void setParser(Parser parser)
+   public void setXMLReader(XMLReader xmlReader)
    {
-      this.parser = parser;
+      this.xmlReader = xmlReader;
    }
 
    /**
     * Create a map from a mapping document.
     *
-    * <p>You must set the parser before calling this method.</p>
+    * <p>You must set the XMLReader (parser) before calling this method.</p>
     *
     * @param src A SAX InputSource for the mapping document.
     * @exception MapException Thrown if the mapping document contains an error.
@@ -259,15 +259,16 @@ public class MapFactory_MapDocument
 
       if (src == null)
          throw new IllegalArgumentException("src argument must not be null.");
-      if (parser == null)
-         throw new IllegalStateException("Parser must be set before calling createMap.");
+      if (xmlReader == null)
+         throw new IllegalStateException("XMLReader (parser) must be set before calling createMap.");
 
       // Parse the map document. Rethrow any exceptions as MapExceptions.
 
       try
       {
-         parser.setDocumentHandler(this);
-         parser.parse(src);
+         xmlReader.setContentHandler(this);
+         xmlReader.setFeature("http://xml.org/sax/features/namespaces", true);
+         xmlReader.parse(src);
       }
       catch (SAXException s)
       {
@@ -289,21 +290,12 @@ public class MapFactory_MapDocument
    }
 
    //**************************************************************************
-   // org.xml.sax.DocumentHandler methods
+   // org.xml.sax.ContentHandler methods
    //**************************************************************************
 
    /**
-    * Implementation of setDocumentLocator in SAX' DocumentHandler interface.
-    * This method is called by the SAX Parser and should not be called by
-    * XML-DBMS programmers.
-    */
-   public void setDocumentLocator (Locator locator)
-   {
-   }
-
-   /**
-    * Implementation of startDocument in SAX' DocumentHandler interface.
-    * This method is called by the SAX Parser and should not be called by
+    * Implementation of startDocument in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
     * XML-DBMS programmers.
     */
    public void startDocument () throws SAXException
@@ -333,8 +325,8 @@ public class MapFactory_MapDocument
    }
 
    /**
-    * Implementation of endDocument in SAX' DocumentHandler interface.
-    * This method is called by the SAX Parser and should not be called by
+    * Implementation of endDocument in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
     * XML-DBMS programmers.
     */
    public void endDocument() throws SAXException
@@ -357,11 +349,11 @@ public class MapFactory_MapDocument
    }
 
    /**
-    * Implementation of startElement in SAX' DocumentHandler interface.
-    * This method is called by the SAX Parser and should not be called by
+    * Implementation of startElement in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
     * XML-DBMS programmers.
     */
-   public void startElement (String name, AttributeList attrs)
+   public void startElement (String uri, String localName, String qName, Attributes attrs)
      throws SAXException
    {
       
@@ -369,13 +361,16 @@ public class MapFactory_MapDocument
       if (debug)
       {
          indent();
-         System.out.println(name + " (start)");
+         System.out.println(localName + " (start)");
          indent += 3;
       }
 
       try
       {
-         switch (elementTokens.getToken(name))
+         if (!uri.equals(XMLDBMSConst.URI_XMLDBMSV2))
+            throw new MapException("Unrecognized namespace URI: " + uri);
+
+         switch (elementTokens.getToken(localName))
          {
             case XMLDBMSConst.ELEM_TOKEN_ATTRIBUTE:
                processAttribute(attrs);
@@ -556,7 +551,7 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_INVALID:
-               throw new MapException("Unrecognized XML-DBMS mapping language element type: " + name);
+               throw new MapException("Unrecognized XML-DBMS mapping language element type: " + localName);
          }
       }
       catch (MapException m)
@@ -566,11 +561,11 @@ public class MapFactory_MapDocument
    }
 
    /**
-    * Implementation of endElement in SAX' DocumentHandler interface.
-    * This method is called by the SAX Parser and should not be called by
+    * Implementation of endElement in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
     * XML-DBMS programmers.
     */
-   public void endElement (String name) throws SAXException
+   public void endElement (String uri, String localName, String qName) throws SAXException
    {
       int    token;
       
@@ -579,12 +574,15 @@ public class MapFactory_MapDocument
       {
          indent -= 3;
          indent();
-         System.out.println(name + " (end)");
+         System.out.println(localName + " (end)");
       }
 
       try
       {
-         switch (elementTokens.getToken(name))
+         if (!uri.equals(XMLDBMSConst.URI_XMLDBMSV2))
+            throw new MapException("Unrecognized namespace URI: " + uri);
+
+         switch (elementTokens.getToken(localName))
          {
             case XMLDBMSConst.ELEM_TOKEN_DATEFORMAT:
                processDateFormat();
@@ -661,7 +659,7 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_INVALID:
-               throw new MapException("Unrecognized XML-DBMS mapping language element type: " + name);
+               throw new MapException("Unrecognized XML-DBMS mapping language element type: " + localName);
          }
       }
       catch (MapException m)
@@ -671,8 +669,8 @@ public class MapFactory_MapDocument
    }
 
    /**
-    * Implementation of characters in SAX' DocumentHandler interface.
-    * This method is called by the SAX Parser and should not be called by
+    * Implementation of characters in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
     * XML-DBMS programmers.
     */
    public void characters (char ch[], int start, int length)
@@ -684,8 +682,8 @@ public class MapFactory_MapDocument
    }
    
    /**
-    * Implementation of ignorableWhitespace in SAX' DocumentHandler interface.
-    * This method is called by the SAX Parser and should not be called by
+    * Implementation of ignorableWhitespace in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
     * XML-DBMS programmers.
     */
    public void ignorableWhitespace (char ch[], int start, int length)
@@ -694,11 +692,50 @@ public class MapFactory_MapDocument
    }
 
    /**
-    * Implementation of processingInstruction in SAX' DocumentHandler interface.
-    * This method is called by the SAX Parser and should not be called by
+    * Implementation of processingInstruction in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
     * XML-DBMS programmers.
     */
    public void processingInstruction (String target, String data)
+      throws SAXException
+   {
+   }
+
+   /**
+    * Implementation of startPrefixMapping in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
+    * XML-DBMS programmers.
+    */
+   public void startPrefixMapping(String prefix, String uri)
+      throws SAXException
+   {
+   }
+
+   /**
+    * Implementation of endPrefixMapping in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
+    * XML-DBMS programmers.
+    */
+   public void endPrefixMapping(String prefix)
+      throws SAXException
+   {
+   }
+
+   /**
+    * Implementation of setDocumentLocator in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
+    * XML-DBMS programmers.
+    */
+   public void setDocumentLocator (Locator locator)
+   {
+   }
+
+   /**
+    * Implementation of skippedEntity in SAX' ContentHandler interface.
+    * This method is called by the SAX parser and should not be called by
+    * XML-DBMS programmers.
+    */
+   public void skippedEntity(String name)
       throws SAXException
    {
    }
@@ -707,7 +744,7 @@ public class MapFactory_MapDocument
    // Element processing methods -- in alphabetical order
    //**************************************************************************
 
-   private void processAttribute(AttributeList attrs)
+   private void processAttribute(Attributes attrs)
       throws MapException
    {
       String  attrValue;
@@ -741,12 +778,12 @@ public class MapFactory_MapDocument
       propMap.setAttributeIsMultiValued(isYes(attrValue));
    }
 
-   private void processCatalog(AttributeList attrs)
+   private void processCatalog(Attributes attrs)
    {
       catalogName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
    }
 
-   private void processColumn(AttributeList attrs)
+   private void processColumn(Attributes attrs)
       throws MapException
    {
       Column column;
@@ -828,7 +865,7 @@ One solution is to store the format names in each column, then later have Map.re
       }
    }
 
-   private void processDatabase(AttributeList attrs)
+   private void processDatabase(Attributes attrs)
    {
       databaseName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME, XMLDBMSConst.DEF_DATABASENAME);
       quoteIdentifiers = isYes(getAttrValue(attrs, XMLDBMSConst.ATTR_QUOTEIDENTIFIERS, XMLDBMSConst.DEF_QUOTEIDENTIFIERS));
@@ -846,7 +883,7 @@ One solution is to store the format names in each column, then later have Map.re
       map.addDateTimeFormat(formatName, getDateFormat(DATETIME));
    }
 
-   private void processElementType(AttributeList attrs)
+   private void processElementType(Attributes attrs)
       throws MapException
    {
       String         qualifiedName;
@@ -953,7 +990,7 @@ One solution is to store the format names in each column, then later have Map.re
       map.setEmptyStringIsNull(true);
    }
 
-   private void processExtends(AttributeList attrs)
+   private void processExtends(Attributes attrs)
    {
       String   qualifiedName;
       ClassMap baseClassMap;
@@ -967,7 +1004,7 @@ One solution is to store the format names in each column, then later have Map.re
       classMap.setBaseClassMap(baseClassMap);
    }
 
-   private void processFixedOrder(AttributeList attrs)
+   private void processFixedOrder(Attributes attrs)
       throws MapException
    {
       String attrValue;
@@ -986,7 +1023,7 @@ One solution is to store the format names in each column, then later have Map.re
       orderInfo.setFixedOrderValue(orderValue);
    }
 
-   private void processForeignKey(AttributeList attrs)
+   private void processForeignKey(Attributes attrs)
       throws MapException
    {
       String name;
@@ -1003,7 +1040,7 @@ One solution is to store the format names in each column, then later have Map.re
       table.addForeignKey(key);
    }
 
-   private void processFormatStart(AttributeList attrs)
+   private void processFormatStart(Attributes attrs)
    {
       formatName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
       locale = null;
@@ -1059,7 +1096,7 @@ One solution is to store the format names in each column, then later have Map.re
       key.setColumns(columns);
    }
 
-   private void processLocale(AttributeList attrs)
+   private void processLocale(Attributes attrs)
       throws MapException
    {
       String country, language;
@@ -1069,7 +1106,7 @@ One solution is to store the format names in each column, then later have Map.re
       locale = new Locale(language, country);
    }
 
-   private void processNamespace(AttributeList attrs)
+   private void processNamespace(Attributes attrs)
       throws MapException
    {
       String uri, prefix;
@@ -1109,7 +1146,7 @@ One solution is to store the format names in each column, then later have Map.re
       map.addNumberFormat(formatName, numberFormat);
    }
 
-   private void processOrder(AttributeList attrs)
+   private void processOrder(Attributes attrs)
    {
       boolean ascending;
 
@@ -1199,7 +1236,7 @@ One solution is to store the format names in each column, then later have Map.re
       orderInfo.setOrderColumn(column);
    }
 
-   private void processPattern(AttributeList attrs)
+   private void processPattern(Attributes attrs)
    {
       pattern = getAttrValue(attrs, XMLDBMSConst.ATTR_VALUE);
    }
@@ -1227,7 +1264,7 @@ One solution is to store the format names in each column, then later have Map.re
       }
    }
 
-   private void processPrimaryKey(AttributeList attrs)
+   private void processPrimaryKey(Attributes attrs)
       throws MapException
    {
       String keyGenerator;
@@ -1262,7 +1299,7 @@ One solution is to store the format names in each column, then later have Map.re
       key.setKeyGeneration(generate, keyGenerator);
    }
 
-   private void processRelatedClass(AttributeList attrs)
+   private void processRelatedClass(Attributes attrs)
    {
       // We can't process <RelatedClass> elements immediately because it is possible
       // that the corresponding <ClassMap> element might not have been processed yet.
@@ -1277,12 +1314,12 @@ One solution is to store the format names in each column, then later have Map.re
       rcmWrapper.parentKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINPARENTTABLE);
    }
 
-   private void processSchema(AttributeList attrs)
+   private void processSchema(Attributes attrs)
    {
       schemaName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
    }
 
-   private void processTable(AttributeList attrs)
+   private void processTable(Attributes attrs)
       throws MapException
    {
       String tableName;
@@ -1301,13 +1338,13 @@ One solution is to store the format names in each column, then later have Map.re
       map.addTimeFormat(formatName, getDateFormat(TIME));
    }
 
-   private void processToClassTable(AttributeList attrs)
+   private void processToClassTable(Attributes attrs)
       throws MapException
    {
       classMap.setTable(getTable(attrs));
    }
 
-   private void processToColumn(AttributeList attrs)
+   private void processToColumn(Attributes attrs)
       throws MapException
    {
       String name;
@@ -1337,7 +1374,7 @@ One solution is to store the format names in each column, then later have Map.re
       propMap.setColumn(column);
    }
 
-   private void processToPropertyTable(AttributeList attrs)
+   private void processToPropertyTable(Attributes attrs)
       throws MapException
    {
       // Save the property table and the location of the unique key. We will
@@ -1348,7 +1385,7 @@ One solution is to store the format names in each column, then later have Map.re
       parentKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINPARENTTABLE);
    }
 
-   private void processUniqueKey(AttributeList attrs)
+   private void processUniqueKey(Attributes attrs)
       throws MapException
    {
       String name;
@@ -1365,7 +1402,7 @@ One solution is to store the format names in each column, then later have Map.re
       table.addUniqueKey(key);
    }
 
-   private void processUseBaseTable(AttributeList attrs)
+   private void processUseBaseTable(Attributes attrs)
    {
       // We can't process <UseBaseTable> elements immediately because it is possible
       // that the <ClassMap> element of the base class might not have been processed yet.
@@ -1380,7 +1417,7 @@ One solution is to store the format names in each column, then later have Map.re
       baseTableWrapper.baseKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINBASETABLE);
    }
 
-   private void processUseClassMap(AttributeList attrs)
+   private void processUseClassMap(Attributes attrs)
       throws MapException
    {
       String   useQualifiedName;
@@ -1412,7 +1449,7 @@ One solution is to store the format names in each column, then later have Map.re
       }
    }
 
-   private void processUseColumn(AttributeList attrs)
+   private void processUseColumn(Attributes attrs)
       throws MapException
    {
       String name;
@@ -1435,7 +1472,7 @@ One solution is to store the format names in each column, then later have Map.re
       }
    }
 
-   private void processUseForeignKey(AttributeList attrs)
+   private void processUseForeignKey(Attributes attrs)
       throws MapException
    {
       String   name;
@@ -1479,7 +1516,7 @@ One solution is to store the format names in each column, then later have Map.re
       }
    }
 
-   private void processUseUniqueKey(AttributeList attrs)
+   private void processUseUniqueKey(Attributes attrs)
       throws MapException
    {
       String name;
@@ -1529,7 +1566,7 @@ One solution is to store the format names in each column, then later have Map.re
       }
    }
 
-   private void processXMLToDBMS(AttributeList attrs)
+   private void processXMLToDBMS(Attributes attrs)
       throws MapException
    {
       String version;
@@ -1679,7 +1716,7 @@ One solution is to store the format names in each column, then later have Map.re
    // Private methods -- attribute processing
    //**************************************************************************
 
-   private String getAttrValue(AttributeList attrs, String name)
+   private String getAttrValue(Attributes attrs, String name)
    {
       String value;
 
@@ -1699,7 +1736,7 @@ One solution is to store the format names in each column, then later have Map.re
       return value;
    }
 
-   private String getAttrValue(AttributeList attrs, String name, String defaultValue)
+   private String getAttrValue(Attributes attrs, String name, String defaultValue)
    {
       // 5/18/00, Ronald Bourret, Richard Sullivan
       // Added defaultValue to parameter list and returned it when no
@@ -1718,7 +1755,7 @@ One solution is to store the format names in each column, then later have Map.re
       return (attrValue == null) ? defaultValue : attrValue;
    }
 
-   private boolean getParentKeyIsUnique(AttributeList attrs, String attrName)
+   private boolean getParentKeyIsUnique(Attributes attrs, String attrName)
    {
       String attrValue;
 
@@ -1726,7 +1763,7 @@ One solution is to store the format names in each column, then later have Map.re
       return attrValue.equals(XMLDBMSConst.ENUM_UNIQUE);
    }
 
-   private Table getTable(AttributeList attrs)
+   private Table getTable(Attributes attrs)
       throws MapException
    {
       String databaseName, catalogName, schemaName, tableName;
