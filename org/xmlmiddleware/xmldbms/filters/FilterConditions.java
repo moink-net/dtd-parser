@@ -349,7 +349,7 @@ public class FilterConditions
 
                   // Check if the parameter is the target of an IN operator.
 
-                  inOperator = checkINOperator(src, dollar);
+                  inOperator = checkINOperator(src, i);
 
                   // Start parsing the parameter name.
 
@@ -478,6 +478,7 @@ public class FilterConditions
 
             case N:
                if ((src[i] != 'n') && (src[i] != 'N')) return false;
+               state = I;
                break;
 
             case I:
