@@ -17,6 +17,7 @@
 package org.xmlmiddleware.xmldbms.helpers;
 
 import org.xmlmiddleware.xmldbms.XMLFormatter;
+import org.xmlmiddleware.xmldbms.XMLFormatterException;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -52,78 +53,78 @@ public class XMLFormatterBase implements XMLFormatter
    // ********************************************************************
 
    // CHAR, VARCHAR, LONGVARCHAR
-   public String formatString(String value)
+   public String formatString(String value) throws XMLFormatterException
    {
       return null;
    }
 
-   public String parseString(String string)
+   public String parseString(String string) throws XMLFormatterException
    {
       return null;
    }
 
    // DATE, TIME, TIMESTAMP
-   public String formatDate(Date value)
+   public String formatDate(Date value) throws XMLFormatterException
    {
       return null;
    }
 
-   public Date parseDate(String string)
+   public Date parseDate(String string) throws XMLFormatterException
    {
       return null;
    }
 
    // BIGINT, INTEGER, SMALLINT, TINYINT
-   public String formatLong(Long value)
+   public String formatLong(Long value) throws XMLFormatterException
    {
       return null;
    }
 
-   public Long parseLong(String string)
+   public Long parseLong(String string) throws XMLFormatterException
    {
       return null;
    }
 
    // DECIMAL, NUMERIC
-   public String formatDecimal(BigDecimal value)
+   public String formatDecimal(BigDecimal value) throws XMLFormatterException
    {
       return null;
    }
 
-   public BigDecimal parseDecimal(String string)
+   public BigDecimal parseDecimal(String string) throws XMLFormatterException
    {
       return null;
    }
 
    // DOUBLE, FLOAT, REAL
-   public String formatDouble(Double value)
+   public String formatDouble(Double value) throws XMLFormatterException
    {
       return null;
    }
 
-   public Double parseDouble(String string)
+   public Double parseDouble(String string) throws XMLFormatterException
    {
       return null;
    }
 
    // BINARY, VARBINARY, LONGVARBINARY
-   public String formatBinary(byte[] value)
+   public String formatBinary(byte[] value) throws XMLFormatterException
    {
       return null;
    }
 
-   public byte[] parseBinary(String string)
+   public byte[] parseBinary(String string) throws XMLFormatterException
    {
       return null;
    }
 
    // BIT
-   public String formatBoolean(Boolean value)
+   public String formatBoolean(Boolean value) throws XMLFormatterException
    {
       return null;
    }
 
-   public Boolean parseBoolean(String string)
+   public Boolean parseBoolean(String string) throws XMLFormatterException
    {
       return null;
    }

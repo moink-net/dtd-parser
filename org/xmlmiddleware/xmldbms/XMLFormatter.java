@@ -46,30 +46,30 @@ public interface XMLFormatter
    // ********************************************************************
 
    // CHAR, VARCHAR, LONGVARCHAR
-   public String formatString(String value);
-   public String parseString(String string);
+   public String formatString(String value) throws XMLFormatterException;
+   public String parseString(String string) throws XMLFormatterException;
 
    // DATE, TIME, TIMESTAMP
-   public String formatDate(Date value);
-   public Date parseDate(String string);
+   public String formatDate(Date value) throws XMLFormatterException;
+   public Date parseDate(String string) throws XMLFormatterException;
 
    // BIGINT, INTEGER, SMALLINT, TINYINT
-   public String formatLong(Long value);
-   public Long parseLong(String string);
+   public String formatLong(Long value) throws XMLFormatterException;
+   public Long parseLong(String string) throws XMLFormatterException;
 
    // DECIMAL, NUMERIC
-   public String formatDecimal(BigDecimal value);
-   public BigDecimal parseDecimal(String string);
+   public String formatDecimal(BigDecimal value) throws XMLFormatterException;
+   public BigDecimal parseDecimal(String string) throws XMLFormatterException;
 
    // DOUBLE, FLOAT, REAL
-   public String formatDouble(Double value);
-   public Double parseDouble(String string);
+   public String formatDouble(Double value) throws XMLFormatterException;
+   public Double parseDouble(String string) throws XMLFormatterException;
 
    // BINARY, VARBINARY, LONGVARBINARY
-   public String formatBinary(byte[] value);
-   public byte[] parseBinary(String string);
+   public String formatBinary(byte[] value) throws XMLFormatterException;
+   public byte[] parseBinary(String string) throws XMLFormatterException;
 
    // BIT
-   public String formatBoolean(Boolean value);
-   public Boolean parseBoolean(String string);
+   public String formatBoolean(Boolean value) throws XMLFormatterException;
+   public Boolean parseBoolean(String string) throws XMLFormatterException;
 }
