@@ -63,6 +63,17 @@ public class CPConnection
       m_statementsAcrossRollback = meta.supportsOpenCursorsAcrossRollback();
    }
 
+   protected void finalize()
+   {
+      try
+      {
+         close();
+      }
+      catch(Exception e)
+         { }
+   }
+         
+
    //**************************************************************************
    // Connection methods
    //**************************************************************************
@@ -358,8 +369,8 @@ public class CPConnection
    // JDBC 2.0 Connection methods
    //**************************************************************************
 
-   // Uncomment these methods to compile with JDBC 2.0
-/*
+   // Comment these methods to compile with JDBC 2.0
+/**/
    public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
 
@@ -374,7 +385,7 @@ public class CPConnection
 
    public void setTypeMap(Map map) throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
-*/
+/**/
 
    //**************************************************************************
    // CPConnectionEventSource methods

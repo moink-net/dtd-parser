@@ -364,10 +364,6 @@ public class DOMToDBMS
         // Get the action for the node
         Action action = getActionFor(classNode);
 
-        // Get out now for Action.NONE
-        if(action.getAction() == Action.NONE)
-            return null;
-
         // A stack for all our children to be processed after insertion
 	    Stack fkChildren = new Stack();
 
@@ -401,7 +397,6 @@ public class DOMToDBMS
 
             // Do the actual row insertion/update
 	        storeRow(table, classRow, action.getAction());
-
 
             // Now delete all out-of-table properties
             clearNonTableProps(classRow, useProps, action);
@@ -453,12 +448,11 @@ public class DOMToDBMS
 	  
         int act = action.getAction();
 
-        // NOTE: Action.NONE should never get here. 
-        // It's screen out at the processClassRow level
-
-        // Note that these rows are always inserted. 
+        // Note that these rows are always inserted . 
         if(act == Action.UPDATE || act == Action.UPDATEORINSERT)
             act = Action.INSERT;
+
+        // Also note that Action.NONE falls through above
 
         // Do actual row insertion
         storeRow(table, propRow, act);
@@ -548,21 +542,25 @@ public class DOMToDBMS
     private void clearNonTableProps(Row classRow, Vector useProps, Action action)
         throws SQLException, MapException, KeyException, ConversionException
     {
-        for(int i = 0; i < useProps.size(); i++)
+        // Skip this for Action.NONE
+        if(action.getAction() != Action.NONE)
         {
-            PropertyMap propMap = (PropertyMap)useProps.elementAt(i);
-
-            Table table = propMap.getTable();
-            if(table != null)
+            for(int i = 0; i < useProps.size(); i++)
             {
-                // NOTE: We assume here than the parent key in the link is unique. 
-                // This should be correct.
+                PropertyMap propMap = (PropertyMap)useProps.elementAt(i);
+    
+                Table table = propMap.getTable();
+                if(table != null)
+                {
+                    // NOTE: We assume here than the parent key in the link is unique. 
+                    // This should be correct.
+    
+                    // This should create the row and copy the keys from parent row
+                    Row row = createRow(table, classRow, propMap.getLinkInfo(), null);
 
-                // This should create the row and copy the keys from parent row
-                Row row = createRow(table, classRow, propMap.getLinkInfo(), null);
-
-                // Delete it!
-                storeRow(table, row, Action.SOFTDELETE);
+                    // Delete it!
+                    storeRow(table, row, Action.SOFTDELETE);
+                }
             }
         }
     }
@@ -602,13 +600,12 @@ public class DOMToDBMS
         // NOTE: Called from processClassRow and called recursively for 
         // inline/wrapper classmaps
 
-	    NodeList children = parentNode.getChildNodes();
+        Node child = LogicalNodeUtils.getFirstChild(parentNode);
         int childOrder = 1;
 
-        for(int i = 0; i < children.getLength(); i++)
+        while(child != null)
         {
 	        Object childMap = null;
-            Node child = children.item(i);
 
 		    // Get the map for the node based on type
             switch(child.getNodeType())
@@ -655,8 +652,14 @@ public class DOMToDBMS
                                  child, childOrder, fkChildren, action);
                 }
 
-                childOrder++;
 		    }
+
+            // TODO: Should this be in the brace above? That is should
+            // it only increment for mapped nodes. Currently copying 
+            // behavior in v1.0
+            childOrder++;
+
+	        child = LogicalNodeUtils.getNextSibling(child);
 	    }
     }
 
@@ -954,9 +957,17 @@ public class DOMToDBMS
      * Copy the child key to parent row.
      */
     private void setParentKey(Row parentRow, Row childRow, LinkInfo l)
+        throws KeyException
     {
+        Column[] childCols = l.getChildKey().getColumns();
+
+        // TODO: Better and more descriptive error message
+
+        if(!childRow.haveColumns(childCols))
+            throw new KeyException("Cannot copy child key. It's not set.");
+
 	    parentRow.setColumnValues(l.getParentKey().getColumns(),
-								  childRow.getColumnValues(l.getChildKey().getColumns()));
+								  childRow.getColumnValues(childCols));
     }
 
 
@@ -964,9 +975,17 @@ public class DOMToDBMS
      * Copy the parent key to a child row.
      */
     private void setChildKey(Row parentRow, Row childRow, LinkInfo l)
+        throws KeyException
     {
+        Column[] parentCols = l.getParentKey().getColumns();
+
+        // TODO: Better and more descriptive error message
+
+        if(!parentRow.haveColumns(parentCols))
+            throw new KeyException("Cannot copy parent key. It's not set.");
+
 	    childRow.setColumnValues(l.getChildKey().getColumns(),
-							     parentRow.getColumnValues(l.getParentKey().getColumns()));
+							     parentRow.getColumnValues(parentCols));
     }
 
 

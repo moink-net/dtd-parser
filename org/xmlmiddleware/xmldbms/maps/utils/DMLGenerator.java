@@ -320,15 +320,15 @@ public class DMLGenerator
                                 Column[] valueColumns, OrderInfo order)
    {
       StringBuffer select = new StringBuffer(1000);
-      boolean first = true;
+      boolean comma = false;
 
       select.append(SELECT);
       
       // Add value column names.
       for(int i = 0; i < valueColumns.length; i++)
       {
-         select.append(makeColumnName(valueColumns[i], first));
-         first = false;
+         select.append(makeColumnName(valueColumns[i], comma));
+         comma = true;
       }
       
       // Add table name.

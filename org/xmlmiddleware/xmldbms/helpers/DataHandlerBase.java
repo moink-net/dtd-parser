@@ -9,6 +9,8 @@ import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
 
+import org.xmlmiddleware.db.*;
+
 /**
  * Implements basic support for The DataHandler interface. The insert(...) 
  * is implemented by child classes.
@@ -401,6 +403,18 @@ abstract class DataHandlerBase
         key.setColumns(keyCols);
 
         return key;
-    }        
-       
+    }    
+    
+
+    /**
+     * Retrieves a driver PreparedStatement from a 
+     * possibly wrapped one.
+     */
+    protected PreparedStatement getRawStatement(PreparedStatement stmt)
+    {
+        if(stmt instanceof SPPreparedStatement)
+            return ((SPPreparedStatement)stmt).getUnderlyingStatement();
+        else
+            return stmt;
+    }
 }

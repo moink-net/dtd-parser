@@ -58,8 +58,9 @@ class PostgresJDBXHandler
 
         if(refreshCols.length > 0)
         {
+            PGPreparedStatement psqlStmt = (PGPreparedStatement)getRawStatement(stmt);
+
             // Get the OID of the last row
-            PGPreparedStatement psqlStmt = (PGPreparedStatement)stmt;
             ResultSet oidRs = psqlStmt.getGeneratedKeys();
             int oid = oidRs.getInt(OIDNAME);
 
@@ -72,6 +73,9 @@ class PostgresJDBXHandler
 
             // Execute it 
             ResultSet rs = selStmt.executeQuery();
+
+            if(!rs.next())
+                throw new SQLException("[xmldbms] Couldn't retrieve inserted row.");
 
             // Set them in the row
             for(int i = 0; i < refreshCols.length; i++)

@@ -49,10 +49,20 @@ public class SPPreparedStatement
      *
      * @param statement The underlying prepared statement
      */
-   public SPPreparedStatement(PreparedStatement statement)
+   protected SPPreparedStatement(PreparedStatement statement)
    {
       m_statement = statement;
       m_listeners = new Hashtable();
+   }
+
+   protected void finalize()
+   {
+      try
+      {
+         close();
+      }
+      catch(Exception e)
+         { }
    }
 
    //**************************************************************************
@@ -422,8 +432,8 @@ public class SPPreparedStatement
    // JDBC 2.0 PreparedStatement methods
    //**************************************************************************
 
-   // Uncomment these methods to compile with JDBC 2.0
-/*
+   // Comment these methods to compile with JDBC 2.0
+/**/
    public void addBatch() throws SQLException
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
 
@@ -456,7 +466,7 @@ public class SPPreparedStatement
 
    public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
-*/
+/**/
 
    //**************************************************************************
    // Statement methods
@@ -728,8 +738,8 @@ public class SPPreparedStatement
    // JDBC 2.0 Statement methods
    //**************************************************************************
 
-   // Uncomment these methods to compile with JDBC 2.0
-/*
+   // Comment these methods to compile with JDBC 1.0
+/**/
    public void setFetchDirection(int direction) throws SQLException
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
 
@@ -759,7 +769,7 @@ public class SPPreparedStatement
 
    public Connection getConnection() throws SQLException
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
-*/
+/**/
 
    // **************************************************************************
    // SPStatementEventSource interface
@@ -779,7 +789,7 @@ public class SPPreparedStatement
    // SPPreparedStatement methods
    //**************************************************************************
 
-   protected PreparedStatement getPreparedStatement()
+   public PreparedStatement getUnderlyingStatement()
    {
       return m_statement;
    }

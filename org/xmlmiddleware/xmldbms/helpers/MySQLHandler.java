@@ -65,7 +65,9 @@ import org.xmlmiddleware.xmldbms.maps.*;
 
         if(refreshCols.length > 0)
         {
-            org.gjt.mm.mysql.Statement mysqlStmt = (org.gjt.mm.mysql.Statement)stmt;
+            org.gjt.mm.mysql.Statement mysqlStmt = 
+                    (org.gjt.mm.mysql.Statement)getRawStatement(stmt);
+
             Long lastInsert = new Long(mysqlStmt.getLastInsertID());
 
             Key key = getAutoIncrementKey(table);

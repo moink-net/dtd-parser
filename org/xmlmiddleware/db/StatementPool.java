@@ -104,7 +104,7 @@ public class StatementPool
       stmt = (SPPreparedStatement)pooledStatement;
 
       // Check in the underlying object
-      realStmt = stmt.getPreparedStatement();
+      realStmt = stmt.getUnderlyingStatement();
       stmt.invalidate();
       super.checkIn(realStmt);
 
@@ -262,7 +262,7 @@ public class StatementPool
       // Get the underlying prepared statement, then invalidate the state of
       // the SPPreparedStatement so it can't be used any more.
 
-      realStmt = stmt.getPreparedStatement();
+      realStmt = stmt.getUnderlyingStatement();
       stmt.invalidate();
 
       // Remove the statement from the statement pool.

@@ -56,9 +56,12 @@ class PostgresHandler
 
         if(refreshCols.length > 0)
         {
+            org.postgresql.Statement psqlStmt = 
+                    (org.postgresql.Statement)getRawStatement(stmt);
+
             // Get the OID of the last row
-            org.postgresql.Statement psqlStmt = (org.postgresql.Statement)stmt;
             int oid = psqlStmt.getInsertedOID();
+
 
             // SELECT the columns with that oid
             String sql = m_dml.getSelect(table, m_oidKey, refreshCols);
@@ -69,6 +72,9 @@ class PostgresHandler
 
             // Execute it 
             ResultSet rs = selStmt.executeQuery();
+
+            if(!rs.next())
+                throw new SQLException("[xmldbms] Couldn't retrieve inserted row.");
 
             // Set them in the row
             for(int i = 0; i < refreshCols.length; i++)

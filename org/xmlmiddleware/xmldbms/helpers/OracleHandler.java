@@ -57,6 +57,10 @@ class OracleHandler
 
         if(refreshCols.length > 0)
         {
+            // IMPL: Test that this is actually a statement from Oracle, like so:
+            // if(!(stmt instanceof oracle.whatever.Statement))
+            //    throw new SQLException("[xmldbms] Invalid DataSource / DataHandler combination.");
+
             // IMPL: Retrieve all columns in 'refreshCols' here, somehow.
 
             // IMPL: Set columns on 'row' like so:
