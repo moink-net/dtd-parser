@@ -193,11 +193,6 @@ import java.util.Hashtable;
  *             RelatedClassTableMap...
  *             ElementInsertionMap...
  *             OrderInfo... (optional)
- *       PropertyTableMap (hashtable of)
- *             Table...
- *             Column...
- *             LinkInfo...
- *             OrderInfo... (optional)
  * </pre>
  *
  * <h4>Methods for Creating Map Objects</h4>
@@ -901,7 +896,11 @@ public class Map extends MapBase
    //**************************************************************************
 
    /**
-    * Gets a ClassMap for an element type.
+    * Gets the ClassMap used by an element type.
+    *
+    * <p>If the ClassMap for the element type uses another ClassMap (which might
+    * use yet another ClassMap, and so on), this method returns the last ClassMap
+    * in the chain. This is the ClassMap actually used to transfer data.</p>
     *
     * @param uri Namespace URI of the element type. May be null.
     * @param localName Local name of the element type.
@@ -910,11 +909,15 @@ public class Map extends MapBase
     */
    public final ClassMap getClassMap(String uri, String localName)
    {
-      return (ClassMap)classMaps.get(XMLName.getUniversalName(uri, localName));
+      return getClassMap(XMLName.getUniversalName(uri, localName));
    }
 
    /**
-    * Gets a ClassMap for an element type.
+    * Gets the ClassMap used by an element type.
+    *
+    * <p>If the ClassMap for the element type uses another ClassMap (which might
+    * use yet another ClassMap, and so on), this method returns the last ClassMap
+    * in the chain. This is the ClassMap actually used to transfer data.</p>
     *
     * @param universalName Universal name of the element type.
     *
@@ -1096,18 +1099,15 @@ public class Map extends MapBase
    {
       ClassTableMap classTableMap;
       String        name;
-      Object        o;
 
       checkArgNull(table, ARG_TABLE);
       name = table.getUniversalName();
-      o = propTableMaps.get(name);
-      if (o != null)
-         throw new MapException("Table already mapped as a property table: " + name);
       classTableMap = (ClassTableMap)classTableMaps.get(name);
       if (classTableMap == null)
       {
          classTableMap = ClassTableMap.create(table);
          classTableMaps.put(name, classTableMap);
+         classTableMap.parentMap = this;
       }
       return classTableMap;
    }
@@ -1116,12 +1116,13 @@ public class Map extends MapBase
     * Add a ClassTableMap for a table.
     *
     * @param classTableMap ClassTableMap for the table. Must not be null.
-    * @exception MapException Thrown if the table has already been mapped.
+    * @exception MapException Thrown if the table has already been mapped, if the
+    *    ClassTableMap has already been used in another Map, or if the ClassTableMap
+    *    maps an element type that has already been mapped.
     */
    public void addClassTableMap(ClassTableMap classTableMap)
       throws MapException
    {
-      Object o;
       String name;
 
       checkArgNull(classTableMap, ARG_CLASSTABLEMAP);
@@ -1129,9 +1130,11 @@ public class Map extends MapBase
       o = classTableMaps.get(name);
       if (o != null)
          throw new MapException("Table already mapped as class table: " + name);
-      o = propTableMaps.get(name);
-      if (o != null)
-         throw new MapException("Table already mapped as a property table: " + name);
+      if (classTableMap.parentMap != null)
+         throw new MapException("The ClassTableMap is used in another Map.");
+      if (xmlNameInClassTableMap(classTableMap.getElementTypeName()))
+         throw MapException("ClassTableMap maps an element type that has already been mapped: " + classTableMap.getElementTypeName().getUniversalName());
+      classTableMap.parentMap = this;
       classTableMaps.put(name, classTableMap);
    }
 
@@ -1148,13 +1151,14 @@ public class Map extends MapBase
    public void removeClassTableMap(String databaseName, String catalogName, String schemaName, String tableName)
       throws MapException
    {
-      Object o;
+      ClassTableMap classTableMap;
       String name;
 
       name = Table.getUniversalName(databaseName, catalogName, schemaName, tableName);
-      o = classTableMaps.remove(name);
-      if (o == null)
+      classTableMap = (ClassTableMap)classTableMaps.remove(name);
+      if (classTableMap == null)
          throw new MapException("Table not mapped as a class table: " + name);
+      classTableMap.parentMap = null;
    }
 
    /**
@@ -1162,6 +1166,15 @@ public class Map extends MapBase
     */
    public void removeAllClassTableMaps()
    {
+      Enumeration   enum;
+      ClassTableMap classTableMap;
+
+      enum = classTableMaps.elements();
+      while (enum.hasMoreElements())
+      {
+         classTableMap = (ClassTableMap)enum.nextElement();
+         classTableMap.parentMap = null;
+      }
       classTableMaps.clear();
    }
 
@@ -1279,118 +1292,26 @@ public class Map extends MapBase
    }
 
    //**************************************************************************
-   // Property table maps
+   // Package methods
    //**************************************************************************
 
-   /**
-    * Gets a PropertyTableMap for a table.
-    *
-    * @param databaseName Name of the database. May be null.
-    * @param catalogName Name of the catalog. May be null.
-    * @param schemaName Name of the schema. May be null.
-    * @param tableName Name of the table.
-    *
-    * @return The PropertyTableMap. Null if the table is not mapped as a property table.
-    */
-   public final PropertyTableMap getPropertyTableMap(String databaseName, String catalogName, String schemaName, String tableName)
+   boolean xmlNameInClassTableMap(XMLName newElementTypeName)
    {
-      return (PropertyTableMap)propTableMaps.get(Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
-   }
+      Enumeration tableMapsEnum;
+      XMLName     elementTypeName;
 
-   /**
-    * Gets an Enumeration of all property table maps.
-    *
-    * @return The Enumeration. May be empty.
-    */
-   public final Enumeration getPropertyTableMaps()
-   {
-      return propTableMaps.elements();
-   }
+      if (newElementTypeName == null) return false;
 
-   /**
-    * Create a PropertyTableMap for a table and add it to the Map.
-    *
-    * <p>If the table has already been mapped as a property table, returns the
-    * existing PropertyTableMap.</p>
-    *
-    * @param table The Table being mapped.
-    *
-    * @return The PropertyTableMap for the table.
-    * @exception MapException Thrown if the table has already been mapped as a
-    *    class table.
-    */
-   public PropertyTableMap createPropertyTableMap(Table table)
-      throws MapException
-   {
-      PropertyTableMap propTableMap;
-      String           name;
-      Object           o;
-
-      checkArgNull(table, ARG_TABLE);
-      name = table.getUniversalName();
-      o = classTableMaps.get(name);
-      if (o != null)
-         throw new MapException("Table already mapped as a class table: " + name);
-      propTableMap = (PropertyTableMap)propTableMaps.get(name);
-      if (propTableMap == null)
+      tableMapsEnum = getTableMaps();
+      while (tableMapsEnum.hasMoreElements())
       {
-         propTableMap = PropertyTableMap.create(table);
-         propTableMaps.put(name, propTableMap);
+         elementTypeName = ((TableMap)tableMapsEnum.nextElement()).getElementTypeName();
+         if (elementTypeName != null)
+         {
+            if (elementTypeName.equals(newElementTypeName)) return true;
+         }
       }
-      return propTableMap;
-   }
-
-   /**
-    * Add a PropertyTableMap for a table.
-    *
-    * @param propTableMap PropertyTableMap for the table. Must not be null.
-    * @exception MapException Thrown if the table has already been mapped.
-    */
-   public void addPropertyTableMap(PropertyTableMap propTableMap)
-      throws MapException
-   {
-      Object o;
-      String name;
-
-      checkArgNull(propTableMap, ARG_PROPTABLEMAP);
-      name = propTableMap.getTable().getUniversalName();
-      o = propTableMaps.get(name);
-      if (o != null)
-         throw new MapException("Table already mapped as property table: " + name);
-      o = classTableMaps.get(name);
-      if (o != null)
-         throw new MapException("Table already mapped as a class table: " + name);
-      propTableMaps.put(name, propTableMap);
-   }
-
-   /**
-    * Remove the PropertyTableMap for a table.
-    *
-    * @param databaseName Name of the database. May be null.
-    * @param catalogName Name of the catalog. May be null.
-    * @param schemaName Name of the schema. May be null.
-    * @param tableName Name of the table.
-    *
-    * @exception MapException Thrown if the table has not been mapped as a class table.
-    */
-   public void removePropertyTableMap(String databaseName, String catalogName, String schemaName, String tableName)
-      throws MapException
-   {
-      Object o;
-      String name;
-
-      name = Table.getUniversalName(databaseName, catalogName, schemaName, tableName);
-      o = propTableMaps.remove(name);
-      if (o == null)
-         throw new MapException("Table not mapped as a property table: " + name);
-   }
-
-   /**
-    * Remove the PropertyTableMaps for all tables.
-    */
-   public void removeAllPropertyTableMaps()
-   {
-      propTableMaps.clear();
+      return false;
    }
 
    //**************************************************************************

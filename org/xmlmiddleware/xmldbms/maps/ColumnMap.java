@@ -49,6 +49,8 @@ public class ColumnMap extends PropertyMapBase
 //   private OrderInfo orderInfo = null;
 //   private boolean   multiValued = false;
 
+   ClassTableMap parentClassTableMap = null;
+
    // ********************************************************************
    // Constructors
    // ********************************************************************
@@ -92,10 +94,13 @@ public class ColumnMap extends PropertyMapBase
     *    Must be null for PCDATA.
     * @param type Type of the XML construct to which the column mapped. One of
     *    ColumnMap.ELEMENTTYPE, ColumnMap.ATTRIBUTE, or ColumnMap.PCDATA.
+    * @exception MapException Thrown if the element type, attribute, or PCDATA has
+    *    already been mapped.
     */
    public void setXMLName(String uri, String localName, int type)
+      throws MapException
    {
-      super.setXMLName(uri, localName, type);
+      setXMLName(XMLName.create(uri, localName), type);
    }
 
    /**
@@ -105,9 +110,17 @@ public class ColumnMap extends PropertyMapBase
     *    Must be null for PCDATA.
     * @param type Type of the XML construct to which the column mapped. One of
     *    ColumnMap.ELEMENTTYPE, ColumnMap.ATTRIBUTE, or ColumnMap.PCDATA.
+    * @exception MapException Thrown if the element type, attribute, or PCDATA has
+    *    already been mapped.
     */
    public void setXMLName(XMLName xmlName, int type)
+      throws MapException
    {
+      if (parentClassTableMap != null)
+      {
+         if (parentClassTableMap.xmlNameInDBPropertyMap(xmlName, type))
+            throw new MapException(getXMLObjectName(type) + xmlName.getUniversalName() + " already mapped in the ClassTableMap for " + parentClassTableMap.getTable().getUniversalName()
+      }
       super.setXMLName(xmlName, type);
    }
 }

@@ -59,6 +59,8 @@ public class RelatedClassTableMap extends RelatedMapBase
 
    private ClassTableMap classTableMap = null;
 
+   ClassTableMap parentClassTableMap = null;
+
    // ********************************************************************
    // Constructors
    // ********************************************************************
@@ -110,8 +112,11 @@ public class RelatedClassTableMap extends RelatedMapBase
     *
     * @param uri The namespace URI of the related element type. May be null.
     * @param localName The local name of the related element type.
+    * @exception MapException Thrown if the element type, attribute, or PCDATA has
+    *    already been mapped.
     */
    public void setElementTypeName(String uri, String localName)
+      throws MapException
    {
       setElementTypeName(XMLName.create(uri, localName));
    }
@@ -126,10 +131,18 @@ public class RelatedClassTableMap extends RelatedMapBase
     * the XML-DBMS mapping language is used inside a &lt;RelatedClass> element.</p>
     *
     * @param elementTypeName The name of the related element type.
+    * @exception MapException Thrown if the element type, attribute, or PCDATA has
+    *    already been mapped.
     */
    public void setElementTypeName(XMLName elementTypeName)
+      throws MapException
    {
       checkArgNull(elementTypeName, ARG_ELEMENTTYPENAME);
+      if (parentClassTableMap != null)
+      {
+         if (parentClassTableMap.xmlNameInDBPropertyMap(elementTypeName, PropertyMapBase.ELEMENTTYPE))
+            throw new MapException("Element type " + elementTypeName.getUniversalName() + " already mapped in the ClassTableMap for " + parentClassTableMap.getTable().getUniversalName()
+      }
       super.setElementTypeName(elementTypeName);
    }
 }

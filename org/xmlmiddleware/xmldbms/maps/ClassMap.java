@@ -39,8 +39,8 @@ import java.util.Hashtable;
  * ClassMap), then all mutator methods except useClassMap() return an
  * IllegalStateException.</p>
  *
- * <p>ClassMaps are stored in the Map class. They are pointed to by ClassMaps,
- * RelatedClassMaps, and InlineClassMaps.</p>
+ * <p>ClassMaps are stored in the Map class. They are pointed to by ClassMaps
+ * and RelatedClassMaps.</p>
  *
  * @author Ronald Bourret, 1998-9, 2001
  * @version 2.0
@@ -204,6 +204,10 @@ public class ClassMap extends ClassMapBase
 
    /**
     * Get the ClassMap used by this ClassMap.
+    *
+    * <p>The ClassMap returned by this method might use another ClassMap, and so
+    * on. It is the responsibility of the calling application to navigate the
+    * chain of ClassMaps.</p>
     *
     * <p>If the returned value is not null, then no other methods may be called
     * to set properties of this ClassMap (except useClassMap()) and the values

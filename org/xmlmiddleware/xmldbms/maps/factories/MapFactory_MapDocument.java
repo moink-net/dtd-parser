@@ -37,6 +37,8 @@ import org.xmlmiddleware.xmldbms.maps.PropertyMap;
 import org.xmlmiddleware.xmldbms.maps.RelatedClassMap;
 import org.xmlmiddleware.xmldbms.maps.Table;
 
+import org.xmlmiddleware.xmldbms.maps.utils.MapInverter;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -51,6 +53,7 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Stack;
 import java.util.Vector;
@@ -159,6 +162,8 @@ public class MapFactory_MapDocument
    private Stack           rcmWrapperStack = new Stack();
    private Stack           inlineClassMapStack = new Stack();
    private Vector          keyColumns = new Vector();
+   private Hashtable       propTables = new Hashtable();
+   private Hashtable       classTables = new Hashtable();
 
    // State variables -- map
    private Map             map;
@@ -251,9 +256,10 @@ public class MapFactory_MapDocument
     * @exception MapException Thrown if the mapping document contains an error.
     */
    public Map createMap(InputSource src)
-      throws MapException
+      throws Exception
    {
       Exception e;
+      MapInverter inverter;
 
       // Check the arguments and state.
 
@@ -274,8 +280,18 @@ public class MapFactory_MapDocument
       {
          // Get the embedded Exception (if any) and check if it's a MapException.
          e = s.getException();
-         if (e instanceof MapException)
-            throw (MapException)e;
+         if (e != null)
+         {
+            if (e instanceof MapException)
+               throw (MapException)e;
+            else
+            {
+               if (e.getMessage() == null)
+                  throw new MapException(e.getClass().getName());
+               else
+                  throw new MapException(e.getClass().getName() + ": " + e.getMessage());
+            }
+         }
          else
             throw new MapException("SAX exception: " + s.getMessage());
       }
@@ -283,6 +299,11 @@ public class MapFactory_MapDocument
       {
          throw new MapException("IO exception: " + io.getMessage());
       }
+
+      // Create the database-centric view of the map.
+
+      inverter = new MapInverter(map);
+      inverter.createDatabaseView();
 
       // Return the Map object.
 
@@ -335,7 +356,6 @@ public class MapFactory_MapDocument
       {
         resolveRCMWrappers();
         resolveBaseTableWrappers();
-        // MapInverter.createDBView(map);
       }
       catch (MapException m)
       {
@@ -1341,14 +1361,32 @@ One solution is to store the format names in each column, then later have Map.re
    private void processToClassTable(Attributes attrs)
       throws MapException
    {
-      classMap.setTable(getTable(attrs));
+      Table  classTable;
+      String uniqueName;
+
+      // Get the class table.
+
+      classTable = getTable(attrs);
+
+      // Check that it is not already mapped and add it to the list of mapped tables.
+
+      uniqueName = classTable.getUniversalName();
+      if (propTables.get(uniqueName) != null)
+         throw new MapException("Table already mapped as a property table: " + uniqueName);
+      else if (classTables.get(uniqueName) != null)
+         throw new MapException("Table already mapped as a class table: " + uniqueName);
+      classTables.put(uniqueName, classTable);
+
+      // Set the table in the ClassMap.
+
+      classMap.setTable(classTable);
    }
 
    private void processToColumn(Attributes attrs)
       throws MapException
    {
       String name;
-      Table  propertyTable;
+      Table  propTable;
       Column column;
 
       // Get the table in which the property column exists. This is either the
@@ -1357,19 +1395,19 @@ One solution is to store the format names in each column, then later have Map.re
       // Note that it doesn't matter if the <PropertyMap> element is in a <ClassMap>
       // element or an <InlineMap> element, since <InlineMap>s don't change the class table.
 
-      propertyTable = propMap.getTable();
-      if (propertyTable == null)
+      propTable = propMap.getTable();
+      if (propTable == null)
       {
-         propertyTable = classMap.getTable();
+         propTable = classMap.getTable();
       }
 
       // Get the name of the column, then get the column, then set the column in
       // the PropertyMap.
 
       name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
-      column = propertyTable.getColumn(name);
+      column = propTable.getColumn(name);
       if (column == null)
-         throw new MapException("Property column " + name + " not found in table " + propertyTable.getUniversalName());
+         throw new MapException("Property column " + name + " not found in table " + propTable.getUniversalName());
 
       propMap.setColumn(column);
    }
@@ -1377,12 +1415,23 @@ One solution is to store the format names in each column, then later have Map.re
    private void processToPropertyTable(Attributes attrs)
       throws MapException
    {
-      // Save the property table and the location of the unique key. We will
+      String uniqueName;
+
+      // Get the property table and the location of the unique key. We will
       // set the property table in processUseForeignKey, since we will then
       // have all the necessary information.
 
       propertyTable = getTable(attrs);
       parentKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINPARENTTABLE);
+
+      // Check that the table is not already mapped and add it to the list of mapped tables.
+
+      uniqueName = propertyTable.getUniversalName();
+      if (propTables.get(uniqueName) != null)
+         throw new MapException("Table already mapped as a property table: " + uniqueName);
+      else if (classTables.get(uniqueName) != null)
+         throw new MapException("Table already mapped as a class table: " + uniqueName);
+      propTables.put(uniqueName, propertyTable);
    }
 
    private void processUniqueKey(Attributes attrs)

@@ -16,6 +16,8 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
+import org.xmlmiddleware.utils.XMLName;
+
 /**
  * Maps a column in a property table to an element type, attribute, or PCDATA; <a 
  * href="../readme.htm#NotForUse">not for general use</a>.
@@ -50,6 +52,8 @@ public class PropertyTableMap extends PropertyMapBase
    private LinkInfo linkInfo = null;
    private Table    table = null;
 
+   ClassTableMap parentClassTableMap = null;
+
    // ********************************************************************
    // Constructors
    // ********************************************************************
@@ -75,6 +79,49 @@ public class PropertyTableMap extends PropertyMapBase
    // ********************************************************************
    // Accessors and mutators
    // ********************************************************************
+
+   // ********************************************************************
+   // XML name and type
+   // ********************************************************************
+
+   /**
+    * Set the name and type of the XML construct being mapped.
+    *
+    * @param uri Namespace URI of the XML construct to which the column is mapped.
+    *    May be null for element types or attributes. Must be null for PCDATA.
+    * @param localName Local name of the XML construct to which the column mapped.
+    *    Must be null for PCDATA.
+    * @param type Type of the XML construct to which the column mapped. One of
+    *    ColumnMap.ELEMENTTYPE, ColumnMap.ATTRIBUTE, or ColumnMap.PCDATA.
+    * @exception MapException Thrown if the element type, attribute, or PCDATA has
+    *    already been mapped.
+    */
+   public void setXMLName(String uri, String localName, int type)
+      throws MapException
+   {
+      setXMLName(XMLName.create(uri, localName), type);
+   }
+
+   /**
+    * Set the name and type of the XML construct being mapped.
+    *
+    * @param xmlName XMLName of the XML construct to which the column is mapped.
+    *    Must be null for PCDATA.
+    * @param type Type of the XML construct to which the column mapped. One of
+    *    ColumnMap.ELEMENTTYPE, ColumnMap.ATTRIBUTE, or ColumnMap.PCDATA.
+    * @exception MapException Thrown if the element type, attribute, or PCDATA has
+    *    already been mapped.
+    */
+   public void setXMLName(XMLName xmlName, int type)
+      throws MapException
+   {
+      if (parentClassTableMap != null)
+      {
+         if (parentClassTableMap.xmlNameInDBPropertyMap(xmlName, type))
+            throw new MapException(getXMLObjectName(type) + xmlName.getUniversalName() + " already mapped in the ClassTableMap for " + parentClassTableMap.getTable().getUniversalName()
+      }
+      super.setXMLName(xmlName, type);
+   }
 
    // ********************************************************************
    // Property table

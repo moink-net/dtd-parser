@@ -33,6 +33,7 @@ import org.xmlmiddleware.utils.XMLName;
  * @version 2.0
  * @see PropertyMap
  * @see ColumnMap
+ * @see PropertyTableMap
  */
 
 public class PropertyMapBase extends MapBase
@@ -99,7 +100,8 @@ public class PropertyMapBase extends MapBase
       return type;
    }
 
-   // PROTECTED! Called by PropertyMap.create() and ColumnMap.setXMLName().
+   // PROTECTED! Called by PropertyMap.create(), ColumnMap.setXMLName(), and
+   // PropertyTableMap.setXMLName().
 
    void setXMLName(String uri, String localName, int type)
    {
@@ -214,5 +216,25 @@ public class PropertyMapBase extends MapBase
       if (type != ATTRIBUTE)
          throw new IllegalStateException("Cannot call setAttributeIsMultiValued(boolean) on PropertyMaps for element types or PCDATA.");
       this.multiValued = multiValued;
+   }
+
+   // ********************************************************************
+   // Package methods
+   // ********************************************************************
+
+   String getXMLObjectName(int type)
+   {
+      switch(type)
+      {
+         case PropertyMapBase.ELEMENTTYPE:
+            return "Element type ";
+
+         case PropertyMapBase.ATTRIBUTE:
+             return "Attribute ";
+
+         case PropertyMapBase.ELEMENTTYPE:
+            return "PCDATA ";
+      }
+      return null;
    }
 }

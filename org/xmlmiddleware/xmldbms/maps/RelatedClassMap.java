@@ -102,13 +102,30 @@ public class RelatedClassMap extends RelatedMapBase
    // ********************************************************************
 
    /**
-    * Get the class map of the related element type.
+    * Get the ClassMap used by the related element type.
+    *
+    * <p>If the ClassMap for the element type uses another ClassMap (which might
+    * use yet another ClassMap, and so on), this method returns the last ClassMap
+    * in the chain. This is the ClassMap actually used to transfer data.</p>
     *
     * @return The ClassMap. Null if the ClassMap has not yet been set.
     */
    public final ClassMap getClassMap()
    {
-      return classMap;
+      ClassMap actualClassMap = null, useClassMap;
+
+      // Navigate the chain of used ClassMaps and return the last ClassMap in
+      // the chain. This is the actual ClassMap to be used. Note that this is
+      // guaranteed not to generate an infinite loop since ClassMap.useClassMap()
+      // checks for loops.
+
+      useClassMap = this.classMap;
+      while (useClassMap != null)
+      {
+         actualClassMap = useClassMap;
+         useClassMap = actualClassMap.getUsedClassMap();
+      }
+      return actualClassMap;
    }
 
    /**
