@@ -833,7 +833,6 @@ One solution is to store the format names in each column, then later have Map.re
       throws MapException
    {
       String         qualifiedName;
-      XMLName        elementTypeName;
       InlineClassMap parentInlineClassMap;
 
       // Get the qualified element type name and convert it to an XMLName.
