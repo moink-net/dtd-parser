@@ -126,7 +126,7 @@ class Row
         {
             Column col = (Column)e.nextElement();
             if(haveColumn(col))
-                cols.add(col);
+                cols.addElement(col);
         }
 
         return cols;
@@ -134,7 +134,10 @@ class Row
 
     public Column[] getColumnsFor(Table table)
     {
-        return (Column[])getColumnVectorFor(table).toArray();
+        Vector cols = getColumnVectorFor(table);
+        Column[] array = new Column[cols.size()];
+        cols.copyInto(array);
+        return array;
     }
 
     /**
