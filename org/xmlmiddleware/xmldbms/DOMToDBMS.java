@@ -1,4 +1,3 @@
->>>>> WARNING: WORK IN PROGRESS WILL NOT COMPILE <<<<<
 
 // Author: Sean Walter
 
@@ -6,15 +5,22 @@ package org.xmlmiddleware.xmldbms;
 
 import java.lang.*;
 import java.io.*;
-import java.util.*;
+import java.util.Hashtable;
+import java.util.Enumeration;
+import java.util.Stack;
+import java.util.StringTokenizer;
+import java.sql.*;
+import javax.sql.*;
 
 import org.w3c.dom.*;
 
 import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.domutils.*;
+
 
 public class DOMToDBMS
 {
-    public static final int COMMIT_AFTERINSERT = 1
+    public static final int COMMIT_AFTERINSERT = 1;
     public static final int COMMIT_AFTERDOCUMENT = 2;
     public static final int COMMIT_NONE = 3;
     public static final int COMMIT_NOTRANSACTIONS = 4;
@@ -40,7 +46,7 @@ public class DOMToDBMS
 
     public DOMToDBMS()
     {
-        m_dataSources = new HashTable();
+        m_dataSources = new Hashtable();
         m_nameQual = new NameQualifierImpl();
 
         // TODO: What's the default commit mode?
@@ -49,7 +55,7 @@ public class DOMToDBMS
 
     public DOMToDBMS(NameQualifier nq)
     {
-        m_dataSources = new HashTable();
+        m_dataSources = new Hashtable();
         m_nameQual = nq;
 
         // TODO: What's the default commit mode?
@@ -64,6 +70,9 @@ public class DOMToDBMS
     }
 
     public int getCommitMode()
+    {
+        return m_commitMode;
+    }
 
 
 
@@ -75,7 +84,7 @@ public class DOMToDBMS
      * @param user User to connect to the database as.
      * @param password Password to connect to the database with.
      */
-    public addDataSource(String databaseName, DataSource dataSource, 
+    public void addDataSource(String databaseName, DataSource dataSource, 
                          String user, String password)
         throws SQLException
     {
@@ -87,16 +96,16 @@ public class DOMToDBMS
      * 
      * @param databaseName Named used in map for this database.
      */
-    public removeDataSource(String databaseName)
+    public void removeDataSource(String databaseName)
     {
-        m_dataSources.remove(databaseName)
+        m_dataSources.remove(databaseName);
     }
 
     /**
      * Clear all database connection info previously added.
      *
      */
-    public removeAllDataSources()
+    public void removeAllDataSources()
     {
         m_dataSources.clear();
     }
@@ -118,20 +127,35 @@ public class DOMToDBMS
     }
 
 
-    public DocumentInfo storeDocument(Map map, Element el)
-        throws ????
-    {
-        m_map = map
-        m_document = el.getOwnerDocument();
 
-        processRoot(el);
+    // TODO: Needs to return a DocumentInfo
+    public /*DocumentInfo*/ void storeDocument(Map map, Element el)
+        throws SQLException, MapException, KeyException
+    {
+        // TODO: Make this reentrant by passing map around
+        m_map = map;
+
+        processRoot(el, 1);
 
         // TODO: Do we have to do this?
         m_map = null;
-        m_document = null;
-  
-        //TODO: Do the return value thingy
-        return null;
+
+
+        // TODO: what do we do about COMMIT_NONE?
+
+        if(m_commitMode == COMMIT_AFTERDOCUMENT)
+        {
+            Enumeration datas = m_dataSources.elements();
+
+            while(datas.hasMoreElements())
+            {
+                DataInfo data = (DataInfo)datas.nextElement();
+                if(data.used)
+                    data.conn.commit();
+            }
+        }
+                    
+        //TODO: Do the return value DocumentInfo thingy
     }
 
 
@@ -141,181 +165,198 @@ public class DOMToDBMS
      *
      * @param el The node to recusively process.
      */
-    private processRoot(Element el)
+    private void processRoot(Element el, int orderInParent)
+        throws SQLException, MapException, KeyException
     {
         // Check if the node is mapped
-        ClassMap classMap = m_map.getClassMap(m_nameQual.getQualifiedName(el));
+        ClassMap classMap = m_map.getClassMap(m_nameQual.getQualifiedName((Node)el));
 
         if(classMap != null)
         {
-            // TODO: Check the order stuff
-            processClassRow(null, classMap, null, node, 0)
+            // Process the node
+            processClassRow(null, classMap, null, (Node)el, orderInParent);
 
             // TODO: get the row and set up a document info
+            // TODO: We need to be able to handle a document info with 
+            // multiple root nodes
         }
 
         // Otherwise treat like a pass through element
         else
         {
-            NodeList children = node.getChildNodes();
+            NodeList children = el.getChildNodes();
+            int childOrder = 1;
+
             for(int i = 0; i < children.getLength(); i++)
             {
                 // Process any child elements, attributes and text are ignored at 
                 // this point.
                 if(children.item(i).getNodeType() == Node.ELEMENT_NODE)
-                    processRoot((Element)children.item(i));
+                {
+                    processRoot((Element)children.item(i), childOrder);
+                    childOrder++;
+                }
             }
         }
     }
 
 
-    private void preprocessChildRow(Row classRow, Row parentRow, LinkInfo linkInfo)
-    {
-        // Do the key here
-        // TODO: Check if we should even process here if Key.getType != Key.XMLDBMS
-
-        // If parent's key is the dominant key
-        linkInfo = relMap.getLinkInfo();
-        if(linkInfo.parentKeyIsUnique())
-        {
-            // Get the key from the parent
-            setChildKey(parentRow, classRow, linkInfo);
-        }
-        else
-        {
-            // Generate the key
-            if(key.getType == Key.XMLDBMS)
-                generateKey(classRow, linkInfo.getChildKey());
-        }
-    }
-
-    private void postprocessChildRow(Row classRow, Row parentRow, LinkInfo linkInfo)
-    {
-        // TODO: Do we need to check parentKey.getType
-        if(!linkInfo.parentKeyIsUnique())
-            setParentKey(parentRow, classRow, linkInfo);
-    }
-        
 
     /**
-     * Processes a mapped class.
-     *
+     * This method creates and inserts a row in a class table. As part of the
+     * process, it also processes all children of the node.
+     * 
      * @param parentRow Parent class' row. May be null if root.
      * @param classMap Class to process.
      * @param relMap Relation between this class and it's parent. May be null if root.
      * @param classNode The node with data for this class.
      * @param orderInParent The order of this node within it's parent.
      */
-    Row processClassRow(Row parentRow, ClassMap classMap, RelatedClassMap relMap, Node classNode, int orderInParent)
-	    throws ????
+    private Row processClassRow(Row parentRow, ClassMap classMap, RelatedClassMap relMap, 
+                                Node classNode, int orderInParent)
+        throws SQLException, KeyException, MapException
     {
-	    // This method creates and inserts a row in a class table. As part of the
-	    // process, it also processes all children of the node.
+        // NOTE: This method is called from processRoot (relMap and parentRow 
+        // will be null in this case) and processRow
 
+        // A stack for all our children to be processed after insertion
 	    Stack fkChildren = new Stack();
-	    Row classRow = new Row(classMap.getTable());
 
-        // This is used for the initial key set and then for propogation to
-        // the parent later as well
+
+        Table table = classMap.getTable();
+
 	    LinkInfo linkInfo = null;
 
-
-         // If the root
-        if(parentRow == null || relmap == null)
-        {
-            Key key = classMap.getTable().getPrimaryKey();
-            if(key.getType == Key.XMLDBMS)
-                generateKey(classRow, key);
-        }
-        else
-        {
+        if(relMap != null)
             linkInfo = relMap.getLinkInfo();
-            preprocessChildRow(classRow, parentRow, linkInfo);
-        }
 
-        // TODO: Do and understand order
-	    // generateOrder(classRow, rcm.orderInfo, orderInParent);
 
+        // This creates a row object and sets/generates keys
+        Row classRow = createRow(table, parentRow, linkInfo);
+
+        // Generate the order
+        // TODO: How would we generate order on root elements?
+        if(relMap != null)
+	        generateOrder(classRow, relMap.getOrderInfo(), orderInParent);
+
+        // Okay work on all the children. Children to be processed later
+        // (due to key constraints) are put in the fkChildren stack.
 	    processChildren(classRow, classMap, classNode, fkChildren);
 
-	    insertRow(classMap.getTable(), classRow);
+        // Do the actual row insertion/update
+	    insertRow(table, classRow);
 
+        // Process children left till later
         processFKNodes(classRow, fkChildren);
 
-
-        // Okay now any keys should have been set so we can update parent
-        if(linkInfo != null)
-            postprocessChildRow(classRow, parentRow, linkInfo);
 
         return classRow;
     }   
 
-    Row processPropRow(Row parentRow, PropertyMap propMap, Node propNode, int orderInParent)
-	    throws ???
+    /**
+     * This method creates and inserts a row in a property table. 
+     */
+    private Row processPropRow(Row parentRow, PropertyMap propMap, Node propNode, int orderInParent)
+        throws SQLException, MapException, KeyException
     {
-	    // This method creates and inserts a row in a property table. If the
-	    // key used to link the row to its parent is a candidate key in this
-	    // table, it is generated if necessary. Otherwise, the candidate key
-	    // from the parent is set in this table as a foreign key.
+        // NOTE: This method is called from processRow
 
-	    Row propRow = new Row(propMap.getTable());
+        Table table = propMap.getTable();
+        LinkInfo linkInfo = propMap.getLinkInfo();
 
-        preprocessChildRow(propRow, parentRow, propMap.getLinkInfo());
+        // Create the row object and set/generate keys
+        Row propRow = createRow(table, parentRow, linkInfo);
 
-        // TODO: Do and understand order
-	    // generateOrder(propRow, propMap.orderInfo, orderInParent);
+        // Generate the order if necessary
+	    generateOrder(propRow, propMap.getOrderInfo(), orderInParent);
 
-	    setPropertyColumn(propRow, propMap.column, propNode);
+        // Set the value
+	    setPropertyColumn(propRow, propMap.getColumn(), propNode);
 	  
-        insertRow(propMap.getTable(), propRow);
+        // Do actual row insertion/update
+        insertRow(table, propRow);
 
-        postprocessChildRow(propRow, parentRow, propMap.getLinkInfo());
-	  
         return propRow;
     }
 
-
-    void processFKNodes(Row parentRow, Stack fkNodes)
-	    throws ???
+    /**
+     * Creates row object and does set up on keys for that row. 
+     */
+    private Row createRow(Table table, Row parentRow, LinkInfo linkInfo)
+        throws KeyException
     {
-	    // This method creates and inserts a row in a class or property table.
-	    // The candidate key used to link the row to its parent is in the
-	    // parent's table.
+        // NOTE: Called from processClassRow and processPropRow
+
+        // Create the actual row
+	    Row row = new Row(table);
+
+        // Check the primary keys on the table 
+        Key priKey = table.getPrimaryKey();
+        if(priKey != null)
+        {
+            // and generate if necessary
+            if(priKey.getKeyGeneration() == Key.XMLDBMS)
+                generateKey(row, priKey);
+        }
+
+        // If row has a parent ...
+        if(parentRow != null && linkInfo != null)
+        {
+            if(linkInfo.parentKeyIsUnique())
+            {
+                // Copy the parent key to this row
+                setChildKey(parentRow, row, linkInfo);
+            }
+            else
+            {
+                // Generate a key, (it's copied back to the parent in processChild)
+                Key childKey = linkInfo.getChildKey();
+                if(childKey.getKeyGeneration() == Key.XMLDBMS)
+                    generateKey(row, childKey);
+            }
+        }
+
+        return row;
+    }
+
+
+    /**
+     * Processes rows that were left till later because of key constraints on
+     * the parent table.
+     */
+    private void processFKNodes(Row parentRow, Stack fkNodes)
+        throws SQLException, MapException, KeyException
+    {
+        // NOTE: Called from processClassRow and processPropRow
 
 	    FKNode fkNode;
 
-	    while (!fkNodes.empty())
+	    while(!fkNodes.empty())
 	    {
 		    fkNode = (FKNode)fkNodes.pop();
-		
-		    if(fkNode.map instanceof PropertyMap)
-		    {
-                PropertyMap propMap = (PropertyMap)fkNode.map;
-			    processPropRow(parentRow, propMap, fkNode.node, fkNode.orderInParent);
-		    }
-		    else // if (fkNode.map instanceof RelatedClassMap)
-		    {
-                RelatedClassMap relMap = (RelatedClassMap)fkNode.map;
-			    processClassRow(parentRow, relMap.getClassMap(), relMap, fkNode.node, fkNode.orderInParent);
-		    }
+            processRow(parentRow, fkNode.map, fkNode.node, fkNode.orderInParent);
 	    }
     }   
 
-    void processChildren(Row parentRow, ClassMap parentMap, Node parentNode, Stack fkChildren)
-	    throws ???
+    
+    /** 
+     * Process children of a class.
+     */
+    private void processChildren(Row parentRow, ClassMap parentMap, Node parentNode, Stack fkChildren)
+        throws KeyException, SQLException, MapException
     {
-	    // Process the children of a class node.
+        // NOTE: Called from processClassRow and called recursively for 
+        // inline/wrapper classmaps
 
 	    NodeList children = parentNode.getChildNodes();
+        int childOrder = 1;
 
         for(int i = 0; i < children.getLength(); i++)
         {
-	        Object childMap;
+	        Object childMap = null;
             Node child = children.item(i);
 
-
-		    // that it is either a text or element node.
-
+		    // Get the map for the node based on type
             switch(child.getNodeType())
             {
             case Node.TEXT_NODE:
@@ -333,32 +374,46 @@ public class DOMToDBMS
 
 
             // If the child has been mapped, then process it. Otherwise, ignore.
-
 		    if(childMap != null)
 		    {
-			    if(childMap instanceof PropertyMap)
-			    {
-			        processProperty(parentRow, (PropertyMap)childMap,
-							        child, i, fkChildren);
-			    }
-			    else if(childMap instanceof RelatedClassMap)
-			    {  
-			        processRelatedClass(parentRow, (RelatedClassMap)childMap,
-								        child, i, fkChildren);
-			    }
-                else if(childMap instanceof InlineClassMap)
+			    if(childMap instanceof InlineClassMap)
                 {
-                    // Just recursively call this function with a new parentNode
+                    // For inline just recursively call this function with a 
+                    // new parentNode, so as to process the grand-children just 
+                    // like children
+
+                    // TODO: Work out order in this case!
                     processChildren(parentRow, parentMap, child, fkChildren);
                 }
+                else if(childMap instanceof PropertyMap)
+                {
+                    // Properties first go through processProperty.
+                    // If they are rows then they go through to processChild
+                    processProperty(parentRow, (PropertyMap)childMap, child,
+                                    childOrder, fkChildren);
+                }
+                else if(childMap instanceof RelatedClassMap)
+                {
+                    // Process the child node
+                    processChild(parentRow, childMap, ((RelatedClassMap)childMap).getLinkInfo(), 
+                                 child, childOrder, fkChildren);
+                }
+
+                childOrder++;
 		    }
 	    }
     }
 
-    void processProperty(Row parentRow, PropertyMap propMap, Node propNode, int order, Stack fkNodes)
-        throws ???
+
+    /**
+     * Preprocess a property. May split it if multi-valued.
+     */
+    private void processProperty(Row parentRow, PropertyMap propMap, Node propNode, int order, Stack fkNodes)
+        throws KeyException, SQLException, MapException
     {
-        if(propMap.isMultiValued())
+        // NOTE: Called from processChildren
+
+        if(propMap.isTokenList())
         {
    			// If the attribute is multi-valued, then process each value as a
     		// separate attribute. We construct fake attributes for this
@@ -373,101 +428,130 @@ public class DOMToDBMS
 
 			while(s.hasMoreElements())
 			{
-                Node node;
+                Node node = null;
+                Document doc = propNode.getOwnerDocument();
 
                 switch(propNode.getNodeType())
                 {
                 case Node.ELEMENT_NODE:
-                    node = m_document.createElement("fake");
+                    node = doc.createElement("fake");
                     break;
                 case Node.ATTRIBUTE_NODE:
-                    node = m_document.createAttribute("fake");
+                    node = doc.createAttribute("fake");
                     break;
                 case Node.TEXT_NODE:
-                    node = m_document.createTextNode("");
+                    node = doc.createTextNode("");
                     break;
                 };
 
-                node.setNodeValue(s.nextToken());
-                processSingleProperty(elementRow, attrMap, node, attrOrder, fkAttrs);
-                attrOrder++;
+                // TODO: Token list order
+                
+                if(node != null)
+                {
+                    node.setNodeValue(s.nextToken());
+                    processSingleProperty(parentRow, propMap, node, attrOrder, fkNodes);
+                    attrOrder++;
+                }
             }
         }
         else
         {
             // If not multivalued then just process it.
-            processSingleProperty(parentRow, attrMap, propNode, order, fkAttrs);
+            processSingleProperty(parentRow, propMap, propNode, order, fkNodes);
         }
     }
             
     
-       
-
-    void processSingleProperty(Row parentRow, PropertyMap propMap, Node propNode, 
+    /**
+     * Adds a property to the class, or if in it's own row sends it for 
+     * processing in processChild.
+     */
+    private void processSingleProperty(Row parentRow, PropertyMap propMap, Node propNode, 
                                int orderInParent, Stack fkNodes)
-	    throws ????
+        throws KeyException, SQLException, MapException
     {
+        // NOTE: Called from processProperty
+
         // If mapped to the current table
         if(propMap.getTable() == null)
         {
-            // TODO: Do this order stuff when we understand it
-            // generateOrder(parentRow, propMap.orderInfo, orderInParent);
-			setPropertyColumn(parentRow, propMap.column, propNode);
+            // Generate the order column
+            generateOrder(parentRow, propMap.getOrderInfo(), orderInParent);
+
+            // And insert the value
+			setPropertyColumn(parentRow, propMap.getColumn(), propNode);
         }
 
-        // Otherwise it's a property from another table, so link it
         else 
         {
-            LinkInfo linkInfo = propMap.getLinkInfo();
-			if(linkInfo.parentKeyIsUnique())
-			{
-			    // If the key linking the class table to the property table is
-			    // a candidate key in the class table and a foreign key in the
-			    // property table, generate that key now and save the node
-			    // for later processing (see FKNode).
-
-			    generateKey(parentRow, linkInfo.getParentKey());
-			    fkNodes.push(new FKNode(propNode, propMap, orderInParent));
-			}
-			else
-			{
-			    // If the key linking the class table to the property table is
-			    // a candidate key in the property table and a foreign key in the
-			    // class table, create the row now, which sets the foreign key in
-			    // the parent (class) table.
-
-			    createPropRow(parentRow, propMap, propNode, orderInParent);
-			}
+            // Otherwise it's a property from another table, so send for other processing
+            processChild(parentRow, propMap, propMap.getLinkInfo(), propNode, orderInParent, fkNodes);
 	    }
     }
 
-    void processRelatedClass(Row parentRow, RelatedClassMap relMap, Node classNode, int orderInParent, Stack fkNodes)
-	    throws ???
+
+    /**
+     * General function for processing child rows. 
+     */
+    private void processChild(Row parentRow, Object map, LinkInfo linkInfo, Node node, 
+                              int orderInParent, Stack fkNodes)
+        throws KeyException, SQLException, MapException
     {
-        Linkinfo linkinfo = relMap.getLinkInfo();
-		if(linkinfo.parentKeyIsUnique())
-		{
-		    // If the key linking the class table to the related class table
-		    // is a candidate key in the class table and a foreign key in the
-		    // related class table, generate that key now and save the node
-		    // for later processing (see FKNode).
+        // NOTE: This method is called before parentRow has been inserted into the
+        // database
+        // Called from processChildren and processSingleProperty
 
-		    generateKey(parentRow, linkinfo.getParentKey());
-		    fkNodes.push(new FKNode(classNode, relMap, orderInParent));
-		}
-		else
-		{
-		    // If the key linking the class table to the related class table
-		    // is a candidate key in the related class table and a foreign
-			// key in the class table, create the row now, which sets the
-			// foreign key in the parent (class) table.
 
-			processClassRow(parentRow, relMap.getClassMap(), relMap, classNode, orderInParent);
-		}
+        if(linkInfo.parentKeyIsUnique())
+        {
+            // If the parent key is the unique key then (possibly) generate it
+            Key parentKey = linkInfo.getParentKey();
+   
+            if(parentKey.getKeyGeneration() == Key.XMLDBMS)
+                generateKey(parentRow, parentKey);
+
+            
+            // and keep the node for later processing
+            fkNodes.push(new FKNode(node, map, orderInParent));
+        }
+        else
+        {
+            // Otherwise the child key is unique and we must copy the key
+            // back to the parentRow. So go ahead and process
+
+            Row childRow = processRow(parentRow, map, node, orderInParent);
+            setParentKey(parentRow, childRow, linkInfo);
+        }
+    }
+
+    
+    /**
+     * When it's actually time for a row to get inserted this sends it to the 
+     * appropriate location.
+     */
+    private Row processRow(Row parentRow, Object map, Node node, int orderInParent)
+        throws SQLException, MapException, KeyException
+    {
+        // NOTE: Called from processChild and processFKNodes
+
+        if(map instanceof PropertyMap)
+			return processPropRow(parentRow, (PropertyMap)map, node, orderInParent);
+
+        else // if (fkNode.map instanceof RelatedClassMap)
+        {
+            RelatedClassMap relMap = (RelatedClassMap)map;
+    	    return processClassRow(parentRow, relMap.getClassMap(), relMap, node, orderInParent);
+        }
     }
 
 
-    String getNodeValue(Node propNode)
+
+
+
+
+
+
+    private String getNodeValue(Node propNode)
     {
 	    String s;
 
@@ -490,51 +574,29 @@ public class DOMToDBMS
 	    // the property value and, if it is 0, set the value to null, which
 	    // is later interpreted as NULL.
 
-	    if(map.emptyStringIsNull() && s.length() == 0)
+	    if(m_map.emptyStringIsNull() && s.length() == 0)
 			s = null;
         
         return s;
     }
 
 
-    void setPropertyColumn(Row propRow, Column propColumn, Node propNode)
+    private void setPropertyColumn(Row propRow, Column propColumn, Node propNode)
     {
 	    // Set the property's value in the row.
         String s = getNodeValue(propNode);
 
-        // Do the XMLFormatter here
-        Object format = propColumn.getFormatObject();
-
-        Object value = null;
-
-        if(format == null)
-        {
-            value = s;
-        }
-        else if(format instanceof DateFormat)
-        {
-            value = ((DateFormat)format).parse(s);
-        }
-        else if(format instanceof NumberFormat)
-        {
-            value = ((NumberFormat)format).parse(s);
-        }
-        else if(format instanceof XMLFormatter)
-        {
-            value = ((XMLFormatter)format).parse(s);
-        }
-
-	    propRow.setColumnValue(propColumn, value);
+	    propRow.setColumnValue(propColumn, s);
     }
     
 
-    void setParentKey(Row parentRow, Row childRow, LinkInfo l)
+    private void setParentKey(Row parentRow, Row childRow, LinkInfo l)
     {
 	    parentRow.setColumnValues(l.getParentKey().getColumns(),
 								  childRow.getColumnValues(l.getChildKey().getColumns()));
     }
 
-    void setChildKey(Row parentRow, Row childRow, LinkInfo l)
+    private void setChildKey(Row parentRow, Row childRow, LinkInfo l)
     {
 	    childRow.setColumnValues(l.getChildKey().getColumns(),
 							     parentRow.getColumnValues(l.getParentKey().getColumns()));
@@ -542,8 +604,9 @@ public class DOMToDBMS
 
 
     private void generateKey(Row row, Key key)
+        throws KeyException
     {
-        KeyGenerator keyGen = m_keyGenerators.get(key.getKeyGeneratorName());
+        KeyGenerator keyGen = (KeyGenerator)m_keyGenerators.get(key.getKeyGeneratorName());
 
         // TODO: throw exception for any non-existant key generators
         // TODO: what about invalid number of columns returned
@@ -551,30 +614,41 @@ public class DOMToDBMS
         row.setColumnValues(key.getColumns(), keyGen.generateKey());
     }
 
+    private void generateOrder(Row row, OrderInfo o, int orderInParent)
+    {
+	    if(o != null && !o.orderValueIsFixed() && o.generateOrder())
+	    {
+		    row.setColumnValue(o.getOrderColumn(), new Integer(orderInParent));
+	    }
+    }   
 
-    void insertRow(Table table, Row row)
+
+    private void insertRow(Table table, Row row)
 	    throws SQLException, MapException
     {
+        // TODO: Portions of this function need to be abstracted into 
+        // DB specific classes
+
 	    PreparedStatement p;
 
 
         // Get the database 
         // TODO: (What about the 'null' or default database?)
-        DataInfo data = m_dataSources.get(table.getDatabaseName());
+        DataInfo data = (DataInfo)m_dataSources.get(table.getDatabaseName());
 
         if(data == null)
-            throw MapException("Database '" + table.getDatabaseName() + "' not set.");
+            throw new MapException("Database '" + table.getDatabaseName() + "' not set.");
 
         String sql = data.strings.getInsert(table);
         PreparedStatement stmt = data.conn.prepareStatement(sql);
 
-	    parameters.setParameters(m_map, stmt, row, table.getColumns());
+	    // parameters.setParameters(m_map, stmt, row, table.getColumns());
 
 	    stmt.executeUpdate();
 
         // TODO: Work this out!
-	    if(commitMode == COMMIT_AFTERINSERT)
-            conn.commit();
+	    if(m_commitMode == COMMIT_AFTERINSERT)
+            data.conn.commit();
 
 	    stmt.close();
 
@@ -627,12 +701,9 @@ public class DOMToDBMS
             dataSource = ds;
             conn = dataSource.getConnection(user, password);
             strings = new SQLStrings(conn);
+            used = false;
         }
     }
 }
-                    
 
 
-
-        
-        

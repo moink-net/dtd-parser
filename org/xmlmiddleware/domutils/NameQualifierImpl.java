@@ -5,9 +5,10 @@
 // Changes from version 1.0: None
 // Changes from version 1.01: None
 
-package org.xmlmiddleware.utils;
+package org.xmlmiddleware.domutils;
 
 import org.w3c.dom.Node;
+import org.xmlmiddleware.utils.*;
 
 /**
  * Default implementation of the NameQualifier interface.
