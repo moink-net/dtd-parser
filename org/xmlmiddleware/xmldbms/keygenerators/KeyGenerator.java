@@ -46,7 +46,7 @@ import java.util.*;
  * name of a class that implements this interface and the properties
  * needed to initialize that class.</p>
  *
- * <P>The helper class KeyGeneratorHighLow provides a sample implementation
+ * <P>The helper class HighLow provides a sample implementation
  * of this interface.</P>
  *
  * @author Ronald Bourret
@@ -64,10 +64,12 @@ public interface KeyGenerator
 	* @param props A Properties object containing properties to initialize
 	*              the key generator. The documentation for the key generator
 	*              must give the names and legal values for these properties.
+      * @param suffix A numeric suffix to be added to property names. If this
+      *     is 0, no suffix is added.
 	* @exception XMLMiddlewareException An error occured while initializing the key.
 	*/
 
-   public void initialize(Properties props) throws XMLMiddlewareException;      
+   public void initialize(Properties props, int suffix) throws XMLMiddlewareException;      
 
    /**
 	* Generates a key.

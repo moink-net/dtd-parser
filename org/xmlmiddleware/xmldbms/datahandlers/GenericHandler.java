@@ -122,7 +122,6 @@ public class GenericHandler
          ResultSet rs = selStmt.executeQuery();
 
          // Make sure at least 1 row.
-
          if(!rs.next())
             throw new SQLException("[xmldbms] Couldn't retrieve inserted row due to changed values.");
 

@@ -151,8 +151,10 @@ import javax.sql.*;
  * [2] If there is more than one key generator, use KeyGeneratorName1,
  * KeyGeneratorName2, ... KeyGeneratorClass1, KeyGeneratorClass2, etc.<br />
  * [3] If the key generator requires initialization properties, these should be
- * passed in as well. See the documentation for your key generator to see what
- * these are.<br />
+ * passed in as well. If there is more than one key generator, the initialization
+ * properties should have the same numerical suffix as KeyGeneratorName and
+ * KeyGeneratorClass. See the documentation for your key generator for information
+ * about the initialization properties.<br />
  * [4] Applies to the output filter file, if any.
  * [5] Value is a space-separated list containing Map, XML, and/or Action.<br />
  * [6] Value is a space-separated list containing Map and/or Filter.<br />
@@ -928,8 +930,7 @@ public class Transfer extends PropertyProcessor
 
       // Get the database name. If this is null, use "Default".
 
-      dbName = props.getProperty(XMLDBMSProps.DBNAME);
-      if (dbName == null) dbName = DEFAULT;
+      dbName = props.getProperty(XMLDBMSProps.DBNAME, DEFAULT);
 
       // Create a new DBInfo object.
 
@@ -1121,7 +1122,7 @@ public class Transfer extends PropertyProcessor
 
       name = configProps.getProperty(XMLDBMSProps.KEYGENERATORNAME);
       className = configProps.getProperty(XMLDBMSProps.KEYGENERATORCLASS);
-      keyGen = createKeyGenerator(name, className, configProps);
+      keyGen = createKeyGenerator(name, className, configProps, 0);
 
       // Add the key generator to DOMToDBMS.
 
@@ -1150,7 +1151,7 @@ public class Transfer extends PropertyProcessor
          {
             // Instantiate the key generator and add it to the DOMToDBMS object.
 
-            keyGen = createKeyGenerator(names[i], classes[i], configProps);
+            keyGen = createKeyGenerator(names[i], classes[i], configProps, i);
             domToDBMS.addKeyGenerator(names[i], keyGen);
          }
       }
@@ -1472,7 +1473,7 @@ public class Transfer extends PropertyProcessor
       return transferInfo;
    }
 
-   private KeyGenerator createKeyGenerator(String name, String className, Properties configProps)
+   private KeyGenerator createKeyGenerator(String name, String className, Properties configProps, int suffix)
       throws XMLMiddlewareException
    {
       KeyGenerator keyGen;
@@ -1485,7 +1486,7 @@ public class Transfer extends PropertyProcessor
       if (keyGen == null)
       {
          keyGen = (KeyGenerator)instantiateObject(className);
-         keyGen.initialize(configProps);
+         keyGen.initialize(configProps, suffix);
          keyGenerators.put(name, keyGen);
       }
       return keyGen;

@@ -48,30 +48,30 @@ import org.w3c.dom.*;
  * to the map document orders.map and the action document orders.act:</p>
  *
  * <pre>
- *   // Create the XMLDBMSMap object with a user-defined function.
- *   <br />
- *   map = createMap("orders.map");
- *   <br />
- *   // Create the Actions object with a user-defined function.
- *   <br />
- *   actions = createActions(map, "orders.act");
- *   <br />
- *   // Create a new DOMToDBMS object.
- *   <br />
- *   domToDBMS = new DOMToDBMS();
- *   <br />
- *   // Create a data source and data handler for our database, then
- *   // bundle these into a TransferInfo object.
- *   <br />
- *   ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
- *   handler = new GenericHandler(ds, null, null);
- *   ti = new TransferInfo(map, null, handler);
- *   <br />
- *   // Open the document and call storeDocument to transfer the data.
- *   <br />
- *   utils = new ParserUtilsXerces();
- *   doc = utils.openDocument(new InputSource(new FileInputStream("orders.xml")));
- *   domToDBMS.storeDocument(ti, doc, actions);
+ *    // Create the XMLDBMSMap object with a user-defined function.
+ *    <br />
+ *    map = createMap("orders.map");
+ *    <br />
+ *    // Create the Actions object with a user-defined function.
+ *    <br />
+ *    actions = createActions(map, "orders.act");
+ *    <br />
+ *    // Create a new DOMToDBMS object.
+ *    <br />
+ *    domToDBMS = new DOMToDBMS();
+ *    <br />
+ *    // Create a data source and data handler for our database, then
+ *    // bundle these into a TransferInfo object.
+ *    <br />
+ *    ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
+ *    handler = new GenericHandler(ds, null, null);
+ *    ti = new TransferInfo(map, null, handler);
+ *    <br />
+ *    // Open the document and call storeDocument to transfer the data.
+ *    <br />
+ *    utils = new ParserUtilsXerces();
+ *    doc = utils.openDocument(new InputSource(new FileInputStream("orders.xml")));
+ *    domToDBMS.storeDocument(ti, doc, actions);
  * </pre>
  *
  * <p>DOMToDBMS stores data starting with the first element it finds that is mapped
@@ -164,9 +164,9 @@ public class DOMToDBMS
    public void setCommitMode(int commitMode)
    {
       if ((commitMode != DataHandler.COMMIT_AFTERSTATEMENT) &&
-         (commitMode != DataHandler.COMMIT_AFTERDOCUMENT) &&
-         (commitMode != DataHandler.COMMIT_NONE) &&
-         (commitMode != DataHandler.COMMIT_NOTRANSACTIONS))
+          (commitMode != DataHandler.COMMIT_AFTERDOCUMENT) &&
+          (commitMode != DataHandler.COMMIT_NONE) &&
+          (commitMode != DataHandler.COMMIT_NOTRANSACTIONS))
          throw new IllegalArgumentException("Invalid commit mode: " + commitMode);
 
       m_commitMode = commitMode;
@@ -480,7 +480,7 @@ public class DOMToDBMS
 
       ClassMap classMap = m_transInfo.getMap().getClassMap(el.getNamespaceURI(), el.getLocalName());
 
-      if(classMap != null)
+      if (classMap != null)
       {
          // Process the node
 
@@ -495,7 +495,7 @@ public class DOMToDBMS
             RootFilter rootFilter = filterSet.createRootFilter();
             FilterConditions rootConditions = rootFilter.createRootFilterConditions(table);
             String where = buildCondition(priKey.getColumns(),
-                                   row.getColumnValues(priKey.getColumns()));
+                                          row.getColumnValues(priKey.getColumns()));
             rootConditions.addCondition(where);
          }
       }
@@ -512,7 +512,7 @@ public class DOMToDBMS
             // Process any child elements. Attributes and text are ignored at
             // this point.
 
-            if(children.item(i).getNodeType() == Node.ELEMENT_NODE)
+            if (children.item(i).getNodeType() == Node.ELEMENT_NODE)
             {
                processRoot(filterSet, (Element)children.item(i), childOrder);
                childOrder++;
@@ -532,7 +532,7 @@ public class DOMToDBMS
     * @param orderInParent The order of this node within its parent.
     */
    private Row processClassRow(Row parentRow, ClassMap classMap, RelatedClassMap relMap,
-                        Element classNode, long orderInParent)
+                               Element classNode, long orderInParent)
       throws SQLException, XMLMiddlewareException
    {
       // This method is called from processRoot and from processRow. When
@@ -565,17 +565,19 @@ public class DOMToDBMS
          // TODO: How would we generate order on root elements?
 
          if (relMap != null)
+         {
             generateOrder(classRow, relMap.getOrderInfo(), orderInParent);
+         }
 
          // Process the children. This does four things:
          //
          // 1) For properties (PCDATA, attributes, and property elements) stored in
-         //   the class table, adds property values to the class row.
+         //    the class table, adds property values to the class row.
          // 2) For properties stored in property tables, adds property nodes to fkChildren.
-         //   Note that rows in property tables always have the FK.
+         //    Note that rows in property tables always have the FK.
          // 3) For related class rows when the PK is in the child class, inserts the row.
          // 4) For related class elements when the FK is in the child class, adds the
-         //   element to fkChildren.
+         //    element to fkChildren.
          //
          // Steps (2), (3), and (4) are done because referential integrity constraints
          // require PK rows to be inserted before FK rows. Because the PK can be in
@@ -615,10 +617,12 @@ public class DOMToDBMS
          // row is dependent on errors. Do we handle this or just let
          // it blow with two errors (one for the child and then one here)?
 
-         if(m_stopOnException)
+         if (m_stopOnException)
             throw e;
          else
+         {
             pushException(e);
+         }
       }
 
       return classRow;
@@ -628,7 +632,7 @@ public class DOMToDBMS
     * Process the children of a class element. This includes the attributes.
     */
    private void processChildren(Row parentRow, ClassMapBase parentMap, Node parentNode,
-                         Vector fkChildren, Action action, Vector useProps)
+                                Vector fkChildren, Action action, Vector useProps)
       throws SQLException, XMLMiddlewareException
    {
       // This method is called from processClassRow. It is also called recursively
@@ -660,7 +664,7 @@ public class DOMToDBMS
 
             case Node.ELEMENT_NODE:
                childMap = parentMap.getChildMap(childNode.getNamespaceURI(),
-                                        childNode.getLocalName());
+                                                childNode.getLocalName());
                break;
 
          }
@@ -668,7 +672,7 @@ public class DOMToDBMS
          // Process the child.
 
          processChild(parentRow, childMap, childNode, childOrder,
-                   fkChildren, action, useProps);
+                      fkChildren, action, useProps);
 
          // Increment the count of the child in its parent.
 
@@ -682,7 +686,7 @@ public class DOMToDBMS
       // Process the attributes
 
       NamedNodeMap attrs = parentNode.getAttributes();
-      if(attrs != null)
+      if (attrs != null)
       {
          for(int i = 0; i < attrs.getLength(); i++)
          {
@@ -690,9 +694,9 @@ public class DOMToDBMS
 
             childNode = attrs.item(i);
             childMap = parentMap.getAttributeMap(childNode.getNamespaceURI(),
-                                        childNode.getLocalName());
+                                                 childNode.getLocalName());
             processChild(parentRow, childMap, childNode, 0,
-                      fkChildren, action, useProps);
+                         fkChildren, action, useProps);
          }
       }
    }
@@ -701,37 +705,37 @@ public class DOMToDBMS
     * This is the other half of processChildren. It is called for every node that is mapped.
     */
    private void processChild(Row parentRow, Object childMap, Node childNode, long childOrder,
-                       Vector fkChildren, Action action, Vector useProps)
+                             Vector fkChildren, Action action, Vector useProps)
       throws SQLException, XMLMiddlewareException
    {
-      if(childMap == null)
+      if (childMap == null)
       {
          return;
       }
-      else if(childMap instanceof PropertyMap)
+      else if (childMap instanceof PropertyMap)
       {
          // Only process the property if it is being used (useProps). When
          // inserting, all mapped properties are used. When updating, only the
          // properties explicitly specified in the Actions object are used.
 
-         if(useProps.contains(childMap))
+         if (useProps.contains(childMap))
          {
             // Call processProperty for the property. For properties in
             // the class table, this calls setPropertyColumn. For properties
             // in property tables, this calls processRowChild.
 
             processProperty(parentRow, (PropertyMap)childMap, childNode,
-                        childOrder, fkChildren, action);
+                            childOrder, fkChildren, action);
          }
       }
-      else if(childMap instanceof RelatedClassMap)
+      else if (childMap instanceof RelatedClassMap)
       {
          // Process the related class
 
          processRowChild(parentRow, childMap, ((RelatedClassMap)childMap).getLinkInfo(),
-                     childNode, childOrder, fkChildren, action);
+                         childNode, childOrder, fkChildren, action);
       }
-      else if(childMap instanceof InlineClassMap)
+      else if (childMap instanceof InlineClassMap)
       {
          // Generate the order column value of the inline element, if any.
 
@@ -759,7 +763,7 @@ public class DOMToDBMS
 
       generateOrder(parentRow, propMap.getOrderInfo(), order);
 
-      if(propMap.isTokenList())
+      if (propMap.isTokenList())
       {
          // If the property is a token list of properties, the process each value
          // as a separate property. To do this, we construct a fake property map
@@ -816,7 +820,7 @@ public class DOMToDBMS
                   break;
             }
 
-            if(tokenNode != null)
+            if (tokenNode != null)
             {
                // Now we recursively call processProperty with the property node
                // constructed for the token. Note that this node will be processed
@@ -825,7 +829,7 @@ public class DOMToDBMS
                // This removes any possibility of an infinite loop.
 
                processProperty(parentRow, tokenMap, tokenNode, tokenOrder,
-                           fkNodes, action);
+                               fkNodes, action);
 
                // Increment the token order.
 
@@ -838,7 +842,7 @@ public class DOMToDBMS
          // This clause processes properties that are single values -- that is,
          // properties that are not token lists.
 
-         if(propMap.getTable() == null)
+         if (propMap.getTable() == null)
          {
             // If the property is stored in the class table, set the value now.
 
@@ -850,7 +854,7 @@ public class DOMToDBMS
             // this case, pass it to processRowChild for processing.
 
             processRowChild(parentRow, propMap, propMap.getLinkInfo(), propNode,
-                        order, fkNodes, action);
+                            order, fkNodes, action);
          }
       }
    }
@@ -860,7 +864,7 @@ public class DOMToDBMS
     * that is, in child tables. These can be related class tables or property tables.
     */
    private void processRowChild(Row parentRow, Object map, LinkInfo linkInfo, Node node,
-                         long orderInParent, Vector fkNodes, Action action)
+                                long orderInParent, Vector fkNodes, Action action)
       throws SQLException, XMLMiddlewareException
    {
       // This method is called for nodes that are stored in child rows. It is
@@ -872,7 +876,7 @@ public class DOMToDBMS
 
       // Called from processChild and processProperty
 
-      if(linkInfo.parentKeyIsUnique())
+      if (linkInfo.parentKeyIsUnique())
       {
          // If the parent row has the unique key, store the child node and
          // related information for later processing by processFKNodes.
@@ -885,7 +889,7 @@ public class DOMToDBMS
          // the unique key from the child row to the parent row.
 
          Row childRow = processRow(parentRow, map, node, orderInParent, action);
-         if(childRow != null)
+         if (childRow != null)
          {
             setParentKey(parentRow, childRow, linkInfo);
          }
@@ -897,12 +901,12 @@ public class DOMToDBMS
     * appropriate location.
     */
    private Row processRow(Row parentRow, Object map, Node node, long orderInParent,
-                     Action action)
+                          Action action)
       throws SQLException, XMLMiddlewareException
    {
       // NOTE: Called from processRowChild and processFKNodes
 
-      if(map instanceof PropertyMap)
+      if (map instanceof PropertyMap)
       {
          // If the map is a property map, call processPropRow.
 
@@ -917,7 +921,7 @@ public class DOMToDBMS
          RelatedClassMap relMap = (RelatedClassMap)map;
 
          return processClassRow(parentRow, relMap.getClassMap(), relMap, (Element)node,
-                           orderInParent);
+                                orderInParent);
       }
    }
 
@@ -925,7 +929,7 @@ public class DOMToDBMS
     * This method creates and inserts a row in a property table.
     */
    private Row processPropRow(Row parentRow, PropertyMap propMap, Node propNode,
-                        long orderInParent, Action action)
+                              long orderInParent, Action action)
       throws SQLException, XMLMiddlewareException
    {
       // NOTE: This method is called from processRow
@@ -954,8 +958,10 @@ public class DOMToDBMS
       // Note that Action.NONE falls through this check.
 
       int act = action.getAction();
-      if((act == Action.UPDATE) || (act == Action.UPDATEORINSERT))
+      if ((act == Action.UPDATE) || (act == Action.UPDATEORINSERT))
+      {
          act = Action.INSERT;
+      }
 
       // Insert the row in the property table and return it to the calling method.
 
@@ -1016,10 +1022,12 @@ public class DOMToDBMS
       // Generate the primary key (if necessary)
 
       Key priKey = table.getPrimaryKey();
-      if(priKey != null)
+      if (priKey != null)
       {
-         if(priKey.getKeyGeneration() == Key.KEYGENERATOR)
+         if (priKey.getKeyGeneration() == Key.KEYGENERATOR)
+         {
             generateKey(row, priKey);
+         }
       }
 
 /*
@@ -1031,7 +1039,9 @@ public class DOMToDBMS
       {
          Key uniqueKey = (Key)e.nextElement();
          if (uniqueKey.getKeyGeneration() == Key.KEYGENERATOR)
+         {
             generateKey(row, uniqueKey);
+         }
       }
 */
 
@@ -1040,9 +1050,9 @@ public class DOMToDBMS
       // should both be null (when the row is in the root table) or both
       // be non-null (when the row is in any other table).
 
-      if(parentRow != null && linkInfo != null)
+      if (parentRow != null && linkInfo != null)
       {
-         if(linkInfo.parentKeyIsUnique())
+         if (linkInfo.parentKeyIsUnique())
          {
             setChildKey(parentRow, row, linkInfo);
          }
@@ -1067,10 +1077,12 @@ public class DOMToDBMS
       for(int i = 0; i < useProps.size(); i++)
       {
          PropertyMap propMap = (PropertyMap)useProps.elementAt(i);
-         if(propMap.getTable() == null)
+         if (propMap.getTable() == null)
          {
-            if(!classRow.isColumnSet(propMap.getColumn()))
+            if (!classRow.isColumnSet(propMap.getColumn()))
+            {
                classRow.setColumnValue(propMap.getColumn(), null);
+            }
          }
       }
    }
@@ -1082,7 +1094,7 @@ public class DOMToDBMS
    {
       String s;
 
-      if(propNode.getNodeType() == Node.ELEMENT_NODE)
+      if (propNode.getNodeType() == Node.ELEMENT_NODE)
       {
          // If the property is an element, then the property's value is the
          // element's contents, serialized as XML. If containsXML is true,
@@ -1107,8 +1119,10 @@ public class DOMToDBMS
       // the property value and, if it is 0, set the value to null, which
       // is later interpreted as NULL.
 
-      if(m_transInfo.getMap().emptyStringIsNull() && s.length() == 0)
+      if (m_transInfo.getMap().emptyStringIsNull() && s.length() == 0)
+      {
          s = null;
+      }
 
       return s;
    }
@@ -1143,7 +1157,7 @@ public class DOMToDBMS
       // in the order column. We use ConvertObject to convert the order value
       // from a Long to whatever type is used by the order column.
 
-      if((o != null) && (!o.orderValueIsFixed()) && (o.generateOrder()))
+      if ((o != null) && (!o.orderValueIsFixed()) && (o.generateOrder()))
       {
          Column col = o.getOrderColumn();
          Object val = ConvertObject.convertObject(new Long(orderValue), col.getType(), col.getFormatter());
@@ -1162,11 +1176,15 @@ public class DOMToDBMS
    {
       Vector useProps = null;
 
-      if(action.getAction() == Action.UPDATE)
+      if (action.getAction() == Action.UPDATE)
+      {
          useProps = action.getUpdatePropertyMaps();
+      }
 
-      if(useProps == null)
+      if (useProps == null)
+      {
          useProps = getAllPropertyMaps(classMap);
+      }
 
       return useProps;
    }
@@ -1177,42 +1195,54 @@ public class DOMToDBMS
    private Vector getAllPropertyMaps(ClassMapBase classMapBase)
    {
       // TODO: Test if caching this is worth it!
-      if(m_classAllProperties.contains(classMapBase))
+
+      if (m_classAllProperties.contains(classMapBase))
+      {
          return (Vector)m_classAllProperties.get(classMapBase);
+      }
 
       // Q: Could this be moved to ClassMap for efficiency?
       // A: Nope, it can't because ClassMap needs to be threadsafe.
+
       Vector v = new Vector();
       PropertyMap propMap;
 
       // PCDATAMap
+
       propMap = classMapBase.getPCDATAMap();
-      if(propMap != null)
+      if (propMap != null)
+      {
          v.addElement(propMap);
+      }
 
       // Attributes
+
       Enumeration e = classMapBase.getAttributeMaps();
       while(e.hasMoreElements())
          v.addElement(e.nextElement());
 
       // Child Elements
+
       e = classMapBase.getChildMaps();
       while(e.hasMoreElements())
       {
          Object map = e.nextElement();
-         if(map instanceof PropertyMap)
+         if (map instanceof PropertyMap)
+         {
             v.addElement(map);
+         }
          else if (map instanceof InlineClassMap)
          {
             Vector v1 = getAllPropertyMaps((InlineClassMap)map);
             for (int i = 0; i < v1.size(); i++)
             {
-              v.addElement(v1.elementAt(i));
+               v.addElement(v1.elementAt(i));
             }
          }
       }
 
       // Cache
+
       m_classAllProperties.put(classMapBase, v);
 
       return v;
@@ -1229,10 +1259,12 @@ public class DOMToDBMS
 
       Action action = m_actions.getAction(el.getNamespaceURI(), el.getLocalName());
 
-      if(action == null)
+      if (action == null)
+      {
          action = m_actions.getDefaultAction();
+      }
 
-      if(action == null)
+      if (action == null)
          throw new XMLMiddlewareException("No default action specified.");
 
       // TODO: When action: attributes are implemented put code here
@@ -1276,11 +1308,11 @@ public class DOMToDBMS
       // We shouldn't ever hit this, but it might be possible if a
       // database-generated key value isn't generated.
 
-      if(!childRow.areColumnsSet(childCols))
+      if (!childRow.areColumnsSet(childCols))
          throw new XMLMiddlewareException("Internal error. The child key is not set yet.");
 
       parentRow.setColumnValues(l.getParentKey().getColumns(),
-                          childRow.getColumnValues(childCols));
+                                childRow.getColumnValues(childCols));
    }
 
    /**
@@ -1294,11 +1326,11 @@ public class DOMToDBMS
       // We shouldn't ever hit this, but it might be possible if a
       // database-generated key value isn't generated.
 
-      if(!parentRow.areColumnsSet(parentCols))
+      if (!parentRow.areColumnsSet(parentCols))
          throw new XMLMiddlewareException("Internal error. The parent key is not set yet.");
 
       childRow.setColumnValues(l.getChildKey().getColumns(),
-                         parentRow.getColumnValues(parentCols));
+                               parentRow.getColumnValues(parentCols));
    }
 
    /**
@@ -1309,13 +1341,13 @@ public class DOMToDBMS
    {
       KeyGenerator keyGen = (KeyGenerator)m_keyGenerators.get(key.getKeyGeneratorName());
 
-      if(keyGen == null)
+      if (keyGen == null)
          throw new XMLMiddlewareException("No KeyGenerator added for the key generator named " + key.getKeyGeneratorName());
 
       Column[] columns = key.getColumns();
       Object[] values = keyGen.generateKey();
 
-      if(columns.length != values.length)
+      if (columns.length != values.length)
          throw new XMLMiddlewareException("Invalid number of columns generated by key generator: " + key.getKeyGeneratorName());
 
       for(int i = 0; i < columns.length; i++)
@@ -1345,7 +1377,7 @@ public class DOMToDBMS
       // TODO: (What about the 'null' or default database?)
       DataHandler dataHandler = m_transInfo.getDataHandler(table.getDatabaseName());
 
-      if(dataHandler == null)
+      if (dataHandler == null)
          throw new XMLMiddlewareException("DataHandler not set for the database named " + table.getDatabaseName());
 
       try
@@ -1381,8 +1413,10 @@ public class DOMToDBMS
       }
       catch(SQLException e)
       {
-         if(soft)
+         if (soft)
+         {
             pushWarning(new SQLWarning(e.getMessage(), e.getSQLState()));
+         }
          else
             throw e;
       }
@@ -1398,8 +1432,8 @@ public class DOMToDBMS
       // "updating" the property means deleting all the old rows and inserting
       // the new rows.
 
-      if(action.getAction() == Action.UPDATE ||
-         action.getAction() == Action.UPDATEORINSERT)
+      if (action.getAction() == Action.UPDATE ||
+          action.getAction() == Action.UPDATEORINSERT)
       {
          for(int i = 0; i < useProps.size(); i++)
          {
@@ -1409,7 +1443,7 @@ public class DOMToDBMS
             PropertyMap propMap = (PropertyMap)useProps.elementAt(i);
 
             Table propTable = propMap.getTable();
-            if(propTable != null)
+            if (propTable != null)
             {
                // Note that for the link between class tables and property tables,
                // the unique key is always in the class table.
@@ -1443,7 +1477,7 @@ public class DOMToDBMS
       // TODO: (What about the 'null' or default database?)
 
       DataHandler dataHandler = m_transInfo.getDataHandler(table.getDatabaseName());
-      if(dataHandler == null)
+      if (dataHandler == null)
          throw new XMLMiddlewareException("Database '" + table.getDatabaseName() + "' not set.");
 
       // Delete the row or rows
@@ -1454,8 +1488,10 @@ public class DOMToDBMS
       }
       catch(SQLException e)
       {
-         if(soft)
+         if (soft)
+         {
             pushWarning(new SQLWarning(e.getMessage(), e.getSQLState()));
+         }
          else
             throw e;
       }
@@ -1472,10 +1508,14 @@ public class DOMToDBMS
    {
       // TODO: What order do we chain the exceptions?
 
-      if(m_sqlExceptions == null)
+      if (m_sqlExceptions == null)
+      {
          m_sqlExceptions = e;
+      }
       else
+      {
          m_sqlExceptions.setNextException(e);
+      }
    }
 
    /**
@@ -1485,10 +1525,14 @@ public class DOMToDBMS
    {
       // TODO: What order do we chain the warnings?
 
-      if(m_sqlWarnings == null)
+      if (m_sqlWarnings == null)
+      {
          m_sqlWarnings = w;
+      }
       else
+      {
          m_sqlWarnings.setNextWarning(w);
+      }
    }
 
    // ************************************************************************
