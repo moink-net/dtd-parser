@@ -375,16 +375,22 @@ public class MapFactory_Database
    public XMLDBMSMap createMap(String rootCatalogName, String rootSchemaName, String rootTableName)
       throws SQLException, XMLMiddlewareException
    {
-      // Check the arguments and state.
+      String[] databaseNames, catalogNames, schemaNames, tableNames;
 
-      checkNull(rootTableName, ROOT + TABLENAME);
-      initGlobalVariables();
+      // Create array-valued arguments.
+
+      databaseNames = new String[1];
+      databaseNames[0] = DEFAULT;
+      catalogNames = new String[1];
+      catalogNames[0] = rootCatalogName;
+      schemaNames = new String[1];
+      schemaNames[0] = rootSchemaName;
+      tableNames = new String[1];
+      tableNames[0] = rootTableName;
 
       // Create and return the map.
 
-      processTable(DEFAULT, rootCatalogName, rootSchemaName, rootTableName, emptyHashtable);
-      invertMap();
-      return map;
+      return createMap(databaseNames, catalogNames, schemaNames, tableNames);
    }
 
    /**
@@ -546,7 +552,7 @@ public class MapFactory_Database
    {
       for (int i = 0; i < databaseNames.length; i++)
       {
-         processCatalogOrSchema(databaseNames[i], catalogNames[i], null);
+         getTableMetadata(databaseNames[i], catalogNames[i], null, null, emptyHashtable);
       }
    }
 
@@ -555,7 +561,7 @@ public class MapFactory_Database
    {
       for (int i = 0; i < databaseNames.length; i++)
       {
-         processCatalogOrSchema(databaseNames[i], catalogNames[i], schemaNames[i]);
+         getTableMetadata(databaseNames[i], catalogNames[i], schemaNames[i], null, emptyHashtable);
       }
    }
 
@@ -564,11 +570,11 @@ public class MapFactory_Database
    {
       for (int i = 0; i < databaseNames.length; i++)
       {
-         processTable(databaseNames[i], catalogNames[i], schemaNames[i], tableNames[i], stopTables);
+         getTableMetadata(databaseNames[i], catalogNames[i], schemaNames[i], tableNames[i], stopTables);
       }
    }
 
-   private void processCatalogOrSchema(String databaseName, String catalogName, String schemaName)
+   private void getTableMetadata(String databaseName, String catalogName, String schemaName, String tableName, Hashtable stopTables)
       throws SQLException, XMLMiddlewareException
    {
       DatabaseMetaData meta;
@@ -576,9 +582,11 @@ public class MapFactory_Database
       Vector           catalogNames = new Vector(),
                        schemaNames = new Vector(),
                        tableNames = new Vector();
+      String           name;
 
       // Get a DatabaseMetaData object for the connection used by the database and
-      // escape the _ and % characters in the schema name, as these are treated as wildcards.
+      // escape the _ and % characters in the schema and table name, as these are
+      // treated as wildcards.
 
       // It is not clear whether to set null catalog and schema names to null or an
       // empty string. For the moment, set these to an empty string. See the catalog
@@ -588,14 +596,19 @@ public class MapFactory_Database
 //      if (catalogName == null) catalogName = "";
 //      if (schemaName == null) schemaName = "";
       schemaName = escapeDBName(meta, schemaName);
+      tableName = escapeDBName(meta, tableName);
 
       // Get the catalog, schema, and table names and cache them.
 
-      rs = meta.getTables(catalogName, schemaName, null, null);
+      rs = meta.getTables(catalogName, schemaName, tableName, null);
       while (rs.next())
       {
-         catalogNames.addElement(rs.getString(1));
-         schemaNames.addElement(rs.getString(2));
+         name = rs.getString(1);
+         if (rs.wasNull()) name = null;
+         catalogNames.addElement(name);
+         name = rs.getString(2);
+         if (rs.wasNull()) name = null;
+         schemaNames.addElement(name);
          tableNames.addElement(rs.getString(3));
       }
 
@@ -607,9 +620,9 @@ public class MapFactory_Database
 
       // Process the tables.
 
-      for (int i = 0; i < schemaNames.size(); i++)
+      for (int i = 0; i < catalogNames.size(); i++)
       {
-         processTable(databaseName, (String)catalogNames.elementAt(i), (String)schemaNames.elementAt(i), (String)tableNames.elementAt(i), emptyHashtable);
+         processTable(databaseName, (String)catalogNames.elementAt(i), (String)schemaNames.elementAt(i), (String)tableNames.elementAt(i), stopTables);
       }
    }
 
