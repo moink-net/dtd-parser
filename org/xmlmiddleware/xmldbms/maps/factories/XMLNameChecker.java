@@ -174,10 +174,13 @@ public class XMLNameChecker
          length = (prefixes == null) ? -1 : prefixes.length;
          for (int i = 0; i < length; i++)
          {
-            prefix = checkCharacters(prefixes[i]);
-            newLocalName = prefix + "." + newLocalName;
-            newXMLName = XMLName.create(namespaceURI, newLocalName, namespacePrefix);
-            if (existingNames.get(newXMLName) == null) break;
+            if (prefixes[i] != null)
+            {
+               prefix = checkCharacters(prefixes[i]);
+               newLocalName = prefix + "." + newLocalName;
+               newXMLName = XMLName.create(namespaceURI, newLocalName, namespacePrefix);
+               if (existingNames.get(newXMLName) == null) break;
+            }
          }
 
          // If the XMLName is still not unique, append numbers until the name is
