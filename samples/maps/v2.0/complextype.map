@@ -1,0 +1,90 @@
+<?xml version='1.0' ?>
+<!--
+     This is a better sample of complex type usage, since it is
+     round-trippable. (The use of complex types in inherit.map is
+     not.)
+
+     There are two tables: Authors and Writings.
+
+     The complex type Writing is mapped to the table Writings. The
+     element types Book and Author both derive from the Writing
+     complex type. Writing is mapped with a normal ClassMap, while
+     Book and Author are mapped as related classes using UseClassMap
+     elements that point to the ClassMap for Writing.
+-->     
+
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
+
+<XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
+   <Databases>
+      <Database Name="Default" QuoteIdentifiers="Yes">
+         <Catalog>
+            <Schema>
+               <Table Name="Authors">
+                  <Column Name="AuthorID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="FirstName" DataType="VARCHAR" Length="30" Nullable="Yes"/>
+                  <Column Name="LastName" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="DOB" DataType="DATE" Nullable="Yes" />
+                  <Column Name="Publisher" DataType="VARCHAR" Length="50" Nullable="Yes"/>
+                  <PrimaryKey KeyGenerator="Database">
+                     <UseColumn Name="AuthorID"/>
+                  </PrimaryKey>
+               </Table>
+               <Table Name="Writings">
+                  <Column Name="AuthorID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="WritingID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="Title" DataType="VARCHAR" Length="50" Nullable="Yes"/>
+                  <PrimaryKey KeyGenerator="Database">
+                     <UseColumn Name="WritingID"/>
+                  </PrimaryKey>
+                  <ForeignKey Name="Author_FK">
+                     <UseColumn Name="AuthorID"/>
+                  </ForeignKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+   </Databases>
+   <Maps>
+      <ClassMap>
+         <ElementType Name="Writing"/>
+         <ToClassTable Name="Writings"/>
+         <PropertyMap>
+            <ElementType Name="Title"/>
+            <ToColumn Name="Title"/>
+         </PropertyMap>
+      </ClassMap>
+      <ClassMap>
+         <ElementType Name="Author"/>
+         <ToClassTable Name="Authors"/>
+         <PropertyMap>
+            <ElementType Name="FirstName"/>
+            <ToColumn Name="FirstName"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="LastName"/>
+            <ToColumn Name="LastName"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Birthday"/>
+            <ToColumn Name="DOB"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Publisher"/>
+            <ToColumn Name="Publisher"/>
+         </PropertyMap>
+         <RelatedClass KeyInParentTable="Unique">
+            <ElementType Name="Book"/>
+            <UseClassMap ElementType="Writing" />
+            <UseUniqueKey Name="Primary Key"/>
+            <UseForeignKey Name="Author_FK"/>
+         </RelatedClass>
+         <RelatedClass KeyInParentTable="Unique">
+            <ElementType Name="Essay"/>
+            <UseClassMap ElementType="Writing" />
+            <UseUniqueKey Name="Primary Key"/>
+            <UseForeignKey Name="Author_FK"/>
+         </RelatedClass>
+      </ClassMap>
+   </Maps>
+</XMLToDBMS>
