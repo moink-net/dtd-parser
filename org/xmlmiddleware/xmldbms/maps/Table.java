@@ -76,8 +76,6 @@ public class Table extends MapBase
 
    private String universalName = null;
 
-   private boolean quoteIdentifiers = true;
-
    private Hashtable columns = new Hashtable();
 
    private Key primaryKey = null;
@@ -200,30 +198,6 @@ public class Table extends MapBase
       universalName.append(tableName);
       universalName.append(DOUBLEQUOTE);
       return universalName.toString();
-   }
-
-   // ********************************************************************
-   // Quote identifiers
-   // ********************************************************************
-
-   /**
-    * Get whether to quote identifiers.
-    *
-    * @return Whether to quote identifiers.
-    */
-   public final boolean quoteIdentifiers()
-   {
-      return quoteIdentifiers;
-   }
-
-   /**
-    * Set whether to quote identifiers.
-    *
-    * @param quoteIdentifiers Whether to quote identifiers.
-    */
-   public void setQuoteIdentifiers(boolean quoteIdentifiers)
-   {
-      this.quoteIdentifiers = quoteIdentifiers;
    }
 
    // ********************************************************************
