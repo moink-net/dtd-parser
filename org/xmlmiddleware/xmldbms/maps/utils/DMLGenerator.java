@@ -131,7 +131,7 @@ public class DMLGenerator
    public String getSelect(Table t, Key key, OrderInfo order)
       throws SQLException
    {
-      return buildSelect(true, t, key, order);
+      return buildSelect(t, key.getColumns(), null, order);
    }
 
    /**
@@ -144,7 +144,20 @@ public class DMLGenerator
    public String getSelect(Table t, Key key)
       throws SQLException
    {
-      return buildSelect(false, t, key, null);
+      return buildSelect(t, key.getColumns(), key.getColumns(), null);
+   }
+
+   /**
+    * Returns a "SELECT cols WHERE Key = ?" SQL string for a given table.
+    *
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with.
+    * @param cols The columns to select.
+    * @return The SELECT string.
+    */
+   public String getSelect(Table t, Key key, Columns[] cols)
+   {
+      return buildSelect(t, key.getColumns(), cols, null);
    }
 
    /**
@@ -195,7 +208,7 @@ public class DMLGenerator
          }
       }
 
-      appendWhereLink(update, key);
+      appendWhereLink(update, key.getColumns());
 
       return update.toString();
    }   
@@ -219,7 +232,7 @@ public class DMLGenerator
       // Add table name.
       appendTableName(delete, t);
 
-      appendWhereLink(delete, key);
+      appendWhereLink(delete, key.getColumns());
       
       return delete.toString();
    }
@@ -228,30 +241,35 @@ public class DMLGenerator
    // Private/protected methods
    //**************************************************************************
 
-   protected String buildSelect(boolean row, Table t, Key key, OrderInfo order)
+   protected String buildSelect(Table t, Columns[] keyColumns, 
+                                Columns[] valueColumns, OrderInfo order)
    {
       StringBuffer select = new StringBuffer(1000);
       boolean first = true;
 
       select.append(SELECT);
       
-      if(row)
+      if(valueColumns == null)
       {
          // Add column names.
          for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
          {
-            appendColumnName(select, (Column)e.nextElement(), first);
+            if(first)
+               update.append(COMMA);
+
+            appendColumnName(update, (Column)e.nextElement(), false);
+            update.append(EQUALSPARAM);
             first = false;
          }
       }
       else
       {
-         // Add key column names.
-         for(int i = 0; i < key.getColumns().length; i++)
-         {
-            appendColumnName(select, key.getColumns()[i], first);
-            first = false;
-         }
+          // Add value column names.
+          for(int i = 0; i < valueColumns.length; i++)
+          {
+             appendColumnName(select, valueColumns[i], first);
+             first = false;
+          }
       }
       
       // Add table name.
@@ -259,8 +277,8 @@ public class DMLGenerator
       select.append(FROM);
       appendTableName(select, t);
       
-      if(key != null)
-         appendWhereLink(select, key);
+      if(keyColumns != null)
+         appendWhereLink(select, keyColumns);
 
       // Add ORDER BY clause. We sort in descending order because this
       // gives us better performance in some cases. For more details,
@@ -273,19 +291,19 @@ public class DMLGenerator
       return select.toString();
    }
 
-   protected void appendWhereLink(StringBuffer stmt, Key key)
+   protected void appendWhereLink(StringBuffer stmt, Columns[] keyColumns)
    {
       // Add WHERE clause.
       boolean first = false;
 
       stmt.append(WHERE);
 
-      for(int i = 0; i < key.getColumns().length; i++)
+      for(int i = 0; i < keyColumns.length; i++)
       {
          if(i != 0)
             stmt.append(AND);
       
-         appendColumnName(stmt, key.getColumns()[i], false);
+         appendColumnName(stmt, keyColumns[i], false);
          stmt.append(EQUALSPARAM);
       }
    }
