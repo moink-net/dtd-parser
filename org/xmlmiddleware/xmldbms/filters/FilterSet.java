@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmlutils.*;
 
@@ -95,16 +96,17 @@ public class FilterSet
     * @param prefix The namespace prefix.
     *
     * @return The namespace URI.
-    * @exception IllegalArgumentException Thrown if the prefix is not found.
+    * @exception XMLMiddlewareException Thrown if the prefix is not found.
     */
    public final String getNamespaceURI(String prefix)
+      throws XMLMiddlewareException
    {
       String uri;
 
       checkArgNull(prefix, ARG_PREFIX);
       uri = (String)uris.get(prefix);
       if (uri == null)
-         throw new IllegalArgumentException("Prefix not found: " + prefix);
+         throw new XMLMiddlewareException("Prefix not found: " + prefix);
       return uri;
    }
 
@@ -114,16 +116,17 @@ public class FilterSet
     * @param uri The namespace URI.
     *
     * @return The namespace prefix.
-    * @exception IllegalArgumentException Thrown if the URI is not found.
+    * @exception XMLMiddlewareException Thrown if the URI is not found.
     */
    public final String getNamespacePrefix(String uri)
+      throws XMLMiddlewareException
    {
       String prefix;
 
       checkArgNull(uri, ARG_URI);
       prefix = (String)prefixes.get(uri);
       if (prefix == null)
-         throw new IllegalArgumentException("URI not found: " + uri);
+         throw new XMLMiddlewareException("URI not found: " + uri);
       return prefix;
    }
 
@@ -153,16 +156,17 @@ public class FilterSet
     * @param prefix The namespace prefix.
     * @param uri The namespace URI.
     *
-    * @exception IllegalArgumentException Thrown if the prefix or URI is already used.
+    * @exception XMLMiddlewareException Thrown if the prefix or URI is already used.
     */
    public void addNamespace(String prefix, String uri)
+      throws XMLMiddlewareException
    {
       checkArgNull(prefix, ARG_PREFIX);
       checkArgNull(uri, ARG_URI);
       if (uris.get(prefix) != null)
-         throw new IllegalArgumentException("Prefix already used: " + prefix);
+         throw new XMLMiddlewareException("Prefix already used: " + prefix);
       if (prefixes.get(uri) != null)
-         throw new IllegalArgumentException("URI already used: " + uri);
+         throw new XMLMiddlewareException("URI already used: " + uri);
       uris.put(prefix, uri);
       prefixes.put(uri, prefix);
    }
@@ -172,9 +176,10 @@ public class FilterSet
     *
     * @param prefix The namespace prefix.
     *
-    * @exception IllegalArgumentException Thrown if the prefix is not found.
+    * @exception XMLMiddlewareException Thrown if the prefix is not found.
     */
    public void removeNamespaceByPrefix(String prefix)
+      throws XMLMiddlewareException
    {
       String uri;
 
@@ -182,7 +187,7 @@ public class FilterSet
 
       uri = (String)uris.remove(prefix);
       if (uri == null)
-         throw new IllegalArgumentException("Prefix not found: " + prefix);
+         throw new XMLMiddlewareException("Prefix not found: " + prefix);
       prefixes.remove(uri);
    }
 
@@ -191,9 +196,10 @@ public class FilterSet
     *
     * @param prefix The namespace prefix.
     *
-    * @exception IllegalArgumentException Thrown if the prefix is not found.
+    * @exception XMLMiddlewareException Thrown if the prefix is not found.
     */
    public void removeNamespaceByURI(String uri)
+      throws XMLMiddlewareException
    {
       String prefix;
 
@@ -201,7 +207,7 @@ public class FilterSet
 
       prefix = (String)prefixes.remove(uri);
       if (prefix == null)
-         throw new IllegalArgumentException("URI not found: " + uri);
+         throw new XMLMiddlewareException("URI not found: " + uri);
       uris.remove(prefix);
    }
 
@@ -249,10 +255,11 @@ public class FilterSet
     * @param wrapperName XMLName of the wrapper element.
     * @param level Nesting level of the wrapper element. This number is 1-based.
     *    A value of 0 means to append the wrapper element name to the end of the list.
-    * @exception IllegalArgumentException Thrown if the nesting level is greater
+    * @exception XMLMiddlewareException Thrown if the nesting level is greater
     *    than the highest nesting level plus 1.
     */
    public void addWrapperName(XMLName wrapperName, int level)
+      throws XMLMiddlewareException
    {
       if (level == 0)
       {
@@ -263,7 +270,7 @@ public class FilterSet
          wrapperNames.insertElementAt(wrapperName, level - 1);
       }
       else
-         throw new IllegalArgumentException("Invalid nesting level for wrapper element: " + level);
+         throw new XMLMiddlewareException("Invalid nesting level for wrapper element: " + level);
    }
 
    /**
@@ -273,17 +280,18 @@ public class FilterSet
     * level downward one position.</p>
     *
     * @param level Nesting level of the wrapper element name. This number is 1-based.
-    * @exception IllegalArgumentException Thrown if the nesting level is greater
+    * @exception XMLMiddlewareException Thrown if the nesting level is greater
     *    than the highest nesting level.
     */
    public void removeWrapperName(int level)
+      throws XMLMiddlewareException
    {
       if ((level > 0) && (level <= wrapperNames.size()))
       {
          wrapperNames.removeElementAt(level - 1);
       }
       else
-         throw new IllegalArgumentException("Invalid nesting level for wrapper element name: " + level);
+         throw new XMLMiddlewareException("Invalid nesting level for wrapper element name: " + level);
    }
 
    /**
@@ -328,15 +336,16 @@ public class FilterSet
     * @param name The name used to identify the result set. If this is null, "Default"
     *    is used.
     * @return The filter.
-    * @exception IllegalArgumentException Thrown if the name is already being used.
+    * @exception XMLMiddlewareException Thrown if the name is already being used.
     */
    public ResultSetFilter createResultSetFilter(String name)
+      throws XMLMiddlewareException
    {
       ResultSetFilter filter;
 
       if (name == null) name = "Default";
       if (rsNames.get(name) != null)
-         throw new IllegalArgumentException("A result set filter for the result set named " + name + " has already been created.");
+         throw new XMLMiddlewareException("A result set filter for the result set named " + name + " has already been created.");
       rsNames.put(name, O);
       filter = new ResultSetFilter(map, name);
       filters.addElement(filter);
@@ -350,9 +359,10 @@ public class FilterSet
     * downward one position.</p>
     *
     * @param index Index of the filter to remove. 0-based.
-    * @exception IllegalArgumentException Thrown if the index is invalid.
+    * @exception XMLMiddlewareException Thrown if the index is invalid.
     */
    public void removeFilter(int index)
+      throws XMLMiddlewareException
    {
       Object filter;
 
@@ -366,7 +376,7 @@ public class FilterSet
          filters.removeElementAt(index);
       }
       else
-         throw new IllegalArgumentException("Invalid filter index: " + index);
+         throw new XMLMiddlewareException("Invalid filter index: " + index);
    }
 
    /**

@@ -21,6 +21,7 @@ package org.xmlmiddleware.conversions.formatters.external;
 
 import org.xmlmiddleware.conversions.*;
 import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 
 import java.sql.Types;
 
@@ -54,19 +55,19 @@ public class Base64Formatter implements StringFormatter
     * @param The string to parse.
     * @param A JDBC Types value indicating the type of object to return.
     * @return An org.xmlmiddleware.conversions.ByteArray.
-    * @exception ConversionException Thrown if the string can't be parsed.
+    * @exception XMLMiddlewareException Thrown if the string can't be parsed.
     */
-   public Object parse(String s, int jdbcType) throws ConversionException
+   public Object parse(String s, int jdbcType) throws XMLMiddlewareException
    {
       switch(jdbcType)
       {
          case Types.BINARY:
          case Types.VARBINARY:
          case Types.LONGVARBINARY:
-            throw new ConversionException("Method not yet implemented.");
+            throw new XMLMiddlewareException("Method not yet implemented.");
 
          default:
-            throw new ConversionException("Conversion to specified JDBC type not supported.");
+            throw new XMLMiddlewareException("Conversion to specified JDBC type not supported.");
       }
    }
 
@@ -75,17 +76,17 @@ public class Base64Formatter implements StringFormatter
     *
     * @param The object to serialize. Must be an org.xmlmiddleware.conversion.ByteArray.
     * @return The string
-    * @exception ConversionException Thrown if the object is not an
+    * @exception XMLMiddlewareException Thrown if the object is not an
     *   org.xmlmiddleware.conversion.ByteArray.
     */
-   public String format(Object o) throws ConversionException
+   public String format(Object o) throws XMLMiddlewareException
    {
       if (o instanceof ByteArray)
       {
-         throw new ConversionException("Method not yet implemented.");
+         throw new XMLMiddlewareException("Method not yet implemented.");
       }
       else
-         throw new ConversionException("Object must be an org.xmlmiddleware.conversions.ByteArray.");
+         throw new XMLMiddlewareException("Object must be an org.xmlmiddleware.conversions.ByteArray.");
    }
 
    /**

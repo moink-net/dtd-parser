@@ -20,6 +20,8 @@
 
 package org.xmlmiddleware.xmldbms.tools;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
+
 import java.io.*;
 import java.util.*;
 
@@ -74,7 +76,6 @@ public class GeneratePropFile extends PropertyProcessor
     * @param args Property/value pairs.
     */
    public static void main(String[] args)
-      throws FileNotFoundException, IOException
    {
       GeneratePropFile generator = new GeneratePropFile();
       Properties       props = new Properties();
@@ -84,7 +85,14 @@ public class GeneratePropFile extends PropertyProcessor
          System.out.println("Usage: java GeneratePropFile <property file name> <property>=<value> [<property>=<value>...]>");
       }
 
-      generator.addPropertiesFromArray(props, args, 1, false);
-      props.save(new FileOutputStream(args[0]), null);
+      try
+      {
+         generator.addPropertiesFromArray(props, args, 1, false);
+         props.save(new FileOutputStream(args[0]), null);
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+      }
    }
 }

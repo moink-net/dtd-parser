@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.actions.*;
 import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.filters.*;
@@ -143,9 +144,11 @@ public class DBMSDelete
     *    any parameters used in the filters. Null if there are no parameters.
     * @param action Action to be taken for each node of the document. This must be
     *    Action.DELETE or Action.SOFTDELETE.
+    * @exception SQLException Thrown if a database error occurs deleting data
+    * @exception XMLMiddlewareException Thrown if an XML-DBMS specific error occurs.
     */
    public void deleteDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable params, int action)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       Actions defaultActions;
       Action  defaultAction;
@@ -177,9 +180,11 @@ public class DBMSDelete
     * @param actions An Actions object describing how to handle various elements of
     *    a document. The actual actions must be Action.NONE, Action.DELETE, or
     *    Action.SOFTDELETE.
+    * @exception XMLMiddlewareException Thrown if an XML-DBMS specific error occurs.
+    * @exception SQLException Thrown if a database error occurs deleting data
     */
    public void deleteDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable params, Actions actions)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       Enumeration dataHandlers;
 
@@ -254,7 +259,7 @@ public class DBMSDelete
    //    |-----processRelatedClassTable
 
    private void processRootTables(FilterSet filterSet)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       Vector filters;
       Object filter;
@@ -282,7 +287,7 @@ public class DBMSDelete
    }
 
    private void processRootTable(RootFilter rootFilter)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       FilterConditions rootConditions;
       Table            rootTable;
@@ -319,7 +324,7 @@ public class DBMSDelete
    }
 
    private void processClassResultSet(ClassTableMap classTableMap, ResultSet rs, Vector parentPKChildren)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       // Process a result set created over a class table.
 
@@ -347,14 +352,14 @@ public class DBMSDelete
    }
 
    private void processRelatedTables(Row classRow, ClassTableMap classTableMap, TableFilter classTableFilter, Vector parentPKChildren)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       processRelatedClassTables(classRow, classTableMap, classTableFilter, parentPKChildren);
       processPropertyTables(classRow, classTableMap, classTableFilter, parentPKChildren);
    }
 
    private void processRelatedClassTables(Row classRow, ClassTableMap classTableMap, TableFilter classTableFilter, Vector parentPKChildren)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       Enumeration          relatedClassTableMaps;
       RelatedClassTableMap relatedClassTableMap;
@@ -448,7 +453,7 @@ public class DBMSDelete
    }
 
    private void processRelatedClassTable(Row classRow, RelatedClassTableMap relatedClassTableMap, RelatedTableFilter relatedTableFilter, Vector pkChildren)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       ClassTableMap childClassTableMap;
       Table         childTable;
@@ -471,7 +476,7 @@ public class DBMSDelete
    }
 
    private void processPropertyTables(Row classRow, ClassTableMap classTableMap, TableFilter classTableFilter, Vector parentPKChildren)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       Enumeration        propTableMaps;
       PropertyTableMap   propTableMap;
@@ -637,6 +642,7 @@ public class DBMSDelete
       Object[] params = null;
 
       RowInfo(int action, Table table, LinkInfo linkInfo, Row row, FilterConditions filterConditions)
+         throws XMLMiddlewareException
       {
          this.action = action;
          this.table = table;

@@ -19,6 +19,8 @@
 
 package org.xmlmiddleware.conversions;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
+
 import java.math.BigDecimal;
 
 /**
@@ -55,25 +57,21 @@ public class ConvertLong
    //**************************************************************************
 
    public static double toDouble(long l)
-      throws ConversionException
    {
       return (double)l;
    }
 
    public static double toDouble(Long l)
-      throws ConversionException
    {
       return l.doubleValue();
    }
 
    public static Double toDoubleObject(long l)
-      throws ConversionException
    {
       return new Double((double)l);
    }
 
    public static Double toDoubleObject(Long l)
-      throws ConversionException
    {
       return toDoubleObject(l.longValue());
    }
@@ -83,25 +81,21 @@ public class ConvertLong
    //**************************************************************************
 
    public static float toFloat(long l)
-      throws ConversionException
    {
       return (float)l;
    }
 
    public static float toFloat(Long l)
-      throws ConversionException
    {
       return l.floatValue();
    }
 
    public static Float toFloatObject(long l)
-      throws ConversionException
    {
       return new Float((float)l);
    }
 
    public static Float toFloatObject(Long l)
-      throws ConversionException
    {
       return toFloatObject(l.longValue());
    }
@@ -111,13 +105,11 @@ public class ConvertLong
    //**************************************************************************
 
    public static BigDecimal toBigDecimal(long l)
-      throws ConversionException
    {
       return new BigDecimal((double)l);
    }
 
    public static BigDecimal toBigDecimal(Long l)
-      throws ConversionException
    {
       return toBigDecimal(l.longValue());
    }
@@ -127,25 +119,21 @@ public class ConvertLong
    //**************************************************************************
 
    public static long toLong(long l)
-      throws ConversionException
    {
       return l;
    }
 
    public static long toLong(Long l)
-      throws ConversionException
    {
       return l.longValue();
    }
 
    public static Long toLongObject(long l)
-      throws ConversionException
    {
       return new Long(l);
    }
 
    public static Long toLongObject(Long l)
-      throws ConversionException
    {
       return l;
    }
@@ -155,27 +143,27 @@ public class ConvertLong
    //**************************************************************************
 
    public static int toInteger(long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((l > Integer.MAX_VALUE) || (l < Integer.MIN_VALUE))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return (int)l;
    }
 
    public static int toInteger(Long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toInteger(l.longValue());
    }
 
    public static Integer toIntegerObject(long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Integer(toInteger(l));
    }
 
    public static Integer toIntegerObject(Long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toIntegerObject(l.longValue());
    }
@@ -185,27 +173,27 @@ public class ConvertLong
    //**************************************************************************
 
    public static short toShort(long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((l > Short.MAX_VALUE) || (l < Short.MIN_VALUE))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return (short)l;
    }
 
    public static short toShort(Long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toShort(l.longValue());
    }
 
    public static Short toShortObject(long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Short(toShort(l));
    }
 
    public static Short toShortObject(Long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toShortObject(l.longValue());
    }
@@ -215,27 +203,27 @@ public class ConvertLong
    //**************************************************************************
 
    public static byte toByte(long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((l > Byte.MAX_VALUE) || (l < Byte.MIN_VALUE))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return (byte)l;
    }
 
    public static byte toByte(Long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toByte(l.longValue());
    }
 
    public static Byte toByteObject(long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Byte(toByte(l));
    }
 
    public static Byte toByteObject(Long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toByteObject(l.longValue());
    }
@@ -245,7 +233,7 @@ public class ConvertLong
    //**************************************************************************
 
    public static boolean toBoolean(long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (l == 0)
       {
@@ -256,23 +244,23 @@ public class ConvertLong
          return true;
       }
       else
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
    }
 
    public static boolean toBoolean(Long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toBoolean(l.longValue());
    }
 
    public static Boolean toBooleanObject(long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Boolean(toBoolean(l));
    }
 
    public static Boolean toBooleanObject(Long l)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toBooleanObject(l.longValue());
    }

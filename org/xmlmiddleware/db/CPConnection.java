@@ -101,7 +101,7 @@ public class CPConnection
       {
          return (PreparedStatement)m_statements.checkOut(sql);
       }
-      catch(PoolException e)
+      catch(XMLMiddlewareException e)
       {
          if(e.getException() instanceof SQLException)
             throw (SQLException)e.getException();

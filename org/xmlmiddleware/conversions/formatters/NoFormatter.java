@@ -20,6 +20,7 @@
 package org.xmlmiddleware.conversions.formatters;
 
 import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 
 import java.sql.Types;
 
@@ -50,11 +51,11 @@ public class NoFormatter implements StringFormatter
     * @param The string to parse.
     * @param A JDBC Types value indicating the type of object to return.
     * @return Never reached.
-    * @exception ConversionException Always thrown
+    * @exception XMLMiddlewareException Always thrown
     */
-   public Object parse(String s, int jdbcType) throws ConversionException
+   public Object parse(String s, int jdbcType) throws XMLMiddlewareException
    {
-      throw new ConversionException("Conversion to specified JDBC type not supported.");
+      throw new XMLMiddlewareException("Conversion to specified JDBC type not supported.");
    }
 
    /**
@@ -62,11 +63,11 @@ public class NoFormatter implements StringFormatter
     *
     * @param The object to serialize.
     * @return Never reached.
-    * @exception ConversionException Always thrown.
+    * @exception XMLMiddlewareException Always thrown.
     */
-   public String format(Object o) throws ConversionException
+   public String format(Object o) throws XMLMiddlewareException
    {
-      throw new ConversionException("Object cannot be converted.");
+      throw new XMLMiddlewareException("Object cannot be converted.");
    }
 
    /**

@@ -20,6 +20,7 @@
 package org.xmlmiddleware.conversions.formatters;
 
 import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 
 import java.sql.Types;
 
@@ -118,9 +119,9 @@ public class BooleanFormatter implements StringFormatter
     * @param A JDBC Types value indicating the type of object to return. This
     *    must be Types.BIT.
     * @return A Boolean.
-    * @exception ConversionException Thrown if the string can't be parsed or the type isn't BIT.
+    * @exception XMLMiddlewareException Thrown if the string can't be parsed or the type isn't BIT.
     */
-   public Object parse(String s, int jdbcType) throws ConversionException
+   public Object parse(String s, int jdbcType) throws XMLMiddlewareException
    {
       int    i;
       String value;
@@ -140,10 +141,10 @@ public class BooleanFormatter implements StringFormatter
             if (value.equals(falseValues[i])) return FALSE;
          }
 
-         throw new ConversionException("Value can't be parsed as true or false: " + s);
+         throw new XMLMiddlewareException("Value can't be parsed as true or false: " + s);
       }
       else
-         throw new ConversionException("Conversion to specified JDBC type not supported.");
+         throw new XMLMiddlewareException("Conversion to specified JDBC type not supported.");
    }
 
    /**
@@ -151,9 +152,9 @@ public class BooleanFormatter implements StringFormatter
     *
     * @param The Boolean
     * @return The string
-    * @exception ConversionException Thrown if the object is not a Boolean.
+    * @exception XMLMiddlewareException Thrown if the object is not a Boolean.
     */
-   public String format(Object o) throws ConversionException
+   public String format(Object o) throws XMLMiddlewareException
    {
       changeArrayCase();
 
@@ -162,7 +163,7 @@ public class BooleanFormatter implements StringFormatter
          return ((Boolean)o).booleanValue() ? trueValues[0] : falseValues[0];
       }
       else
-         throw new ConversionException("Object must be a Boolean.");
+         throw new XMLMiddlewareException("Object must be a Boolean.");
    }
 
    /**

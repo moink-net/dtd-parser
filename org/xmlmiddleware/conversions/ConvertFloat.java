@@ -19,6 +19,8 @@
 
 package org.xmlmiddleware.conversions;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
+
 import java.math.BigDecimal;
 
 /**
@@ -55,25 +57,21 @@ public class ConvertFloat
    //**************************************************************************
 
    public static double toDouble(float f)
-      throws ConversionException
    {
       return (double)f;
    }
 
    public static double toDouble(Float f)
-      throws ConversionException
    {
       return f.doubleValue();
    }
 
    public static Double toDoubleObject(float f)
-      throws ConversionException
    {
       return new Double((double)f);
    }
 
    public static Double toDoubleObject(Float f)
-      throws ConversionException
    {
       return new Double(f.doubleValue());
    }
@@ -83,25 +81,21 @@ public class ConvertFloat
    //**************************************************************************
 
    public static float toFloat(float f)
-      throws ConversionException
    {
       return f;
    }
 
    public static float toFloat(Float f)
-      throws ConversionException
    {
       return f.floatValue();
    }
 
    public static Float toFloatObject(float f)
-      throws ConversionException
    {
       return new Float(f);
    }
 
    public static Float toFloatObject(Float f)
-      throws ConversionException
    {
       return f;
    }
@@ -111,13 +105,11 @@ public class ConvertFloat
    //**************************************************************************
 
    public static BigDecimal toBigDecimal(float f)
-      throws ConversionException
    {
       return new BigDecimal((double)f);
    }
 
    public static BigDecimal toBigDecimal(Float f)
-      throws ConversionException
    {
       return new BigDecimal(f.doubleValue());
    }
@@ -127,27 +119,27 @@ public class ConvertFloat
    //**************************************************************************
 
    public static long toLong(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((f > Long.MAX_VALUE) || (f < Long.MIN_VALUE))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return (long)f;
    }
 
    public static long toLong(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toLong(f.floatValue());
    }
 
    public static Long toLongObject(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Long(toLong(f));
    }
 
    public static Long toLongObject(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toLongObject(f.floatValue());
    }
@@ -157,27 +149,27 @@ public class ConvertFloat
    //**************************************************************************
 
    public static int toInteger(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((f > Integer.MAX_VALUE) || (f < Integer.MIN_VALUE))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return (int)f;
    }
 
    public static int toInteger(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toInteger(f.floatValue());
    }
 
    public static Integer toIntegerObject(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Integer(toInteger(f));
    }
 
    public static Integer toIntegerObject(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toIntegerObject(f.floatValue());
    }
@@ -187,27 +179,27 @@ public class ConvertFloat
    //**************************************************************************
 
    public static short toShort(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((f > Short.MAX_VALUE) || (f < Short.MIN_VALUE))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return (short)f;
    }
 
    public static short toShort(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toShort(f.floatValue());
    }
 
    public static Short toShortObject(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Short(toShort(f));
    }
 
    public static Short toShortObject(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toShortObject(f.floatValue());
    }
@@ -217,27 +209,27 @@ public class ConvertFloat
    //**************************************************************************
 
    public static byte toByte(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((f > Byte.MAX_VALUE) || (f < Byte.MIN_VALUE))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return (byte)f;
    }
 
    public static byte toByte(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toByte(f.floatValue());
    }
 
    public static Byte toByteObject(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Byte(toByte(f));
    }
 
    public static Byte toByteObject(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toByteObject(f.floatValue());
    }
@@ -247,7 +239,7 @@ public class ConvertFloat
    //**************************************************************************
 
    public static boolean toBoolean(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (f == 0.0)
       {
@@ -258,23 +250,23 @@ public class ConvertFloat
          return true;
       }
       else
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
    }
 
    public static boolean toBoolean(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toBoolean(f.floatValue());
    }
 
    public static Boolean toBooleanObject(float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Boolean(toBoolean(f));
    }
 
    public static Boolean toBooleanObject(Float f)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toBooleanObject(f.floatValue());
    }

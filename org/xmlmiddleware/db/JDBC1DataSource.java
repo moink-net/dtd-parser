@@ -82,14 +82,14 @@ public class JDBC1DataSource
      * @param id This must be a ConnectionID object.
      *
      * @return The Connection.
-     * @exception PoolException Thrown if the factory cannot return a connection, such as
+     * @exception XMLMiddlewareException Thrown if the factory cannot return a connection, such as
      *               when the maximum number of connections has been exceeded.
      */
    protected Object createObject(Object id)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       if (!(id instanceof ConnectionID))
-         throw new PoolException("JDBC1DataSource: Object ID must be a ConnectionID.");
+         throw new XMLMiddlewareException("JDBC1DataSource: Object ID must be a ConnectionID.");
 
       try
       {
@@ -101,7 +101,7 @@ public class JDBC1DataSource
       }
       catch(SQLException e)
       {
-         throw new PoolException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 
@@ -110,14 +110,14 @@ public class JDBC1DataSource
     *
     * @param object The connection object to close.
     *
-    * @exception PoolException Thrown if the factory does not recognize the Connection or an
+    * @exception XMLMiddlewareException Thrown if the factory does not recognize the Connection or an
     *               error occurs while closing it.
     */
    protected void closeObject(Object object)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       if(!(object instanceof Connection))
-         throw new PoolException("JDBC1DataSource: Invalid connection object");
+         throw new XMLMiddlewareException("JDBC1DataSource: Invalid connection object");
 
       try
       {
@@ -125,7 +125,7 @@ public class JDBC1DataSource
       }
       catch(SQLException e)
       {
-         throw new PoolException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 
@@ -141,7 +141,7 @@ public class JDBC1DataSource
       {
          return (Connection)checkOut(new ConnectionID());
       }
-      catch(PoolException e)
+      catch(XMLMiddlewareException e)
       {
          if(e.getException() instanceof SQLException)
             throw (SQLException)e.getException();
@@ -157,7 +157,7 @@ public class JDBC1DataSource
       {
          return (Connection)checkOut(new ConnectionID(username, password));
       }
-      catch(PoolException e)
+      catch(XMLMiddlewareException e)
       {
          if(e.getException() instanceof SQLException)
             throw (SQLException)e.getException();

@@ -9,6 +9,8 @@
 
 package org.xmlmiddleware.xmldbms.keygenerators;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
+
 import java.util.*;
 
 /**
@@ -50,10 +52,10 @@ public interface KeyGenerator
 	* @param props A Properties object containing properties to initialize
 	*              the key generator. The documentation for the key generator
 	*              must give the names and legal values for these properties.
-	* @exception KeyException An error occured while initializing the key.
+	* @exception XMLMiddlewareException An error occured while initializing the key.
 	*/
 
-   public void initialize(Properties props) throws KeyException;      
+   public void initialize(Properties props) throws XMLMiddlewareException;      
 
    /**
 	* Generates a key.
@@ -62,10 +64,10 @@ public interface KeyGenerator
 	* do not need to call this method.</p>
 	* 
 	* @return The key as an array of Objects.
-	* @exception KeyException An error occured while generating the key.
+	* @exception XMLMiddlewareException An error occured while generating the key.
 	*/
 
-   public Object[] generateKey() throws KeyException;      
+   public Object[] generateKey() throws XMLMiddlewareException;      
 
    /**
 	* Closes a key generator.
@@ -75,8 +77,8 @@ public interface KeyGenerator
 	* generator multiple times before it is closed. Programmers using DOMToDBMS
 	* call this method.</p>
 	*
-	* @exception KeyException An error occured while closing the key.
+	* @exception XMLMiddlewareException An error occured while closing the key.
 	*/
 
-   public void close() throws KeyException;      
+   public void close() throws XMLMiddlewareException;      
 }

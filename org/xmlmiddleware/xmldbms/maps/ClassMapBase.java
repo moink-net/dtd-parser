@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmlutils.*;
 
 import java.util.*;
@@ -168,10 +169,10 @@ public class ClassMapBase extends MapBase
     * Add a PropertyMap for an attribute.
     *
     * @param propMap PropertyMap for the attribute. Must not be null.
-    * @exception MapException Thrown if the attribute has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the attribute has already been mapped.
     */
    public void addAttributeMap(PropertyMap propMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String universalName;
@@ -183,7 +184,7 @@ public class ClassMapBase extends MapBase
       universalName = propMap.getXMLName().getUniversalName();
       o = attributeMaps.get(universalName);
       if (o != null)
-         throw new MapException("Attribute " + universalName + " already mapped for element type " + elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Attribute " + universalName + " already mapped for element type " + elementTypeName.getUniversalName() + ".");
       attributeMaps.put(universalName, propMap);
    }
 
@@ -193,10 +194,10 @@ public class ClassMapBase extends MapBase
     * @param uri Namespace URI of the attribute. May be null.
     * @param localName Local name of the attribute.
     *
-    * @exception MapException Thrown if the attribute has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the attribute has not been mapped.
     */
    public void removeAttributeMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // getUniversalName checks if localName is null.
 
@@ -208,17 +209,17 @@ public class ClassMapBase extends MapBase
     *
     * @param universalName Universal name of the attribute.
     *
-    * @exception MapException Thrown if the attribute has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the attribute has not been mapped.
     */
    public void removeAttributeMap(String universalName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       checkArgNull(universalName, ARG_UNIVERSALNAME);
       o = attributeMaps.remove(universalName);
       if (o == null)
-         throw new MapException("Attribute " + universalName + " not mapped for element type " + elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Attribute " + universalName + " not mapped for element type " + elementTypeName.getUniversalName() + ".");
    }
 
    /**
@@ -265,29 +266,29 @@ public class ClassMapBase extends MapBase
     * Add a PropertyMap for PCDATA.
     *
     * @param propMap PropertyMap for PCDATA. Must not be null.
-    * @exception MapException Thrown if PCDATA has already been mapped.
+    * @exception XMLMiddlewareException Thrown if PCDATA has already been mapped.
     */
    public void addPCDATAMap(PropertyMap propMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkArgNull(propMap, ARG_PROPMAP);
       if (propMap.getType() != PropertyMap.PCDATA)
          throw new IllegalArgumentException("PropertyMap does not map PCDATA.");
       if (pcdataMap != null)
-         throw new MapException("PCDATA already mapped for " + elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("PCDATA already mapped for " + elementTypeName.getUniversalName() + ".");
       pcdataMap = propMap;
    }
 
    /**
     * Remove the PropertyMap for PCDATA.
     *
-    * @exception MapException Thrown if PCDATA has not been mapped.
+    * @exception XMLMiddlewareException Thrown if PCDATA has not been mapped.
     */
    public void removePCDATAMap()
-      throws MapException
+      throws XMLMiddlewareException
    {
       if (pcdataMap == null)
-         throw new MapException("PCDATA not mapped for " + elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("PCDATA not mapped for " + elementTypeName.getUniversalName() + ".");
       pcdataMap = null;
    }
 
@@ -356,11 +357,11 @@ public class ClassMapBase extends MapBase
     * @param localName Local name of the child element type.
     *
     * @return The PropertyMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a related class or inlined class.
     */
    public PropertyMap createChildPropertyMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       return createChildPropertyMap(XMLName.create(uri, localName));
    }
@@ -374,11 +375,11 @@ public class ClassMapBase extends MapBase
     * @param elementTypeName XMLName of the child element type.
     *
     * @return The PropertyMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a related class or inlined class.
     */
    public PropertyMap createChildPropertyMap(XMLName elementTypeName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String universalName;
@@ -397,9 +398,9 @@ public class ClassMapBase extends MapBase
          return (PropertyMap)o;
       }
       else if (o instanceof RelatedClassMap)
-         throw new MapException("Child element type " + universalName + " already mapped as a related class of element type " + this.elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped as a related class of element type " + this.elementTypeName.getUniversalName() + ".");
       else // if (o instanceof InlineClassMap)
-         throw new MapException("Child element type " + universalName + " already mapped as an inlined child class of element type " + this.elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped as an inlined child class of element type " + this.elementTypeName.getUniversalName() + ".");
    }
 
    /**
@@ -412,11 +413,11 @@ public class ClassMapBase extends MapBase
     * @param localName Local name of the child element type.
     *
     * @return The RelatedClassMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a property or inlined class.
     */
    public RelatedClassMap createRelatedClassMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       return createRelatedClassMap(XMLName.create(uri, localName));
    }
@@ -430,11 +431,11 @@ public class ClassMapBase extends MapBase
     * @param elementTypeName XMLName of the child element type.
     *
     * @return The RelatedClassMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a property or inlined class.
     */
    public RelatedClassMap createRelatedClassMap(XMLName elementTypeName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String universalName;
@@ -453,9 +454,9 @@ public class ClassMapBase extends MapBase
          return (RelatedClassMap)o;
       }
       else if (o instanceof PropertyMap)
-         throw new MapException("Child element type " + universalName + " already mapped as a property of element type " + this.elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped as a property of element type " + this.elementTypeName.getUniversalName() + ".");
       else // if (o instanceof InlineClassMap)
-         throw new MapException("Child element type " + universalName + " already mapped as an inlined child class of element type " + this.elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped as an inlined child class of element type " + this.elementTypeName.getUniversalName() + ".");
    }
 
    /**
@@ -468,11 +469,11 @@ public class ClassMapBase extends MapBase
     * @param localName Local name of the child element type.
     *
     * @return The InlineClassMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a property or related class.
     */
    public InlineClassMap createInlineClassMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       return createInlineClassMap(XMLName.create(uri, localName));
    }
@@ -486,11 +487,11 @@ public class ClassMapBase extends MapBase
     * @param elementTypeName XMLName of the child element type.
     *
     * @return The InlineClassMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a property or related class.
     */
    public InlineClassMap createInlineClassMap(XMLName elementTypeName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String universalName;
@@ -509,19 +510,19 @@ public class ClassMapBase extends MapBase
          return (InlineClassMap)o;
       }
       else if (o instanceof PropertyMap)
-         throw new MapException("Child element type " + universalName + " already mapped as a property of element type " + this.elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped as a property of element type " + this.elementTypeName.getUniversalName() + ".");
       else // if (o instanceof RelatedClassMap)
-         throw new MapException("Child element type " + universalName + " already mapped as a related child class of element type " + this.elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped as a related child class of element type " + this.elementTypeName.getUniversalName() + ".");
    }
 
    /**
     * Add a PropertyMap for a child element type.
     *
     * @param propMap PropertyMap for the child element type. Must not be null.
-    * @exception MapException Thrown if the child element type has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the child element type has already been mapped.
     */
    public void addChildMap(PropertyMap propMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String universalName;
@@ -533,7 +534,7 @@ public class ClassMapBase extends MapBase
       universalName = propMap.getXMLName().getUniversalName();
       o = childMaps.get(universalName);
       if (o != null)
-         throw new MapException("Child element type " + universalName + " already mapped for element type " + elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped for element type " + elementTypeName.getUniversalName() + ".");
       childMaps.put(universalName, propMap);
    }
 
@@ -549,10 +550,10 @@ public class ClassMapBase extends MapBase
     * XML-DBMS mapping language.</p>
     *
     * @param relatedClassMap RelatedClassMap for the child element type. Must not be null.
-    * @exception MapException Thrown if the child element type has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the child element type has already been mapped.
     */
    public void addChildMap(RelatedClassMap relatedClassMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object  o;
       String  universalName;
@@ -565,7 +566,7 @@ public class ClassMapBase extends MapBase
       universalName = relatedClassMap.getElementTypeName().getUniversalName();
       o = childMaps.get(universalName);
       if (o != null)
-         throw new MapException("Child element type " + universalName + " already mapped for element type " + elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped for element type " + elementTypeName.getUniversalName() + ".");
       childMaps.put(universalName, relatedClassMap);
    }
 
@@ -573,10 +574,10 @@ public class ClassMapBase extends MapBase
     * Add an InlineClassMap for a child element type.
     *
     * @param inlineClassMap InlineClassMap for the child element type. Must not be null.
-    * @exception MapException Throw if the child element type is already mapped.
+    * @exception XMLMiddlewareException Throw if the child element type is already mapped.
     */
    public void addChildMap(InlineClassMap inlineClassMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String universalName;
@@ -586,7 +587,7 @@ public class ClassMapBase extends MapBase
       universalName = inlineClassMap.getElementTypeName().getUniversalName();
       o = childMaps.get(universalName);
       if (o != null)
-         throw new MapException("Child element type " + universalName + " already mapped for element type " + elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " already mapped for element type " + elementTypeName.getUniversalName() + ".");
       childMaps.put(universalName, inlineClassMap);
    }
 
@@ -596,10 +597,10 @@ public class ClassMapBase extends MapBase
     * @param uri Namespace URI of the child element type. May be null.
     * @param localName Local name of the child element type.
     *
-    * @exception MapException Thrown if the child element type has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the child element type has not been mapped.
     */
    public void removeChildMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // getUniversalName checks if localName is null.
 
@@ -611,17 +612,17 @@ public class ClassMapBase extends MapBase
     *
     * @param universalName Universal name of the child element type.
     *
-    * @exception MapException Thrown if the child element type has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the child element type has not been mapped.
     */
    public void removeChildMap(String universalName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       checkArgNull(universalName, ARG_UNIVERSALNAME);
       o = childMaps.remove(universalName);
       if (o == null)
-         throw new MapException("Child element type " + universalName + " not mapped for element type " + elementTypeName.getUniversalName() + ".");
+         throw new XMLMiddlewareException("Child element type " + universalName + " not mapped for element type " + elementTypeName.getUniversalName() + ".");
    }
 
    /**

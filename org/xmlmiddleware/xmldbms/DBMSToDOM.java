@@ -26,6 +26,7 @@ package org.xmlmiddleware.xmldbms;
 
 import org.xmlmiddleware.conversions.*;
 import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.filters.*;
 import org.xmlmiddleware.xmldbms.maps.*;
@@ -129,11 +130,13 @@ public class DBMSToDOM
     * Construct a new DBMSToDOM object.
     *
     * @param utils A ParserUtils object.
+    * @exception SAXException Thrown if the XMLReader does not support namespaces.
+    * @exception XMLMiddlewareException Thrown if an error occurs instantiating the XMLReader.
     */
    // 8/01 Adam Flinton
    // Replaced DocumentFactory with ParserUtils.
    public DBMSToDOM(ParserUtils utils)
-      throws SAXException, ParserUtilsException
+      throws SAXException, XMLMiddlewareException
    {
       this.utils = utils;
       fragmentBuilder = new FragmentBuilder(utils.getXMLReader());
@@ -171,9 +174,11 @@ public class DBMSToDOM
     *    null, retrieveDocument will create a new Document.
     * @return The document. If rootNode is not null, this is the owner Document.
     *    Otherwise, it is a new Document.
+    * @exception SQLException Thrown if a database error occurs retrieving data
+    * @exception XMLMiddlewareException Thrown if an XML-DBMS error occurs retrieving data.
     */
    public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable params, Node rootNode)
-      throws ParserUtilsException, SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       Hashtable resultSets = new Hashtable();
 
@@ -194,9 +199,11 @@ public class DBMSToDOM
     *    null, retrieveDocument will create a new Document.
     * @return The document. If rootNode is not null, this is the owner Document.
     *    Otherwise, it is a new Document.
+    * @exception SQLException Thrown if a database error occurs retrieving data
+    * @exception XMLMiddlewareException Thrown if an XML-DBMS error occurs retrieving data.
     */
    public Document retrieveDocument(TransferInfo transferInfo, ResultSet rs, FilterSet filterSet, Hashtable params, Node rootNode)
-      throws ParserUtilsException, SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       Hashtable resultSets = new Hashtable();
 
@@ -219,9 +226,11 @@ public class DBMSToDOM
     *    null, retrieveDocument will create a new Document.
     * @return The document. If rootNode is not null, this is the owner Document.
     *    Otherwise, it is a new Document.
+    * @exception SQLException Thrown if a database error occurs retrieving data
+    * @exception XMLMiddlewareException Thrown if an XML-DBMS error occurs retrieving data.
     */
    public Document retrieveDocument(TransferInfo transferInfo, Hashtable resultSets, FilterSet filterSet, Hashtable params, Node rootNode)
-      throws ParserUtilsException, SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       OrderedNode     orderedRootNode;
       Vector          filters;
@@ -294,7 +303,7 @@ public class DBMSToDOM
    // ************************************************************************
 
    private void retrieveRootTableData(OrderedNode rootNode, RootFilter rootFilter)
-      throws ParserUtilsException, SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       Table            rootTable;
       ClassTableMap    rootTableMap;
@@ -326,7 +335,7 @@ public class DBMSToDOM
    }
 
    private void retrieveResultSetData(OrderedNode rootNode, ResultSetFilter rsFilter, ResultSet rs)
-      throws ParserUtilsException, SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       ClassTableMap rootTableMap;
 
@@ -354,7 +363,7 @@ public class DBMSToDOM
    //                            processPropertyTable --> processPropResultSet
 
    private void processClassResultSet(OrderedNode parentNode, ResultSet rs, XMLName classElementName, OrderInfo classElementOrder, ClassTableMap classTableMap)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       Row         classRow;
       Table       table;
@@ -403,7 +412,7 @@ public class DBMSToDOM
    }
 
    private void processColumns(OrderedNode classNode, Row classRow, Enumeration columnMaps)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       ColumnMap   columnMap;
       OrderedNode parentNode;
@@ -428,7 +437,7 @@ public class DBMSToDOM
    }
 
    private void processColumn(OrderedNode parentNode, Row classRow, PropertyMapBase propMapBase)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       // We use PropertyMapBase because this method is called from processColumns
       // using a ColumnMap and from processPropertyResultSet using a PropertyTableMap.
@@ -490,12 +499,12 @@ public class DBMSToDOM
             break;
 
          case PropertyMapBase.UNKNOWN:
-            throw new MapException("Column is not mapped to an element type, attribute, or PCDATA: " + propMapBase.getColumn().getName());
+            throw new XMLMiddlewareException("Column is not mapped to an element type, attribute, or PCDATA: " + propMapBase.getColumn().getName());
       }
    }
 
    private void processRelatedTables(OrderedNode classNode, Row classRow, ClassTableMap classTableMap, TableFilter classTableFilter)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       Enumeration          relatedClassTableMaps, propTableMaps;
       RelatedClassTableMap relatedClassTableMap;
@@ -528,7 +537,7 @@ public class DBMSToDOM
    }
 
    private void processRelatedClassTable(OrderedNode classNode, Row classRow, RelatedClassTableMap relatedClassTableMap, RelatedTableFilter relatedTableFilter)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       OrderedNode   parentNode;
       ClassTableMap childClassTableMap;
@@ -580,7 +589,7 @@ public class DBMSToDOM
    }
 
    private void processPropertyTable(OrderedNode classNode, Row classRow, PropertyTableMap propTableMap, RelatedTableFilter relatedTableFilter)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       OrderedNode parentNode;
       Table       propTable;
@@ -631,7 +640,7 @@ public class DBMSToDOM
    }
 
    private void processPropResultSet(OrderedNode parentNode, ResultSet rs, PropertyTableMap propTableMap)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       Row  row = new Row();
 
@@ -656,7 +665,7 @@ public class DBMSToDOM
    }
 
    private OrderedNode getOrderedRootNode(Node rootNode, FilterSet filterSet)
-      throws ParserUtilsException
+      throws XMLMiddlewareException
    {
       Vector          wrapperNames, filters;
       Node            realRootNode = null;
@@ -742,7 +751,7 @@ public class DBMSToDOM
    }
 
    private void createDocument(XMLName rootName)
-      throws ParserUtilsException
+      throws XMLMiddlewareException
    {
       DOMImplementation domImpl;
       DocumentType      docType;
@@ -1043,7 +1052,7 @@ public class DBMSToDOM
       {
          return formatter.format(value);
       }
-      catch (ConversionException e)
+      catch (XMLMiddlewareException e)
       {
          throw new SQLException("[XML-DBMS] Conversion error: " + e.getMessage());
       }

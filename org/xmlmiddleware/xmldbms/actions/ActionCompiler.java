@@ -96,6 +96,7 @@ public class ActionCompiler implements ContentHandler
     * Construct a new ActionCompiler and set the XMLReader (parser).
     *
     * @param xmlReader The XMLReader
+    * @exception SAXException Thrown if the XMLReader doesn't support namespaces.
     */
    public ActionCompiler(XMLReader xmlReader)
       throws SAXException
@@ -118,12 +119,13 @@ public class ActionCompiler implements ContentHandler
     * @param map The map to which the actions apply.
     * @param src A SAX InputSource for the action document.
     * @return The Actions object
-    * @exception SAXException Thrown if the action document contains an error.
-    * @exception IOException Thrown if an IO error occurs.
+    * @exception XMLMiddlewareException Thrown if the action document contains an error.
     */
    public Actions compile(XMLDBMSMap map, InputSource src)
-      throws SAXException, IOException
+      throws XMLMiddlewareException
    {
+      Exception e;
+
       // Check the arguments.
 
       if ((src == null) || (map == null))
@@ -139,7 +141,28 @@ public class ActionCompiler implements ContentHandler
 
       // Parse the actions document.
 
-      xmlReader.parse(src);
+      try
+      {
+         xmlReader.parse(src);
+      }
+      catch (SAXException s)
+      {
+         // Get the embedded Exception (if any) and check if it's a XMLMiddlewareException.
+         e = s.getException();
+         if (e != null)
+         {
+            if (e instanceof XMLMiddlewareException)
+               throw (XMLMiddlewareException)e;
+            else
+               throw new XMLMiddlewareException(e);
+         }
+         else
+            throw new XMLMiddlewareException(s);
+      }
+      catch (IOException io)
+      {
+         throw new XMLMiddlewareException(io);
+      }
 
       // Return the Actions object.
 
@@ -184,76 +207,83 @@ public class ActionCompiler implements ContentHandler
       if (!uri.equals(ActionConst.URI_ACTIONSV2))
          throw new SAXException("Unrecognized namespace URI for action language: " + uri);
 
-      switch (elementTokens.getToken(localName))
+      try
       {
-         case ActionConst.ELEM_TOKEN_ACTION:
-            // do nothing
-            break;
+         switch (elementTokens.getToken(localName))
+         {
+            case ActionConst.ELEM_TOKEN_ACTION:
+               // do nothing
+               break;
 
-         case ActionConst.ELEM_TOKEN_ACTIONS:
-            processActions(attrs);
-            break;
+            case ActionConst.ELEM_TOKEN_ACTIONS:
+               processActions(attrs);
+               break;
 
-         case ActionConst.ELEM_TOKEN_ALL:
-            throw new SAXException("<All> not yet implemented.");
-//            break;
+            case ActionConst.ELEM_TOKEN_ALL:
+               throw new SAXException("<All> not yet implemented.");
+//               break;
 
-         case ActionConst.ELEM_TOKEN_ATTRIBUTE:
-            processAttribute(attrs);
-            break;
+            case ActionConst.ELEM_TOKEN_ATTRIBUTE:
+               processAttribute(attrs);
+               break;
 
-         case ActionConst.ELEM_TOKEN_DEFAULTACTION:
-            processDefaultAction();
-            stateDefaultAction = true;
-            break;
+            case ActionConst.ELEM_TOKEN_DEFAULTACTION:
+               processDefaultAction();
+               stateDefaultAction = true;
+               break;
 
-         case ActionConst.ELEM_TOKEN_DELETE:
-            processAction(Action.DELETE);
-            break;
+            case ActionConst.ELEM_TOKEN_DELETE:
+               processAction(Action.DELETE);
+               break;
 
-         case ActionConst.ELEM_TOKEN_ELEMENTTYPE:
-            processElementType(attrs);
-            break;
+            case ActionConst.ELEM_TOKEN_ELEMENTTYPE:
+               processElementType(attrs);
+               break;
 
-         case ActionConst.ELEM_TOKEN_INSERT:
-            processAction(Action.INSERT);
-            break;
+            case ActionConst.ELEM_TOKEN_INSERT:
+               processAction(Action.INSERT);
+               break;
 
-         case ActionConst.ELEM_TOKEN_NAMESPACE:
-            processNamespace(attrs);
-            break;
+            case ActionConst.ELEM_TOKEN_NAMESPACE:
+               processNamespace(attrs);
+               break;
 
-         case ActionConst.ELEM_TOKEN_NONE:
-            processAction(Action.NONE);
-            break;
+            case ActionConst.ELEM_TOKEN_NONE:
+               processAction(Action.NONE);
+               break;
 
-         case ActionConst.ELEM_TOKEN_OPTIONS:
-            // do nothing
-            break;
+            case ActionConst.ELEM_TOKEN_OPTIONS:
+               // do nothing
+               break;
 
-         case ActionConst.ELEM_TOKEN_PCDATA:
-            processUpdateProperty(null, PropertyMap.PCDATA);
-            break;
+            case ActionConst.ELEM_TOKEN_PCDATA:
+               processUpdateProperty(null, PropertyMap.PCDATA);
+               break;
 
-         case ActionConst.ELEM_TOKEN_SOFTDELETE:
-            processAction(Action.SOFTDELETE);
-            break;
+            case ActionConst.ELEM_TOKEN_SOFTDELETE:
+               processAction(Action.SOFTDELETE);
+               break;
 
-         case ActionConst.ELEM_TOKEN_SOFTINSERT:
-            processAction(Action.SOFTINSERT);
-            break;
+            case ActionConst.ELEM_TOKEN_SOFTINSERT:
+               processAction(Action.SOFTINSERT);
+               break;
 
-         case ActionConst.ELEM_TOKEN_UPDATE:
-            processAction(Action.UPDATE);
-            stateUpdate = true;
-            break;
+            case ActionConst.ELEM_TOKEN_UPDATE:
+               processAction(Action.UPDATE);
+               stateUpdate = true;
+               break;
 
-         case ActionConst.ELEM_TOKEN_UPDATEORINSERT:
-            processAction(Action.UPDATEORINSERT);
-            break;
+            case ActionConst.ELEM_TOKEN_UPDATEORINSERT:
+               processAction(Action.UPDATEORINSERT);
+               break;
 
-         case ActionConst.ELEM_TOKEN_INVALID:
-            throw new SAXException("Unrecognized action language element type: " + localName);
+            case ActionConst.ELEM_TOKEN_INVALID:
+               throw new XMLMiddlewareException("Unrecognized action language element type: " + localName);
+         }
+      }
+      catch (XMLMiddlewareException m)
+      {
+         throw new SAXException(m);
       }
    }
 
@@ -271,35 +301,42 @@ public class ActionCompiler implements ContentHandler
       if (!uri.equals(ActionConst.URI_ACTIONSV2))
          throw new SAXException("Unrecognized namespace URI for action language: " + uri);
 
-      switch (elementTokens.getToken(localName))
+      try
       {
-         case ActionConst.ELEM_TOKEN_DEFAULTACTION:
-            stateDefaultAction = false;
-            break;
+         switch (elementTokens.getToken(localName))
+         {
+            case ActionConst.ELEM_TOKEN_DEFAULTACTION:
+               stateDefaultAction = false;
+               break;
 
-         case ActionConst.ELEM_TOKEN_UPDATE:
-            stateUpdate = false;
-            break;
+            case ActionConst.ELEM_TOKEN_UPDATE:
+               stateUpdate = false;
+               break;
 
-         case ActionConst.ELEM_TOKEN_ACTION:
-         case ActionConst.ELEM_TOKEN_ACTIONS:
-         case ActionConst.ELEM_TOKEN_ALL:
-         case ActionConst.ELEM_TOKEN_ATTRIBUTE:
-         case ActionConst.ELEM_TOKEN_DELETE:
-         case ActionConst.ELEM_TOKEN_ELEMENTTYPE:
-         case ActionConst.ELEM_TOKEN_INSERT:
-         case ActionConst.ELEM_TOKEN_NAMESPACE:
-         case ActionConst.ELEM_TOKEN_NONE:
-         case ActionConst.ELEM_TOKEN_OPTIONS:
-         case ActionConst.ELEM_TOKEN_PCDATA:
-         case ActionConst.ELEM_TOKEN_SOFTDELETE:
-         case ActionConst.ELEM_TOKEN_SOFTINSERT:
-         case ActionConst.ELEM_TOKEN_UPDATEORINSERT:
-            // Nothing to do.
-            break;
+            case ActionConst.ELEM_TOKEN_ACTION:
+            case ActionConst.ELEM_TOKEN_ACTIONS:
+            case ActionConst.ELEM_TOKEN_ALL:
+            case ActionConst.ELEM_TOKEN_ATTRIBUTE:
+            case ActionConst.ELEM_TOKEN_DELETE:
+            case ActionConst.ELEM_TOKEN_ELEMENTTYPE:
+            case ActionConst.ELEM_TOKEN_INSERT:
+            case ActionConst.ELEM_TOKEN_NAMESPACE:
+            case ActionConst.ELEM_TOKEN_NONE:
+            case ActionConst.ELEM_TOKEN_OPTIONS:
+            case ActionConst.ELEM_TOKEN_PCDATA:
+            case ActionConst.ELEM_TOKEN_SOFTDELETE:
+            case ActionConst.ELEM_TOKEN_SOFTINSERT:
+            case ActionConst.ELEM_TOKEN_UPDATEORINSERT:
+               // Nothing to do.
+               break;
 
-         case ActionConst.ELEM_TOKEN_INVALID:
-            throw new SAXException("Unrecognized action language element type: " + localName);
+            case ActionConst.ELEM_TOKEN_INVALID:
+               throw new XMLMiddlewareException("Unrecognized action language element type: " + localName);
+         }
+      }
+      catch (XMLMiddlewareException m)
+      {
+         throw new SAXException(m);
       }
    }
 
@@ -357,7 +394,7 @@ public class ActionCompiler implements ContentHandler
    }
 
    private void processActions(Attributes attrs)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       String version;
 
@@ -367,11 +404,11 @@ public class ActionCompiler implements ContentHandler
 
       version = getAttrValue(attrs, ActionConst.ATTR_VERSION, ActionConst.DEF_VERSION);
       if (!version.equals(ActionConst.DEF_VERSION))
-         throw new SAXException("Unsupported action language version: " + version);
+         throw new XMLMiddlewareException("Unsupported action language version: " + version);
    }
 
    private void processAttribute(Attributes attrs)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       String qname;
 
@@ -386,7 +423,7 @@ public class ActionCompiler implements ContentHandler
    }
 
    private void processElementType(Attributes attrs)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       String qname;
 
@@ -428,13 +465,13 @@ public class ActionCompiler implements ContentHandler
    }
 
    private void processUpdateProperty(XMLName propName, int type)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       // The <ElementType>, <Attribute>, or <PCDATA> element is inside
       // an <Update> element.
 
       if (stateDefaultAction)
-         throw new SAXException("When <Update> is inside <DefaultAction>, the only valid child is <All />.");
+         throw new XMLMiddlewareException("When <Update> is inside <DefaultAction>, the only valid child is <All />.");
 
       action.setUpdateProperty(propName, type);
    }

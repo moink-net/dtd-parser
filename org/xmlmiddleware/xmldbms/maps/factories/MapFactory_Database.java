@@ -20,6 +20,7 @@
 package org.xmlmiddleware.xmldbms.maps.factories;
 
 import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
 import org.xmlmiddleware.xmlutils.*;
@@ -358,9 +359,11 @@ public class MapFactory_Database
     * @param rootTableName Name of the root table.
     *
     * @return The XMLDBMSMap.
+    * @exception SQLException An error occurred accessing the database.
+    * @exception XMLMiddlewareException An error occurred building the map.
     */
    public XMLDBMSMap createMap(String rootCatalogName, String rootSchemaName, String rootTableName)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       // Check the arguments and state.
 
@@ -386,9 +389,11 @@ public class MapFactory_Database
     * @param rootTableNames Names of the root tables.
     *
     * @return The XMLDBMSMap.
+    * @exception SQLException An error occurred accessing the database.
+    * @exception XMLMiddlewareException An error occurred building the map.
     */
    public XMLDBMSMap createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String[] rootSchemaNames, String[] rootTableNames)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       checkArray(rootTableNames, 0, true, null, TABLENAME);
       checkArray(rootDatabaseNames, rootTableNames.length, false, DEFAULT, ROOT + DATABASENAME);
@@ -426,9 +431,11 @@ public class MapFactory_Database
     * @param stopTableNames Names of the stop tables.
     *
     * @return The XMLDBMSMap.
+    * @exception SQLException An error occurred accessing the database.
+    * @exception XMLMiddlewareException An error occurred building the map.
     */
    public XMLDBMSMap createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String[] rootSchemaNames, String[] rootTableNames, String[] stopDatabaseNames, String[] stopCatalogNames, String[] stopSchemaNames, String[] stopTableNames)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       String    name;
       Hashtable stopTables = new Hashtable();
@@ -471,9 +478,11 @@ public class MapFactory_Database
     * @param rootCatalogNames Names of the root catalogs.
     *
     * @return The XMLDBMSMap.
+    * @exception SQLException An error occurred accessing the database.
+    * @exception XMLMiddlewareException An error occurred building the map.
     */
    public XMLDBMSMap createMap(String[] rootDatabaseNames, String[] rootCatalogNames)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       checkArray(rootCatalogNames, 0, true, null, ROOT + CATALOGNAME);
       checkArray(rootDatabaseNames, rootCatalogNames.length, false, DEFAULT, ROOT + DATABASENAME);
@@ -499,9 +508,11 @@ public class MapFactory_Database
     * @param rootSchemaNames Names of the root schemas.
     *
     * @return The XMLDBMSMap.
+    * @exception SQLException An error occurred accessing the database.
+    * @exception XMLMiddlewareException An error occurred building the map.
     */
    public XMLDBMSMap createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String rootSchemaNames[])
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       checkArray(rootSchemaNames, 0, true, null, ROOT + SCHEMANAME);
       checkArray(rootDatabaseNames, rootSchemaNames.length, false, DEFAULT, ROOT + DATABASENAME);
@@ -521,7 +532,7 @@ public class MapFactory_Database
    //**************************************************************************
 
    private void processCatalogs(String[] databaseNames, String[] catalogNames)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       for (int i = 0; i < databaseNames.length; i++)
       {
@@ -530,7 +541,7 @@ public class MapFactory_Database
    }
 
    private void processSchemas(String[] databaseNames, String[] catalogNames, String[] schemaNames)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       for (int i = 0; i < databaseNames.length; i++)
       {
@@ -539,7 +550,7 @@ public class MapFactory_Database
    }
 
    private void processTables(String[] databaseNames, String[] catalogNames, String[] schemaNames, String[] tableNames, Hashtable stopTables)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       for (int i = 0; i < databaseNames.length; i++)
       {
@@ -548,7 +559,7 @@ public class MapFactory_Database
    }
 
    private void processCatalogOrSchema(String databaseName, String catalogName, String schemaName)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       DatabaseMetaData meta;
       ResultSet        rs;
@@ -597,7 +608,7 @@ public class MapFactory_Database
    //**************************************************************************
 
    private void processTable(String databaseName, String catalogName, String schemaName, String tableName, Hashtable stopTables)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       DatabaseMetaData meta;
       Table            table;
@@ -805,7 +816,7 @@ public class MapFactory_Database
    }
 
    private void linkRemoteTables(ClassTableMap classTableMap, Vector remoteTables, Vector linkInfos)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       LinkInfo             linkInfo;
       Table                remoteTable;
@@ -883,7 +894,7 @@ public class MapFactory_Database
    }
 
    private void processRemoteTables(Vector remoteTables, Hashtable stopTables)
-      throws SQLException, MapException
+      throws SQLException, XMLMiddlewareException
    {
       Table remoteTable;
 
@@ -1160,7 +1171,7 @@ public class MapFactory_Database
    }
 
    private void invertMap()
-      throws MapException
+      throws XMLMiddlewareException
    {
       MapInverter inverter;
 

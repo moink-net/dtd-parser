@@ -26,6 +26,7 @@ package org.xmlmiddleware.xmldbms.maps;
 
 import org.xmlmiddleware.conversions.formatters.*;
 import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmlutils.*;
 
 import java.sql.*;
@@ -114,7 +115,7 @@ import java.util.*;
  * (database-centric) all inherit from PropertyMapBase, since all map properties.
  *
  * <pre>
- *    MapException
+ *    XMLMiddlewareException
  *
  *    MapBase
  *       XMLDBMSMap
@@ -510,12 +511,12 @@ public class XMLDBMSMap extends MapBase
     * @param formatter The formatting object. Must not be null.
     */
    public void addNamedFormatter(String name, StringFormatter formatter)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkArgNull(name, ARG_NAME);
       checkArgNull(formatter, ARG_FORMATTER);
       if (namedFormatters.get(name) != null)
-         throw new MapException("Formatter with the name " + name + " already exists.");
+         throw new XMLMiddlewareException("Formatter with the name " + name + " already exists.");
       namedFormatters.put(name, formatter);
    }
 
@@ -525,11 +526,11 @@ public class XMLDBMSMap extends MapBase
     * @param name The name. Must not be null.
     */
    public void removeNamedFormatter(String name, StringFormatter formatter)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkArgNull(name, ARG_NAME);
       if (namedFormatters.remove(name) == null)
-         throw new MapException("No formatter with the name " + name + " found.");
+         throw new XMLMiddlewareException("No formatter with the name " + name + " found.");
    }
 
    /**
@@ -550,17 +551,17 @@ public class XMLDBMSMap extends MapBase
     * @param prefix The namespace prefix.
     *
     * @return The namespace URI.
-    * @exception MapException Thrown if the prefix is not found.
+    * @exception XMLMiddlewareException Thrown if the prefix is not found.
     */
    public final String getNamespaceURI(String prefix)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String uri;
 
       checkArgNull(prefix, ARG_PREFIX);
       uri = (String)uris.get(prefix);
       if (uri == null)
-         throw new MapException("Prefix not found: " + prefix);
+         throw new XMLMiddlewareException("Prefix not found: " + prefix);
       return uri;
    }
 
@@ -570,17 +571,17 @@ public class XMLDBMSMap extends MapBase
     * @param uri The namespace URI.
     *
     * @return The namespace prefix.
-    * @exception MapException Thrown if the URI is not found.
+    * @exception XMLMiddlewareException Thrown if the URI is not found.
     */
    public final String getNamespacePrefix(String uri)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String prefix;
 
       checkArgNull(uri, ARG_URI);
       prefix = (String)prefixes.get(uri);
       if (prefix == null)
-         throw new MapException("URI not found: " + uri);
+         throw new XMLMiddlewareException("URI not found: " + uri);
       return prefix;
    }
 
@@ -610,17 +611,17 @@ public class XMLDBMSMap extends MapBase
     * @param prefix The namespace prefix.
     * @param uri The namespace URI.
     *
-    * @exception MapException Thrown if the prefix or URI is already used.
+    * @exception XMLMiddlewareException Thrown if the prefix or URI is already used.
     */
    public void addNamespace(String prefix, String uri)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkArgNull(prefix, ARG_PREFIX);
       checkArgNull(uri, ARG_URI);
       if (uris.get(prefix) != null)
-         throw new MapException("Prefix already used: " + prefix);
+         throw new XMLMiddlewareException("Prefix already used: " + prefix);
       if (prefixes.get(uri) != null)
-         throw new MapException("URI already used: " + uri);
+         throw new XMLMiddlewareException("URI already used: " + uri);
       uris.put(prefix, uri);
       prefixes.put(uri, prefix);
    }
@@ -630,10 +631,10 @@ public class XMLDBMSMap extends MapBase
     *
     * @param prefix The namespace prefix.
     *
-    * @exception MapException Thrown if the prefix is not found.
+    * @exception XMLMiddlewareException Thrown if the prefix is not found.
     */
    public void removeNamespaceByPrefix(String prefix)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String uri;
 
@@ -641,7 +642,7 @@ public class XMLDBMSMap extends MapBase
 
       uri = (String)uris.remove(prefix);
       if (uri == null)
-         throw new MapException("Prefix not found: " + prefix);
+         throw new XMLMiddlewareException("Prefix not found: " + prefix);
       prefixes.remove(uri);
    }
 
@@ -650,10 +651,10 @@ public class XMLDBMSMap extends MapBase
     *
     * @param prefix The namespace prefix.
     *
-    * @exception MapException Thrown if the prefix is not found.
+    * @exception XMLMiddlewareException Thrown if the prefix is not found.
     */
    public void removeNamespaceByURI(String uri)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String prefix;
 
@@ -661,7 +662,7 @@ public class XMLDBMSMap extends MapBase
 
       prefix = (String)prefixes.remove(uri);
       if (prefix == null)
-         throw new MapException("URI not found: " + uri);
+         throw new XMLMiddlewareException("URI not found: " + uri);
       uris.remove(prefix);
    }
 
@@ -777,10 +778,10 @@ public class XMLDBMSMap extends MapBase
     * Add a ClassMap for an element type.
     *
     * @param classMap ClassMap for the element type.
-    * @exception MapException Thrown if the element type has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the element type has already been mapped.
     */
    public void addClassMap(ClassMap classMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String universalName;
       Object o;
@@ -790,7 +791,7 @@ public class XMLDBMSMap extends MapBase
       universalName = classMap.getElementTypeName().getUniversalName();
       o = classMaps.get(universalName);
       if (o != null)
-         throw new MapException("Element type " + universalName + " already mapped.");
+         throw new XMLMiddlewareException("Element type " + universalName + " already mapped.");
       classMaps.put(universalName, classMap);
    }
 
@@ -800,10 +801,10 @@ public class XMLDBMSMap extends MapBase
     * @param uri Namespace URI of the element type. May be null.
     * @param localName Local name of the element type.
     *
-    * @exception MapException Thrown if the element type has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the element type has not been mapped.
     */
    public void removeClassMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // getUniversalName checks if localName is null.
 
@@ -815,17 +816,17 @@ public class XMLDBMSMap extends MapBase
     *
     * @param universalName Universal name of the element type.
     *
-    * @exception MapException Thrown if the element type has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the element type has not been mapped.
     */
    public void removeClassMap(String universalName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       checkArgNull(universalName, ARG_UNIVERSALNAME);
       o = classMaps.remove(universalName);
       if (o == null)
-         throw new MapException("Element type " + universalName + " not mapped.");
+         throw new XMLMiddlewareException("Element type " + universalName + " not mapped.");
    }
 
    /**
@@ -907,10 +908,10 @@ public class XMLDBMSMap extends MapBase
     * Add a ClassTableMap for a table.
     *
     * @param classTableMap ClassTableMap for the table. Must not be null.
-    * @exception MapException Thrown if the table has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the table has already been mapped.
     */
    public void addClassTableMap(ClassTableMap classTableMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String name;
       Object o;
@@ -919,7 +920,7 @@ public class XMLDBMSMap extends MapBase
       name = classTableMap.getTable().getHashName();
       o = classTableMaps.get(name);
       if (o != null)
-         throw new MapException("Table already mapped: " + classTableMap.getTable().getUniversalName());
+         throw new XMLMiddlewareException("Table already mapped: " + classTableMap.getTable().getUniversalName());
       classTableMaps.put(name, classTableMap);
    }
 
@@ -931,16 +932,16 @@ public class XMLDBMSMap extends MapBase
     * @param schemaName Name of the schema. May be null.
     * @param tableName Name of the table.
     *
-    * @exception MapException Thrown if the table has not been mapped as a class table.
+    * @exception XMLMiddlewareException Thrown if the table has not been mapped as a class table.
     */
    public void removeClassTableMap(String databaseName, String catalogName, String schemaName, String tableName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       o = classTableMaps.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
       if (o == null)
-         throw new MapException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
    }
 
    /**
@@ -948,16 +949,16 @@ public class XMLDBMSMap extends MapBase
     *
     * @param table The Table
     *
-    * @exception MapException Thrown if the table has not been mapped as a class table.
+    * @exception XMLMiddlewareException Thrown if the table has not been mapped as a class table.
     */
    public void removeClassTableMap(Table table)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       o = classTableMaps.remove(table.getHashName());
       if (o == null)
-         throw new MapException("Table not mapped as a class table: " + table.getUniversalName());
+         throw new XMLMiddlewareException("Table not mapped as a class table: " + table.getUniversalName());
    }
 
    /**
@@ -1029,10 +1030,10 @@ public class XMLDBMSMap extends MapBase
     * Add a Table.
     *
     * @param table The Table.
-    * @exception MapException Thrown if the table already exists.
+    * @exception XMLMiddlewareException Thrown if the table already exists.
     */
    public void addTable(Table table)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String name;
@@ -1041,7 +1042,7 @@ public class XMLDBMSMap extends MapBase
       name = table.getHashName();
       o = tables.get(name);
       if (o != null)
-         throw new MapException("Table already exists: " + table.getUniversalName());
+         throw new XMLMiddlewareException("Table already exists: " + table.getUniversalName());
       tables.put(name, table);
    }
 
@@ -1056,16 +1057,16 @@ public class XMLDBMSMap extends MapBase
     * @param schemaName Name of the schema. May be null.
     * @param tableName Name of the table.
     *
-    * @exception MapException Thrown if the table does not exist.
+    * @exception XMLMiddlewareException Thrown if the table does not exist.
     */
    public void removeTable(String databaseName, String catalogName, String schemaName, String tableName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       o = tables.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
       if (o == null)
-         throw new MapException("Table does not exist: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Table does not exist: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
    }
 
    /**
@@ -1076,16 +1077,16 @@ public class XMLDBMSMap extends MapBase
     *
     * @param table The Table
     *
-    * @exception MapException Thrown if the table does not exist.
+    * @exception XMLMiddlewareException Thrown if the table does not exist.
     */
    public void removeTable(Table table)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       o = tables.remove(table.getHashName());
       if (o == null)
-         throw new MapException("Table does not exist: " + table.getUniversalName());
+         throw new XMLMiddlewareException("Table does not exist: " + table.getUniversalName());
    }
 
    /**

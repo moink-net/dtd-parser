@@ -84,15 +84,15 @@ public class ArrayDataSource
     * @param id Ignored.
     *
     * @return The Connection.
-    * @exception PoolException Thrown if the factory cannot return a connection, such as
+    * @exception XMLMiddlewareException Thrown if the factory cannot return a connection, such as
     *               when the maximum number of connections has been exceeded.
     */
    protected Object createObject(Object id)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       // Check if any left
       if(m_connections.empty())
-         throw new PoolException("ArrayDataSource: No more connections available.");
+         throw new XMLMiddlewareException("ArrayDataSource: No more connections available.");
 
       return m_connections.pop();
    }
@@ -104,15 +104,15 @@ public class ArrayDataSource
     *
     * @param object Connection to close.
     *
-    * @exception PoolException Thrown if the factory does not recognize the Connection or an
+    * @exception XMLMiddlewareException Thrown if the factory does not recognize the Connection or an
     *               error occurs while closing it.
     */
    protected void closeObject(Object object)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       // Make sure it's a connection
       if(!(object instanceof Connection))
-         throw new PoolException("ArrayDataSource: Invalid connection passed to ArrayDataSource");
+         throw new XMLMiddlewareException("ArrayDataSource: Invalid connection passed to ArrayDataSource");
 
       // Put it back on stack
       m_connections.push(object);
@@ -132,7 +132,7 @@ public class ArrayDataSource
       {
          return (Connection)checkOut(ARRAYCONNECTION);
       }
-      catch(PoolException e)
+      catch(XMLMiddlewareException e)
       {
          if(e.getException() instanceof SQLException)
             throw (SQLException)e.getException();

@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import java.util.*;
@@ -108,10 +109,11 @@ public class FilterBase
     * @param tableName Name of the table.
     *
     * @return The TableFilter for the table.
-    * @exception IllegalArgumentException Thrown if a filter already exists for the
+    * @exception XMLMiddlewareException Thrown if a filter already exists for the
     *    table or the table is not mapped as a class table.
     */
    public TableFilter createTableFilter(String databaseName, String catalogName, String schemaName, String tableName)
+      throws XMLMiddlewareException
    {
       TableFilter   tableFilter;
       ClassTableMap classTableMap;
@@ -119,11 +121,11 @@ public class FilterBase
 
       classTableMap = map.getClassTableMap(databaseName, catalogName, schemaName, tableName);
       if (classTableMap == null)
-         throw new IllegalArgumentException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
 
       name = Table.getHashName(databaseName, catalogName, schemaName, tableName);
       if (tableFilters.get(name) != null)
-         throw new IllegalArgumentException("Filter already exists for table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Filter already exists for table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
 
       tableFilter = new TableFilter(classTableMap);
       tableFilters.put(name, tableFilter);
@@ -138,16 +140,16 @@ public class FilterBase
     * @param schemaName Name of the schema. May be null.
     * @param tableName Name of the table.
     *
-    * @exception IllegalArgumentException Thrown if no filter exists for the table.
+    * @exception XMLMiddlewareException Thrown if no filter exists for the table.
     */
    public void removeTableFilter(String databaseName, String catalogName, String schemaName, String tableName)
-      throws IllegalArgumentException
+      throws XMLMiddlewareException
    {
       Object o;
 
       o = tableFilters.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
       if (o == null)
-         throw new IllegalArgumentException("Filter does not exist for table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Filter does not exist for table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
    }
 
    /**

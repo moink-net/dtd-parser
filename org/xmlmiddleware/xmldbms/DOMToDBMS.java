@@ -20,6 +20,7 @@ package org.xmlmiddleware.xmldbms;
 
 import org.xmlmiddleware.conversions.*;
 import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.datahandlers.*;
 import org.xmlmiddleware.xmldbms.filters.*;
 import org.xmlmiddleware.xmldbms.keygenerators.*;
@@ -297,7 +298,7 @@ public class DOMToDBMS
      * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
     public FilterSet storeDocument(TransferInfo transInfo, Document doc, int action)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         return storeDocument(transInfo, doc.getDocumentElement(), action);
     }
@@ -311,7 +312,7 @@ public class DOMToDBMS
      * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
     public FilterSet storeDocument(TransferInfo transInfo, Document doc, Actions actions)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         return storeDocument(transInfo, doc.getDocumentElement(), actions);
     }
@@ -325,7 +326,7 @@ public class DOMToDBMS
      * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
     public FilterSet storeDocument(TransferInfo transInfo, Element el, int action)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         Action act = new Action();
         act.setAction(action);
@@ -345,7 +346,7 @@ public class DOMToDBMS
      * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
     public FilterSet storeDocument(TransferInfo transInfo, Element el, Actions actions)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         FilterSet filterSet = (m_returnFilterSet) ? new FilterSet(transInfo.getMap()) : null;
 
@@ -433,7 +434,7 @@ public class DOMToDBMS
      * @param orderInParent Position of this element in parent
      */
     private void processRoot(FilterSet filterSet, Element el, long orderInParent)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // Check if the node is mapped as a class
 
@@ -492,7 +493,7 @@ public class DOMToDBMS
      */
     private Row processClassRow(Row parentRow, ClassMap classMap, RelatedClassMap relMap,
                                 Element classNode, long orderInParent)
-        throws SQLException, KeyException, MapException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // This method is called from processRoot and from processRow. When
         // it is called from processRoot, relMap and parentRow are null.
@@ -588,7 +589,7 @@ public class DOMToDBMS
      */
     private void processChildren(Row parentRow, ClassMapBase parentMap, Node parentNode,
                                  Vector fkChildren, Action action, Vector useProps)
-        throws KeyException, SQLException, MapException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // This method is called from processClassRow. It is also called recursively
         // from processChild for inline class maps.
@@ -663,7 +664,7 @@ public class DOMToDBMS
      */
     private void processChild(Row parentRow, Object childMap, Node childNode, long childOrder,
                               Vector fkChildren, Action action, Vector useProps)
-        throws KeyException, SQLException, MapException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         if(childMap == null)
         {
@@ -712,7 +713,7 @@ public class DOMToDBMS
      * stored in a separate property table) calls processRowChild.
      */
     private void processProperty(Row parentRow, PropertyMap propMap, Node propNode, long order, Vector fkNodes, Action action)
-        throws KeyException, SQLException, MapException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // NOTE: Called from processChild
 
@@ -822,7 +823,7 @@ public class DOMToDBMS
      */
     private void processRowChild(Row parentRow, Object map, LinkInfo linkInfo, Node node,
                                  long orderInParent, Vector fkNodes, Action action)
-        throws KeyException, SQLException, MapException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // This method is called for nodes that are stored in child rows. It is
         // called before the parent row has been inserted into the database. Thus,
@@ -859,7 +860,7 @@ public class DOMToDBMS
      */
     private Row processRow(Row parentRow, Object map, Node node, long orderInParent,
                            Action action)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // NOTE: Called from processRowChild and processFKNodes
 
@@ -887,7 +888,7 @@ public class DOMToDBMS
      */
     private Row processPropRow(Row parentRow, PropertyMap propMap, Node propNode,
                                long orderInParent, Action action)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // NOTE: This method is called from processRow
 
@@ -929,7 +930,7 @@ public class DOMToDBMS
      * contained the primary key.
      */
     private void processFKNodes(Row parentRow, Vector fkNodes, Action action)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // NOTE: Called from processClassRow
 
@@ -954,7 +955,7 @@ public class DOMToDBMS
      * Creates a Row object and creates / copies keys for that row.
      */
     private Row createRow(Table table, Row parentRow, LinkInfo linkInfo)
-        throws KeyException, ConversionException
+        throws XMLMiddlewareException
     {
         // NOTE: Called from processClassRow and processPropRow
 
@@ -1016,7 +1017,7 @@ public class DOMToDBMS
      * Called before row is stored. Sets missing fields to null.
      */
     private void setMissingFieldsToNull(Row classRow, Vector useProps)
-        throws ConversionException
+        throws XMLMiddlewareException
     {
        // This method is called after all the children (including attributes)
        // of a class element have been processed. If any properties in which
@@ -1078,7 +1079,7 @@ public class DOMToDBMS
      * Set the value for column
      */
     private void setPropertyColumn(Row row, PropertyMap propMap, Node node)
-        throws ConversionException
+        throws XMLMiddlewareException
     {
         Column column = propMap.getColumn();
 
@@ -1097,7 +1098,7 @@ public class DOMToDBMS
      * Generate the order column value, if any.
      */
     private void generateOrder(Row row, OrderInfo o, long orderValue)
-        throws ConversionException
+        throws XMLMiddlewareException
     {
         // If the property is ordered, the order is stored in an order column,
         // and XML-DBMS generates the order, the store the current order value
@@ -1184,7 +1185,7 @@ public class DOMToDBMS
      * Gets the action for a given element.
      */
     private Action getActionFor(Element el)
-        throws MapException
+        throws XMLMiddlewareException
     {
         // See if there is an action for the specified element. If so, use it. If
         // not, use the default. If there is no default, throw an exception.
@@ -1195,7 +1196,7 @@ public class DOMToDBMS
             action = m_actions.getDefaultAction();
 
         if(action == null)
-            throw new MapException("No default action specified.");
+            throw new XMLMiddlewareException("No default action specified.");
 
         // TODO: When action: attributes are implemented put code here
 
@@ -1206,7 +1207,7 @@ public class DOMToDBMS
      * Builds a set of expressions of the form "Column=value AND ..."
      */
     private String buildCondition(Column[] columns, Object[] values)
-       throws ConversionException
+       throws XMLMiddlewareException
     {
         String       value;
         StringBuffer sb = new StringBuffer();
@@ -1231,7 +1232,7 @@ public class DOMToDBMS
      * Copy the child key to parent row.
      */
     private void setParentKey(Row parentRow, Row childRow, LinkInfo l)
-        throws KeyException, ConversionException
+        throws XMLMiddlewareException
     {
         Column[] childCols = l.getChildKey().getColumns();
 
@@ -1239,7 +1240,7 @@ public class DOMToDBMS
         // database-generated key value isn't generated.
 
         if(!childRow.haveColumns(childCols))
-            throw new KeyException("Internal error. The child key is not set yet.");
+            throw new XMLMiddlewareException("Internal error. The child key is not set yet.");
 
         parentRow.setColumnValues(l.getParentKey().getColumns(),
                                   childRow.getColumnValues(childCols));
@@ -1249,7 +1250,7 @@ public class DOMToDBMS
      * Copy the parent key to a child row.
      */
     private void setChildKey(Row parentRow, Row childRow, LinkInfo l)
-        throws KeyException, ConversionException
+        throws XMLMiddlewareException
     {
         Column[] parentCols = l.getParentKey().getColumns();
 
@@ -1257,7 +1258,7 @@ public class DOMToDBMS
         // database-generated key value isn't generated.
 
         if(!parentRow.haveColumns(parentCols))
-            throw new KeyException("Internal error. The parent key is not set yet.");
+            throw new XMLMiddlewareException("Internal error. The parent key is not set yet.");
 
         childRow.setColumnValues(l.getChildKey().getColumns(),
                                  parentRow.getColumnValues(parentCols));
@@ -1267,18 +1268,18 @@ public class DOMToDBMS
      * Use a KeyGenerator to generate a key.
      */
     private void generateKey(Row row, Key key)
-        throws KeyException, ConversionException
+        throws XMLMiddlewareException
     {
         KeyGenerator keyGen = (KeyGenerator)m_keyGenerators.get(key.getKeyGeneratorName());
 
         if(keyGen == null)
-            throw new KeyException("No KeyGenerator added for the key generator named " + key.getKeyGeneratorName());
+            throw new XMLMiddlewareException("No KeyGenerator added for the key generator named " + key.getKeyGeneratorName());
 
         Column[] columns = key.getColumns();
         Object[] values = keyGen.generateKey();
 
         if(columns.length != values.length)
-            throw new KeyException("Invalid number of columns generated by key generator: " + key.getKeyGeneratorName());
+            throw new XMLMiddlewareException("Invalid number of columns generated by key generator: " + key.getKeyGeneratorName());
 
         for(int i = 0; i < columns.length; i++)
         {
@@ -1298,7 +1299,7 @@ public class DOMToDBMS
      * Send a row to a DataHandler for processing.
      */
     private void storeRow(Table table, Row row, int action)
-        throws SQLException, MapException
+        throws SQLException, XMLMiddlewareException
     {
 
         boolean soft = false;
@@ -1308,7 +1309,7 @@ public class DOMToDBMS
         DataHandler dataHandler = m_transInfo.getDataHandler(table.getDatabaseName());
 
         if(dataHandler == null)
-            throw new MapException("DataHandler not set for the database named " + table.getDatabaseName());
+            throw new XMLMiddlewareException("DataHandler not set for the database named " + table.getDatabaseName());
 
         try
         {
@@ -1335,10 +1336,10 @@ public class DOMToDBMS
 
                 case Action.SOFTDELETE:
                 case Action.DELETE:
-                    throw new MapException("DELETE and SOFTDELETE actions cannot be used with DOMToDBMS.");
+                    throw new XMLMiddlewareException("DELETE and SOFTDELETE actions cannot be used with DOMToDBMS.");
 
                 default:
-                    throw new MapException("Internal error. Invalid action in storeRow.");
+                    throw new XMLMiddlewareException("Internal error. Invalid action in storeRow.");
             };
         }
         catch(SQLException e)
@@ -1355,7 +1356,7 @@ public class DOMToDBMS
      * Deletes rows from a property table for a particular property.
      */
     private void deletePropTableRows(Row classRow, Vector useProps, Action action)
-        throws SQLException, MapException, KeyException, ConversionException
+        throws SQLException, XMLMiddlewareException
     {
         // When a property (usually multi-valued) is stored in a property table,
         // "updating" the property means deleting all the old rows and inserting
@@ -1400,14 +1401,14 @@ public class DOMToDBMS
      * Delete a row or rows.
      */
     private void deleteRow(Table table, Row row, Key key, boolean soft)
-        throws SQLException, MapException
+        throws SQLException, XMLMiddlewareException
     {
         // Get the DataHandler for the database
         // TODO: (What about the 'null' or default database?)
 
         DataHandler dataHandler = m_transInfo.getDataHandler(table.getDatabaseName());
         if(dataHandler == null)
-            throw new MapException("Database '" + table.getDatabaseName() + "' not set.");
+            throw new XMLMiddlewareException("Database '" + table.getDatabaseName() + "' not set.");
 
         // Delete the row or rows
 

@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.actions;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmlutils.*;
 
@@ -136,10 +137,11 @@ public class Actions
     * @param localName Local name of the element type. Must not be null.
     *
     * @return The action for the element type.
-    * @exception IllegalArgumentException Thrown if an action has already been
+    * @exception XMLMiddlewareException Thrown if an action has already been
     *    created for the element type.
     */
    public Action createAction(String uri, String localName)
+      throws XMLMiddlewareException
    {
       return createAction(XMLName.create(uri, localName));
    }
@@ -150,10 +152,11 @@ public class Actions
     * @param elementTypeName The element type name. Must not be null.
     *
     * @return The action for the element type.
-    * @exception IllegalArgumentException Thrown if an action has already been
+    * @exception XMLMiddlewareException Thrown if an action has already been
     *    created for the element type or the element type is not mapped as a class.
     */
    public Action createAction(XMLName elementTypeName)
+      throws XMLMiddlewareException
    {
       Action   action;
       ClassMap classMap;
@@ -165,13 +168,13 @@ public class Actions
 
       action = getAction(elementTypeName);
       if (action != null)
-         throw new IllegalArgumentException("Action already created for " + elementTypeName.getUniversalName());
+         throw new XMLMiddlewareException("Action already created for " + elementTypeName.getUniversalName());
 
       // Check that the element type is mapped as a class.
 
       classMap = map.getClassMap(elementTypeName.getUniversalName());
       if (classMap == null)
-         throw new IllegalArgumentException("Element type not mapped as a class: " + elementTypeName.getUniversalName());
+         throw new XMLMiddlewareException("Element type not mapped as a class: " + elementTypeName.getUniversalName());
 
       // Create the new Action, add it to the hashtable, and return it.
 
@@ -185,17 +188,17 @@ public class Actions
     *
     * @param elementTypeName The element type name. Must not be null.
     *
-    * @exception IllegalArgumentException Thrown if no action has been specified
+    * @exception XMLMiddlewareException Thrown if no action has been specified
     *    for the element type.
     */
    public void removeAction(XMLName elementTypeName)
-      throws IllegalArgumentException
+      throws XMLMiddlewareException
    {
       Object o;
 
       o = actions.remove(elementTypeName);
       if (o == null)
-         throw new IllegalArgumentException("No action specified for element type " + elementTypeName.getUniversalName());
+         throw new XMLMiddlewareException("No action specified for element type " + elementTypeName.getUniversalName());
    }
 
    /**
@@ -204,11 +207,11 @@ public class Actions
     * @param uri The uri of the element type.
     * @param localName The local name of the element type. Must not be null.
     *
-    * @exception IllegalArgumentException Thrown if no action has been specified
+    * @exception XMLMiddlewareException Thrown if no action has been specified
     *    for the element type.
     */
    public void removeAction(String uri, String localName)
-      throws IllegalArgumentException
+      throws XMLMiddlewareException
    {
       removeAction(XMLName.create(uri, localName));
    }

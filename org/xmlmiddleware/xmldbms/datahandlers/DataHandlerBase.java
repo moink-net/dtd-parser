@@ -2,6 +2,7 @@ package org.xmlmiddleware.xmldbms.datahandlers;
 
 import org.xmlmiddleware.conversions.*;
 import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
@@ -565,7 +566,7 @@ abstract class DataHandlerBase
         {
             row.setColumnValue(column, ConvertObject.convertObject(val, column.getType(), column.getFormatter()));
         }
-        catch(ConversionException e)
+        catch(XMLMiddlewareException e)
         {
             throw new SQLException("[xmldbms]Conversion error: " + e.getMessage());
         }

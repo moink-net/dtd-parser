@@ -137,17 +137,17 @@ public class FilterCompiler implements ContentHandler
     * @param src A SAX InputSource for the filter document.
     * @param map The map to which the filters apply.
     * @return The FilterSet object
-    * @exception SAXException Thrown if the filter document contains an error.
-    * @exception IOException Thrown if an IO error occurs.
+    * @exception XMLMiddlewareException Thrown if the filter document contains an error.
     */
    public FilterSet compile(XMLDBMSMap map, InputSource src)
-      throws SAXException, IOException
+      throws XMLMiddlewareException
    {
+      Exception e;
+
       // Check the arguments.
 
       if ((src == null) || (map == null))
          throw new IllegalArgumentException("map and src arguments must not be null.");
-
 
       // Initialize global variables.
 
@@ -156,7 +156,28 @@ public class FilterCompiler implements ContentHandler
 
       // Parse the filter document.
 
-      xmlReader.parse(src);
+      try
+      {
+         xmlReader.parse(src);
+      }
+      catch (SAXException s)
+      {
+         // Get the embedded Exception (if any) and check if it's a XMLMiddlewareException.
+         e = s.getException();
+         if (e != null)
+         {
+            if (e instanceof XMLMiddlewareException)
+               throw (XMLMiddlewareException)e;
+            else
+               throw new XMLMiddlewareException(e);
+         }
+         else
+            throw new XMLMiddlewareException(s);
+      }
+      catch (IOException io)
+      {
+         throw new XMLMiddlewareException(io);
+      }
 
       // Return the FilterSet object.
 
@@ -201,54 +222,61 @@ public class FilterCompiler implements ContentHandler
       if (!uri.equals(FilterConst.URI_FILTERSV2))
          throw new SAXException("Unrecognized namespace URI for filter language: " + uri);
 
-      switch (elementTokens.getToken(localName))
+      try
       {
-         case FilterConst.ELEM_TOKEN_FILTERSET:
-            processFilterSet(attrs);
-            break;
+         switch (elementTokens.getToken(localName))
+         {
+            case FilterConst.ELEM_TOKEN_FILTERSET:
+               processFilterSet(attrs);
+               break;
 
-         case FilterConst.ELEM_TOKEN_NAMESPACE:
-            processNamespace(attrs);
-            break;
+            case FilterConst.ELEM_TOKEN_NAMESPACE:
+               processNamespace(attrs);
+               break;
 
-         case FilterConst.ELEM_TOKEN_RELATEDTABLEFILTER:
-            state = STATE_RELATEDTABLEFILTER;
-            processRelatedTableFilter(attrs);
-            break;
+            case FilterConst.ELEM_TOKEN_RELATEDTABLEFILTER:
+               state = STATE_RELATEDTABLEFILTER;
+               processRelatedTableFilter(attrs);
+               break;
 
-         case FilterConst.ELEM_TOKEN_RESULTSETINFO:
-            processResultSetInfo(attrs);
-            break;
+            case FilterConst.ELEM_TOKEN_RESULTSETINFO:
+               processResultSetInfo(attrs);
+               break;
 
-         case FilterConst.ELEM_TOKEN_ROOTFILTER:
-            state = STATE_ROOTFILTER;
-            processRootFilter();
-            break;
+            case FilterConst.ELEM_TOKEN_ROOTFILTER:
+               state = STATE_ROOTFILTER;
+               processRootFilter();
+               break;
 
-         case FilterConst.ELEM_TOKEN_TABLE:
-            processTable(attrs);
-            break;
+            case FilterConst.ELEM_TOKEN_TABLE:
+               processTable(attrs);
+               break;
 
-         case FilterConst.ELEM_TOKEN_TABLEFILTER:
-            state = STATE_TABLEFILTER;
-            break;
+            case FilterConst.ELEM_TOKEN_TABLEFILTER:
+               state = STATE_TABLEFILTER;
+               break;
 
-         case FilterConst.ELEM_TOKEN_WHERE:
-            processWhere(attrs);
-            break;
+            case FilterConst.ELEM_TOKEN_WHERE:
+               processWhere(attrs);
+               break;
 
-         case FilterConst.ELEM_TOKEN_WRAPPER:
-            processWrapper(attrs);
-            break;
+            case FilterConst.ELEM_TOKEN_WRAPPER:
+               processWrapper(attrs);
+               break;
 
-         case FilterConst.ELEM_TOKEN_FILTER:
-         case FilterConst.ELEM_TOKEN_FILTERS:
-         case FilterConst.ELEM_TOKEN_OPTIONS:
-            // do nothing
-            break;
+            case FilterConst.ELEM_TOKEN_FILTER:
+            case FilterConst.ELEM_TOKEN_FILTERS:
+            case FilterConst.ELEM_TOKEN_OPTIONS:
+               // do nothing
+               break;
 
-         case FilterConst.ELEM_TOKEN_INVALID:
-            throw new SAXException("Unrecognized filter language element type: " + localName);
+            case FilterConst.ELEM_TOKEN_INVALID:
+               throw new XMLMiddlewareException("Unrecognized filter language element type: " + localName);
+         }
+      }
+      catch (XMLMiddlewareException m)
+      {
+         throw new SAXException(m);
       }
    }
 
@@ -266,35 +294,42 @@ public class FilterCompiler implements ContentHandler
       if (!uri.equals(FilterConst.URI_FILTERSV2))
          throw new SAXException("Unrecognized namespace URI for filter language: " + uri);
 
-      switch (elementTokens.getToken(localName))
+      try
       {
+         switch (elementTokens.getToken(localName))
+         {
 
-         case FilterConst.ELEM_TOKEN_RELATEDTABLEFILTER:
-            state = STATE_TABLEFILTER;
-            break;
+            case FilterConst.ELEM_TOKEN_RELATEDTABLEFILTER:
+               state = STATE_TABLEFILTER;
+               break;
 
-         case FilterConst.ELEM_TOKEN_ROOTFILTER:
-            state = STATE_INITIAL;
-            break;
+            case FilterConst.ELEM_TOKEN_ROOTFILTER:
+               state = STATE_INITIAL;
+               break;
 
-         case FilterConst.ELEM_TOKEN_TABLEFILTER:
-            state = STATE_INITIAL;
-            break;
+            case FilterConst.ELEM_TOKEN_TABLEFILTER:
+               state = STATE_INITIAL;
+               break;
 
-         case FilterConst.ELEM_TOKEN_FILTER:
-         case FilterConst.ELEM_TOKEN_FILTERS:
-         case FilterConst.ELEM_TOKEN_FILTERSET:
-         case FilterConst.ELEM_TOKEN_NAMESPACE:
-         case FilterConst.ELEM_TOKEN_OPTIONS:
-         case FilterConst.ELEM_TOKEN_RESULTSETINFO:
-         case FilterConst.ELEM_TOKEN_TABLE:
-         case FilterConst.ELEM_TOKEN_WHERE:
-         case FilterConst.ELEM_TOKEN_WRAPPER:
-            // Nothing to do.
-            break;
+            case FilterConst.ELEM_TOKEN_FILTER:
+            case FilterConst.ELEM_TOKEN_FILTERS:
+            case FilterConst.ELEM_TOKEN_FILTERSET:
+            case FilterConst.ELEM_TOKEN_NAMESPACE:
+            case FilterConst.ELEM_TOKEN_OPTIONS:
+            case FilterConst.ELEM_TOKEN_RESULTSETINFO:
+            case FilterConst.ELEM_TOKEN_TABLE:
+            case FilterConst.ELEM_TOKEN_WHERE:
+            case FilterConst.ELEM_TOKEN_WRAPPER:
+               // Nothing to do.
+               break;
 
-         case FilterConst.ELEM_TOKEN_INVALID:
-            throw new SAXException("Unrecognized filter language element type: " + localName);
+            case FilterConst.ELEM_TOKEN_INVALID:
+               throw new XMLMiddlewareException("Unrecognized filter language element type: " + localName);
+         }
+      }
+      catch (XMLMiddlewareException m)
+      {
+         throw new SAXException(m);
       }
    }
 
@@ -347,7 +382,7 @@ public class FilterCompiler implements ContentHandler
    //**************************************************************************
 
    private void processFilterSet(Attributes attrs)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       String version;
 
@@ -357,10 +392,11 @@ public class FilterCompiler implements ContentHandler
 
       version = getAttrValue(attrs, FilterConst.ATTR_VERSION, FilterConst.DEF_VERSION);
       if (!version.equals(FilterConst.DEF_VERSION))
-         throw new SAXException("Unsupported filter language version: " + version);
+         throw new XMLMiddlewareException("Unsupported filter language version: " + version);
    }
 
    private void processNamespace(Attributes attrs)
+      throws XMLMiddlewareException
    {
       String uri, prefix;
 
@@ -390,7 +426,7 @@ public class FilterCompiler implements ContentHandler
    }
 
    private void processResultSetInfo(Attributes attrs)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       String          databaseName, catalogName, schemaName, tableName, rsName;
       ResultSetFilter resultSetFilter;
@@ -402,16 +438,9 @@ public class FilterCompiler implements ContentHandler
       schemaName = getAttrValue(attrs, FilterConst.ATTR_SCHEMA);
       tableName = getAttrValue(attrs, FilterConst.ATTR_TABLE);
 
-      try
-      {
-         resultSetFilter = filterSet.createResultSetFilter(rsName);
-         filterBase = resultSetFilter;
-         resultSetFilter.setTable(databaseName, catalogName, schemaName, tableName);
-      }
-      catch (IllegalArgumentException e)
-      {
-         throw new SAXException(e.getMessage());
-      }
+      resultSetFilter = filterSet.createResultSetFilter(rsName);
+      filterBase = resultSetFilter;
+      resultSetFilter.setTable(databaseName, catalogName, schemaName, tableName);
    }
 
    private void processRootFilter()
@@ -421,7 +450,7 @@ public class FilterCompiler implements ContentHandler
    }
 
    private void processTable(Attributes attrs)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       String databaseName, catalogName, schemaName, tableName;
 
@@ -430,34 +459,27 @@ public class FilterCompiler implements ContentHandler
       schemaName = getAttrValue(attrs, FilterConst.ATTR_SCHEMA);
       tableName = getAttrValue(attrs, FilterConst.ATTR_NAME);
 
-      try
+      switch (state)
       {
-         switch (state)
-         {
-            case STATE_RELATEDTABLEFILTER:
-               relatedTableFilter = tableFilter.createRelatedTableFilter(databaseName, catalogName, schemaName, tableName, parentKeyName, childKeyName);
-               break;
+         case STATE_RELATEDTABLEFILTER:
+            relatedTableFilter = tableFilter.createRelatedTableFilter(databaseName, catalogName, schemaName, tableName, parentKeyName, childKeyName);
+            break;
 
-            case STATE_ROOTFILTER:
-               rootFilterConditions = rootFilter.createRootFilterConditions(databaseName, catalogName, schemaName, tableName);
-               break;
+         case STATE_ROOTFILTER:
+            rootFilterConditions = rootFilter.createRootFilterConditions(databaseName, catalogName, schemaName, tableName);
+            break;
 
-            case STATE_TABLEFILTER:
-               tableFilter = filterBase.createTableFilter(databaseName, catalogName, schemaName, tableName);
-               break;
+         case STATE_TABLEFILTER:
+            tableFilter = filterBase.createTableFilter(databaseName, catalogName, schemaName, tableName);
+            break;
 
-            default:
-               throw new SAXException("Programming error. Invalid state.");
-         }
-      }
-      catch (IllegalArgumentException e)
-      {
-         throw new SAXException(e.getMessage());
+         default:
+            throw new XMLMiddlewareException("Programming error. Invalid state.");
       }
    }
 
    private void processWhere(Attributes attrs)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       String condition;
 
@@ -474,12 +496,12 @@ public class FilterCompiler implements ContentHandler
             break;
 
          default:
-            throw new SAXException("Programming error. Invalid state.");
+            throw new XMLMiddlewareException("Programming error. Invalid state.");
       }
    }
 
    private void processWrapper(Attributes attrs)
-      throws SAXException
+      throws XMLMiddlewareException
    {
       String  qualifiedName;
       XMLName wrapperName;

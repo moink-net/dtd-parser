@@ -66,7 +66,6 @@ public class Row
 	 * @param value Value to set (null for a NULL value).
 	 */
     public void setColumnValue(Column column, Object value)
-//        throws ConversionException
     {
         // Hashtable won't accept null objects, so we create
         // a placeholder for NULL
@@ -124,7 +123,6 @@ public class Row
 	 * @param values Values to set.
 	 */
     public void setColumnValues(Column[] columns, Object[] values)
-//        throws ConversionException
     {
 	    // Typically, this is used to set a multi-column key value.
         for(int i = 0; i < columns.length; i++)

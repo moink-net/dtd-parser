@@ -20,6 +20,8 @@
 
 package org.xmlmiddleware.xmldbms.tools;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -98,11 +100,11 @@ public class PropertyProcessor
     * @param start The index to start in the pairs array. 0-based.
     * @param expandFiles Whether to expand property files, etc. See the introduction
     *    for details.
-    * @exception FileNotFoundException Thrown if an input file is not found.
-    * @exception IOException Thrown if an error occurs accessing an input file.
+    * @exception XMLMiddlewareException Thrown if an input file is not found or
+    *    if an error occurs accessing an input file.
     */
    public void addPropertiesFromArray(Properties props, String[] pairs, int start, boolean expandFiles)
-      throws FileNotFoundException, IOException
+      throws XMLMiddlewareException
    {
       Properties cmdLineProps = new Properties();
       int        equalsIndex;
@@ -150,11 +152,11 @@ public class PropertyProcessor
     *    found, it is treated as a local file name.
     * @param expandFiles Whether to expand property files, etc. See the introduction
     *    for details.
-    * @exception FileNotFoundException Thrown if an input file is not found.
-    * @exception IOException Thrown if an error occurs accessing an input file.
+    * @exception XMLMiddlewareException Thrown if an input file is not found or
+    *    if an error occurs accessing an input file.
     */
    public void addPropertiesFromFile(Properties props, String filename, boolean expandFiles)
-      throws FileNotFoundException, IOException
+      throws XMLMiddlewareException
    {
       Properties fileProps;
       String     baseURL;
@@ -236,7 +238,7 @@ public class PropertyProcessor
     }
 
    protected URL buildURL(String baseURL, String filename)
-      throws FileNotFoundException
+      throws XMLMiddlewareException
    {
       try
       {
@@ -270,13 +272,13 @@ public class PropertyProcessor
          }
          catch (MalformedURLException m2)
          {
-            throw new FileNotFoundException(m2.getMessage() + ": " + baseURL + filename);
+            throw new XMLMiddlewareException(m2);
          }
       }
    }   
 
    protected String buildURLString(String url, String filename)
-      throws FileNotFoundException
+      throws XMLMiddlewareException
    {
       URL realURL;
 
@@ -300,7 +302,7 @@ public class PropertyProcessor
    }
 
    private void expandFiles(Properties source, Properties target, String defaultBaseURL)
-      throws FileNotFoundException, IOException
+      throws XMLMiddlewareException
    {
       Enumeration enum;
       String      prop, value, baseURL;
@@ -344,13 +346,20 @@ public class PropertyProcessor
    }
 
    private Properties getPropsFromFile(String baseURL, String filename)
-      throws FileNotFoundException, IOException
+      throws XMLMiddlewareException
    {
       URL        propFileURL;
       Properties props = new Properties();
 
       propFileURL = buildURL(baseURL, filename);
-      props.load(propFileURL.openStream());
+      try
+      {
+         props.load(propFileURL.openStream());
+      }
+      catch (IOException e)
+      {
+         throw new XMLMiddlewareException(e);
+      }
       return props;
    }
 

@@ -171,9 +171,11 @@ public class MapSerializer extends XMLWriter
     *
     * @param map The XMLDBMSMap.
     * @exception IOException Thrown if an I/O exception occurs.
+    * @exception XMLMiddlewareException Thrown if a prefix was not found for a URI
+    *    or a map error occurs.
     */
    public void serialize(XMLDBMSMap map)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       this.map = map;
       serialize(null, null);
@@ -186,10 +188,11 @@ public class MapSerializer extends XMLWriter
     * @param systemID System ID of the DTD. If this is null, "xmldbms2.dtd" is used.
     * @param publicID Public ID of the DTD. May be null.
     * @exception IOException Thrown if an I/O exception occurs.
-    * @exception MapException Thrown if a prefix was not found for a URI.
+    * @exception XMLMiddlewareException Thrown if a prefix was not found for a URI
+    *    or a map error occurs.
     */
    public void serialize(XMLDBMSMap map, String systemID, String publicID)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       this.map = map;
       if (systemID == null)
@@ -204,7 +207,7 @@ public class MapSerializer extends XMLWriter
    //**************************************************************************
 
    private void serialize(String systemID, String publicID)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       writeMapStart(systemID, publicID);
       writeOptions();
@@ -218,7 +221,7 @@ public class MapSerializer extends XMLWriter
    //**************************************************************************
 
    private void writeAttribute(XMLName attributeName)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       attrs[0] = MapConst.ATTR_NAME;
       values[0] = getQualifiedName(attributeName);
@@ -226,7 +229,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writeClassMap(ClassMap classMap)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       ClassMap baseClassMap, useClassMap;
       Table    table;
@@ -271,7 +274,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writeClassMaps()
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       Enumeration classMaps;
       ClassMap    classMap;
@@ -523,7 +526,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writeElementType(XMLName elementTypeName)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       attrs[0] = MapConst.ATTR_NAME;
       values[0] = getQualifiedName(elementTypeName);
@@ -540,7 +543,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writeExtends(ClassMap classMap)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       ClassMap baseClassMap;
       LinkInfo baseLinkInfo;
@@ -643,7 +646,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writeInlineClassMap(InlineClassMap inlineClassMap)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       writeElementStart(MapConst.ELEM_INLINEMAP, 0, false);
       writeElementType(inlineClassMap.getElementTypeName());
@@ -719,7 +722,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writeMaps()
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       writeElementStart(MapConst.ELEM_MAPS, 0, false);
       writeClassMaps();
@@ -857,7 +860,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writePropertyInlineRelatedMaps(ClassMapBase base)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       Enumeration enum;
       Object      o;
@@ -917,7 +920,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writePropertyMap(PropertyMap propMap)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       int count = 0;
 
@@ -969,7 +972,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writeRelatedClassMap(RelatedClassMap relatedClassMap)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       LinkInfo linkInfo;
       XMLName  mappedElementTypeName, usedElementTypeName;
@@ -1072,7 +1075,7 @@ public class MapSerializer extends XMLWriter
    }
 
    private void writeUseClassMap(ClassMap classMap)
-      throws IOException, MapException
+      throws IOException, XMLMiddlewareException
    {
       attrs[0] = MapConst.ATTR_ELEMENTTYPE;
       values[0] = getQualifiedName(classMap.getElementTypeName());

@@ -20,6 +20,7 @@
 package org.xmlmiddleware.conversions;
 
 import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -38,18 +39,18 @@ public class ConvertObject
    //**************************************************************************
 
    public static ByteArray toByteArray(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof ByteArray)
          return (ByteArray)o;
       else if (o instanceof String)
          return (ByteArray)formatter.parse((String)o, Types.BINARY);
       else
-         throw new ConversionException("Conversion to ByteArray not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to ByteArray not supported: " + o.getClass().getName());
    }
 
    public static double toDouble(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toDouble((Double)o);
@@ -70,11 +71,11 @@ public class ConvertObject
       else if (o instanceof String)
          return ((Double)formatter.parse((String)o, Types.DOUBLE)).doubleValue();
       else
-         throw new ConversionException("Conversion to double not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to double not supported: " + o.getClass().getName());
    }
 
    public static Double toDoubleObject(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toDoubleObject((Double)o);
@@ -95,11 +96,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Double)formatter.parse((String)o, Types.DOUBLE);
       else
-         throw new ConversionException("Conversion to Double not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Double not supported: " + o.getClass().getName());
    }
 
    public static float toFloat(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toFloat((Double)o);
@@ -120,11 +121,11 @@ public class ConvertObject
       else if (o instanceof String)
          return ((Float)formatter.parse((String)o, Types.REAL)).floatValue();
       else
-         throw new ConversionException("Conversion to float not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to float not supported: " + o.getClass().getName());
    }
 
    public static Float toFloatObject(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toFloatObject((Double)o);
@@ -145,11 +146,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Float)formatter.parse((String)o, Types.REAL);
       else
-         throw new ConversionException("Conversion to Float not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Float not supported: " + o.getClass().getName());
    }
 
    public static BigDecimal toBigDecimal(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toBigDecimal((Double)o);
@@ -170,11 +171,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (BigDecimal)formatter.parse((String)o, Types.NUMERIC);
       else
-         throw new ConversionException("Conversion to BigDecimal not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to BigDecimal not supported: " + o.getClass().getName());
    }
 
    public static long toLong(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toLong((Double)o);
@@ -195,11 +196,11 @@ public class ConvertObject
       else if (o instanceof String)
          return ((Long)formatter.parse((String)o, Types.BIGINT)).longValue();
       else
-         throw new ConversionException("Conversion to long not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to long not supported: " + o.getClass().getName());
    }
 
    public static Long toLongObject(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toLongObject((Double)o);
@@ -220,11 +221,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Long)formatter.parse((String)o, Types.BIGINT);
       else
-         throw new ConversionException("Conversion to Long not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Long not supported: " + o.getClass().getName());
    }
 
    public static int toInteger(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toInteger((Double)o);
@@ -245,11 +246,11 @@ public class ConvertObject
       else if (o instanceof String)
          return ((Integer)formatter.parse((String)o, Types.INTEGER)).intValue();
       else
-         throw new ConversionException("Conversion to int not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to int not supported: " + o.getClass().getName());
    }
 
    public static Integer toIntegerObject(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toIntegerObject((Double)o);
@@ -270,11 +271,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Integer)formatter.parse((String)o, Types.INTEGER);
       else
-         throw new ConversionException("Conversion to Integer not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Integer not supported: " + o.getClass().getName());
    }
 
    public static short toShort(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toShort((Double)o);
@@ -295,11 +296,11 @@ public class ConvertObject
       else if (o instanceof String)
          return ((Short)formatter.parse((String)o, Types.SMALLINT)).shortValue();
       else
-         throw new ConversionException("Conversion to short not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to short not supported: " + o.getClass().getName());
    }
 
    public static Short toShortObject(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toShortObject((Double)o);
@@ -320,11 +321,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Short)formatter.parse((String)o, Types.SMALLINT);
       else
-         throw new ConversionException("Conversion to Short not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Short not supported: " + o.getClass().getName());
    }
 
    public static byte toByte(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toByte((Double)o);
@@ -345,11 +346,11 @@ public class ConvertObject
       else if (o instanceof String)
          return ((Byte)formatter.parse((String)o, Types.TINYINT)).byteValue();
       else
-         throw new ConversionException("Conversion to byte not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to byte not supported: " + o.getClass().getName());
    }
 
    public static Byte toByteObject(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toByteObject((Double)o);
@@ -370,11 +371,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Byte)formatter.parse((String)o, Types.TINYINT);
       else
-         throw new ConversionException("Conversion to Byte not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Byte not supported: " + o.getClass().getName());
    }
 
    public static boolean toBoolean(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toBoolean((Double)o);
@@ -395,11 +396,11 @@ public class ConvertObject
       else if (o instanceof String)
          return ((Boolean)formatter.parse((String)o, Types.BIT)).booleanValue();
       else
-         throw new ConversionException("Conversion to boolean not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to boolean not supported: " + o.getClass().getName());
    }
 
    public static Boolean toBooleanObject(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Double)
          return ConvertDouble.toBooleanObject((Double)o);
@@ -420,11 +421,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Boolean)formatter.parse((String)o, Types.BIT);
       else
-         throw new ConversionException("Conversion to Boolean not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Boolean not supported: " + o.getClass().getName());
    }
 
    public static Date toDate(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Timestamp)
          return ConvertTimestamp.toDate((Timestamp)o);
@@ -433,11 +434,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Date)formatter.parse((String)o, Types.DATE);
       else
-         throw new ConversionException("Conversion to Date not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Date not supported: " + o.getClass().getName());
    }
 
    public static Time toTime(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Timestamp)
          return ConvertTimestamp.toTime((Timestamp)o);
@@ -446,11 +447,11 @@ public class ConvertObject
       else if (o instanceof String)
          return (Time)formatter.parse((String)o, Types.TIME);
       else
-         throw new ConversionException("Conversion to Time not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Time not supported: " + o.getClass().getName());
    }
 
    public static Timestamp toTimestamp(Object o, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (o instanceof Date)
          return ConvertDate.toTimestamp((Date)o);
@@ -459,7 +460,7 @@ public class ConvertObject
       else if (o instanceof String)
          return (Timestamp)formatter.parse((String)o, Types.TIMESTAMP);
       else
-         throw new ConversionException("Conversion to Timestamp not supported: " + o.getClass().getName());
+         throw new XMLMiddlewareException("Conversion to Timestamp not supported: " + o.getClass().getName());
    }
 
    /**
@@ -473,7 +474,7 @@ public class ConvertObject
     * @return The converted object
     */
    public static Object convertObject(Object o, int destType, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       switch(destType)
       {
@@ -523,7 +524,7 @@ public class ConvertObject
             return toTimestamp(o, formatter);
 
          default:
-            throw new ConversionException("Conversion to specified JDBC type not supported.");
+            throw new XMLMiddlewareException("Conversion to specified JDBC type not supported.");
       }
    }
 }

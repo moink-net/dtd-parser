@@ -19,6 +19,8 @@
 
 package org.xmlmiddleware.conversions;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
+
 import java.math.BigDecimal;
 
 /**
@@ -55,25 +57,21 @@ public class ConvertByte
    //**************************************************************************
 
    public static double toDouble(byte b)
-      throws ConversionException
    {
       return (double)b;
    }
 
    public static double toDouble(Byte b)
-      throws ConversionException
    {
       return b.doubleValue();
    }
 
    public static Double toDoubleObject(byte b)
-      throws ConversionException
    {
       return new Double((double)b);
    }
 
    public static Double toDoubleObject(Byte b)
-      throws ConversionException
    {
       return new Double(b.doubleValue());
    }
@@ -83,25 +81,21 @@ public class ConvertByte
    //**************************************************************************
 
    public static float toFloat(byte b)
-      throws ConversionException
    {
       return (float)b;
    }
 
    public static float toFloat(Byte b)
-      throws ConversionException
    {
       return b.floatValue();
    }
 
    public static Float toFloatObject(byte b)
-      throws ConversionException
    {
       return new Float((float)b);
    }
 
    public static Float toFloatObject(Byte b)
-      throws ConversionException
    {
       return new Float(b.floatValue());
    }
@@ -111,13 +105,11 @@ public class ConvertByte
    //**************************************************************************
 
    public static BigDecimal toBigDecimal(byte b)
-      throws ConversionException
    {
       return new BigDecimal((double)b);
    }
 
    public static BigDecimal toBigDecimal(Byte b)
-      throws ConversionException
    {
       return new BigDecimal(b.doubleValue());
    }
@@ -127,25 +119,21 @@ public class ConvertByte
    //**************************************************************************
 
    public static long toLong(byte b)
-      throws ConversionException
    {
       return (long)b;
    }
 
    public static long toLong(Byte b)
-      throws ConversionException
    {
       return b.longValue();
    }
 
    public static Long toLongObject(byte b)
-      throws ConversionException
    {
       return new Long((long)b);
    }
 
    public static Long toLongObject(Byte b)
-      throws ConversionException
    {
       return new Long(b.longValue());
    }
@@ -155,25 +143,21 @@ public class ConvertByte
    //**************************************************************************
 
    public static int toInteger(byte b)
-      throws ConversionException
    {
       return (int)b;
    }
 
    public static int toInteger(Byte b)
-      throws ConversionException
    {
       return b.intValue();
    }
 
    public static Integer toIntegerObject(byte b)
-      throws ConversionException
    {
       return new Integer((int)b);
    }
 
    public static Integer toIntegerObject(Byte b)
-      throws ConversionException
    {
       return new Integer(b.intValue());
    }
@@ -183,25 +167,21 @@ public class ConvertByte
    //**************************************************************************
 
    public static short toShort(byte b)
-      throws ConversionException
    {
       return (short)b;
    }
 
    public static short toShort(Byte b)
-      throws ConversionException
    {
       return b.shortValue();
    }
 
    public static Short toShortObject(byte b)
-      throws ConversionException
    {
       return new Short((short)b);
    }
 
    public static Short toShortObject(Byte b)
-      throws ConversionException
    {
       return new Short(b.shortValue());
    }
@@ -211,25 +191,21 @@ public class ConvertByte
    //**************************************************************************
 
    public static byte toByte(byte b)
-      throws ConversionException
    {
       return b;
    }
 
    public static byte toByte(Byte b)
-      throws ConversionException
    {
       return b.byteValue();
    }
 
    public static Byte toByteObject(byte b)
-      throws ConversionException
    {
       return new Byte(b);
    }
 
    public static Byte toByteObject(Byte b)
-      throws ConversionException
    {
       return b;
    }
@@ -239,7 +215,7 @@ public class ConvertByte
    //**************************************************************************
 
    public static boolean toBoolean(byte b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (b == 0)
       {
@@ -250,23 +226,23 @@ public class ConvertByte
          return true;
       }
       else
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
    }
 
    public static boolean toBoolean(Byte b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toBoolean(b.byteValue());
    }
 
    public static Boolean toBooleanObject(byte b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Boolean(toBoolean(b));
    }
 
    public static Boolean toBooleanObject(Byte b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return toBooleanObject(b.byteValue());
    }

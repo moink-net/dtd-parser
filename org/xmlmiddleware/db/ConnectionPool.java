@@ -64,12 +64,12 @@ public abstract class ConnectionPool
     * <p>Overrides Pool.checkOut(Object).</p>
     *
     * @return The object.
-    * @exception PoolException Thrown if the pool does not recognize the ID or cannot
+    * @exception XMLMiddlewareException Thrown if the pool does not recognize the ID or cannot
     *                          return the specified object for any reason, such as lack
     *                          of resources.
     */
    public Object checkOut(Object id)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       Connection    realConn;
       CPConnection  conn;
@@ -86,7 +86,7 @@ public abstract class ConnectionPool
       }
       catch (SQLException e)
       {
-         throw new PoolException(e);
+         throw new XMLMiddlewareException(e);
       }
 
       // Add this connection pool as a listener for connection events.
@@ -102,17 +102,17 @@ public abstract class ConnectionPool
     * <p>Overrides Pool.checkIn(Object).</p>
     *
     * @param object The object.
-    * @exception PoolException Thrown if the object does not belong to this pool.
+    * @exception XMLMiddlewareException Thrown if the object does not belong to this pool.
     */
    public void checkIn(Object object)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       Connection    realConn;
       CPConnection  conn;
       StatementPool statements;
 
       if(!(object instanceof CPConnection))
-         throw new PoolException("ConnectionPool requires a CPConnection object.");
+         throw new XMLMiddlewareException("ConnectionPool requires a CPConnection object.");
 
       conn = (CPConnection)object;
 
@@ -212,17 +212,17 @@ public abstract class ConnectionPool
     * closing the object.</p>
     *
     * @param object The object.
-    * @exception PoolException Thrown if the object is not checked out.
+    * @exception XMLMiddlewareException Thrown if the object is not checked out.
     */
    protected void remove(Object object)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       Connection    realConn;
       CPConnection  conn;
       StatementPool statements;
 
       if(!(object instanceof CPConnection))
-         throw new PoolException("Pool requires a CPConnection object.");
+         throw new XMLMiddlewareException("Pool requires a CPConnection object.");
 
       conn = (CPConnection)object;
 

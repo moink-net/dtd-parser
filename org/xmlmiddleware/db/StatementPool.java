@@ -61,17 +61,17 @@ public class StatementPool
     * @param sqlString The SQL string to use.
     *
     * @return The PreparedStatement.
-    * @exception PoolException Thrown if the pool does not recognize the string or cannot
+    * @exception XMLMiddlewareException Thrown if the pool does not recognize the string or cannot
     * return the specified object for any reason, such as lack of resources.
     */
    public Object checkOut(Object sqlString)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       PreparedStatement   realStmt;
       SPPreparedStatement stmt;
 
       if (!(sqlString instanceof String))
-         throw new PoolException("Object ID must be a String.");
+         throw new XMLMiddlewareException("Object ID must be a String.");
 
       // Check out a PreparedStatement, wrap it ...
       realStmt = (PreparedStatement)super.checkOut(sqlString);
@@ -88,17 +88,17 @@ public class StatementPool
     * Check a prepared statement back into the pool.
     *
     * @param pooledStatement The pooled statement.
-    * @exception PoolException Thrown if the statement does not belong to this pool.
+    * @exception XMLMiddlewareException Thrown if the statement does not belong to this pool.
     */
    public void checkIn(Object pooledStatement)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       PreparedStatement   realStmt;
       SPPreparedStatement stmt;
 
       // It has to be something we created
       if(!(pooledStatement instanceof SPPreparedStatement))
-         throw new PoolException("StatementPool requires a SPPreparedStatement object.");
+         throw new XMLMiddlewareException("StatementPool requires a SPPreparedStatement object.");
 
       // Get actual object
       stmt = (SPPreparedStatement)pooledStatement;
@@ -177,13 +177,13 @@ public class StatementPool
     *
     * @param id SQL string for the prepared statement.
     * @return The PreparedStatement.
-    * @exception PoolException Thrown if statement cannot be created or id is invalid.
+    * @exception XMLMiddlewareException Thrown if statement cannot be created or id is invalid.
     */
    protected Object createObject(Object id)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       if(!(id instanceof String))
-         throw new PoolException("StatementPool.createObject needs a String id.");
+         throw new XMLMiddlewareException("StatementPool.createObject needs a String id.");
 
       try
       {   
@@ -192,7 +192,7 @@ public class StatementPool
       }
       catch(SQLException e)
       {
-         throw new PoolException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 
@@ -202,14 +202,14 @@ public class StatementPool
     * <p>Overrides Pool.closeObject.</p>
     *
     * @param obj The prepared statement to close.
-    * @exception PoolException Thrown if object is not valid or an error occurs
+    * @exception XMLMiddlewareException Thrown if object is not valid or an error occurs
     *            while closing it.
     */
    protected void closeObject(Object object)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       if(!(object instanceof PreparedStatement))
-         throw new PoolException("StatementPool.closeObject needs PreparedStatement.");
+         throw new XMLMiddlewareException("StatementPool.closeObject needs PreparedStatement.");
 
       try
       {
@@ -221,7 +221,7 @@ public class StatementPool
       }
       catch(SQLException e)
       {
-         throw new PoolException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 
@@ -246,16 +246,16 @@ public class StatementPool
     * closing the object.</p>
     *
     * @param object The object.
-    * @exception PoolException Thrown if the object is not checked out.
+    * @exception XMLMiddlewareException Thrown if the object is not checked out.
     */
    protected void remove(Object object)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       PreparedStatement   realStmt;
       SPPreparedStatement stmt;
 
       if(!(object instanceof SPPreparedStatement))
-         throw new PoolException("StatementPool requires a SPPreparedStatement object.");
+         throw new XMLMiddlewareException("StatementPool requires a SPPreparedStatement object.");
 
       stmt = (SPPreparedStatement)object;
 

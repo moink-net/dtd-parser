@@ -26,6 +26,7 @@ package org.xmlmiddleware.xmldbms.datahandlers;
 import org.xmlmiddleware.conversions.*;
 import org.xmlmiddleware.conversions.formatters.*;
 import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import java.io.*;
@@ -78,7 +79,7 @@ public class Parameters
     * @param values Parameter values.
     * @exception SQLException A database error occurred while setting
     *  the parameter.
-   */
+    */
 
    public static void setParameters(PreparedStatement p, int offset, Column[] columns, Object[] values)
       throws SQLException
@@ -101,7 +102,7 @@ public class Parameters
     * @param value The parameter value
     * @exception SQLException A database error occurred while setting
     *  the parameter.
-   */
+    */
    public static void setParameter(PreparedStatement p, int number, Column column, Object value)
      throws SQLException
    {
@@ -249,7 +250,7 @@ public class Parameters
     * @param values Parameter values.
     * @exception SQLException A database error occurred while setting
     *  the parameter.
-   */
+    */
    public static void convertAndSetParameters(PreparedStatement p, int offset, Column[] columns, Object[] values)
       throws SQLException
    {
@@ -281,13 +282,20 @@ public class Parameters
       int             type;
       Object          o;
 
+      // Get the column's type.
+
       type = column.getType();
+
+      // Set the parameter to null if the value is null.
 
       if (value == null)
       {
          p.setNull(number, type);
          return;
       }
+
+      // Convert the object to the correct type.
+
       try
       {
          formatter = column.getFormatter();
@@ -300,10 +308,13 @@ public class Parameters
             o = ConvertObject.convertObject(value, type, formatter);
          }
       }
-      catch (ConversionException c)
+      catch (XMLMiddlewareException e)
       {
-         throw new SQLException("[XML-DBMS] Conversion exception: " + c.getMessage());
+         throw new SQLException("[XML-DBMS] " + e.getMessage());
       }
+
+      // Call setParameter to actually set the parameter
+
       setParameter(p, number, column, o);
    }   
 }

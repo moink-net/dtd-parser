@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmlutils.*;
 
 import java.util.*;
@@ -179,10 +180,10 @@ public class ClassTableMap extends MapBase
     *
     * @param uri Namespace URI of the element type. May be null.
     * @param localName Local name of the element type.
-    * @exception MapException Thrown if the element type name has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the element type name has already been mapped.
     */
    public void setElementTypeName(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       setElementTypeName(XMLName.create(uri, localName));
    }
@@ -191,10 +192,10 @@ public class ClassTableMap extends MapBase
     * Set the element type name.
     *
     * @param elementTypeName The element type name.
-    * @exception MapException Thrown if the element type name has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the element type name has already been mapped.
     */
    public void setElementTypeName(XMLName elementTypeName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkArgNull(elementTypeName, ARG_ELEMENTTYPENAME);
       this.elementTypeName = elementTypeName;
@@ -257,10 +258,10 @@ public class ClassTableMap extends MapBase
     * Add a ColumnMap for a column.
     *
     * @param columnMap ColumnMap for the column.
-    * @exception MapException Thrown if the column has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the column has already been mapped.
     */
    public void addColumnMap(ColumnMap columnMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String name;
@@ -269,7 +270,7 @@ public class ClassTableMap extends MapBase
       name = columnMap.getColumn().getName();
       o = columnMaps.get(name);
       if (o != null)
-         throw new MapException("Column " + name + " already mapped.");
+         throw new XMLMiddlewareException("Column " + name + " already mapped.");
       columnMaps.put(name, columnMap);
    }
 
@@ -278,17 +279,17 @@ public class ClassTableMap extends MapBase
     *
     * @param columnName The column name.
     *
-    * @exception MapException Thrown if the column has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the column has not been mapped.
     */
    public void removeColumnMap(String columnName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       checkArgNull(columnName, ARG_COLUMNNAME);
       o = columnMaps.remove(columnName);
       if (o == null)
-         throw new MapException("Column " + columnName + " not mapped.");
+         throw new XMLMiddlewareException("Column " + columnName + " not mapped.");
    }
 
    /**
@@ -379,10 +380,10 @@ public class ClassTableMap extends MapBase
     * @param schemaName Name of the schema. May be null.
     * @param tableName Name of the table.
     *
-    * @exception MapException Thrown if the related class table has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the related class table has not been mapped.
     */
    public void removeRelatedClassTableMaps(String databaseName, String catalogName, String schemaName, String tableName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String               hashName;
       RelatedClassTableMap relatedClassTableMap;
@@ -467,10 +468,10 @@ public class ClassTableMap extends MapBase
     * Add a PropertyTableMap.
     *
     * @param propTableMap The PropertyTableMap.
-    * @exception MapException Thrown if the property table has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the property table has already been mapped.
     */
    public void addPropertyTableMap(PropertyTableMap propTableMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String name;
@@ -479,7 +480,7 @@ public class ClassTableMap extends MapBase
       name = propTableMap.getTable().getHashName();
       o = propTableMaps.get(name);
       if (o != null)
-         throw new MapException("Property table " + propTableMap.getTable().getUniversalName() + " already mapped.");
+         throw new XMLMiddlewareException("Property table " + propTableMap.getTable().getUniversalName() + " already mapped.");
       propTableMaps.put(name, propTableMap);
    }
 
@@ -491,16 +492,16 @@ public class ClassTableMap extends MapBase
     * @param schemaName Name of the schema. May be null.
     * @param tableName Name of the table.
     *
-    * @exception MapException Thrown if the related property table has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the related property table has not been mapped.
     */
    public void removePropertyTableMap(String databaseName, String catalogName, String schemaName, String tableName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
       o = propTableMaps.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
       if (o == null)
-         throw new MapException("Property table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName)+ " not mapped.");
+         throw new XMLMiddlewareException("Property table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName)+ " not mapped.");
    }
 
    /**

@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import java.util.*;
@@ -96,8 +97,11 @@ public class TableFilter
     *    related table. If the related table only appears once as a child of the
     *    parent table, this may be null.
     * @return The filter. May be null.
+    * @exception XMLMiddlewareException Returned if the specified table is not
+    *    related to the table that uses this TableFilter.
     */
    public final RelatedTableFilter getRelatedTableFilter(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
+      throws XMLMiddlewareException
    {
       String hashName;
 
@@ -157,9 +161,11 @@ public class TableFilter
     *    related table. If the related table only appears once as a child of the
     *    parent table, this may be null.
     * @return The filter
-    * @exception IllegalArgumentException Returned if the filter already exists.
+    * @exception XMLMiddlewareException Returned if the filter already exists or the
+    *    specified table is not related to the table that uses this TableFilter.
     */
    public RelatedTableFilter createRelatedTableFilter(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
+      throws XMLMiddlewareException
    {
       Object               o;
       PropertyTableMap     propTableMap;
@@ -184,7 +190,7 @@ public class TableFilter
       }
       hashName = getHashName(table, linkInfo);
       if (relatedTableFilters.get(hashName) != null)
-         throw new IllegalArgumentException("Related table filter already exists for " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " with the parent key name '" + parentKeyName + "' and the child key name '" + childKeyName + "'.");
+         throw new XMLMiddlewareException("Related table filter already exists for " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " with the parent key name '" + parentKeyName + "' and the child key name '" + childKeyName + "'.");
 
       relatedTableFilter = new RelatedTableFilter(table, linkInfo.getParentKey().getName(), linkInfo.getChildKey().getName());
       relatedTableFilters.put(hashName, relatedTableFilter);
@@ -204,15 +210,16 @@ public class TableFilter
     * @param childKeyName Name of the child key used to link the table and the
     *    related table. If the related table only appears once as a child of the
     *    parent table, this may be null.
-    * @exception IllegalArgumentException Returned if the filter does not exist.
+    * @exception XMLMiddlewareException Returned if the filter does not exist.
     */
    public void removeRelatedTableFilter(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
+      throws XMLMiddlewareException
    {
       String hashName;
 
       hashName = getHashName(databaseName, catalogName, schemaName, tableName, parentKeyName, childKeyName);
       if (relatedTableFilters.remove(hashName) == null)
-         throw new IllegalArgumentException("Related table filter not found for " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " with the parent key name '" + parentKeyName + "' and the child key name '" + childKeyName + "'.");
+         throw new XMLMiddlewareException("Related table filter not found for " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " with the parent key name '" + parentKeyName + "' and the child key name '" + childKeyName + "'.");
    }
 
    /**
@@ -228,6 +235,7 @@ public class TableFilter
    //*********************************************************************
 
    private Object getRelatedTableMap(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
+      throws XMLMiddlewareException
    {
       PropertyTableMap     propTableMap;
       Enumeration          relatedClassTableMaps;
@@ -256,7 +264,7 @@ public class TableFilter
          {
             if ((!parentKeyName.equals(linkInfo.getParentKey().getName())) ||
                 (!childKeyName.equals(linkInfo.getChildKey().getName())))
-               throw new IllegalArgumentException("The property table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " is not linked to the class table " + classTableMap.getTable().getUniversalName() + " with the keys named " + parentKeyName + " and " + childKeyName);
+               throw new XMLMiddlewareException("The property table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " is not linked to the class table " + classTableMap.getTable().getUniversalName() + " with the keys named " + parentKeyName + " and " + childKeyName);
          }
          return propTableMap;
       }
@@ -276,7 +284,7 @@ public class TableFilter
       // If no RelatedClassTableMaps were found, throw an exception.
 
       if (relatedClassTableMap == null)
-         throw new IllegalArgumentException("The table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " does not appear as a related class table or property table of the class table " + classTableMap.getTable().getUniversalName());
+         throw new XMLMiddlewareException("The table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " does not appear as a related class table or property table of the class table " + classTableMap.getTable().getUniversalName());
 
       if (count == 1)
       {
@@ -289,7 +297,7 @@ public class TableFilter
          {
             if ((!parentKeyName.equals(linkInfo.getParentKey().getName())) ||
                 (!childKeyName.equals(linkInfo.getChildKey().getName())))
-               throw new IllegalArgumentException("The related class table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " is never linked to the class table " + classTableMap.getTable().getUniversalName() + " with the keys named " + parentKeyName + " and " + childKeyName);
+               throw new XMLMiddlewareException("The related class table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " is never linked to the class table " + classTableMap.getTable().getUniversalName() + " with the keys named " + parentKeyName + " and " + childKeyName);
          }
       }
       else
@@ -298,7 +306,7 @@ public class TableFilter
          // the parent and child key names.
 
          if (parentKeyName == null)
-            throw new IllegalArgumentException(Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " appears more than once as a related class table of " + classTableMap.getTable().getUniversalName() + ". In this case, you must provide the names of the parent and child keys used to link the two tables.");
+            throw new XMLMiddlewareException(Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " appears more than once as a related class table of " + classTableMap.getTable().getUniversalName() + ". In this case, you must provide the names of the parent and child keys used to link the two tables.");
 
          // Go through the enumeration of RelatedClassTableMaps again and find
          // the one we want. This is inefficient, but it is a very uncommon
@@ -321,13 +329,14 @@ public class TableFilter
          }
 
          if (!tableFound)
-            throw new IllegalArgumentException(Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " does not appear as a related table of " + classTableMap.getTable().getUniversalName() + " linked with the keys " + parentKeyName + " and " + childKeyName + ".");
+            throw new XMLMiddlewareException(Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " does not appear as a related table of " + classTableMap.getTable().getUniversalName() + " linked with the keys " + parentKeyName + " and " + childKeyName + ".");
       }
 
       return relatedClassTableMap;
    }
 
    private String getHashName(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
+      throws XMLMiddlewareException
    {
       Object               o;
       PropertyTableMap     propTableMap;

@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import java.util.*;
@@ -140,16 +141,17 @@ public class FilterConditions
     * downward one position.</p>
     *
     * @param index Index of the condition. 0-based.
-    * @exception IllegalArgumentException Thrown if the index is invalid.
+    * @exception XMLMiddlewareException Thrown if the index is invalid.
     */
    public void removeCondition(int index)
+      throws XMLMiddlewareException
    {
       if ((index >= 0) && (index < conditions.size()))
       {
          conditions.removeElementAt(index);
       }
       else
-         throw new IllegalArgumentException("Invalid index: " + index);
+         throw new XMLMiddlewareException("Invalid index: " + index);
 
       parseConditions = true;
    }
@@ -194,10 +196,11 @@ public class FilterConditions
     * conditions AND'ed together.</p>
     *
     * @return The condition. This may be zero-length but is never null.
-    * @exception IllegalArgumentException Thrown if a named parameter is found in
+    * @exception XMLMiddlewareException Thrown if a named parameter is found in
     *    a condition but no corresponding column is found in the table.
     */
    public final String getWhereCondition()
+      throws XMLMiddlewareException
    {
       parse();
       return whereCondition;
@@ -209,10 +212,11 @@ public class FilterConditions
     * <p>These occur in the order the corresponding names appear in the WHERE condition.</p>
     *
     * @return The list. May be null.
-    * @exception IllegalArgumentException Thrown if a named parameter is found in
+    * @exception XMLMiddlewareException Thrown if a named parameter is found in
     *    a condition but no corresponding column is found in the table.
     */
    public final Column[] getColumns()
+      throws XMLMiddlewareException
    {
       parse();
       return columns;
@@ -224,10 +228,11 @@ public class FilterConditions
     * <p>These occur in the order the corresponding names appear in the WHERE condition.</p>
     *
     * @return The list. May be null.
-    * @exception IllegalArgumentException Thrown if a named parameter is found in
+    * @exception XMLMiddlewareException Thrown if a named parameter is found in
     *    a condition but no corresponding column is found in the table.
     */
    public final Object[] getParameterValues()
+      throws XMLMiddlewareException
    {
       parse();
       return paramValues;
@@ -242,6 +247,7 @@ public class FilterConditions
    //*********************************************************************
 
    private void parse()
+      throws XMLMiddlewareException
    {
       if (parseConditions)
       {
@@ -269,6 +275,7 @@ public class FilterConditions
    }
 
    private void parseConditions()
+      throws XMLMiddlewareException
    {
       for (int i = 0; i < conditions.size(); i++)
       {
@@ -277,6 +284,7 @@ public class FilterConditions
    }
 
    private void parseVectorConditions()
+      throws XMLMiddlewareException
    {
       // Reparse those conditions that have IN operators / use Vectors. This is
       // necessary because the number of parameters in the IN operator must
@@ -292,6 +300,7 @@ public class FilterConditions
    }
 
    private void parseCondition(int index)
+      throws XMLMiddlewareException
    {
       // WARNING! The index parameter is fragile. In particular, if parseConditions
       // is true, then parseCondition(index) must be called with values of index that
@@ -412,7 +421,7 @@ public class FilterConditions
                      columnName = (lastDollar > 0) ? paramName.substring(1, lastDollar) : paramName.substring(1);
                      column = table.getColumn(columnName);
                      if (column == null)
-                        throw new IllegalArgumentException("Filter parameter names must be of the form $Column[$Suffix], where Column matches the name of the column in the table to which the parameter applies. No column was found in table " + table.getUniversalName() + " corresponding to the parameter name " + paramName);
+                        throw new XMLMiddlewareException("Filter parameter names must be of the form $Column[$Suffix], where Column matches the name of the column in the table to which the parameter applies. No column was found in table " + table.getUniversalName() + " corresponding to the parameter name " + paramName);
                      paramColumns.addElement(column);
                   }
 

@@ -21,6 +21,7 @@
 package org.xmlmiddleware.xmldbms.tools;
 
 import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.actions.*;
 import org.xmlmiddleware.xmldbms.datahandlers.*;
@@ -308,9 +309,10 @@ public class Transfer extends PropertyProcessor
     * Construct a Transfer object.
     *
     * @param props A Properties object containing the ParserUtilsClass property.
+    * @exception XMLMiddlewareException An error occurs instantiating the ParserUtils class.
     */
    public Transfer(Properties props)
-      throws Exception
+      throws XMLMiddlewareException
    {
       super();
       setParserUtils(props);
@@ -378,10 +380,13 @@ public class Transfer extends PropertyProcessor
     * connections to the database, so it should be used sparingly.</p>
     *
     * @param props The database properties
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
 
    public void setDatabaseProperties(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       // Clear out the existing database objects. Note that doing this removes any
       // references to those objects, so those objects are marked to be discarded.
@@ -415,9 +420,12 @@ public class Transfer extends PropertyProcessor
     * the properties each of these methods needs, see the introduction.</p>
     *
     * @param props A Properties object describing the method to be executed
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public void dispatch(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       String method;
 
@@ -464,9 +472,12 @@ public class Transfer extends PropertyProcessor
     * @param actionFilename Filename or URL of the action file.
     * @return A FilterSet describing the stored document. This is returned only if
     *    the ReturnFilter property is set to "Yes".
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public FilterSet storeDocument(Properties configProps, String xmlFilename, String mapFilename, String actionFilename)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       InputSource src;
 
@@ -486,9 +497,12 @@ public class Transfer extends PropertyProcessor
     * @param actionFilename Filename or URL of the action file.
     * @return A FilterSet describing the stored document. This is returned only if
     *    the ReturnFilter property is set to "Yes".
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public FilterSet storeDocument(String xmlString, Properties configProps, String mapFilename, String actionFilename)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       InputSource src;
 
@@ -506,9 +520,12 @@ public class Transfer extends PropertyProcessor
     * @param xmlStream An InputStream containing the XML to store.
     * @return A FilterSet describing the stored document. This is returned only if
     *    the ReturnFilter property is set to "Yes".
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public FilterSet storeDocument(Properties configProps, String mapFilename, String actionFilename, InputStream xmlStream)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       InputSource src;
 
@@ -526,9 +543,12 @@ public class Transfer extends PropertyProcessor
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
     * @return A string containing the retrieved XML
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public String retrieveDocument(Properties configProps, String mapFilename, String filterFilename, Hashtable params)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       Document doc;
 
@@ -546,9 +566,12 @@ public class Transfer extends PropertyProcessor
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
     * @param xmlFilename Filename or URL of the XML file.
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public void retrieveDocument(Properties configProps, String mapFilename, String filterFilename, Hashtable params, String xmlFilename)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       Document doc;
       String   encoding = null;
@@ -574,9 +597,12 @@ public class Transfer extends PropertyProcessor
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
     * @return A string containing the retrieved XML
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public String retrieveDocument(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       Document doc;
 
@@ -599,9 +625,12 @@ public class Transfer extends PropertyProcessor
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
     * @param xmlFilename Filename or URL of the XML file.
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public void retrieveDocument(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params, String xmlFilename)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       Document doc;
       String   encoding = null;
@@ -622,9 +651,12 @@ public class Transfer extends PropertyProcessor
     * @param filterFilename Filename or URL of the filter file.
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
     */
    public void deleteDocument(Properties configProps, String mapFilename, String actionFilename, String filterFilename, Hashtable params)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       XMLDBMSMap   map;
       TransferInfo transferInfo;
@@ -652,7 +684,7 @@ public class Transfer extends PropertyProcessor
    // ************************************************************************
 
    private void dispatchStoreDocument(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       String    mapFile, actionFile, xmlFile;
       FilterSet filterSet;
@@ -675,7 +707,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void writeFilterSet(Properties props, FilterSet filterSet)
-      throws Exception
+      throws XMLMiddlewareException
    {
       String           filterFile, encoding, systemID, publicID;
       URL              filterURL;
@@ -684,64 +716,73 @@ public class Transfer extends PropertyProcessor
       Writer           writer;
       FilterSerializer serializer;
 
-      // Get the name of the filter file. Do nothing if there is no filter file.
-
-      filterFile = props.getProperty(XMLDBMSProps.FILTERFILE);
-      if (filterFile == null) return;
-
-      // We don't know if the filter filename is a URL or not. To find this
-      // out, attempt to create a URL over the file name. If there is no
-      // protocol, this will throw an exception. Hacky, but it works.
-
       try
       {
-         // If the filename is a URL, open the URL connection and get
-         // an output stream that writes to that connection.
 
-         filterURL = new URL(filterFile);
-         conn = filterURL.openConnection();
-         conn.setDoOutput(true);
-         outputStream = conn.getOutputStream();
+         // Get the name of the filter file. Do nothing if there is no filter file.
+
+         filterFile = props.getProperty(XMLDBMSProps.FILTERFILE);
+         if (filterFile == null) return;
+
+         // We don't know if the filter filename is a URL or not. To find this
+         // out, attempt to create a URL over the file name. If there is no
+         // protocol, this will throw an exception. Hacky, but it works.
+
+         try
+         {
+            // If the filename is a URL, open the URL connection and get
+            // an output stream that writes to that connection.
+
+            filterURL = new URL(filterFile);
+            conn = filterURL.openConnection();
+            conn.setDoOutput(true);
+            outputStream = conn.getOutputStream();
+         }
+         catch (MalformedURLException m)
+         {
+            // If the filename is not a URL (i.e. it is a local filename),
+            // create an OutputStream over the file.
+
+            outputStream = new FileOutputStream(filterFile);
+         }
+
+         // Get the encoding (if any) and create an OutputStreamWriter accordingly.
+
+         encoding = props.getProperty(XMLDBMSProps.ENCODING);
+         writer = (encoding == null) ? new OutputStreamWriter(outputStream) :
+                                       new OutputStreamWriter(outputStream, encoding);
+
+         // Get the system ID and public ID of the filter file DTD.
+
+         systemID = props.getProperty(XMLDBMSProps.SYSTEMID);
+         publicID = props.getProperty(XMLDBMSProps.PUBLICID);
+
+         // Serialize the filter set. We only write the DTD information if it is provided.
+
+         serializer = new FilterSerializer(writer);
+         serializer.setPrettyPrinting(true, 3);
+
+         if (systemID == null)
+         {
+            serializer.serialize(filterSet);
+         }
+         else
+         {
+            serializer.serialize(filterSet, systemID, publicID);
+         }
+
+         // Close the writer. It does not appear that we can/need to close the URLConnection.
+
+         writer.close();
       }
-      catch (MalformedURLException m)
+      catch (Exception e)
       {
-         // If the filename is not a URL (i.e. it is a local filename),
-         // create an OutputStream over the file.
-
-         outputStream = new FileOutputStream(filterFile);
+         throw new XMLMiddlewareException(e);
       }
-
-      // Get the encoding (if any) and create an OutputStreamWriter accordingly.
-
-      encoding = props.getProperty(XMLDBMSProps.ENCODING);
-      writer = (encoding == null) ? new OutputStreamWriter(outputStream) :
-                                    new OutputStreamWriter(outputStream, encoding);
-    
-      // Get the system ID and public ID of the filter file DTD.
-
-      systemID = props.getProperty(XMLDBMSProps.SYSTEMID);
-      publicID = props.getProperty(XMLDBMSProps.PUBLICID);
-
-      // Serialize the filter set. We only write the DTD information if it is provided.
-
-      serializer = new FilterSerializer(writer);
-      serializer.setPrettyPrinting(true, 3);
-      if (systemID == null)
-      {
-         serializer.serialize(filterSet);
-      }
-      else
-      {
-         serializer.serialize(filterSet, systemID, publicID);
-      }
-
-      // Close the writer. It does not appear that we can/need to close the URLConnection.
-
-      writer.close();
    }
 
    private void dispatchRetrieveDocumentByFilter(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       String     mapFile, filterFile, xmlFile;
       Properties configProps = props;
@@ -759,7 +800,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void dispatchRetrieveDocumentBySQL(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       String     mapFile, filterFile, xmlFile;
       Properties configProps = props, selects = props;
@@ -777,7 +818,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void dispatchDeleteDocument(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       String mapFile, actionFile, filterFile;
 
@@ -797,7 +838,7 @@ public class Transfer extends PropertyProcessor
    // ************************************************************************
 
    private FilterSet storeDocumentInternal(Properties configProps, String mapFilename, String actionFilename, InputSource src)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       XMLDBMSMap   map;
       TransferInfo transferInfo;
@@ -821,7 +862,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private Document retrieveDocumentInternal(Properties configProps, String mapFilename, String filterFilename, Hashtable params)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       XMLDBMSMap   map;
       TransferInfo transferInfo;
@@ -843,7 +884,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private Document retrieveDocumentInternal(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       XMLDBMSMap   map;
       Hashtable    resultSets;
@@ -881,7 +922,7 @@ public class Transfer extends PropertyProcessor
    // ************************************************************************
 
    private void setParserUtils(Properties props)
-      throws Exception
+      throws XMLMiddlewareException
    {
       String parserUtilsClass;
 
@@ -897,7 +938,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void configSingleDatabase(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       String dbName, dataSourceClass, dataHandlerClass;
       DBInfo dbInfo;
@@ -926,7 +967,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void configMultipleDatabases(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       String[] dbNames, dataSourceClasses, dataHandlerClasses, users, passwords;
       String   dataHandlerClass;
@@ -970,18 +1011,25 @@ public class Transfer extends PropertyProcessor
       }
       catch (ArrayIndexOutOfBoundsException e)
       {
-         throw new IllegalArgumentException("If you specify them, you must have the same number of " + XMLDBMSProps.DBNAME + ", " + XMLDBMSProps.DATASOURCECLASS + ", " + XMLDBMSProps.DATAHANDLERCLASS + ", " + XMLDBMSProps.USER + ", and " + XMLDBMSProps.PASSWORD + " properties.");
+         throw new XMLMiddlewareException("If you specify them, you must have the same number of " + XMLDBMSProps.DBNAME + ", " + XMLDBMSProps.DATASOURCECLASS + ", " + XMLDBMSProps.DATAHANDLERCLASS + ", " + XMLDBMSProps.USER + ", and " + XMLDBMSProps.PASSWORD + " properties.");
       }
    }
 
    private void configDBMSToDOM(Properties configProps)
-      throws Exception
+      throws XMLMiddlewareException
    {
       String systemID = null, publicID = null;
 
       // Create a DBMSToDOM object if one doesn't already exist
 
-      if (dbmsToDOM == null) dbmsToDOM = new DBMSToDOM(utils);
+      try
+      {
+         if (dbmsToDOM == null) dbmsToDOM = new DBMSToDOM(utils);
+      }
+      catch (SAXException e)
+      {
+         processSAXException(e);
+      }
 
       // If there are configuration properties, get the system ID and public ID
       // of the document being created.
@@ -998,7 +1046,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void configDOMToDBMS(Properties configProps)
-      throws Exception
+      throws XMLMiddlewareException
    {
       String  value;
       int     commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
@@ -1056,7 +1104,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void addKeyGenerators(Properties configProps)
-      throws Exception
+      throws XMLMiddlewareException
    {
       // Remove all current key generators.
 
@@ -1080,7 +1128,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void addSingleKeyGenerator(Properties configProps)
-      throws Exception
+      throws XMLMiddlewareException
    {
       String       name, className;
       KeyGenerator keyGen;
@@ -1098,7 +1146,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void addMultipleKeyGenerators(Properties configProps)
-      throws Exception
+      throws XMLMiddlewareException
    {
       String[]     names, classes;
       KeyGenerator keyGen;
@@ -1125,7 +1173,7 @@ public class Transfer extends PropertyProcessor
       }
       catch (ArrayIndexOutOfBoundsException e)
       {
-         throw new IllegalArgumentException("The number of " + XMLDBMSProps.KEYGENERATORNAME + " properties must match the number of " + XMLDBMSProps.KEYGENERATORCLASS + " properties.");
+         throw new XMLMiddlewareException("The number of " + XMLDBMSProps.KEYGENERATORNAME + " properties must match the number of " + XMLDBMSProps.KEYGENERATORCLASS + " properties.");
       }
    }
 
@@ -1221,7 +1269,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private void createDataHandler(String dbName, String dataHandlerClass, DBInfo dbInfo)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       DataHandler dataHandler;
 
@@ -1238,7 +1286,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private Hashtable createResultSets(Properties selects)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       if (selects == null)
          throw new IllegalArgumentException("You must specify one or more Select properties when retrieving data from a result set.");
@@ -1257,7 +1305,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private Hashtable createSingleResultSet(Properties selects)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       Hashtable  resultSets = new Hashtable();
       String     select, dbName, rsName;
@@ -1304,7 +1352,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private Hashtable createMultipleResultSets(Properties props)
-      throws Exception
+      throws XMLMiddlewareException, SQLException
    {
       Hashtable  resultSets = new Hashtable();
       String[]   selects, dbNames, rsNames;
@@ -1442,7 +1490,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private KeyGenerator createKeyGenerator(String name, String className, Properties configProps)
-      throws Exception
+      throws XMLMiddlewareException
    {
       KeyGenerator keyGen;
 
@@ -1461,9 +1509,9 @@ public class Transfer extends PropertyProcessor
    }
 
    private XMLDBMSMap createMap(String mapFilename)
-      throws Exception
+      throws XMLMiddlewareException
    {
-      MapCompiler compiler;
+      MapCompiler compiler = null;
       String      url;
       XMLDBMSMap  map;
 
@@ -1478,7 +1526,14 @@ public class Transfer extends PropertyProcessor
       map = (XMLDBMSMap)fileObjects.get(url);
       if (map == null)
       {
-         compiler = new MapCompiler(utils.getXMLReader());
+         try
+         {
+            compiler = new MapCompiler(utils.getXMLReader());
+         }
+         catch (SAXException e)
+         {
+            processSAXException(e);
+         }
          map = compiler.compile(new InputSource(url));
          fileObjects.put(url, map);
       }
@@ -1486,9 +1541,9 @@ public class Transfer extends PropertyProcessor
    }
 
    private Actions createActions(XMLDBMSMap map, String actionFilename)
-      throws Exception
+      throws XMLMiddlewareException
    {
-      ActionCompiler compiler;
+      ActionCompiler compiler = null;
       String         url;
       Actions        actions;
 
@@ -1503,7 +1558,14 @@ public class Transfer extends PropertyProcessor
       actions = (Actions)fileObjects.get(url);
       if (actions == null)
       {
-         compiler = new ActionCompiler(utils.getXMLReader());
+         try
+         {
+            compiler = new ActionCompiler(utils.getXMLReader());
+         }
+         catch (SAXException e)
+         {
+            processSAXException(e);
+         }
          actions = compiler.compile(map, new InputSource(url));
          fileObjects.put(url, actions);
       }
@@ -1511,9 +1573,9 @@ public class Transfer extends PropertyProcessor
    }
 
    private FilterSet createFilterSet(XMLDBMSMap map, String filterFilename)
-      throws Exception
+      throws XMLMiddlewareException
    {
-      FilterCompiler compiler;
+      FilterCompiler compiler = null;
       String         url;
       FilterSet      filterSet;
 
@@ -1528,7 +1590,14 @@ public class Transfer extends PropertyProcessor
       filterSet = (FilterSet)fileObjects.get(url);
       if (filterSet == null)
       {
-         compiler = new FilterCompiler(utils.getXMLReader());
+         try
+         {
+            compiler = new FilterCompiler(utils.getXMLReader());
+         }
+         catch (SAXException e)
+         {
+            processSAXException(e);
+         }
          filterSet = compiler.compile(map, new InputSource(url));
          fileObjects.put(url, filterSet);
       }
@@ -1590,6 +1659,7 @@ public class Transfer extends PropertyProcessor
    }
 
    private Object instantiateObject(String className)
+      throws XMLMiddlewareException
    {
       try
       {
@@ -1597,18 +1667,27 @@ public class Transfer extends PropertyProcessor
       }
       catch (Exception e)
       {
-         throwException(e);
-
+         throw new XMLMiddlewareException(e.getClass().getName() + ": " + e.getMessage());
       }
-
-      // This is never reached, but it keeps the compiler happy.
-
-      return null;
    }
 
-   private void throwException(Exception e)
+   private void processSAXException(SAXException s)
+      throws XMLMiddlewareException
    {
-      throw new IllegalArgumentException(e.getClass().getName() + ": " + e.getMessage());
+      Exception e;
+
+      // Get the embedded Exception (if any) and check if it's a XMLMiddlewareException.
+
+      e = s.getException();
+      if (e != null)
+      {
+         if (e instanceof XMLMiddlewareException)
+            throw (XMLMiddlewareException)e;
+         else
+            throw new XMLMiddlewareException(e);
+      }
+      else
+         throw new XMLMiddlewareException(s);
    }
 
    // ************************************************************************

@@ -20,6 +20,7 @@
 package org.xmlmiddleware.conversions.formatters;
 
 import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 
 import java.sql.Types;
 
@@ -57,10 +58,10 @@ public class CharFormatter implements StringFormatter
     * @param The string to "parse".
     * @param A JDBC Types value indicating the type of object to return.
     * @return A String
-    * @exception ConversionException Thrown if jdbcType is not CHAR, VARCHAR, or
+    * @exception XMLMiddlewareException Thrown if jdbcType is not CHAR, VARCHAR, or
     *    LONGVARCHAR.
     */
-   public Object parse(String s, int jdbcType) throws ConversionException
+   public Object parse(String s, int jdbcType) throws XMLMiddlewareException
    {
       switch(jdbcType)
       {
@@ -70,7 +71,7 @@ public class CharFormatter implements StringFormatter
             return s;
 
          default:
-            throw new ConversionException("Conversion to specified JDBC type not supported.");
+            throw new XMLMiddlewareException("Conversion to specified JDBC type not supported.");
       }
    }
 
@@ -79,16 +80,16 @@ public class CharFormatter implements StringFormatter
     *
     * @param The string to "format"
     * @return The string
-    * @exception ConversionException Thrown if the object is not a String.
+    * @exception XMLMiddlewareException Thrown if the object is not a String.
     */
-   public String format(Object o) throws ConversionException
+   public String format(Object o) throws XMLMiddlewareException
    {
       if (o instanceof String)
       {
          return (String)o;
       }
       else
-         throw new ConversionException("Object must be a String.");
+         throw new XMLMiddlewareException("Object must be a String.");
    }
 
    /**

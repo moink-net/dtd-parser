@@ -346,10 +346,10 @@ public class Table extends MapBase
     * Add a Column.
     *
     * @param column The Column.
-    * @exception MapException Thrown if the Column already exists.
+    * @exception XMLMiddlewareException Thrown if the Column already exists.
     */
    public void addColumn(Column column)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String name;
@@ -358,7 +358,7 @@ public class Table extends MapBase
       name = column.getName();
       o = columns.get(name);
       if (o != null)
-         throw new MapException("Column " + name + " already exists in " + getUniversalName() + ".");
+         throw new XMLMiddlewareException("Column " + name + " already exists in " + getUniversalName() + ".");
       columns.put(name, column);
 
       rsColumns = null;
@@ -372,10 +372,10 @@ public class Table extends MapBase
     *
     * @param columnName Name of the column.
     *
-    * @exception MapException Thrown if the column does not exist.
+    * @exception XMLMiddlewareException Thrown if the column does not exist.
     */
    public void removeColumn(String columnName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
@@ -383,7 +383,7 @@ public class Table extends MapBase
 
       o = columns.remove(columnName);
       if (o == null)
-         throw new MapException("Column " + columnName + " not found in table " + getUniversalName());
+         throw new XMLMiddlewareException("Column " + columnName + " not found in table " + getUniversalName());
 
       rsColumns = null;
    }
@@ -445,13 +445,13 @@ public class Table extends MapBase
     * Add a primary key to the table.
     *
     * @param key The primary key.
-    * @exception MapException Thrown if the primary key already exists.
+    * @exception XMLMiddlewareException Thrown if the primary key already exists.
     */
    public void addPrimaryKey(Key key)
-      throws MapException
+      throws XMLMiddlewareException
    {
       if (primaryKey != null)
-         throw new MapException("Primary key already exists.");
+         throw new XMLMiddlewareException("Primary key already exists.");
       checkArgNull(key, ARG_KEY);
       if (key.getType() != Key.PRIMARY_KEY)
          throw new IllegalArgumentException("Key is not a primary key.");
@@ -461,13 +461,13 @@ public class Table extends MapBase
    /**
     * Remove the primary key.
     *
-    * @exception MapException Thrown if a primary key does not exist.
+    * @exception XMLMiddlewareException Thrown if a primary key does not exist.
     */
    public void removePrimaryKey()
-      throws MapException
+      throws XMLMiddlewareException
    {
       if (primaryKey == null)
-         throw new MapException("Primary key does not exist.");
+         throw new XMLMiddlewareException("Primary key does not exist.");
       primaryKey = null;
    }
 
@@ -515,10 +515,10 @@ public class Table extends MapBase
     * Add a unique key (except the primary key) to the table.
     *
     * @param key The unique key.
-    * @exception MapException Thrown if the unique key already exists.
+    * @exception XMLMiddlewareException Thrown if the unique key already exists.
     */
    public void addUniqueKey(Key key)
-      throws MapException
+      throws XMLMiddlewareException
    {
       addKey(uniqueKeys, key, Key.UNIQUE_KEY);
    }
@@ -528,10 +528,10 @@ public class Table extends MapBase
     *
     * @param keyName Name of the key.
     *
-    * @exception MapException Thrown if the unique key does not exist.
+    * @exception XMLMiddlewareException Thrown if the unique key does not exist.
     */
    public void removeUniqueKey(String keyName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       removeKey(uniqueKeys, keyName);
    }
@@ -588,10 +588,10 @@ public class Table extends MapBase
     * Add a foreign key to the table.
     *
     * @param key The foreign key.
-    * @exception MapException Thrown if the foreign key already exists.
+    * @exception XMLMiddlewareException Thrown if the foreign key already exists.
     */
    public void addForeignKey(Key key)
-      throws MapException
+      throws XMLMiddlewareException
    {
       addKey(foreignKeys, key, Key.FOREIGN_KEY);
    }
@@ -601,10 +601,10 @@ public class Table extends MapBase
     *
     * @param keyName Name of the key.
     *
-    * @exception MapException Thrown if the foreign key does not exist.
+    * @exception XMLMiddlewareException Thrown if the foreign key does not exist.
     */
    public void removeForeignKey(String keyName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       removeKey(foreignKeys, keyName);
    }
@@ -673,7 +673,7 @@ public class Table extends MapBase
    }
 
    private void addKey(Hashtable hash, Key key, int type)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
       String name;
@@ -684,12 +684,12 @@ public class Table extends MapBase
       name = key.getName();
       o = hash.get(name);
       if (o != null)
-         throw new MapException("Key " + name + " already exists in " + getUniversalName() + ".");
+         throw new XMLMiddlewareException("Key " + name + " already exists in " + getUniversalName() + ".");
       hash.put(name, key);
    }
 
    private void removeKey(Hashtable hash, String keyName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Object o;
 
@@ -697,6 +697,6 @@ public class Table extends MapBase
 
       o = hash.remove(keyName);
       if (o == null)
-         throw new MapException("Key " + keyName + " not found in table " + getUniversalName() + ".");
+         throw new XMLMiddlewareException("Key " + keyName + " not found in table " + getUniversalName() + ".");
    }
 }

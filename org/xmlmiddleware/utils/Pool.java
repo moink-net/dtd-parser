@@ -74,12 +74,12 @@ public abstract class Pool
     * contain more than one connection to the same databases.</p>
     *
     * @return The object.
-    * @exception PoolException Thrown if the pool does not recognize the ID or cannot
+    * @exception XMLMiddlewareException Thrown if the pool does not recognize the ID or cannot
     *                          return the specified object for any reason, such as lack
     *                          of resources.
     */
    public Object checkOut(Object id)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       Object obj = null;
 
@@ -108,14 +108,14 @@ public abstract class Pool
     * Check an Object back into the pool.
     *
     * @param object The object.
-    * @exception PoolException Thrown if the object does not belong to this pool.
+    * @exception XMLMiddlewareException Thrown if the object does not belong to this pool.
     */
    public void checkIn(Object object)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       // Make sure this is our object
       if(!m_checked.containsKey(object)) 
-         throw new PoolException("Object does not belong to this pool.");
+         throw new XMLMiddlewareException("Object does not belong to this pool.");
 
       // Take it out of the checked map
       Object id = m_checked.remove(object);
@@ -137,19 +137,19 @@ public abstract class Pool
     *
     * @param id Identifier for creating this object.
     * @return The object created.
-    * @exception PoolException Thrown if object cannot be created or id is invalid.
+    * @exception XMLMiddlewareException Thrown if object cannot be created or id is invalid.
     */
    protected abstract Object createObject(Object id)
-      throws PoolException;
+      throws XMLMiddlewareException;
 
    /**
     * Abstract method to close an object for this pool.
     *
     * @param obj The object to close.
-    * @exception PoolException Thrown if object is not valid.
+    * @exception XMLMiddlewareException Thrown if object is not valid.
     */
    protected abstract void closeObject(Object obj)
-      throws PoolException;
+      throws XMLMiddlewareException;
 
    //**************************************************************************
    // Protected methods
@@ -180,13 +180,13 @@ public abstract class Pool
     * closing the object.</p>
     *
     * @param object The object.
-    * @exception PoolException Thrown if the object is not checked out.
+    * @exception XMLMiddlewareException Thrown if the object is not checked out.
     */
    protected void remove(Object object)
-      throws PoolException
+      throws XMLMiddlewareException
    {
       if (!m_checked.containsKey(object))
-         throw new PoolException("Object not in pool");
+         throw new XMLMiddlewareException("Object not in pool");
 
       // Close the object. Ignore any errors, since the object may no
       // longer be in a valid state.
@@ -195,7 +195,7 @@ public abstract class Pool
       {
          closeObject(object);
       }
-      catch (PoolException e)
+      catch (XMLMiddlewareException e)
       {
       }
 
@@ -219,7 +219,7 @@ public abstract class Pool
             {
                closeObject(stack.pop());
             }
-            catch (PoolException p)
+            catch (XMLMiddlewareException p)
             {
             }
          }
@@ -237,7 +237,7 @@ public abstract class Pool
          {
             closeObject(e.nextElement());
          }
-         catch (PoolException p)
+         catch (XMLMiddlewareException p)
          {
          }
       }

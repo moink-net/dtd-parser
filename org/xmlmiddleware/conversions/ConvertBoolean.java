@@ -50,25 +50,21 @@ public class ConvertBoolean
    //**************************************************************************
 
    public static double toDouble(boolean b)
-      throws ConversionException
    {
       return (b ? 1.0 : 0.0);
    }
 
    public static double toDouble(Boolean b)
-      throws ConversionException
    {
       return (b.booleanValue() ? 1.0 : 0.0);
    }
 
    public static Double toDoubleObject(boolean b)
-      throws ConversionException
    {
       return new Double(b ? 1.0 : 0.0);
    }
 
    public static Double toDoubleObject(Boolean b)
-      throws ConversionException
    {
       return new Double(b.booleanValue() ? 1.0 : 0.0);
    }
@@ -78,25 +74,21 @@ public class ConvertBoolean
    //**************************************************************************
 
    public static float toFloat(boolean b)
-      throws ConversionException
    {
       return (b ? (float)1.0 : (float)0.0);
    }
 
    public static float toFloat(Boolean b)
-      throws ConversionException
    {
       return (b.booleanValue() ? (float)1.0 : (float)0.0);
    }
 
    public static Float toFloatObject(boolean b)
-      throws ConversionException
    {
       return new Float(b ? (float)1.0 : (float)0.0);
    }
 
    public static Float toFloatObject(Boolean b)
-      throws ConversionException
    {
       return new Float(b.booleanValue() ? (float)1.0 : (float)0.0);
    }
@@ -106,13 +98,11 @@ public class ConvertBoolean
    //**************************************************************************
 
    public static BigDecimal toBigDecimal(boolean b)
-      throws ConversionException
    {
       return new BigDecimal(b ? 1.0 : 0.0);
    }
 
    public static BigDecimal toBigDecimal(Boolean b)
-      throws ConversionException
    {
       return new BigDecimal(b.booleanValue() ? 1.0 : 0.0);
    }
@@ -122,25 +112,21 @@ public class ConvertBoolean
    //**************************************************************************
 
    public static long toLong(boolean b)
-      throws ConversionException
    {
       return (b ? 1 : 0);
    }
 
    public static long toLong(Boolean b)
-      throws ConversionException
    {
       return (b.booleanValue() ? 1 : 0);
    }
 
    public static Long toLongObject(boolean b)
-      throws ConversionException
    {
       return new Long(b ? 1 : 0);
    }
 
    public static Long toLongObject(Boolean b)
-      throws ConversionException
    {
       return new Long(b.booleanValue() ? 1 : 0);
    }
@@ -150,25 +136,21 @@ public class ConvertBoolean
    //**************************************************************************
 
    public static int toInteger(boolean b)
-      throws ConversionException
    {
       return (b ? 1 : 0);
    }
 
    public static int toInteger(Boolean b)
-      throws ConversionException
    {
       return (b.booleanValue() ? 1 : 0);
    }
 
    public static Integer toIntegerObject(boolean b)
-      throws ConversionException
    {
       return new Integer(b ? 1 : 0);
    }
 
    public static Integer toIntegerObject(Boolean b)
-      throws ConversionException
    {
       return new Integer(b.booleanValue() ? 1 : 0);
    }
@@ -178,25 +160,21 @@ public class ConvertBoolean
    //**************************************************************************
 
    public static short toShort(boolean b)
-      throws ConversionException
    {
       return (b ? (short)1 : (short)0);
    }
 
    public static short toShort(Boolean b)
-      throws ConversionException
    {
       return (b.booleanValue() ? (short)1 : (short)0);
    }
 
    public static Short toShortObject(boolean b)
-      throws ConversionException
    {
       return new Short(b ? (short)1 : (short)0);
    }
 
    public static Short toShortObject(Boolean b)
-      throws ConversionException
    {
       return new Short(b.booleanValue() ? (short)1 : (short)0);
    }
@@ -206,25 +184,21 @@ public class ConvertBoolean
    //**************************************************************************
 
    public static byte toByte(boolean b)
-      throws ConversionException
    {
       return (b ? (byte)1 : (byte)0);
    }
 
    public static byte toByte(Boolean b)
-      throws ConversionException
    {
       return (b.booleanValue() ? (byte)1 : (byte)0);
    }
 
    public static Byte toByteObject(boolean b)
-      throws ConversionException
    {
       return new Byte(b ? (byte)1 : (byte)0);
    }
 
    public static Byte toByteObject(Boolean b)
-      throws ConversionException
    {
       return new Byte(b.booleanValue() ? (byte)1 : (byte)0);
    }
@@ -234,25 +208,21 @@ public class ConvertBoolean
    //**************************************************************************
 
    public static boolean toBoolean(boolean b)
-      throws ConversionException
    {
       return b;
    }
 
    public static boolean toBoolean(Boolean b)
-      throws ConversionException
    {
       return b.booleanValue();
    }
 
    public static Boolean toBooleanObject(boolean b)
-      throws ConversionException
    {
       return new Boolean(b);
    }
 
    public static Boolean toBooleanObject(Boolean b)
-      throws ConversionException
    {
       return b;
    }

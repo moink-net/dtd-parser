@@ -20,6 +20,7 @@
 package org.xmlmiddleware.conversions.formatters;
 
 import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 
 /**
  * Interface for custom formatting classes.
@@ -68,10 +69,10 @@ public interface StringFormatter
     * @param s The string to parse.
     * @param jdbcType A JDBC Types value indicating the type of object to return.
     * @return The object
-    * @exception ConversionException Thrown if the string can't be parsed by
+    * @exception XMLMiddlewareException Thrown if the string can't be parsed by
     *     the implementing class.
     */
-   public Object parse(String s, int jdbcType) throws ConversionException;
+   public Object parse(String s, int jdbcType) throws XMLMiddlewareException;
 
    /**
     * Serialize an object as a string.
@@ -81,12 +82,12 @@ public interface StringFormatter
     *
     * @param o The object to serialize.
     * @return The string
-    * @exception ConversionException Thrown if the object can't be serialized. This
+    * @exception XMLMiddlewareException Thrown if the object can't be serialized. This
     *    usually occurs when the object is of a type not recognized by the implementing
     *    class, such as when the implementing class operates only on Integers and the
     *    calling code passes a Date.
     */
-   public String format(Object o) throws ConversionException;
+   public String format(Object o) throws XMLMiddlewareException;
 
    /**
     * Whether the implementing class can convert to/from a certain type of object.

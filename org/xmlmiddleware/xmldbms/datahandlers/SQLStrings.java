@@ -46,6 +46,8 @@ public class SQLStrings
     * Construct a new SQLStrings.
     *
     * @param conn A database connection. This is used to get database metadata.
+    * @exception SQLException Thrown if a database exception occurs while
+    *    getting the database metadata.
     */
    public SQLStrings(Connection conn)
       throws SQLException
@@ -79,7 +81,6 @@ public class SQLStrings
     * @return The INSERT string.
     */
    public String getInsert(Table t)
-      throws SQLException
    {
       String id = "INSERT_" + t.getUniversalName();
 
@@ -99,7 +100,6 @@ public class SQLStrings
     * @return The SELECT string.
     */
    public String getSelectRow(Table t, Key key, OrderInfo order)
-      throws SQLException
    {
       String id;
 
@@ -123,7 +123,6 @@ public class SQLStrings
     * @return The SELECT string.
     */
    public String getSelectKey(Table t, Key key)
-      throws SQLException
    {
       String id = "SELECTKEY_" + t.getUniversalName() + key.getName();
       
@@ -144,7 +143,6 @@ public class SQLStrings
     * @return The SELECT string.
     */
    public String getSelectWhere(Table t, Key key, String where, OrderInfo order)
-      throws SQLException
    {
       String id;
 
@@ -177,7 +175,6 @@ public class SQLStrings
     * @return The UPDATE string.
     */
    public String getUpdate(Table t, Key key, Column[] cols)
-      throws SQLException
    {
       // TODO: We may want to remove this column
       // We don't do caching for this one because chances are
@@ -193,7 +190,6 @@ public class SQLStrings
     * @return The DELETE string.
     */
    public String getDelete(Table t, Key key)
-      throws SQLException
    {        
       String id = "DELETE_" + t.getUniversalName() + key.getName();
 
@@ -214,7 +210,6 @@ public class SQLStrings
     * @return The DELETE string.
     */
    public String getDeleteWhere(Table t, Key key, String where)
-      throws SQLException
    {
       String id;
 

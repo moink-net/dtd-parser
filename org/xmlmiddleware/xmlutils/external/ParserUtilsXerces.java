@@ -21,6 +21,7 @@
 
 package org.xmlmiddleware.xmlutils.external;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmlutils.*;
 
 import org.xml.sax.*;
@@ -64,9 +65,10 @@ public class ParserUtilsXerces implements ParserUtils
     * Get a SAX 2.0 XMLReader.
     *
     * @return An object that implements XMLReader.
+    * @exception XMLMiddlewareException Thrown if an error occurs instantiating the XMLReader.
     */
    public XMLReader getXMLReader()
-      throws ParserUtilsException
+      throws XMLMiddlewareException
    {
       return new SAXParser();
    }
@@ -75,9 +77,10 @@ public class ParserUtilsXerces implements ParserUtils
     * Get a DOMImplementation object.
     *
     * @return The DOMImplementation object
+    * @exception XMLMiddlewareException Thrown if an error occurs instantiating the DOMImplementation.
     */
    public DOMImplementation getDOMImplementation()
-      throws ParserUtilsException
+      throws XMLMiddlewareException
    {
       try
       {
@@ -85,7 +88,7 @@ public class ParserUtilsXerces implements ParserUtils
       }
       catch (Exception e)
       {
-         throw new ParserUtilsException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 
@@ -95,9 +98,10 @@ public class ParserUtilsXerces implements ParserUtils
     * @param src A SAX InputSource
     *
     * @return An object that implements Document.
+    * @exception XMLMiddlewareException Thrown if an error occurs creating the DOM Document.
     */
    public Document openDocument(InputSource src)
-      throws ParserUtilsException
+      throws XMLMiddlewareException
    {
       DOMParser parser;
 
@@ -112,7 +116,7 @@ public class ParserUtilsXerces implements ParserUtils
       }
       catch (Exception e)
       {
-         throw new ParserUtilsException(e);
+         throw new XMLMiddlewareException(e);
       }
 
       // Return the DOM tree
@@ -126,9 +130,10 @@ public class ParserUtilsXerces implements ParserUtils
     * @param xmlFilename The name of the XML file.
     * @param encoding The output encoding to use. If this is null, the default
     *    encoding is used.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
     */
    public void writeDocument(Document doc, String xmlFilename, String encoding)
-      throws ParserUtilsException
+      throws XMLMiddlewareException
    {
       FileOutputStream stream;
       OutputFormat     outputFormat;
@@ -150,7 +155,7 @@ public class ParserUtilsXerces implements ParserUtils
       }
       catch (Exception e)
       {
-         throw new ParserUtilsException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 
@@ -160,9 +165,10 @@ public class ParserUtilsXerces implements ParserUtils
     * @param doc The DOM Document.
     *
     * @return The XML string.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
     */
    public String writeDocument(Document doc)
-      throws ParserUtilsException
+      throws XMLMiddlewareException
    {
       ByteArrayOutputStream stream;
       OutputFormat          outputFormat;
@@ -179,7 +185,7 @@ public class ParserUtilsXerces implements ParserUtils
       }
       catch (Exception e)
       {
-         throw new ParserUtilsException(e);
+         throw new XMLMiddlewareException(e);
       }
       return stream.toString();
    }

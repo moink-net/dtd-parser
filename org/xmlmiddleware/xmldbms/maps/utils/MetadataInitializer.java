@@ -20,6 +20,7 @@
 package org.xmlmiddleware.xmldbms.maps.utils;
 
 import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import java.sql.*;
@@ -90,11 +91,11 @@ public class MetadataInitializer
     * @param databaseName The name of the database. If this is null, "Default" is used.
     * @param conn A connection to the database.
     * @param required Whether database metadata is required for all tables.
-    * @exception MapException Thrown if metadata is not found for a column or if required
+    * @exception XMLMiddlewareException Thrown if metadata is not found for a column or if required
     *    is true and metadata is not found for a table.
     */
    public void initializeMetadata(String databaseName, Connection conn, boolean required)
-      throws MapException
+      throws XMLMiddlewareException
    {
       DatabaseMetaData meta;
       Enumeration      tables;
@@ -115,12 +116,12 @@ public class MetadataInitializer
                addColumnMetadata(meta, table, required);
             }
             else if (required)
-               throw new MapException("Connection not found for database: " + table.getDatabaseName());
+               throw new XMLMiddlewareException("Connection not found for database: " + table.getDatabaseName());
          }
       }
       catch (SQLException e)
       {
-         throw new MapException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 
@@ -130,11 +131,11 @@ public class MetadataInitializer
     * @param databaseNames The names of the databases. If any name is null, "Default" is used.
     * @param conns The connections to the databases.
     * @param required Whether database metadata is required for all tables.
-    * @exception MapException Thrown if metadata is not found for a column or if required
+    * @exception XMLMiddlewareException Thrown if metadata is not found for a column or if required
     *    is true and metadata is not found for a table.
     */
    public void initializeMetadata(String[] databaseNames, Connection[] conns, boolean required)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Hashtable        connections = new Hashtable();
       String           name;
@@ -162,12 +163,12 @@ public class MetadataInitializer
             }
             catch (SQLException e)
             {
-               throw new MapException(e);
+               throw new XMLMiddlewareException(e);
             }
             addColumnMetadata(meta, table, required);
          }
          else if (required)
-            throw new MapException("Connection not found for database: " + table.getDatabaseName());
+            throw new XMLMiddlewareException("Connection not found for database: " + table.getDatabaseName());
 
       }
    }
@@ -191,7 +192,7 @@ public class MetadataInitializer
     * @param schemaName The name of the schema used to map the result set. May be null.
     * @param tableName The name of the table used to map the result set.
     * @param rs The result set.
-    * @exception MapException Thrown if the table is not found or an error occurs
+    * @exception XMLMiddlewareException Thrown if the table is not found or an error occurs
     *    retrieving the metadata.
     */
    public void initializeMetadata(String    databaseName,
@@ -199,13 +200,13 @@ public class MetadataInitializer
                                   String    schemaName,
                                   String    tableName,
                                   ResultSet rs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Table table;
 
       table = map.getTable(databaseName, catalogName, schemaName, tableName);
       if (table == null)
-         throw new MapException("Table not found: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Table not found: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
 
       initializeMetadata(table, rs);
 
@@ -226,11 +227,11 @@ public class MetadataInitializer
     *
     * @param table The Table used to map the result set.
     * @param rs The result set.
-    * @exception MapException Thrown if the table is not found or an error occurs
+    * @exception XMLMiddlewareException Thrown if the table is not found or an error occurs
     *    retrieving the metadata.
     */
    public void initializeMetadata(Table table, ResultSet rs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       ResultSetMetaData meta;
       Enumeration       columns;
@@ -260,7 +261,7 @@ public class MetadataInitializer
       }
       catch (SQLException e)
       {
-         throw new MapException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 
@@ -269,7 +270,7 @@ public class MetadataInitializer
    //**************************************************************************
 
    private void addColumnMetadata(DatabaseMetaData meta, Table table, boolean required)
-      throws MapException
+      throws XMLMiddlewareException
    {
       ResultSet  rs;
       Column     column;
@@ -330,7 +331,7 @@ public class MetadataInitializer
          // simply requiring users to use the exact case.
 
          if (required && !tableFound)
-            throw new MapException("Table not found: " + table.getUniversalName() +
+            throw new XMLMiddlewareException("Table not found: " + table.getUniversalName() +
                ". Check that the table exists, that its name is spelled correctly, " +
                "and that the case used in the map document exactly matches the " +
                "case used in the database. This might be different than the case " +
@@ -340,16 +341,16 @@ public class MetadataInitializer
 
          column = table.checkMetadata();
          if (column != null)
-            throw new MapException("Column " + column.getName() + " not found in table " +
+            throw new XMLMiddlewareException("Column " + column.getName() + " not found in table " +
                table.getUniversalName() + ". Check that the column exists, " +
                "that its name is spelled correctly, and that the case " +
                "used in the map document exactly matches the case used in the " +
                "database. This might be different than the case you used when " +
                "creating the column.");
       }
-      catch  (SQLException e)
+      catch (SQLException e)
       {
-         throw new MapException(e);
+         throw new XMLMiddlewareException(e);
       }
    }
 

@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 /**
@@ -117,12 +118,13 @@ public class ResultSetFilter extends FilterBase
     * @param schemaName Name of the schema. May be null.
     * @param tableName Name of the table.
     *
-    * @exception IllegalArgumentException Thrown if the table is not mapped as a class table.
+    * @exception XMLMiddlewareException Thrown if the table is not mapped as a class table.
     */
    public void setTable(String databaseName, String catalogName, String schemaName, String tableName)
+      throws XMLMiddlewareException
    {
       if (map.getClassTableMap(databaseName, catalogName, schemaName, tableName) == null)
-         throw new IllegalArgumentException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
 
       this.databaseName = (databaseName == null) ? DEFAULT : databaseName;
       this.catalogName = catalogName;

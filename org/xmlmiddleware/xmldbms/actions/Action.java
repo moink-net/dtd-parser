@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.actions;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmlutils.*;
 
@@ -226,8 +227,11 @@ public class Action
     * @param uri URI of the property. Null for PCDATA.
     * @param localName Local name of the property. Null for PCDATA.
     * @param type PropertyMap.ELEMENTTYPE, .ATTRIBUTE, or .PCDATA
+    * @exception XMLMiddlewareException Thrown if the element type, attribute or
+    *    PCDATA not mapped as a property of the class element.
     */
    public void setUpdateProperty(String uri, String localName, int type)
+      throws XMLMiddlewareException
    {
       setUpdateProperty(XMLName.create(uri, localName), type);
    }
@@ -237,8 +241,11 @@ public class Action
     *
     * @param propName XMLName of the property. Null for PCDATA.
     * @param type PropertyMap.ELEMENTTYPE, .ATTRIBUTE, or .PCDATA
+    * @exception XMLMiddlewareException Thrown if the element type, attribute or
+    *    PCDATA not mapped as a property of the class element.
     */
    public void setUpdateProperty(XMLName propName, int type)
+      throws XMLMiddlewareException
    {
       Object o;
 
@@ -257,7 +264,7 @@ public class Action
                   break;
                }
             }
-            throw new IllegalArgumentException(propName.getUniversalName() + " not mapped as a property of " + elementTypeName.getUniversalName());
+            throw new XMLMiddlewareException(propName.getUniversalName() + " not mapped as a property of " + elementTypeName.getUniversalName());
 
          case PropertyMap.ATTRIBUTE:
             o = classMap.getAttributeMap(propName.getUniversalName());
@@ -285,8 +292,10 @@ public class Action
     * @param uri URI of the property. Null for PCDATA.
     * @param localName Local name of the property. Null for PCDATA.
     * @param type PropertyMap.ELEMENTTYPE, .ATTRIBUTE, or .PCDATA
+    * @exception XMLMiddlewareException Thrown if the property is not an update property.
     */
    public void removeUpdateProperty(String uri, String localName, int type)
+      throws XMLMiddlewareException
    {
       removeUpdateProperty(XMLName.create(uri, localName), type);
    }
@@ -296,8 +305,10 @@ public class Action
     *
     * @param propName XMLName of the property. Null for PCDATA.
     * @param type PropertyMap.ELEMENTTYPE, .ATTRIBUTE, or .PCDATA
+    * @exception XMLMiddlewareException Thrown if the property is not an update property.
     */
    public void removeUpdateProperty(XMLName propName, int type)
+      throws XMLMiddlewareException
    {
       Object o;
 
@@ -309,18 +320,18 @@ public class Action
          case PropertyMap.ELEMENTTYPE:
             o = updateElements.remove(propName);
             if (o == null)
-               throw new IllegalArgumentException(propName.getUniversalName() + " not an update property.");
+               throw new XMLMiddlewareException(propName.getUniversalName() + " not an update property.");
             break;
 
          case PropertyMap.ATTRIBUTE:
             o = updateAttrs.remove(propName);
             if (o == null)
-               throw new IllegalArgumentException(propName.getUniversalName() + " not an update property.");
+               throw new XMLMiddlewareException(propName.getUniversalName() + " not an update property.");
             break;
 
          case PropertyMap.PCDATA:
             if (pcdataMap == null)
-               throw new IllegalArgumentException("PCDATA not an update property.");
+               throw new XMLMiddlewareException("PCDATA not an update property.");
             pcdataMap = null;
             break;
 

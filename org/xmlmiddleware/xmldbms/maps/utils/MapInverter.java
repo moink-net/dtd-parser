@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.maps.utils;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmlutils.*;
 
@@ -98,12 +99,12 @@ public class MapInverter
     * instead -- but that child elements that use the ClassMaps of other element types
     * can be reconstructed.)</p>
     *
-    * @exception MapException Thrown if an error occurs creating the database-centric
+    * @exception XMLMiddlewareException Thrown if an error occurs creating the database-centric
     *    objects. This indicates a programming error, as it means the XML-centric objects
     *    are invalid.
     */
    public void createDatabaseView(XMLDBMSMap map)
-      throws MapException
+      throws XMLMiddlewareException
    {
       if (map == null)
          throw new IllegalStateException("XMLDBMSMap object must be set before the database view can be created.");
@@ -118,12 +119,12 @@ public class MapInverter
     * <p>Warning: This method deletes any existing objects that form part of the
     * XML-centric view of the map.</p>
     *
-    * @exception MapException Thrown if an error occurs creating the XML-centric objects.
+    * @exception XMLMiddlewareException Thrown if an error occurs creating the XML-centric objects.
     *    This indicates a programming error, as it means the database-centric objects
     *    are invalid.
     */
    public void createXMLView(XMLDBMSMap map)
-      throws MapException
+      throws XMLMiddlewareException
    {
       if (map == null)
          throw new IllegalStateException("XMLDBMSMap object must be set before the XML view can be created.");
@@ -137,7 +138,7 @@ public class MapInverter
    //**************************************************************************
 
    private void invertClassMaps(XMLDBMSMap map)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Enumeration classMaps;
 
@@ -149,7 +150,7 @@ public class MapInverter
    }
 
    private void invertClassMap(XMLDBMSMap map, ClassMap classMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Create a ClassTableMap from a ClassMap.
 
@@ -189,7 +190,7 @@ public class MapInverter
    }
 
    private void invertMarkupMaps(XMLDBMSMap map, ClassTableMap newClassTableMap, ClassMapBase classMapBase, ElementInsertionList elementInsertionList)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Process the child maps of a ClassMap or InlineClassMap.
 
@@ -242,7 +243,7 @@ public class MapInverter
    }
 
    private void invertPropertyMap(ClassTableMap newClassTableMap, PropertyMap propMap, ElementInsertionList elementInsertionList)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Create a ColumnMap or a PropertyTableMap from a PropertyMap.
 
@@ -306,7 +307,7 @@ public class MapInverter
    }
 
    private void invertRelatedClassMap(XMLDBMSMap map, ClassTableMap newClassTableMap, RelatedClassMap relatedClassMap, ElementInsertionList elementInsertionList)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Create a RelatedClassTableMap from a RelatedClassMap.
 
@@ -337,7 +338,7 @@ public class MapInverter
    }
 
    private void invertInlineClassMap(XMLDBMSMap map, ClassTableMap newClassTableMap, InlineClassMap inlineClassMap, ElementInsertionList elementInsertionList)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // The InlineClassMaps in a ClassMap form a tree. That is, a given ClassMap or
       // InlineClassMap can have more than one InlineClassMap as a child. The path of
@@ -383,7 +384,7 @@ public class MapInverter
    //**************************************************************************
 
    private void invertClassTableMaps(XMLDBMSMap map)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Enumeration classTableMaps;
 
@@ -395,7 +396,7 @@ public class MapInverter
    }
 
    private void invertClassTableMap(XMLDBMSMap map, ClassTableMap classTableMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Create a ClassMap from a ClassTableMap.
 
@@ -436,7 +437,7 @@ public class MapInverter
    }
 
    private void invertColumnMaps(ClassMap newClassMap, Enumeration columnMaps)
-      throws MapException
+      throws XMLMiddlewareException
    {
       ColumnMap      columnMap;
       InlineClassMap newInlineClassMap;
@@ -463,7 +464,7 @@ public class MapInverter
    }
 
    private void invertPropertyTableMaps(ClassMap newClassMap, Enumeration propTableMaps)
-      throws MapException
+      throws XMLMiddlewareException
    {
       PropertyTableMap  propTableMap;
       InlineClassMap    newInlineClassMap;
@@ -490,7 +491,7 @@ public class MapInverter
    }
 
    private void invertPropertyMapBase(ClassMapBase newClassMapBase, PropertyMapBase propMapBase)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Create a PropertyMap from a ColumnMap or a PropertyTableMap.
 
@@ -547,7 +548,7 @@ public class MapInverter
    }
 
    private void invertRelatedClassTableMaps(XMLDBMSMap map, ClassMap newClassMap, Enumeration relatedClassTableMaps)
-      throws MapException
+      throws XMLMiddlewareException
    {
       RelatedClassTableMap  relatedClassTableMap;
       InlineClassMap        newInlineClassMap;
@@ -574,7 +575,7 @@ public class MapInverter
    }
 
    private void invertRelatedClassTableMap(XMLDBMSMap map, ClassMapBase newClassMapBase, RelatedClassTableMap relatedClassTableMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Create a RelatedClassMap from a RelatedClassTableMap.
 
@@ -608,7 +609,7 @@ public class MapInverter
    }
 
    private InlineClassMap constructInlineClassMaps(ClassMap newClassMap, ElementInsertionList elementInsertionList)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Construct a chain of InlineClassMaps from an ElementInsertionList.
       //

@@ -20,6 +20,7 @@
 package org.xmlmiddleware.conversions;
 
 import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 
 import java.sql.Types;
 
@@ -44,7 +45,7 @@ public class SQLLiterals
     * @return The SQL literal
     */
    public static String buildLiteral(int type, Object value, StringFormatter formatter)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       StringBuffer sb;
       int          i;
@@ -137,7 +138,7 @@ public class SQLLiterals
 */
 
          default:
-            throw new ConversionException("Conversion to specified JDBC type not supported.");
+            throw new XMLMiddlewareException("Conversion to specified JDBC type not supported.");
       }
    }
 

@@ -19,6 +19,7 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 /**
@@ -80,15 +81,16 @@ public class RootFilter extends FilterBase
     * @param tableName Name of the root table.
     *
     * @return The root filter conditions.
-    * @exception IllegalArgumentException Thrown if the table is not mapped as a class table.
+    * @exception XMLMiddlewareException Thrown if the table is not mapped as a class table.
     */
    public FilterConditions createRootFilterConditions(String databaseName, String catalogName, String schemaName, String tableName)
+      throws XMLMiddlewareException
    {
       ClassTableMap    classTableMap;
 
       classTableMap = map.getClassTableMap(databaseName, catalogName, schemaName, tableName);
       if (classTableMap == null)
-         throw new IllegalArgumentException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
 
       rootFilterConditions = new FilterConditions(classTableMap.getTable());
       return rootFilterConditions;
@@ -102,15 +104,16 @@ public class RootFilter extends FilterBase
     * @param table The root table.
     *
     * @return The root filter conditions.
-    * @exception IllegalArgumentException Thrown if the table is not mapped as a class table.
+    * @exception XMLMiddlewareException Thrown if the table is not mapped as a class table.
     */
    public FilterConditions createRootFilterConditions(Table table)
+      throws XMLMiddlewareException
    {
       ClassTableMap    classTableMap;
 
       classTableMap = map.getClassTableMap(table);
       if (classTableMap == null)
-         throw new IllegalArgumentException("Table not mapped as a class table: " + table.getUniversalName());
+         throw new XMLMiddlewareException("Table not mapped as a class table: " + table.getUniversalName());
 
       rootFilterConditions = new FilterConditions(table);
       return rootFilterConditions;

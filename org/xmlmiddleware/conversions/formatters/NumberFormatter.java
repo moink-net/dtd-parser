@@ -20,6 +20,7 @@
 package org.xmlmiddleware.conversions.formatters;
 
 import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 
 import java.math.*;
 import java.sql.Types;
@@ -64,9 +65,9 @@ public class NumberFormatter implements StringFormatter
     * @param The string to parse.
     * @param A JDBC Types value indicating the type of object to return.
     * @return A number. This is a Long if possible; otherwise, it is a Double.
-    * @exception ConversionException Thrown if the string can't be parsed.
+    * @exception XMLMiddlewareException Thrown if the string can't be parsed.
     */
-   public Object parse(String s, int jdbcType) throws ConversionException
+   public Object parse(String s, int jdbcType) throws XMLMiddlewareException
    {
       Object o;
 
@@ -76,7 +77,7 @@ public class NumberFormatter implements StringFormatter
       }
       catch (ParseException p)
       {
-         throw new ConversionException(p);
+         throw new XMLMiddlewareException(p);
       }
 
       if (o instanceof Double)
@@ -88,12 +89,12 @@ public class NumberFormatter implements StringFormatter
             case Types.BINARY:
             case Types.VARBINARY:
             case Types.LONGVARBINARY:
-               throw new ConversionException("Conversion to binary types not supported.");
+               throw new XMLMiddlewareException("Conversion to binary types not supported.");
 
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
-               throw new ConversionException("Conversion to string types not supported.");
+               throw new XMLMiddlewareException("Conversion to string types not supported.");
 
             case Types.DOUBLE:
             case Types.FLOAT:
@@ -124,10 +125,10 @@ public class NumberFormatter implements StringFormatter
             case Types.DATE:
             case Types.TIME:
             case Types.TIMESTAMP:
-               throw new ConversionException("Conversion to date/time types not supported.");
+               throw new XMLMiddlewareException("Conversion to date/time types not supported.");
 
             default:
-               throw new ConversionException("Conversion to specified JDBC type not supported.");
+               throw new XMLMiddlewareException("Conversion to specified JDBC type not supported.");
          }
       }
       else if (o instanceof Long)
@@ -139,12 +140,12 @@ public class NumberFormatter implements StringFormatter
             case Types.BINARY:
             case Types.VARBINARY:
             case Types.LONGVARBINARY:
-               throw new ConversionException("Conversion to binary types not supported.");
+               throw new XMLMiddlewareException("Conversion to binary types not supported.");
 
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
-               throw new ConversionException("Conversion to string types not supported.");
+               throw new XMLMiddlewareException("Conversion to string types not supported.");
 
             case Types.DOUBLE:
             case Types.FLOAT:
@@ -175,14 +176,14 @@ public class NumberFormatter implements StringFormatter
             case Types.DATE:
             case Types.TIME:
             case Types.TIMESTAMP:
-               throw new ConversionException("Conversion to date/time types not supported.");
+               throw new XMLMiddlewareException("Conversion to date/time types not supported.");
 
             default:
-               throw new ConversionException("Conversion to specified JDBC type not supported.");
+               throw new XMLMiddlewareException("Conversion to specified JDBC type not supported.");
          }
       }
       else
-         throw new ConversionException("Java does not behave as advertised. NumberFormat returned an Object other than a Long or a Double.");
+         throw new XMLMiddlewareException("Java does not behave as advertised. NumberFormat returned an Object other than a Long or a Double.");
    }
 
    /**
@@ -192,10 +193,10 @@ public class NumberFormatter implements StringFormatter
     * @param The object to serialize. Must be a Long, Integer,
     *        Short, Byte, Double, or Float.
     * @return The string
-    * @exception ConversionException Thrown if the object is not a Long,
+    * @exception XMLMiddlewareException Thrown if the object is not a Long,
     *            Integer, Short, Byte, Double, or Float.
     */
-   public String format(Object o) throws ConversionException
+   public String format(Object o) throws XMLMiddlewareException
    {
       if ((o instanceof Long) || (o instanceof Integer) ||
           (o instanceof Short) ||(o instanceof Byte))
@@ -208,7 +209,7 @@ public class NumberFormatter implements StringFormatter
          {
             return formatter.format(ConvertBigDecimal.toLong((BigDecimal)o));
          }
-         catch (ConversionException e)
+         catch (XMLMiddlewareException e)
          {
             return formatter.format(ConvertBigDecimal.toDouble((BigDecimal)o));
          }
@@ -218,7 +219,7 @@ public class NumberFormatter implements StringFormatter
          return formatter.format(((Number)o).doubleValue());
       }
       else
-         throw new ConversionException("Object must be a BigDecimal, Long, Integer, Short, Byte, Double, or Float.");
+         throw new XMLMiddlewareException("Object must be a BigDecimal, Long, Integer, Short, Byte, Double, or Float.");
    }
 
    /**

@@ -22,6 +22,8 @@
 
 package org.xmlmiddleware.xmlutils;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
+
 import org.xml.sax.*;
 import org.w3c.dom.*;
 
@@ -45,17 +47,19 @@ public interface ParserUtils
     * Get a SAX 2.0 XMLReader.
     *
     * @return An object that implements XMLReader.
+    * @exception XMLMiddlewareException Thrown if an error occurs instantiating the XMLReader.
     */
    public XMLReader getXMLReader()
-      throws ParserUtilsException;
+      throws XMLMiddlewareException;
 
    /**
     * Get a DOMImplementation object.
     *
     * @return The DOMImplementation object
+    * @exception XMLMiddlewareException Thrown if an error occurs instantiating the DOMImplementation.
     */
    public DOMImplementation getDOMImplementation()
-      throws ParserUtilsException;
+      throws XMLMiddlewareException;
 
    /**
     * Open an InputSource and create a DOM Document.
@@ -63,9 +67,10 @@ public interface ParserUtils
     * @param src A SAX InputSource
     *
     * @return An object that implements Document.
+    * @exception XMLMiddlewareException Thrown if an error occurs creating the DOM Document.
     */
    public Document openDocument(InputSource src)
-      throws ParserUtilsException;
+      throws XMLMiddlewareException;
 
    /**
     * Write a DOM Document to a file.
@@ -74,9 +79,10 @@ public interface ParserUtils
     * @param xmlFilename The name of the XML file.
     * @param encoding The output encoding to use. If this is null, the default
     *    encoding is used.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
     */
    public void writeDocument(Document doc, String xmlFilename, String encoding)
-      throws ParserUtilsException;
+      throws XMLMiddlewareException;
 
    /**
     * Write a DOM Document to a String.
@@ -84,7 +90,8 @@ public interface ParserUtils
     * @param doc The DOM Document.
     *
     * @return The XML string.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
     */
    String writeDocument(Document doc)
-      throws ParserUtilsException;
+      throws XMLMiddlewareException;
 }

@@ -19,6 +19,8 @@
 
 package org.xmlmiddleware.conversions;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
+
 import java.math.BigDecimal;
 
 /**
@@ -76,15 +78,15 @@ public class ConvertBigDecimal
    //**************************************************************************
 
    public static double toDouble(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((b.compareTo(MAX_DOUBLE) == 1) || (b.compareTo(MIN_DOUBLE) == -1))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return b.doubleValue();
    }
 
    public static Double toDoubleObject(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Double(toDouble(b));
    }
@@ -94,15 +96,15 @@ public class ConvertBigDecimal
    //**************************************************************************
 
    public static float toFloat(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((b.compareTo(MAX_FLOAT) == 1) || (b.compareTo(MIN_FLOAT) == -1))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return b.floatValue();
    }
 
    public static Float toFloatObject(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Float(toFloat(b));
    }
@@ -112,7 +114,6 @@ public class ConvertBigDecimal
    //**************************************************************************
 
    public static BigDecimal toBigDecimal(BigDecimal b)
-      throws ConversionException
    {
       return b;
    }
@@ -122,15 +123,15 @@ public class ConvertBigDecimal
    //**************************************************************************
 
    public static long toLong(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((b.compareTo(MAX_LONG) == 1) || (b.compareTo(MIN_LONG) == -1))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return b.longValue();
    }
 
    public static Long toLongObject(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Long(toLong(b));
    }
@@ -140,15 +141,15 @@ public class ConvertBigDecimal
    //**************************************************************************
 
    public static int toInteger(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((b.compareTo(MAX_INTEGER) == 1) || (b.compareTo(MIN_INTEGER) == -1))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return b.intValue();
    }
 
    public static Integer toIntegerObject(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Integer(toInteger(b));
    }
@@ -158,15 +159,15 @@ public class ConvertBigDecimal
    //**************************************************************************
 
    public static short toShort(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((b.compareTo(MAX_SHORT) == 1) || (b.compareTo(MIN_SHORT) == -1))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return ConvertLong.toShort(b.longValue());
    }
 
    public static Short toShortObject(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Short(toShort(b));
    }
@@ -176,15 +177,15 @@ public class ConvertBigDecimal
    //**************************************************************************
 
    public static byte toByte(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if ((b.compareTo(MAX_BYTE) == 1) || (b.compareTo(MIN_BYTE) == -1))
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
       return ConvertLong.toByte(b.longValue());
    }
 
    public static Byte toByteObject(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Byte(toByte(b));
    }
@@ -194,7 +195,7 @@ public class ConvertBigDecimal
    //**************************************************************************
 
    public static boolean toBoolean(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       if (b.compareTo(ZERO) == 0)
       {
@@ -205,11 +206,11 @@ public class ConvertBigDecimal
          return true;
       }
       else
-         throw new ConversionException("Conversion resulted in truncation of significant digits.");
+         throw new XMLMiddlewareException("Conversion resulted in truncation of significant digits.");
    }
 
    public static Boolean toBooleanObject(BigDecimal b)
-      throws ConversionException
+      throws XMLMiddlewareException
    {
       return new Boolean(toBoolean(b));
    }

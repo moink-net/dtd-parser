@@ -20,6 +20,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
+import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmlutils.*;
 
 import java.util.*;
@@ -270,7 +271,7 @@ public class ClassMap extends ClassMapBase
       {
          removePCDATAMap();
       }
-      catch (MapException m)
+      catch (XMLMiddlewareException m)
       {
       }
       removeAllChildMaps();
@@ -325,10 +326,10 @@ public class ClassMap extends ClassMapBase
     * Add a PropertyMap for an attribute.
     *
     * @param propMap PropertyMap for the attribute. Must not be null.
-    * @exception MapException Thrown if the attribute has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the attribute has already been mapped.
     */
    public void addAttributeMap(PropertyMap propMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.addAttributeMap(propMap);
@@ -340,10 +341,10 @@ public class ClassMap extends ClassMapBase
     * @param uri Namespace URI of the attribute. May be null.
     * @param localName Local name of the attribute.
     *
-    * @exception MapException Thrown if the attribute has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the attribute has not been mapped.
     */
    public void removeAttributeMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.removeAttributeMap(uri, localName);
@@ -354,10 +355,10 @@ public class ClassMap extends ClassMapBase
     *
     * @param universalName Universal name of the attribute.
     *
-    * @exception MapException Thrown if the attribute has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the attribute has not been mapped.
     */
    public void removeAttributeMap(String universalName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.removeAttributeMap(universalName);
@@ -393,10 +394,10 @@ public class ClassMap extends ClassMapBase
     * Add a PropertyMap for PCDATA.
     *
     * @param propMap PropertyMap for PCDATA. Must not be null.
-    * @exception MapException Thrown if PCDATA has already been mapped.
+    * @exception XMLMiddlewareException Thrown if PCDATA has already been mapped.
     */
    public void addPCDATAMap(PropertyMap propMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.addPCDATAMap(propMap);
@@ -405,10 +406,10 @@ public class ClassMap extends ClassMapBase
    /**
     * Remove the PropertyMap for PCDATA.
     *
-    * @exception MapException Thrown if PCDATA has not been mapped.
+    * @exception XMLMiddlewareException Thrown if PCDATA has not been mapped.
     */
    public void removePCDATAMap()
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.removePCDATAMap();
@@ -428,11 +429,11 @@ public class ClassMap extends ClassMapBase
     * @param localName Local name of the child element type.
     *
     * @return The PropertyMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a related class or inlined class.
     */
    public PropertyMap createChildPropertyMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       return super.createChildPropertyMap(uri, localName);
@@ -447,11 +448,11 @@ public class ClassMap extends ClassMapBase
     * @param elementTypeName XMLName of the child element type.
     *
     * @return The PropertyMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a related class or inlined class.
     */
    public PropertyMap createChildPropertyMap(XMLName elementTypeName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       return super.createChildPropertyMap(elementTypeName);
@@ -467,11 +468,11 @@ public class ClassMap extends ClassMapBase
     * @param localName Local name of the child element type.
     *
     * @return The RelatedClassMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a property or inlined class.
     */
    public RelatedClassMap createRelatedClassMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       return super.createRelatedClassMap(uri, localName);
@@ -486,11 +487,11 @@ public class ClassMap extends ClassMapBase
     * @param elementTypeName XMLName of the child element type.
     *
     * @return The RelatedClassMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a property or inlined class.
     */
    public RelatedClassMap createRelatedClassMap(XMLName elementTypeName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       return super.createRelatedClassMap(elementTypeName);
@@ -506,11 +507,11 @@ public class ClassMap extends ClassMapBase
     * @param localName Local name of the child element type.
     *
     * @return The InlineClassMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a property or related class.
     */
    public InlineClassMap createInlineClassMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       return super.createInlineClassMap(uri, localName);
@@ -525,11 +526,11 @@ public class ClassMap extends ClassMapBase
     * @param elementTypeName XMLName of the child element type.
     *
     * @return The InlineClassMap for the child element type.
-    * @exception MapException Thrown if the child element type is already
+    * @exception XMLMiddlewareException Thrown if the child element type is already
     *    mapped as a property or related class.
     */
    public InlineClassMap createInlineClassMap(XMLName elementTypeName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       return super.createInlineClassMap(elementTypeName);
@@ -539,10 +540,10 @@ public class ClassMap extends ClassMapBase
     * Add a PropertyMap for a child element type.
     *
     * @param propMap PropertyMap for the child element type. Must not be null.
-    * @exception MapException Thrown if the child element type has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the child element type has already been mapped.
     */
    public void addChildMap(PropertyMap propMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.addChildMap(propMap);
@@ -560,10 +561,10 @@ public class ClassMap extends ClassMapBase
     * XML-DBMS mapping language.</p>
     *
     * @param relatedClassMap RelatedClassMap for the child element type. Must not be null.
-    * @exception MapException Thrown if the child element type has already been mapped.
+    * @exception XMLMiddlewareException Thrown if the child element type has already been mapped.
     */
    public void addChildMap(RelatedClassMap relatedClassMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.addChildMap(relatedClassMap);
@@ -573,10 +574,10 @@ public class ClassMap extends ClassMapBase
     * Add an InlineClassMap for a child element type.
     *
     * @param inlineClassMap InlineClassMap for the child element type. Must not be null.
-    * @exception MapException Throw if the child element type is already mapped.
+    * @exception XMLMiddlewareException Throw if the child element type is already mapped.
     */
    public void addChildMap(InlineClassMap inlineClassMap)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.addChildMap(inlineClassMap);
@@ -588,10 +589,10 @@ public class ClassMap extends ClassMapBase
     * @param uri Namespace URI of the child element type. May be null.
     * @param localName Local name of the child element type.
     *
-    * @exception MapException Thrown if the child element type has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the child element type has not been mapped.
     */
    public void removeChildMap(String uri, String localName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.removeChildMap(uri, localName);
@@ -602,10 +603,10 @@ public class ClassMap extends ClassMapBase
     *
     * @param universalName Universal name of the child element type.
     *
-    * @exception MapException Thrown if the child element type has not been mapped.
+    * @exception XMLMiddlewareException Thrown if the child element type has not been mapped.
     */
    public void removeChildMap(String universalName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       checkState();
       super.removeChildMap(universalName);

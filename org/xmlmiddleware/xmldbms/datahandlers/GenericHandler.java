@@ -39,6 +39,7 @@ public class GenericHandler
      *
      * @param table Table to insert into.
      * @param row Row to insert.
+     * @exception SQLException A database error occurred while inserting data.
      */
 	public void insert(Table table, Row row)
         throws SQLException

@@ -205,10 +205,10 @@ public class MapCompiler
     *
     * @param src A SAX InputSource for the mapping document.
     * @return The XMLDBMSMap object
-    * @exception MapException Thrown if the mapping document contains an error.
+    * @exception XMLMiddlewareException Thrown if the mapping document contains an error.
     */
    public XMLDBMSMap compile(InputSource src)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Exception e;
       MapInverter inverter;
@@ -218,7 +218,7 @@ public class MapCompiler
       if (src == null)
          throw new IllegalArgumentException("src argument must not be null.");
 
-      // Parse the map document. Rethrow any exceptions as MapExceptions.
+      // Parse the map document. Rethrow any exceptions as XMLMiddlewareExceptions.
 
       try
       {
@@ -226,21 +226,21 @@ public class MapCompiler
       }
       catch (SAXException s)
       {
-         // Get the embedded Exception (if any) and check if it's a MapException.
+         // Get the embedded Exception (if any) and check if it's a XMLMiddlewareException.
          e = s.getException();
          if (e != null)
          {
-            if (e instanceof MapException)
-               throw (MapException)e;
+            if (e instanceof XMLMiddlewareException)
+               throw (XMLMiddlewareException)e;
             else
-               throw new MapException(e);
+               throw new XMLMiddlewareException(e);
          }
          else
-            throw new MapException(s);
+            throw new XMLMiddlewareException(s);
       }
       catch (IOException io)
       {
-         throw new MapException(io);
+         throw new XMLMiddlewareException(io);
       }
 
       // Create the database-centric view of the map.
@@ -288,7 +288,7 @@ public class MapCompiler
         resolveRCMWrappers();
         resolveBaseTableWrappers();
       }
-      catch (MapException m)
+      catch (XMLMiddlewareException m)
       {
          throw new SAXException(m);
       }
@@ -315,7 +315,7 @@ public class MapCompiler
       try
       {
          if (!uri.equals(MapConst.URI_XMLDBMSV2))
-            throw new MapException("Unrecognized namespace URI: " + uri);
+            throw new XMLMiddlewareException("Unrecognized namespace URI: " + uri);
 
          switch (elementTokens.getToken(localName))
          {
@@ -507,10 +507,10 @@ public class MapCompiler
                break;
 
             case MapConst.ELEM_TOKEN_INVALID:
-               throw new MapException("Unrecognized XML-DBMS mapping language element type: " + localName);
+               throw new XMLMiddlewareException("Unrecognized XML-DBMS mapping language element type: " + localName);
          }
       }
-      catch (MapException m)
+      catch (XMLMiddlewareException m)
       {
          throw new SAXException(m);
       }
@@ -530,7 +530,7 @@ public class MapCompiler
       try
       {
          if (!uri.equals(MapConst.URI_XMLDBMSV2))
-            throw new MapException("Unrecognized namespace URI: " + uri);
+            throw new XMLMiddlewareException("Unrecognized namespace URI: " + uri);
 
          switch (elementTokens.getToken(localName))
          {
@@ -624,10 +624,10 @@ public class MapCompiler
                break;
 
             case MapConst.ELEM_TOKEN_INVALID:
-               throw new MapException("Unrecognized XML-DBMS mapping language element type: " + localName);
+               throw new XMLMiddlewareException("Unrecognized XML-DBMS mapping language element type: " + localName);
          }
       }
-      catch (MapException m)
+      catch (XMLMiddlewareException m)
       {
          throw new SAXException(m);
       }
@@ -682,7 +682,7 @@ public class MapCompiler
    //**************************************************************************
 
    private void processAttribute(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String  attrValue;
       XMLName xmlName;
@@ -691,7 +691,7 @@ public class MapCompiler
       // XML markup and throw an error if this is true.
 
       if (containsXML)
-         throw new MapException("The ContainsXML attribute may not be set to 'Yes' for PropertyMaps that map attributes.");
+         throw new XMLMiddlewareException("The ContainsXML attribute may not be set to 'Yes' for PropertyMaps that map attributes.");
 
       // Get the attribute's name and create an XMLName, then create an
       // attribute map.
@@ -726,7 +726,7 @@ public class MapCompiler
    }
 
    private void processColumn(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Column          column;
       String          columnName, attrValue;
@@ -747,7 +747,7 @@ public class MapCompiler
       {
          type = JDBCTypes.getType(attrValue);
          if (type == Types.NULL)
-            throw new MapException("Invalid data type: " + attrValue);
+            throw new XMLMiddlewareException("Invalid data type: " + attrValue);
          column.setType(type);
       }
 
@@ -797,7 +797,7 @@ public class MapCompiler
                break;
 
             default:
-               throw new MapException("Invalid nullability value: " + attrValue);
+               throw new XMLMiddlewareException("Invalid nullability value: " + attrValue);
          }
          column.setNullability(nullability);
       }
@@ -809,7 +809,7 @@ public class MapCompiler
       {
          formatter = map.getNamedFormatter(attrValue);
          if (formatter == null)
-            throw new MapException("Column " + columnName + " uses the named format " + attrValue + ". The format was not declared.");
+            throw new XMLMiddlewareException("Column " + columnName + " uses the named format " + attrValue + ". The format was not declared.");
          column.setFormatter(formatter);
       }
       else if (type != Types.NULL)
@@ -824,7 +824,7 @@ public class MapCompiler
    }
 
    private void processDateFormatEnd()
-      throws MapException
+      throws XMLMiddlewareException
    {
       DateFormat      df;
       StringFormatter formatter;
@@ -841,7 +841,7 @@ public class MapCompiler
    }
 
    private void processDateFormatStart(Attributes attrs, boolean getDateStyle, boolean getTimeStyle)
-      throws MapException
+      throws XMLMiddlewareException
    {
       processFormatStart(attrs);
       if (getDateStyle)
@@ -855,7 +855,7 @@ public class MapCompiler
    }
 
    private void processDateTimeFormatEnd()
-      throws MapException
+      throws XMLMiddlewareException
    {
       DateFormat      df;
       StringFormatter formatter;
@@ -872,7 +872,7 @@ public class MapCompiler
    }
 
    private void processDecimalFormatStart(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       processFormatStart(attrs);
 
@@ -880,7 +880,7 @@ public class MapCompiler
    }
 
    private void processDecimalFormatEnd()
-      throws MapException
+      throws XMLMiddlewareException
    {
       NumberFormat    nf;
       StringFormatter formatter;
@@ -894,7 +894,7 @@ public class MapCompiler
          }
          catch (ClassCastException c)
          {
-            throw new MapException("No DecimalFormat object available for locale with country " + locale.getCountry() + " and language " + locale.getLanguage() + ".");
+            throw new XMLMiddlewareException("No DecimalFormat object available for locale with country " + locale.getCountry() + " and language " + locale.getLanguage() + ".");
          }
       }
       else
@@ -911,7 +911,7 @@ public class MapCompiler
    }
 
    private void processElementType(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String         qualifiedName;
       InlineClassMap parentInlineClassMap;
@@ -1020,9 +1020,9 @@ public class MapCompiler
    }
 
    private void processExtends(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
-      throw new MapException("Extends keyword not yet implemented.");
+      throw new XMLMiddlewareException("Extends keyword not yet implemented.");
 /*
       String   qualifiedName;
       ClassMap baseClassMap;
@@ -1038,7 +1038,7 @@ public class MapCompiler
    }
 
    private void processFixedOrder(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       OrderInfo orderInfo;
       String    attrValue;
@@ -1048,7 +1048,7 @@ public class MapCompiler
       if (state.intValue() == iSTATE_PROPERTYMAP)
       {
          if (propMap.getType() == PropertyMap.ATTRIBUTE)
-            throw new MapException("A PropertyMap for an attribute may not contain a FixedOrder element. (If the attribute value is a token list, it may contain an TLOrderColumn element.)");
+            throw new XMLMiddlewareException("A PropertyMap for an attribute may not contain a FixedOrder element. (If the attribute value is a token list, it may contain an TLOrderColumn element.)");
       }
 
       // Create an OrderInfo object.
@@ -1062,7 +1062,7 @@ public class MapCompiler
    }
 
    private void processForeignKey(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String    name;
       FKWrapper fkWrapper;
@@ -1087,7 +1087,7 @@ public class MapCompiler
    }
 
    private void processFormatClass(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String          className;
       StringFormatter formatter;
@@ -1105,7 +1105,7 @@ public class MapCompiler
       }
       catch (Exception e)
       {
-         throw new MapException(e);
+         throw new XMLMiddlewareException(e);
       }
 
       // Add the formatting object to the hashtable of named formatting
@@ -1116,7 +1116,7 @@ public class MapCompiler
    }
 
    private void processFormatStart(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Get the attribute values and check that the Name or DefaultForTypes
       // or both attributes are present.
@@ -1124,7 +1124,7 @@ public class MapCompiler
       formatName = getAttrValue(attrs, MapConst.ATTR_NAME);
       defaultForTypes = getAttrValue(attrs, MapConst.ATTR_DEFAULTFORTYPES);
       if ((formatName == null) && (defaultForTypes == null))
-         throw new MapException("At least one of the attributes Name and DefaultForTypes must be present on a formatting element.");
+         throw new XMLMiddlewareException("At least one of the attributes Name and DefaultForTypes must be present on a formatting element.");
 
       locale = null;
    }
@@ -1142,7 +1142,7 @@ public class MapCompiler
    }
 
    private void processLocale(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String country, language;
 
@@ -1152,7 +1152,7 @@ public class MapCompiler
    }
 
    private void processNamespace(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String uri, prefix;
 
@@ -1176,7 +1176,7 @@ public class MapCompiler
    }
 
    private void processNumberFormatEnd()
-      throws MapException
+      throws XMLMiddlewareException
    {
       NumberFormat    nf;
       StringFormatter formatter;
@@ -1192,7 +1192,7 @@ public class MapCompiler
    }
 
    private void processOrderColumn(Attributes attrs, boolean isTokenList)
-      throws MapException
+      throws XMLMiddlewareException
    {
       // This method processes both OrderColumn and TLOrderColumn. In the latter
       // case, isTokenList is true. This is passed to processOrder, which then
@@ -1222,10 +1222,10 @@ public class MapCompiler
             if (isTokenList)
             {
                if (!propMap.isTokenList())
-                  throw new MapException("A PropertyMap cannot contain a TLOrderColumn element unless the TokenList attribute is set to 'Yes'.");
+                  throw new XMLMiddlewareException("A PropertyMap cannot contain a TLOrderColumn element unless the TokenList attribute is set to 'Yes'.");
             }
             else if (propMap.getType() == PropertyMap.ATTRIBUTE)
-               throw new MapException("A PropertyMap for an attribute may not contain an OrderColumn element. (If the attribute value is a token list, it may contain a TLOrderColumn element.)");
+               throw new XMLMiddlewareException("A PropertyMap for an attribute may not contain an OrderColumn element. (If the attribute value is a token list, it may contain a TLOrderColumn element.)");
 
             // If the LinkInfo is null, the order column is in the class table.
             // If the LinkInfo is not null, the order column is in the table
@@ -1270,7 +1270,7 @@ public class MapCompiler
 
       column = orderColumnTable.getColumn(name);
       if (column == null)
-         throw new MapException("Order column " + name + " not found in table " + orderColumnTable.getUniversalName());
+         throw new XMLMiddlewareException("Order column " + name + " not found in table " + orderColumnTable.getUniversalName());
       orderInfo.setOrderColumn(column);
 
       // Set whether order is generated.
@@ -1279,13 +1279,13 @@ public class MapCompiler
    }
 
    private void processPCDATA()
-      throws MapException
+      throws XMLMiddlewareException
    {
       // Check if the user attempted to specify that the PCDATA contained
       // XML markup and throw an error if this is true.
 
       if (containsXML)
-         throw new MapException("The ContainsXML attribute may not be set to 'Yes' for PropertyMaps that map PCDATA.");
+         throw new XMLMiddlewareException("The ContainsXML attribute may not be set to 'Yes' for PropertyMaps that map PCDATA.");
 
       // Create a new PropertyMap and set whether it contains a token list.
 
@@ -1309,7 +1309,7 @@ public class MapCompiler
    }
 
    private void processPrimaryKey(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String name, keyGenerator;
       int    generate;
@@ -1380,7 +1380,7 @@ public class MapCompiler
    }
 
    private void processSimpleDateFormatEnd()
-      throws MapException
+      throws XMLMiddlewareException
    {
       DateFormat      df;
       StringFormatter formatter;
@@ -1397,14 +1397,14 @@ public class MapCompiler
    }
 
    private void processSimpleDateFormatStart(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       processFormatStart(attrs);
       pattern = getAttrValue(attrs, MapConst.ATTR_PATTERN);
    }
 
    private void processTableStart(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String tableName;
 
@@ -1418,7 +1418,7 @@ public class MapCompiler
    }
 
    private void processTableEnd()
-      throws MapException
+      throws XMLMiddlewareException
    {
       Enumeration columns;
       Column      column;
@@ -1434,7 +1434,7 @@ public class MapCompiler
    }
 
    private void processTimeFormatEnd()
-      throws MapException
+      throws XMLMiddlewareException
    {
       DateFormat      df;
       StringFormatter formatter;
@@ -1451,7 +1451,7 @@ public class MapCompiler
    }
 
    private void processToClassTable(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Table  classTable;
       String hashName;
@@ -1464,9 +1464,9 @@ public class MapCompiler
 
       hashName = classTable.getHashName();
       if (propTables.get(hashName) != null)
-         throw new MapException("Table already mapped as a property table: " + classTable.getUniversalName());
+         throw new XMLMiddlewareException("Table already mapped as a property table: " + classTable.getUniversalName());
       else if (classTables.get(hashName) != null)
-         throw new MapException("Table already mapped as a class table: " + classTable.getUniversalName());
+         throw new XMLMiddlewareException("Table already mapped as a class table: " + classTable.getUniversalName());
       classTables.put(hashName, classTable);
 
       // Set the table in the ClassMap.
@@ -1475,7 +1475,7 @@ public class MapCompiler
    }
 
    private void processToColumn(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String name;
       Table  propTable;
@@ -1499,13 +1499,13 @@ public class MapCompiler
       name = getAttrValue(attrs, MapConst.ATTR_NAME);
       column = propTable.getColumn(name);
       if (column == null)
-         throw new MapException("Property column " + name + " not found in table " + propTable.getUniversalName());
+         throw new XMLMiddlewareException("Property column " + name + " not found in table " + propTable.getUniversalName());
 
       propMap.setColumn(column);
    }
 
    private void processToPropertyTable(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String hashName;
 
@@ -1521,14 +1521,14 @@ public class MapCompiler
 
       hashName = propertyTable.getHashName();
       if (propTables.get(hashName) != null)
-         throw new MapException("Table already mapped as a property table: " + propertyTable.getUniversalName());
+         throw new XMLMiddlewareException("Table already mapped as a property table: " + propertyTable.getUniversalName());
       else if (classTables.get(hashName) != null)
-         throw new MapException("Table already mapped as a class table: " + propertyTable.getUniversalName());
+         throw new XMLMiddlewareException("Table already mapped as a class table: " + propertyTable.getUniversalName());
       propTables.put(hashName, propertyTable);
    }
 
    private void processUniqueKey(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String name;
 
@@ -1560,7 +1560,7 @@ public class MapCompiler
    }
 
    private void processUseClassMap(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String   useQualifiedName;
       XMLName  useXMLName;
@@ -1592,7 +1592,7 @@ public class MapCompiler
    }
 
    private void processUseColumn(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String name;
       Column column;
@@ -1607,12 +1607,12 @@ public class MapCompiler
 
       column = table.getColumn(name);
       if (column == null)
-          throw new MapException("Key column " + name + " not found in table " + table.getUniversalName());
+          throw new XMLMiddlewareException("Key column " + name + " not found in table " + table.getUniversalName());
       keyColumns.addElement(column);
    }
 
    private void processUseForeignKey(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String   name;
       Table    foreignKeyTable, uniqueKeyTable;
@@ -1684,7 +1684,7 @@ public class MapCompiler
    }
 
    private void processUseUniqueKey(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String    name;
       Table     uniqueKeyTable;
@@ -1744,7 +1744,7 @@ public class MapCompiler
    }
 
    private void processXMLToDBMS(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String version;
 
@@ -1758,7 +1758,7 @@ public class MapCompiler
 
       version = getAttrValue(attrs, MapConst.ATTR_VERSION, MapConst.DEF_VERSION);
       if (!version.equals(MapConst.DEF_VERSION))
-         throw new MapException("Unsupported XML-DBMS version: " + version);
+         throw new XMLMiddlewareException("Unsupported XML-DBMS version: " + version);
    }
 
    //**************************************************************************
@@ -1814,14 +1814,14 @@ public class MapCompiler
    }
 
    private void addNamedFormatter(String formatName, StringFormatter formatter)
-      throws MapException
+      throws XMLMiddlewareException
    {
       if (formatName == null) return;
       map.addNamedFormatter(formatName, formatter);
    }
 
    private void addDefaultFormatter(String defaultForTypes, StringFormatter formatter)
-      throws MapException
+      throws XMLMiddlewareException
    {
       StringTokenizer tokenizer;
       String          typeName;
@@ -1837,9 +1837,9 @@ public class MapCompiler
          typeName = tokenizer.nextToken();
          type = JDBCTypes.getType(typeName);
          if (type == Types.NULL)
-            throw new MapException("Invalid JDBC type name: " + typeName);
+            throw new XMLMiddlewareException("Invalid JDBC type name: " + typeName);
          if (formatTypes.get(typeName) != null)
-            throw new MapException("Default format already set for type: " + typeName);
+            throw new XMLMiddlewareException("Default format already set for type: " + typeName);
          formatTypes.put(typeName, typeName);
 
          // Set the default formatter
@@ -1849,7 +1849,7 @@ public class MapCompiler
    }
 
    private void resolveFKWrappers()
-      throws MapException
+      throws XMLMiddlewareException
    {
       while (!fkWrapperStack.empty())
       {
@@ -1858,14 +1858,14 @@ public class MapCompiler
    }
 
    private void resolveFKWrapper(FKWrapper fkWrapper)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Table     remoteTable;
       Key       remoteKey;
 
       remoteTable = map.getTable(fkWrapper.remoteDatabaseName, fkWrapper.remoteCatalogName, fkWrapper.remoteSchemaName, fkWrapper.remoteTableName);
       if (remoteTable == null)
-         throw new MapException("Table not found: " + Table.getUniversalName(fkWrapper.remoteDatabaseName, fkWrapper.remoteCatalogName, fkWrapper.remoteSchemaName, fkWrapper.remoteTableName) + ". Referenced by foreign key: " + fkWrapper.foreignKey.getName());
+         throw new XMLMiddlewareException("Table not found: " + Table.getUniversalName(fkWrapper.remoteDatabaseName, fkWrapper.remoteCatalogName, fkWrapper.remoteSchemaName, fkWrapper.remoteTableName) + ". Referenced by foreign key: " + fkWrapper.foreignKey.getName());
 
       remoteKey = getUniqueKey(remoteTable, fkWrapper.remoteKeyName);
 
@@ -1873,7 +1873,7 @@ public class MapCompiler
    }
 
    private void resolveRCMWrappers()
-      throws MapException
+      throws XMLMiddlewareException
    {
       while (!rcmWrapperStack.empty())
       {
@@ -1882,7 +1882,7 @@ public class MapCompiler
    }
 
    private void resolveRCMWrapper(RCMWrapper rcmWrapper)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Table     parentTable, childTable, uniqueKeyTable, foreignKeyTable, orderTable;
       Key       uniqueKey, foreignKey;
@@ -1899,7 +1899,7 @@ public class MapCompiler
       parentTable = rcmWrapper.parentClassMap.getTable();
       childTable = rcmWrapper.relatedClassMap.getClassMap().getTable();
       if (childTable == null)
-         throw new MapException("Element type " + rcmWrapper.relatedClassMap.getClassMap().getElementTypeName().getUniversalName() + " mapped as a related class but never mapped as a class.");
+         throw new XMLMiddlewareException("Element type " + rcmWrapper.relatedClassMap.getClassMap().getElementTypeName().getUniversalName() + " mapped as a related class but never mapped as a class.");
 
       // Get the parent and child keys. This is the usual confusing stuff about, "Um, the
       // parent key is unique so we use the unique key name with the parent table and the
@@ -1940,7 +1940,7 @@ public class MapCompiler
 
          orderColumn = orderTable.getColumn(rcmWrapper.orderColumnName);
          if (orderColumn == null)
-            throw new MapException("Order column " + rcmWrapper.orderColumnName + " not found in table " + orderTable.getUniversalName() + ".");
+            throw new XMLMiddlewareException("Order column " + rcmWrapper.orderColumnName + " not found in table " + orderTable.getUniversalName() + ".");
 
          orderInfo = rcmWrapper.relatedClassMap.getOrderInfo();
          orderInfo.setOrderColumn(orderColumn);
@@ -1949,7 +1949,7 @@ public class MapCompiler
    }
 
    private void resolveBaseTableWrappers()
-      throws MapException
+      throws XMLMiddlewareException
    {
       while (!baseTableWrapperStack.empty())
       {
@@ -1958,7 +1958,7 @@ public class MapCompiler
    }
 
    private void resolveBaseTableWrapper(BaseTableWrapper baseTableWrapper)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Table     extendedTable, baseTable, uniqueKeyTable, foreignKeyTable;
       Key       uniqueKey, foreignKey;
@@ -1973,7 +1973,7 @@ public class MapCompiler
       extendedTable = baseTableWrapper.extendedClassMap.getTable();
       baseTable = baseTableWrapper.extendedClassMap.getBaseClassMap().getTable();
       if (baseTable == null)
-         throw new MapException("Element type " + baseTableWrapper.extendedClassMap.getBaseClassMap().getElementTypeName().getUniversalName() + " mapped as a base class but never mapped as a class.");
+         throw new XMLMiddlewareException("Element type " + baseTableWrapper.extendedClassMap.getBaseClassMap().getElementTypeName().getUniversalName() + " mapped as a base class but never mapped as a class.");
 
       // Get the extended and base keys. This is the usual confusing stuff about, "Um,
       // the extended class table key is unique so we use the unique key name with
@@ -2050,7 +2050,7 @@ public class MapCompiler
    }
 
    private Table getTable(Attributes attrs)
-      throws MapException
+      throws XMLMiddlewareException
    {
       String databaseName, catalogName, schemaName, tableName;
       Table  table;
@@ -2062,7 +2062,7 @@ public class MapCompiler
 
       table = map.getTable(databaseName, catalogName, schemaName, tableName);
       if (table == null)
-         throw new MapException("Table not found: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+         throw new XMLMiddlewareException("Table not found: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
       return table;
    }
 
@@ -2072,7 +2072,7 @@ public class MapCompiler
    }
 
    private int parseInt(String string)
-      throws MapException
+      throws XMLMiddlewareException
    {
       int i;
 
@@ -2082,7 +2082,7 @@ public class MapCompiler
       }
       catch (NumberFormatException n)
       {
-         throw new MapException("Invalid integer value: " + string + ". " + n.getMessage());
+         throw new XMLMiddlewareException("Invalid integer value: " + string + ". " + n.getMessage());
       }
       return i;
    }
@@ -2092,7 +2092,7 @@ public class MapCompiler
    //**************************************************************************
 
    private Key getUniqueKey(Table uniqueKeyTable, String uniqueKeyName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Key uniqueKey;
 
@@ -2108,35 +2108,35 @@ public class MapCompiler
       {
          uniqueKey = uniqueKeyTable.getUniqueKey(uniqueKeyName);
          if (uniqueKey == null)
-            throw new MapException("Unique or primary key with the name " + uniqueKeyName + " not found in table " + uniqueKeyTable.getUniversalName());
+            throw new XMLMiddlewareException("Unique or primary key with the name " + uniqueKeyName + " not found in table " + uniqueKeyTable.getUniversalName());
       }
       return uniqueKey;
    }
 
    private Key getForeignKey(Table foreignKeyTable, String foreignKeyName)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Key foreignKey;
 
       foreignKey = foreignKeyTable.getForeignKey(foreignKeyName);
       if (foreignKey == null)
-         throw new MapException("Foreign key " + foreignKeyName + " not found in table " + foreignKeyTable.getUniversalName());
+         throw new XMLMiddlewareException("Foreign key " + foreignKeyName + " not found in table " + foreignKeyTable.getUniversalName());
       return foreignKey;
    }
 
    private void checkUniqueKey(String tag, Table foreignKeyTable, Key foreignKey, Table uniqueKeyTable, Key uniqueKey)
-      throws MapException
+      throws XMLMiddlewareException
    {
       Table fkUniqueKeyTable;
       Key   fkUniqueKey;
 
       fkUniqueKeyTable = foreignKey.getRemoteTable();
       if (!fkUniqueKeyTable.equals(uniqueKeyTable))
-         throw new MapException("<" + tag + ">" + " uses foreign key " + foreignKey.getName() + " on table " + foreignKeyTable.getUniversalName() + ". This references table " + fkUniqueKeyTable.getUniversalName() + " but <UseUniqueKey> uses table " + uniqueKeyTable.getUniversalName());
+         throw new XMLMiddlewareException("<" + tag + ">" + " uses foreign key " + foreignKey.getName() + " on table " + foreignKeyTable.getUniversalName() + ". This references table " + fkUniqueKeyTable.getUniversalName() + " but <UseUniqueKey> uses table " + uniqueKeyTable.getUniversalName());
 
       fkUniqueKey = foreignKey.getRemoteKey();
       if (!fkUniqueKey.equals(uniqueKey))
-         throw new MapException("<" + tag + ">" + " uses foreign key " + foreignKey.getName() + " on table " + foreignKeyTable.getUniversalName() + ". This references unique key " + fkUniqueKey.getName() + " on table " + fkUniqueKeyTable.getUniversalName() + " but <UseUniqueKey> uses key " + uniqueKey.getName() + " on table " + uniqueKeyTable.getUniversalName());
+         throw new XMLMiddlewareException("<" + tag + ">" + " uses foreign key " + foreignKey.getName() + " on table " + foreignKeyTable.getUniversalName() + ". This references unique key " + fkUniqueKey.getName() + " on table " + fkUniqueKeyTable.getUniversalName() + " but <UseUniqueKey> uses key " + uniqueKey.getName() + " on table " + uniqueKeyTable.getUniversalName());
    }
 
    //**************************************************************************
