@@ -22,7 +22,7 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * Generate SELECT, UPDATE, INSERT, and DELETE statements.
+ * Generate SELECT, UPDATE, INSERT, and DELETE strings.
  *
  * @author Sean, 2001
  * @version 2.0
@@ -79,7 +79,7 @@ public class DMLGenerator
 	//**************************************************************************
 
 	/**
-	 * Get an INSERT string for a table.
+	 * Returns an INSERT SQL string for the given table.
 	 *
 	 * @param t The table. Must not be null.
 	 * @return The INSERT string.
@@ -117,11 +117,12 @@ public class DMLGenerator
 	}
 
 	/**
-	 * Get a SELECT string for a specific table, key, and OrderInfo.
-	 *
-	 * @param t The table. Must not be null.
-	 * @param key The key identifying the row to select.
-	 * @param order The OrderInfo. May be null.
+	 * Returns a "SELECT * WHERE key = ? ORDER BY ?" SQL string for a 
+	 * given table. 
+	 * 
+	 * @param t The table to select from. Must not be null.
+	 * @param key The key to restrict with.
+	 * @param order The sort information. May be null.
 	 * @return The SELECT string.
 	 */
 	public String getSelect(Table t, Key key, OrderInfo order)
@@ -131,10 +132,10 @@ public class DMLGenerator
 	}
 
 	/**
-	 * Get a SELECT string for a specific table and key.
+	 * Returns a "SELECT key WHERE key = ?" SQL string for a given table.
 	 *
-	 * @param t The table. Must not be null.
-	 * @param key The key identifying the row to select.
+	 * @param t The table to select from. Must not be null.
+	 * @param key The key to restrict with.
 	 * @return The SELECT string.
 	 */
 	public String getSelect(Table t, Key key)
@@ -144,11 +145,11 @@ public class DMLGenerator
 	}
 
 	/**
-	 * Get an UPDATE string for a specific table, key, and set of columns.
+	 * Returns an UPDATE SQL string for a given table, key, and set of columns.
 	 *
-	 * @param t The table. Must not be null.
-	 * @param key The key identifying the row to update. Must not be null.
-	 * @param cols An array of columns to be updated.
+	 * @param t The table to update. Must not be null.
+	 * @param key The key to restrict with. Must not be null.
+	 * @param cols The columns to update. If this is null, all columns are included.
 	 * @return The UPDATE string.
 	 */
 	public String getUpdate(Table t, Key key, Column[] cols)
@@ -197,10 +198,10 @@ public class DMLGenerator
 	}	
 
 	/**
-	 * Get a DELETE string for a specific table and key.
+	 * Returns a DELETE SQL string for a given table.
 	 *
-	 * @param t The table. Must not be null.
-	 * @param key The key identifying the row to delete. Must not be null.
+	 * @param t The table to delete from. Must not be null.
+	 * @param key The key to restrict with. Must not be null.
 	 * @return The DELETE string.
 	 */
 	public String getDelete(Table t, Key key)
