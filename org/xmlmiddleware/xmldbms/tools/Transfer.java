@@ -35,7 +35,6 @@ import org.xml.sax.*;
 import org.w3c.dom.*;
 
 import java.io.*;
-import java.net.*;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
@@ -69,7 +68,7 @@ import javax.sql.*;
  *
  * <ul>
  * <li><p>Property-processing properties are used to process other properties.
- *     They are File and BaseURL.</p></li>
+ *     This are File.</p></li>
  *
  * <li><p>Parser properties provide information about the XML parser / DOM
  *     implementation. They are ParserUtilsClass.</p></li>
@@ -131,7 +130,7 @@ import javax.sql.*;
  * [3] Optional. If no database name is specified, "Default" is used.<br />
  * [4] Optional if there is only one result set, in which case "Default" is used.
  * Required if there is more than one result set. Result set names correspond to
- * result set names in the filter document.</p>
+ * result set names in the filter document./p>
  *
  * <p>The following table shows which configuration properties apply to each method.
  * Configuration properties are used by all three interfaces.</p>
@@ -140,10 +139,10 @@ import javax.sql.*;
  * <tr valign="top"><th>Method</th><th>Configuration properties</th></tr>
  * <tr valign="top"><td>StoreDocument</td><td>CommitMode[1]<br />StopOnError
  * <br />ReturnFilter<br />KeyGeneratorName[2]<br />KeyGeneratorClass[2][3]
- * <br />Encoding[4]<br />SystemID[4]<br />PublicID[4]</td></tr>
+ * <br />Encoding[4]<br />SystemID[4]<br />PublicID[4]<br />Validate[5]</td></tr>
  * <tr valign="top"><td>RetrieveDocumentByFilter<br />RetrieveDocumentBySQL</td>
- * <td>Encoding<br />SystemID<br />PublicID</td></tr>
- * <tr valign="top"><td>DeleteDocument</td><td>CommitMode[1]</td></tr>
+ * <td>Encoding<br />SystemID<br />PublicID<br />Validate[6]</td></tr>
+ * <tr valign="top"><td>DeleteDocument</td><td>CommitMode[1]<br />Validate[7]</td></tr>
  * </table>
  *
  * <p>NOTES:<br />
@@ -154,7 +153,10 @@ import javax.sql.*;
  * [3] If the key generator requires initialization properties, these should be
  * passed in as well. See the documentation for your key generator to see what
  * these are.<br />
- * [4] Applies to the output filter file, if any.</p>
+ * [4] Applies to the output filter file, if any.
+ * [5] Value is a space-separated list containing Map, XML, and/or Action.<br />
+ * [6] Value is a space-separated list containing Map and/or Filter.<br />
+ * [7] Value is a space-separated list containing Map, Action, and/or Filter.</p>
  *
  * <p>For a complete description of the properties used by Transfer,
  * see ?????.</p>
@@ -199,21 +201,6 @@ import javax.sql.*;
  * property files, making it possible to have a hierarchy of property files.
  * File properties can be used from the command line and with the
  * dispatch-style interface. They cannot be used with the traditional API.</p>
- *
- * <p>The value of a File property is a URL. This can be either a complete URL,
- * such as http://www.rpbourret.com/props/myprops.props or a relative URL, such
- * as myprops.props. In the case of a relative URL, the value of the BaseURL
- * property is prepended to the value of the File property. If no BaseURL property
- * is specified, then the value of the File property is treated as a local file name.</p>
- *
- * <p>The purpose of the BaseURL property is to make it easy to deploy files on
- * different machines simply by changing the BaseURL property. The BaseURL property
- * is applied hierarchically. That is, if it occurs in the command line or in a given
- * property file, it applies to those properties and all descendant properties until
- * it is overridden.</p>
- *
- * <p>The BaseURL property applies to the value of the File, MapFile, XMLFile, ActionFile
- * and FilterFile properties.</p>
  *
  * <p><b>Dispatch-style Interface</b></p>
  *
@@ -467,9 +454,9 @@ public class Transfer extends PropertyProcessor
     *
     * @param configProps Configuration properties. May be null. See the introduction
     *    for details.
-    * @param xmlFilename Filename or URL of the XML file.
-    * @param mapFilename Filename or URL of the map file.
-    * @param actionFilename Filename or URL of the action file.
+    * @param xmlFilename Name of the XML file.
+    * @param mapFilename Name of the map file.
+    * @param actionFilename Name of the action file.
     * @return A FilterSet describing the stored document. This is returned only if
     *    the ReturnFilter property is set to "Yes".
     * @exception SQLException Thrown if a database error occurs.
@@ -481,9 +468,14 @@ public class Transfer extends PropertyProcessor
    {
       InputSource src;
 
-      // Note that buildURLString is in PropertyProcessor (the base class).
-
-      src = new InputSource(buildURLString(null, xmlFilename));
+      try
+      {
+         src = new InputSource(new FileReader(xmlFilename));
+      }
+      catch (FileNotFoundException e)
+      {
+         throw new XMLMiddlewareException(e);
+      }
       return storeDocumentInternal(configProps, mapFilename, actionFilename, src);
    }
 
@@ -493,8 +485,8 @@ public class Transfer extends PropertyProcessor
     * @param xmlString A string containing the XML to store.
     * @param configProps Configuration properties. May be null. See the introduction
     *    for details.
-    * @param mapFilename Filename or URL of the map file.
-    * @param actionFilename Filename or URL of the action file.
+    * @param mapFilename Name of the map file.
+    * @param actionFilename Name of the action file.
     * @return A FilterSet describing the stored document. This is returned only if
     *    the ReturnFilter property is set to "Yes".
     * @exception SQLException Thrown if a database error occurs.
@@ -515,8 +507,8 @@ public class Transfer extends PropertyProcessor
     *
     * @param configProps Configuration properties. May be null. See the introduction
     *    for details.
-    * @param mapFilename Filename or URL of the map file.
-    * @param actionFilename Filename or URL of the action file.
+    * @param mapFilename Name of the map file.
+    * @param actionFilename Name of the action file.
     * @param xmlStream An InputStream containing the XML to store.
     * @return A FilterSet describing the stored document. This is returned only if
     *    the ReturnFilter property is set to "Yes".
@@ -538,8 +530,8 @@ public class Transfer extends PropertyProcessor
     *
     * @param configProps Configuration properties. May be null. See the introduction
     *    for details.
-    * @param mapFilename Filename or URL of the map file.
-    * @param filterFilename Filename or URL of the filter file.
+    * @param mapFilename Name of the map file.
+    * @param filterFilename Name of the filter file.
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
     * @return A string containing the retrieved XML
@@ -561,11 +553,11 @@ public class Transfer extends PropertyProcessor
     *
     * @param configProps Configuration properties. May be null. See the introduction
     *    for details.
-    * @param mapFilename Filename or URL of the map file.
-    * @param filterFilename Filename or URL of the filter file.
+    * @param mapFilename Name of the map file.
+    * @param filterFilename Name of the filter file.
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
-    * @param xmlFilename Filename or URL of the XML file.
+    * @param xmlFilename Name of the XML file.
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
@@ -590,10 +582,10 @@ public class Transfer extends PropertyProcessor
     *
     * @param configProps Configuration properties. May be null. See the introduction
     *    for details.
-    * @param mapFilename Filename or URL of the map file.
+    * @param mapFilename Name of the map file.
     * @param selects A Properties object describing the result set. See the introduction
     *    for details.
-    * @param filterFilename Filename or URL of the filter file.
+    * @param filterFilename Name of the filter file.
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
     * @return A string containing the retrieved XML
@@ -618,13 +610,13 @@ public class Transfer extends PropertyProcessor
     *
     * @param configProps Configuration properties. May be null. See the introduction
     *    for details.
-    * @param mapFilename Filename or URL of the map file.
+    * @param mapFilename Name of the map file.
     * @param selects A Properties object describing the result set. See the introduction
     *    for details.
-    * @param filterFilename Filename or URL of the filter file.
+    * @param filterFilename Name of the filter file.
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
-    * @param xmlFilename Filename or URL of the XML file.
+    * @param xmlFilename Name of the XML file.
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
@@ -646,9 +638,9 @@ public class Transfer extends PropertyProcessor
     *
     * @param configProps Configuration properties. May be null. See the introduction
     *    for details.
-    * @param mapFilename Filename or URL of the map file.
-    * @param actionFilename Filename or URL of the action file.
-    * @param filterFilename Filename or URL of the filter file.
+    * @param mapFilename Name of the map file.
+    * @param actionFilename Name of the action file.
+    * @param filterFilename Name of the filter file.
     * @param params A Hashtable of filter parameters. May be null. Note that this may
     *    be a Properties object, since Properties inherit from Hashtable.
     * @exception SQLException Thrown if a database error occurs.
@@ -658,6 +650,7 @@ public class Transfer extends PropertyProcessor
    public void deleteDocument(Properties configProps, String mapFilename, String actionFilename, String filterFilename, Hashtable params)
       throws XMLMiddlewareException, SQLException
    {
+      String       validate;
       XMLDBMSMap   map;
       TransferInfo transferInfo;
       Actions      actions;
@@ -665,10 +658,11 @@ public class Transfer extends PropertyProcessor
 
       // Create the various objects needed by DBMSDelete.
 
-      map = createMap(mapFilename);
+      validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
+      map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
       transferInfo = createTransferInfo(map);
-      actions = createActions(map, actionFilename);
-      filterSet = createFilterSet(map, filterFilename);
+      actions = createActions(map, actionFilename, (validate.indexOf(XMLDBMSProps.ACTIONTOKEN) != -1));
+      filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
 
       // Configure the DBMSDelete object
 
@@ -710,8 +704,6 @@ public class Transfer extends PropertyProcessor
       throws XMLMiddlewareException
    {
       String           filterFile, encoding, systemID, publicID;
-      URL              filterURL;
-      URLConnection    conn;
       OutputStream     outputStream;
       Writer           writer;
       FilterSerializer serializer;
@@ -724,33 +716,18 @@ public class Transfer extends PropertyProcessor
          filterFile = props.getProperty(XMLDBMSProps.FILTERFILE);
          if (filterFile == null) return;
 
-         // We don't know if the filter filename is a URL or not. To find this
-         // out, attempt to create a URL over the file name. If there is no
-         // protocol, this will throw an exception. Hacky, but it works.
-
-         try
-         {
-            // If the filename is a URL, open the URL connection and get
-            // an output stream that writes to that connection.
-
-            filterURL = new URL(filterFile);
-            conn = filterURL.openConnection();
-            conn.setDoOutput(true);
-            outputStream = conn.getOutputStream();
-         }
-         catch (MalformedURLException m)
-         {
-            // If the filename is not a URL (i.e. it is a local filename),
-            // create an OutputStream over the file.
-
-            outputStream = new FileOutputStream(filterFile);
-         }
-
          // Get the encoding (if any) and create an OutputStreamWriter accordingly.
 
          encoding = props.getProperty(XMLDBMSProps.ENCODING);
-         writer = (encoding == null) ? new OutputStreamWriter(outputStream) :
-                                       new OutputStreamWriter(outputStream, encoding);
+         if (encoding == null)
+         {
+            writer = new FileWriter(filterFile);
+         }
+         else
+         {
+            outputStream = new FileOutputStream(filterFile);
+            writer = new OutputStreamWriter(outputStream, encoding);
+         }
 
          // Get the system ID and public ID of the filter file DTD.
 
@@ -771,7 +748,7 @@ public class Transfer extends PropertyProcessor
             serializer.serialize(filterSet, systemID, publicID);
          }
 
-         // Close the writer. It does not appear that we can/need to close the URLConnection.
+         // Close the writer.
 
          writer.close();
       }
@@ -840,6 +817,7 @@ public class Transfer extends PropertyProcessor
    private FilterSet storeDocumentInternal(Properties configProps, String mapFilename, String actionFilename, InputSource src)
       throws XMLMiddlewareException, SQLException
    {
+      String       validate;
       XMLDBMSMap   map;
       TransferInfo transferInfo;
       Actions      actions;
@@ -847,9 +825,10 @@ public class Transfer extends PropertyProcessor
 
       // Create the various objects needed by DOMToDBMS.storeDocument.
 
-      map = createMap(mapFilename);
+      validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
+      map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
       transferInfo = createTransferInfo(map);
-      actions = createActions(map, actionFilename);
+      actions = createActions(map, actionFilename, (validate.indexOf(XMLDBMSProps.ACTIONTOKEN) != -1));
 
       // Configure the DOMToDBMS object
 
@@ -857,22 +836,24 @@ public class Transfer extends PropertyProcessor
 
       // Open a DOM tree over the InputSource and store it in the database
 
-      doc = utils.openDocument(src);
+      doc = utils.openDocument(src, (validate.indexOf(XMLDBMSProps.XMLTOKEN) != -1));
       return domToDBMS.storeDocument(transferInfo, doc, actions);
    }
 
    private Document retrieveDocumentInternal(Properties configProps, String mapFilename, String filterFilename, Hashtable params)
       throws XMLMiddlewareException, SQLException
    {
+      String       validate;
       XMLDBMSMap   map;
       TransferInfo transferInfo;
       FilterSet    filterSet;
 
       // Create the various objects needed by DBMSToDOM.retrieveDocument.
 
-      map = createMap(mapFilename);
+      validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
+      map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
       transferInfo = createTransferInfo(map);
-      filterSet = createFilterSet(map, filterFilename);
+      filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
 
       // Configure the DBMSToDOM object
 
@@ -886,6 +867,7 @@ public class Transfer extends PropertyProcessor
    private Document retrieveDocumentInternal(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params)
       throws XMLMiddlewareException, SQLException
    {
+      String       validate;
       XMLDBMSMap   map;
       Hashtable    resultSets;
       TransferInfo transferInfo;
@@ -894,10 +876,11 @@ public class Transfer extends PropertyProcessor
 
       // Create the various objects needed by DBMSToDOM.retrieveDocument.
 
-      map = createMap(mapFilename);
+      validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
+      map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
       resultSets = createResultSets(selects);
       transferInfo = createTransferInfo(map);
-      filterSet = createFilterSet(map, filterFilename);
+      filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
 
       // Configure the DBMSToDOM object
 
@@ -1508,98 +1491,92 @@ public class Transfer extends PropertyProcessor
       return keyGen;
    }
 
-   private XMLDBMSMap createMap(String mapFilename)
+   private XMLDBMSMap createMap(String mapFilename, boolean validate)
       throws XMLMiddlewareException
    {
       MapCompiler compiler = null;
-      String      url;
       XMLDBMSMap  map;
-
-      // Build a URL string from the map file name. See PropertyProcessor.buildURLString
-      // for details.
-
-      url = buildURLString(null, mapFilename);
 
       // Check if we have already compiled the map file. If so, use the cached
       // XMLDBMSMap object. If not create a new map compiler and compile the map file.
 
-      map = (XMLDBMSMap)fileObjects.get(url);
+      map = (XMLDBMSMap)fileObjects.get(mapFilename);
       if (map == null)
       {
          try
          {
-            compiler = new MapCompiler(utils.getXMLReader());
+            compiler = new MapCompiler(utils.getXMLReader(validate));
+            map = compiler.compile(new InputSource(new FileReader(mapFilename)));
          }
-         catch (SAXException e)
+         catch (SAXException s)
          {
-            processSAXException(e);
+            processSAXException(s);
          }
-         map = compiler.compile(new InputSource(url));
-         fileObjects.put(url, map);
+         catch (FileNotFoundException f)
+         {
+            throw new XMLMiddlewareException(f);
+         }
+         fileObjects.put(mapFilename, map);
       }
       return map;
    }
 
-   private Actions createActions(XMLDBMSMap map, String actionFilename)
+   private Actions createActions(XMLDBMSMap map, String actionFilename, boolean validate)
       throws XMLMiddlewareException
    {
       ActionCompiler compiler = null;
-      String         url;
       Actions        actions;
-
-      // Build a URL string from the action file name. See PropertyProcessor.buildURLString
-      // for details.
-
-      url = buildURLString(null, actionFilename);
 
       // Check if we have already compiled the action file. If so, use the cached
       // Actions object. If not create a new action compiler and compile the action file.
 
-      actions = (Actions)fileObjects.get(url);
+      actions = (Actions)fileObjects.get(actionFilename);
       if (actions == null)
       {
          try
          {
-            compiler = new ActionCompiler(utils.getXMLReader());
+            compiler = new ActionCompiler(utils.getXMLReader(validate));
+            actions = compiler.compile(map, new InputSource(new FileReader(actionFilename)));
          }
-         catch (SAXException e)
+         catch (SAXException s)
          {
-            processSAXException(e);
+            processSAXException(s);
          }
-         actions = compiler.compile(map, new InputSource(url));
-         fileObjects.put(url, actions);
+         catch (FileNotFoundException f)
+         {
+            throw new XMLMiddlewareException(f);
+         }
+         fileObjects.put(actionFilename, actions);
       }
       return actions;
    }
 
-   private FilterSet createFilterSet(XMLDBMSMap map, String filterFilename)
+   private FilterSet createFilterSet(XMLDBMSMap map, String filterFilename, boolean validate)
       throws XMLMiddlewareException
    {
       FilterCompiler compiler = null;
-      String         url;
       FilterSet      filterSet;
-
-      // Build a URL string from the filter file name. See PropertyProcessor.buildURLString
-      // for details.
-
-      url = buildURLString(null, filterFilename);
 
       // Check if we have already compiled the filter file. If so, use the cached
       // FilterSet object. If not create a new filter compiler and compile the filter file.
 
-      filterSet = (FilterSet)fileObjects.get(url);
+      filterSet = (FilterSet)fileObjects.get(filterFilename);
       if (filterSet == null)
       {
          try
          {
-            compiler = new FilterCompiler(utils.getXMLReader());
+            compiler = new FilterCompiler(utils.getXMLReader(validate));
+            filterSet = compiler.compile(map, new InputSource(new FileReader(filterFilename)));
          }
-         catch (SAXException e)
+         catch (SAXException s)
          {
-            processSAXException(e);
+            processSAXException(s);
          }
-         filterSet = compiler.compile(map, new InputSource(url));
-         fileObjects.put(url, filterSet);
+         catch (FileNotFoundException f)
+         {
+            throw new XMLMiddlewareException(f);
+         }
+         fileObjects.put(filterFilename, filterSet);
       }
       return filterSet;
    }

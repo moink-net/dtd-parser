@@ -177,15 +177,14 @@ public class MapFactory_Database
 
    // General class variables
    private Connection[]   connections = null;
-   private String[]       databaseNames = null,
-                          namespaceURIs = null;
+   private String         prefix = null, uri = null;
+   private String[]       databaseNames = null;
    private boolean        useElementTypes = true,
                           followPrimaryKeys = true, followForeignKeys = true;
    private XMLDBMSMap     map = null;
    private Hashtable      processedTables = new Hashtable(),
                           conns = new Hashtable(),
-                          metas = new Hashtable(),
-                          uris = new Hashtable();
+                          metas = new Hashtable();
    private XMLNameChecker checker = new XMLNameChecker();
 
    //**************************************************************************
@@ -232,24 +231,38 @@ public class MapFactory_Database
    }
 
    /**
-    * Construct a new MapFactory_Database and set the connections, database names,
-    * and namespace URIs.
+    * Construct a new MapFactory_Database and set the connections and database names.
     *
-    * @param databaseNames An array of names for the databases in connections and URIs
-    *    in namespaceURIs.
+    * @param databaseNames An array of names for the databases in the connections argument.
     * @param connections An array of database connections.
-    * @param namespaceURIs An array of namespace URIs. Entries may be null.
     */
-   public MapFactory_Database(String[] databaseNames, Connection[] connections, String[] namespaceURIs)
+   public MapFactory_Database(String[] databaseNames, Connection[] connections)
    {
       this.databaseNames = databaseNames;
       this.connections = connections;
-      this.namespaceURIs = namespaceURIs;
    }
 
    //**************************************************************************
    // Public methods -- setting variables
    //**************************************************************************
+
+   /**
+    * Set the namespace URI and prefix of the generated element types.
+    *
+    * <p>Generated attributes are not in any namespace (are unprefixed).</p>
+    *
+    * @param uri The namespace URI. May be null.
+    * @param prefix The namespace prefix. May be null, even if the uri argument is not null.
+    */
+
+   public void setNamespaceInfo(String uri, String prefix)
+   {
+      if ((uri == null) && (prefix != null))
+         throw new IllegalArgumentException("The namespace prefix must be null if the namespace URI is null.");
+
+      this.uri = uri;
+      this.prefix = prefix;
+   }
 
    /**
     * Whether to generate child elements or attributes from columns.
@@ -276,7 +289,7 @@ public class MapFactory_Database
    /**
     * Set the database connection to use.
     *
-    * <p>The database name is set to "Default" and no namespace URI is used.</p>
+    * <p>The database name is set to "Default".</p>
     *
     * @param conn The database connection.
     */
@@ -286,22 +299,18 @@ public class MapFactory_Database
       connections[0] = conn;
       databaseNames = new String[1];
       databaseNames[0] = DEFAULT;
-      namespaceURIs = new String[1];
-      namespaceURIs[0] = null;
    }
 
    /**
-    * Set the database connections to and namespace URIs to use.
+    * Set the database connections to use.
     *
-    * @param databaseNames An array of names for the databases in connections.
+    * @param databaseNames An array of names for the databases in the connections argument.
     * @param connections An array of database connections.
-    * @param namespaceURIs An array of namespace URIs. Entries may be null.
     */
-   public void setConnections(String[] databaseNames, Connection[] connections, String[] namespaceURIs)
+   public void setConnections(String[] databaseNames, Connection[] connections)
    {
       this.databaseNames = databaseNames;
       this.connections = connections;
-      this.namespaceURIs = namespaceURIs;
    }
 
    /**
@@ -1234,10 +1243,9 @@ public class MapFactory_Database
       prefixes[2] = table.getCatalogName();
       prefixes[3] = table.getDatabaseName();
 
-      // Get an element type name for the column name, using the namespace URI of
-      // the table's database.
+      // Get an element type name for the column name.
 
-      return checker.checkElementTypeName(prefixes, (String)uris.get(prefixes[3]), column.getName());
+      return checker.checkElementTypeName(prefixes, uri, column.getName(), prefix);
    }
 
    private XMLName getElementTypeName(Table table)
@@ -1251,10 +1259,9 @@ public class MapFactory_Database
       prefixes[1] = table.getCatalogName();
       prefixes[2] = table.getDatabaseName();
 
-      // Get an element type name for the table name, using the namespace URI of
-      // the table's database.
+      // Get an element type name for the table name.
 
-      return checker.checkElementTypeName(prefixes, (String)uris.get(prefixes[2]), table.getTableName());
+      return checker.checkElementTypeName(prefixes, uri, table.getTableName(), prefix);
    }
 
    private XMLName getAttributeName(Table table, Column column, XMLName elementTypeName)
@@ -1269,9 +1276,10 @@ public class MapFactory_Database
       prefixes[2] = table.getCatalogName();
       prefixes[3] = table.getDatabaseName();
 
-      // Get an element type name for the column name, using a namespace URI of null.
+      // Get an element type name for the column name, using a namespace URI and
+      // prefix of null.
 
-      return checker.checkAttributeName(prefixes, elementTypeName, null, column.getName());
+      return checker.checkAttributeName(prefixes, elementTypeName, null, column.getName(), null);
    }
 
    //**************************************************************************
@@ -1286,7 +1294,6 @@ public class MapFactory_Database
       processedTables.clear();
       metas.clear();
       buildHashtable(conns, databaseNames, connections);
-      buildHashtable(uris, databaseNames, namespaceURIs);
       checker.startNewSession();
    }
 
@@ -1300,8 +1307,6 @@ public class MapFactory_Database
          throw new IllegalStateException("You must set at least one database name.");
       if (connections.length != databaseNames.length)
          throw new IllegalStateException("The number of connections and database names must be the same.");
-      if (connections.length != namespaceURIs.length)
-         throw new IllegalStateException("The number of namespace URIs and database names must be the same.");
       checkNullEntries(connections, CONNECTIONS);
    }
 

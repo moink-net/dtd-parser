@@ -139,7 +139,7 @@ public class DBMSToDOM
       throws SAXException, XMLMiddlewareException
    {
       this.utils = utils;
-      fragmentBuilder = new FragmentBuilder(utils.getXMLReader());
+      fragmentBuilder = new FragmentBuilder(utils.getXMLReader(false));
    }         
 
    // ************************************************************************

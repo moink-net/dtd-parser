@@ -103,15 +103,17 @@ public class XMLNameChecker
     *
     * @param prefixes An array of prefixes to prepend to the name to resolve
     *     collisions. May be null.
-    * @param uri The URI of the namespace in which the element type name resides. May be null.
+    * @param namespaceURI The URI of the namespace in which the element type name resides. May be null.
     * @param localName The local part of the element type name to check.
+    * @param namespacePrefix The prefix of the namespace in which the element type name
+    *     resides. May be null, even if the namespaceURI argument is non-null.
     * @return A unique element type name.
     * @exception XMLMiddlewareException Thrown if a valid name cannot be constructed.
     */
-   public XMLName checkElementTypeName(String[] prefixes, String uri, String localName)
+   public XMLName checkElementTypeName(String[] prefixes, String namespaceURI, String localName, String namespacePrefix)
       throws XMLMiddlewareException
    {
-      return checkName(prefixes, uri, localName, elementTypeNames);
+      return checkName(prefixes, namespaceURI, localName, namespacePrefix, elementTypeNames);
    }
 
    /**
@@ -125,12 +127,15 @@ public class XMLNameChecker
     * @param prefixes An array of prefixes to prepend to the name to resolve
     *     collisions. May be null.
     * @param elementTypeName XMLName of the element type name to which the attribute belongs.
-    * @param uri The URI of the namespace in which the attribute name resides. May be null.
+    * @param namespaceURI The URI of the namespace in which the attribute name resides.
+    *    May be null.
     * @param localName The local part of the attribute name to check.
+    * @param namespacePrefix The prefix of the namespace in which the attribute name
+    *     resides. May be null, even if the namespaceURI argument is non-null.
     * @return A unique attribute name.
     * @exception XMLMiddlewareException Thrown if a valid name cannot be constructed.
     */
-   public XMLName checkAttributeName(String[] prefixes, XMLName elementTypeName, String uri, String localName)
+   public XMLName checkAttributeName(String[] prefixes, XMLName elementTypeName, String namespaceURI, String localName, String namespacePrefix)
       throws XMLMiddlewareException
    {
       Hashtable attributeNames;
@@ -142,14 +147,14 @@ public class XMLNameChecker
          attributeHashtables.put(elementTypeName, attributeNames);
       }
 
-      return checkName(prefixes, uri, localName, attributeNames);
+      return checkName(prefixes, namespaceURI, localName, namespacePrefix, attributeNames);
    }
 
    //**************************************************************************
    // Private methods
    //**************************************************************************
 
-   private XMLName checkName(String[] prefixes, String uri, String localName, Hashtable existingNames)
+   private XMLName checkName(String[] prefixes, String namespaceURI, String localName, String namespacePrefix, Hashtable existingNames)
       throws XMLMiddlewareException
    {
       XMLName newXMLName;
@@ -159,7 +164,7 @@ public class XMLNameChecker
       // Check the characters in the local name and construct and XMLName.
 
       newLocalName = checkCharacters(localName);
-      newXMLName = XMLName.create(uri, newLocalName);
+      newXMLName = XMLName.create(namespaceURI, newLocalName, namespacePrefix);
 
       // If the XMLName is not unique, prepend the prefixes until the name
       // is unique or we run out of prefixes.
@@ -171,7 +176,7 @@ public class XMLNameChecker
          {
             prefix = checkCharacters(prefixes[i]);
             newLocalName = prefix + "." + newLocalName;
-            newXMLName = XMLName.create(uri, newLocalName);
+            newXMLName = XMLName.create(namespaceURI, newLocalName, namespacePrefix);
             if (existingNames.get(newXMLName) == null) break;
          }
 
@@ -183,7 +188,7 @@ public class XMLNameChecker
          while (existingNames.get(newXMLName) != null)
          {
             newLocalName = baseName + String.valueOf(suffix);
-            newXMLName = XMLName.create(uri, newLocalName);
+            newXMLName = XMLName.create(namespaceURI, newLocalName, namespacePrefix);
             suffix++;
          }
       }

@@ -114,6 +114,17 @@ public class FilterSerializer extends XMLWriter
    //**************************************************************************
 
    /**
+    * Set the Writer.
+    *
+    * @param writer The writer. The writer must implement the write(String,int,int)
+    *    and write(int) methods.
+   **/
+   public void setWriter(Writer writer)
+   {
+      setWriter(writer);
+   }
+
+   /**
     * Serialize a FilterSet to the filter language.
     *
     * <p>No system or public ID is written in the DOCTYPE statement.</p>

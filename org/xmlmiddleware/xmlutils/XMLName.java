@@ -495,7 +495,7 @@ public class XMLName
       checkUniversalName(universalName);
 
       separator = universalName.indexOf(SEPARATOR);
-      if (separator == -1) return null;
+      if (separator == -1) return universalName;
       return universalName.substring(separator + 1);
    }
 

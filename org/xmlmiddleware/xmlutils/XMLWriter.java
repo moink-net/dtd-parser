@@ -102,23 +102,6 @@ public class XMLWriter
                          QUOTENTITY   = "&quot;",
                          RETURN       = System.getProperty("line.separator");
 
-   private static final int lXMLDECLSTART = XMLDECLSTART.length(),
-                            lXMLDECLEND   = XMLDECLEND.length(),
-                            lENCODING     = ENCODING.length(),
-                            lSTANDALONE   = STANDALONE.length(),
-                            lYES          = YES.length(),
-                            lNO           = NO.length(),
-                            lDOCTYPESTART = DOCTYPESTART.length(),
-                            lDOCTYPEEND   = DOCTYPEEND.length(),
-                            lSYSTEMID     = SYSTEMID.length(),
-                            lPUBLICID     = PUBLICID.length(),
-                            lAMPENTITY    = AMPENTITY.length(),
-                            lLTENTITY     = LTENTITY.length(),
-                            lGTENTITY     = GTENTITY.length(),
-                            lAPOSENTITY   = APOSENTITY.length(),
-                            lQUOTENTITY   = QUOTENTITY.length(),
-                            lRETURN       = RETURN.length();
-
    private static final char QUOT   = '"',
                              APOS   = '\'',
                              LT     = '<',
@@ -215,9 +198,9 @@ public class XMLWriter
    public void writeXMLDecl()
       throws IOException
    {
-      writer.write(XMLDECLSTART, 0, lXMLDECLSTART);
+      writer.write(XMLDECLSTART);
       writeEncoding();
-      writer.write(XMLDECLEND, 0, lXMLDECLEND);
+      writer.write(XMLDECLEND);
       if (pretty) writer.write(RETURN);
    }
 
@@ -232,12 +215,12 @@ public class XMLWriter
    public void writeXMLDecl(boolean standalone)
       throws IOException
    {
-      writer.write(XMLDECLSTART, 0, lXMLDECLSTART);
+      writer.write(XMLDECLSTART);
       writeEncoding();
-      writer.write(STANDALONE, 0, lSTANDALONE);
+      writer.write(STANDALONE);
       writeQuotedValue(standalone ? YES : NO);
-      writer.write(XMLDECLEND, 0, lXMLDECLEND);
-      if (pretty) writer.write(RETURN, 0, lRETURN);
+      writer.write(XMLDECLEND);
+      if (pretty) writer.write(RETURN);
    }
 
    /**
@@ -252,11 +235,11 @@ public class XMLWriter
    public void writeDOCTYPE(String root, String systemID, String publicID)
       throws IOException
    {
-      writer.write(DOCTYPESTART, 0, lDOCTYPESTART);
-      writer.write(root, 0, root.length());
+      writer.write(DOCTYPESTART);
+      writer.write(root);
       if (publicID != null)
       {
-         writer.write(PUBLICID, 0, lPUBLICID);
+         writer.write(PUBLICID);
          writeQuotedValue(publicID);
          writer.write(SPACE);
       }
@@ -264,11 +247,11 @@ public class XMLWriter
       {
          if (publicID == null)
          {
-            writer.write(SYSTEMID, 0, lSYSTEMID);
+            writer.write(SYSTEMID);
          }
          writeQuotedValue(systemID);
       }
-      writer.write(DOCTYPEEND, 0, lDOCTYPEEND);
+      writer.write(DOCTYPEEND);
       if (pretty) writer.write(RETURN);
    }
 
@@ -293,20 +276,20 @@ public class XMLWriter
 
       if (!charsWritten && pretty)
       {
-         writer.write(RETURN, 0, lRETURN);
+         writer.write(RETURN);
          indent();
       }
 
       // Write the element start tag, including any attributes.
 
       writer.write(LT);
-      writer.write(name, 0, name.length());
+      writer.write(name);
       if (attrs != null)
       {
          for (int i = 0; i < numAttrs; i++)
          {
             writer.write(SPACE);
-            writer.write(attrs[i], 0, attrs[i].length());
+            writer.write(attrs[i]);
             writer.write(EQUALS);
             writeAttributeValue(values[i]);
          }
@@ -353,7 +336,7 @@ public class XMLWriter
          // If the element being ended had element or empty content and we are
          // pretty printing, then start a new line and indent.
 
-         writer.write(RETURN, 0, lRETURN);
+         writer.write(RETURN);
          indent();
       }
 
@@ -365,7 +348,7 @@ public class XMLWriter
 
       writer.write(LT);
       writer.write(SLASH);
-      writer.write(name, 0, name.length());
+      writer.write(name);
       writer.write(GT);
       writer.flush();
    }
@@ -448,7 +431,7 @@ public class XMLWriter
          encoding = ((OutputStreamWriter)writer).getEncoding();
          if (encoding != null)
          {
-            writer.write(ENCODING, 0, lENCODING);
+            writer.write(ENCODING);
             writeQuotedValue(encoding);
          }
       }
@@ -467,7 +450,7 @@ public class XMLWriter
 
       quote = getQuote(value);
       writer.write(quote);
-      writer.write(value, 0, value.length());
+      writer.write(value);
       writer.write(quote);
    }
 

@@ -101,7 +101,7 @@ public class MapFactory_DTD
    private int           orderType = ORDER_NONE;
    private Connection    conn;
    private DBNameChecker checker = new DBNameChecker();
-   private String        catalogName, schemaName;
+   private String        databaseName = DEFAULT, catalogName = null, schemaName = null;
 
    //**************************************************************************
    // Constants
@@ -111,7 +111,8 @@ public class MapFactory_DTD
    // Replace ID with PK and FK.
 
    private static final Object OBJ = new Object();
-   private static String       ORDER = "Order",
+   private static String       DEFAULT = "Default",
+                               ORDER = "Order",
                                PK = "PK",
                                FK = "FK",
                                PCDATA = "PCDATA",
@@ -192,11 +193,13 @@ public class MapFactory_DTD
    /**
     * Set the catalog and schema names to use in the map.
     *
+    * @param databaseName The database name. If this is null, "DEFAULT" will be used.
     * @param catalogName The catalog name. May be null.
     * @param schemaName The schema name. May be null.
     */
-   public void setDatabaseNames(String catalogName, String schemaName)
+   public void setDatabaseNames(String databaseName, String catalogName, String schemaName)
    {
+      this.databaseName = (databaseName != null) ? databaseName : DEFAULT;
       this.catalogName = catalogName;
       this.schemaName = schemaName;
    }
@@ -208,8 +211,7 @@ public class MapFactory_DTD
     * @param src A SAX InputSource representing the document.
     * @param type DTD_EXTERNAL or DTD_XMLDOCUMENT.
     * @param namespaceURIs A Hashtable using prefixes as keys and namespace
-    *    URIs as values. Used to determine universal names of elements and attributes.
-    *    May be null.
+    *    URIs as values. The prefixes correspond to those used in the DTD. May be null.
     * @return The XMLDBMSMap object.
     * @exception XMLMiddlewareException Thrown if a DTD or map error occurs.
     * @exception IOException Thrown if an IO exception occurs parsing the DTD.
@@ -595,6 +597,7 @@ public class MapFactory_DTD
    {
       PropertyMap propMap;
       Table       table;
+      Column      column;
       LinkInfo    linkInfo;
       int         nullable;
       OrderInfo   orderInfo;
@@ -647,7 +650,8 @@ public class MapFactory_DTD
 
       nullable = (!multiValued && optional) ? DatabaseMetaData.columnNullable :
                                               DatabaseMetaData.columnNoNulls;
-      createColumn(table, name.getLocalName(), Types.VARCHAR, 255, nullable);
+      column = createColumn(table, name.getLocalName(), Types.VARCHAR, 255, nullable);
+      propMap.setColumn(column);
 
       // Create order information in the map as requested.
 
@@ -788,7 +792,7 @@ public class MapFactory_DTD
       // create a new table.
 
       tableName = checker.checkTableName(catalogName, schemaName, name);
-      table = map.createTable(null, catalogName, schemaName, tableName);
+      table = map.createTable(databaseName, catalogName, schemaName, tableName);
 
       // Create the primary key.
 

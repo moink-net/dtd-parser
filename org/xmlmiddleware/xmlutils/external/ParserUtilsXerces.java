@@ -52,6 +52,12 @@ import javax.xml.parsers.SAXParserFactory;
 public class ParserUtilsXerces implements ParserUtils
 {
    // ***********************************************************************
+   // Constants
+   // ***********************************************************************
+
+   private static final String VALIDATION = "http://xml.org/sax/features/validation";
+
+   // ***********************************************************************
    // Constructors
    // ***********************************************************************
 
@@ -70,20 +76,23 @@ public class ParserUtilsXerces implements ParserUtils
     * Return an object that wraps an XMLReader.  The XMLReader is wrapped
     * within the SAXParser.
     *
-    * @return  XMLReader wrapped within a SAXParser
-    * @exception  XMLMiddlewareException thrown when the SAXParserFactory encounters
+    * @param validating Whether the XMLReader performs validation.
+    * @return XMLReader wrapped within a SAXParser
+    * @exception XMLMiddlewareException thrown when the SAXParserFactory encounters
     *          a problem creating a new SAXParser
     */
-   public XMLReader getXMLReader()
+   public XMLReader getXMLReader(boolean validating)
       throws XMLMiddlewareException
    {
       // Instantiate a SAXParser using the SAXParserFactory.
       // This process ensures compatability across multiple version of Xerces
 
       SAXParserFactory factory = SAXParserFactory.newInstance();
+      factory.setValidating(validating);
       try
       {
          // Return the XMLReader that is wrapped by the SAXParser
+
          return factory.newSAXParser().getXMLReader();
       }
       catch (Exception e)
@@ -115,12 +124,14 @@ public class ParserUtilsXerces implements ParserUtils
    /**
     * Open an InputSource and create a DOM Document
     *
-    * @param   src SAX InputSource to be parsed into a Document
-    * @return  Document containing a DOM representation of InputSource
-    * @exception  XMLMiddlewareException Thrown if there is a problem parsing the
+    * @param src SAX InputSource to be parsed into a Document
+    * @param validate Whether the InputSource is validated.
+    *
+    * @return Document containing a DOM representation of InputSource
+    * @exception XMLMiddlewareException Thrown if there is a problem parsing the
     *          InputSource
     */
-   public Document openDocument(InputSource src)
+   public Document openDocument(InputSource src, boolean validate)
       throws XMLMiddlewareException
    {
       // Instantiate a DocumentBuilder parser using the DocumentBuilderFactory.
@@ -128,6 +139,7 @@ public class ParserUtilsXerces implements ParserUtils
 
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
+      factory.setValidating(validate);
       try
       {
          DocumentBuilder builder = factory.newDocumentBuilder();

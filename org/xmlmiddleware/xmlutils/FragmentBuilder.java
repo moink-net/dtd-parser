@@ -61,6 +61,11 @@ public class FragmentBuilder implements ContentHandler
    // Constructors
    // ************************************************************************
 
+   /**
+    * Construct a new FragmentBuilder.
+    *
+    * @param xmlReader An XMLReader. This must be non-validating.
+    */
    public FragmentBuilder(XMLReader xmlReader)
       throws SAXException
    {
@@ -76,6 +81,13 @@ public class FragmentBuilder implements ContentHandler
    // Public methods
    // ************************************************************************
 
+   /**
+    * Construct a new document fragment.
+    *
+    * @param doc The document to which the fragment will belong.
+    * @param xml The XML string to parse. Must be well-formed.
+    * @return The DocumentFragment
+    */
    public DocumentFragment parse(Document doc, String xml)
       throws SAXException, IOException
    {

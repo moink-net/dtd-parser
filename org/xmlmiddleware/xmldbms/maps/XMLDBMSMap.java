@@ -550,19 +550,12 @@ public class XMLDBMSMap extends MapBase
     *
     * @param prefix The namespace prefix.
     *
-    * @return The namespace URI.
-    * @exception XMLMiddlewareException Thrown if the prefix is not found.
+    * @return The namespace URI. Null if the prefix is not used.
     */
    public final String getNamespaceURI(String prefix)
-      throws XMLMiddlewareException
    {
-      String uri;
-
       checkArgNull(prefix, ARG_PREFIX);
-      uri = (String)uris.get(prefix);
-      if (uri == null)
-         throw new XMLMiddlewareException("Prefix not found: " + prefix);
-      return uri;
+      return (String)uris.get(prefix);
    }
 
    /**
@@ -570,25 +563,18 @@ public class XMLDBMSMap extends MapBase
     *
     * @param uri The namespace URI.
     *
-    * @return The namespace prefix.
-    * @exception XMLMiddlewareException Thrown if the URI is not found.
+    * @return The namespace prefix. Null if the URI is not used.
     */
    public final String getNamespacePrefix(String uri)
-      throws XMLMiddlewareException
    {
-      String prefix;
-
       checkArgNull(uri, ARG_URI);
-      prefix = (String)prefixes.get(uri);
-      if (prefix == null)
-         throw new XMLMiddlewareException("URI not found: " + uri);
-      return prefix;
+      return (String)prefixes.get(uri);
    }
 
    /**
     * Get a Hashtable containing all namespace URIs hashed by prefix.
     *
-    * @return The Hashtable.
+    * @return The Hashtable. May be empty.
     */
    public final Hashtable getNamespaceURIs()
    {
@@ -598,7 +584,7 @@ public class XMLDBMSMap extends MapBase
    /**
     * Get a Hashtable containing all namespace prefixes hashed by URI.
     *
-    * @return The Hashtable.
+    * @return The Hashtable. May be empty.
     */
    public final Hashtable getNamespacePrefixes()
    {

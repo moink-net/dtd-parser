@@ -56,18 +56,14 @@ public class DDLGenerator
    // Class variables
    //**************************************************************************
 
-   private String m_quote;
-   private String m_catalogSeparator;
-   private boolean m_isCatalogAtStart;
-   private boolean m_useCatalog;
-   private boolean m_useSchema;
-   private Hashtable typeNames = new Hashtable();
-   private Hashtable createParams = new Hashtable();
+   private Hashtable dbInfos;
+   private DBInfo    dbInfo;
 
    //**************************************************************************
    // Constants
    //**************************************************************************
 
+   private final static String DEFAULT        = "Default";
    private final static String CREATETABLE    = "CREATE TABLE";
    private final static String NULL           = "NULL";
    private final static String NOTNULL        = "NOT NULL";
@@ -76,10 +72,10 @@ public class DDLGenerator
    private final static String UNIQUE         = "UNIQUE";
    private final static String FOREIGNKEY     = "FOREIGN KEY";
    private final static String REFERENCES     = "REFERENCES";
-   private final static String LENGTH         = "length";
-   private final static String PRECISION      = "precision";
-   private final static String SCALE          = "scale";
-   private final static String PRECISIONSCALE = "precision, scale";
+   private final static String LENGTH         = "LENGTH";
+   private final static String PRECISION      = "PRECISION";
+   private final static String SCALE          = "SCALE";
+   private final static String PRECISIONSCALE = "PRECISION, SCALE";
 
 
    //**************************************************************************
@@ -92,6 +88,8 @@ public class DDLGenerator
     */
    public DDLGenerator()
    {
+      dbInfos = null;
+      dbInfo = new DBInfo();
       initDatabaseMetadata();
       initDataTypeMetadata();
    }
@@ -99,14 +97,58 @@ public class DDLGenerator
    /**
     * Construct a new DDLGenerator.
     *
+    * @param databaseName The name of the database to which the DatabaseMetaData
+    *    object applies. If this is null, "Default" is used.
     * @param meta A DatabaseMetaData object.
     * @exception SQLException Thrown if an error occurs retrieving database metadata.
     */
-   public DDLGenerator(DatabaseMetaData meta)
+   public DDLGenerator(String databaseName, DatabaseMetaData meta)
       throws SQLException
    {
-      initDatabaseMetadata(meta);
-      initDataTypeMetadata(meta);
+      // Use "Default" if no database name is specified.
+
+      if (databaseName == null) databaseName = DEFAULT;
+
+      // Create a new DBInfo object.
+
+      dbInfo = new DBInfo();
+      dbInfos = new Hashtable();
+      dbInfos.put(databaseName, dbInfo);
+
+      // Initialize the database metadata
+
+      initDatabaseMetadata(databaseName, meta);
+      initDataTypeMetadata(databaseName, meta);
+   }
+
+   /**
+    * Construct a new DDLGenerator.
+    *
+    * @param databaseNames The names of the databases to which the DatabaseMetaData
+    *    objects apply.
+    * @param metas DatabaseMetaData objects.
+    * @exception SQLException Thrown if an error occurs retrieving database metadata.
+    */
+   public DDLGenerator(String[] databaseNames, DatabaseMetaData[] metas)
+      throws SQLException
+   {
+      dbInfos = new Hashtable();
+
+      for (int i = 0; i < databaseNames.length; i++)
+      {
+         if (dbInfos.get(databaseNames[i]) != null)
+            throw new IllegalArgumentException("Database name used more than once: " + databaseNames[i]);
+
+         // Create a new DBInfo object.
+
+         dbInfo = new DBInfo();
+         dbInfos.put(databaseNames[i], dbInfo);
+
+         // Initialize the database metadata
+
+         initDatabaseMetadata(databaseNames[i], metas[i]);
+         initDataTypeMetadata(databaseNames[i], metas[i]);
+      }
    }
 
    //**************************************************************************
@@ -119,7 +161,7 @@ public class DDLGenerator
     * @param map The map
     * @return A Vector of CREATE TABLE strings
     */
-   public Vector getCreateTables(XMLDBMSMap map)
+   public Vector getCreateTableStrings(XMLDBMSMap map)
    {
       Enumeration  tables;
       Table        table;
@@ -129,7 +171,7 @@ public class DDLGenerator
       while (tables.hasMoreElements())
       {
          table = (Table)tables.nextElement();
-         strings.addElement(getCreateTable(table));
+         strings.addElement(getCreateTableString(table));
       }
       return strings;
    }
@@ -140,13 +182,23 @@ public class DDLGenerator
     * @param table The table
     * @return The CREATE TABLE string
     */
-   public String getCreateTable(Table table)
+   public String getCreateTableString(Table table)
    {
       StringBuffer sb = new StringBuffer();
       boolean      needComma;
       Enumeration  columns, keys;
       Column       column;
       Key          key;
+
+      // Get the correct metadata for the database. Note that if no DatabaseMetaData
+      // objects were passed in, we use the default metadata.
+
+      if (dbInfos != null)
+      {
+         dbInfo = (DBInfo)dbInfos.get(table.getDatabaseName());
+         if (dbInfo == null)
+            throw new IllegalArgumentException("No DatabaseMetaData object specified for the " + table.getDatabaseName() + " database.");
+      }
 
       // Start the CREATE TABLE statement
 
@@ -216,24 +268,24 @@ public class DDLGenerator
       StringBuffer sb = new StringBuffer();
 
       // 6/9/00, Ruben Lainez, Ronald Bourret
-      // Use the identifier m_quote character for the table name.
+      // Use the identifier quote character for the table name.
 
       // If the catalog name exists, is used, and is at the start of the qualified
       // name, add it now.
 
-      if (m_useCatalog)
+      if (dbInfo.useCatalog)
       {
          catalog = table.getCatalogName();
-         if ((catalog != null) && (m_isCatalogAtStart))
+         if ((catalog != null) && (dbInfo.isCatalogAtStart))
          {
             sb.append(getQuotedName(catalog));
-            sb.append(m_catalogSeparator);
+            sb.append(dbInfo.catalogSeparator);
          }
       }
  
       // If the schema name exists and is used, add it now.
 
-      if (m_useSchema)
+      if (dbInfo.useSchema)
       {
          schema = table.getSchemaName();
          if(schema != null)
@@ -250,11 +302,11 @@ public class DDLGenerator
       // If the catalog name exists, is used, and is at the end of the qualified
       // name, add it now.
 
-      if (m_useCatalog)
+      if (dbInfo.useCatalog)
       {
-         if ((catalog != null) && (!m_isCatalogAtStart))
+         if ((catalog != null) && (!dbInfo.isCatalogAtStart))
          {
-            sb.append(m_catalogSeparator);
+            sb.append(dbInfo.catalogSeparator);
             sb.append(getQuotedName(catalog));
          }
       }
@@ -286,9 +338,9 @@ public class DDLGenerator
 
       // Create a quoted name.
 
-      sb.append(m_quote);
+      sb.append(dbInfo.quote);
       sb.append(name);
-      sb.append(m_quote);
+      sb.append(dbInfo.quote);
       return sb.toString();
    }
 
@@ -297,25 +349,25 @@ public class DDLGenerator
       int          type, value = 0;
       StringBuffer sb = new StringBuffer();
       String       params;
-      int[]        positions = new int[3];
+      long[]       positions = new long[3];
       String[]     paramTypes = {LENGTH, PRECISION, SCALE};
       boolean      exists, firstParam;
 
       // Get the type and the type name.
 
       type = column.getType();
-      sb.append((String)typeNames.get(new Integer(type)));
+      sb.append((String)dbInfo.typeNames.get(new Integer(type)));
 
       // Get the parameters for the type, such as length in VARCHAR(length)
 
-      params = (String)createParams.get(new Integer(type));
+      params = (String)dbInfo.createParams.get(new Integer(type));
       if (params != null)
       {
          // Parse the parameters and find out which ones are present.
 
-         positions[0] = params.indexOf(LENGTH);
-         positions[1] = params.indexOf(PRECISION);
-         positions[2] = params.indexOf(SCALE);
+         positions[0] = (long)params.indexOf(LENGTH);
+         positions[1] = (long)params.indexOf(PRECISION);
+         positions[2] = (long)params.indexOf(SCALE);
 
          // Sort the parameters.
 
@@ -419,6 +471,8 @@ public class DDLGenerator
 
       // Set the constraint name
 
+      sb.append(',');
+      sb.append(' ');
       sb.append(CONSTRAINT);
       sb.append(' ');
       sb.append(key.getName());
@@ -447,6 +501,7 @@ public class DDLGenerator
       sb.append(' ');
       sb.append('(');
       sb.append(getKeyColumns(key));
+      sb.append(')');
 
       // Add a REFERENCES clause for foreign keys
 
@@ -488,64 +543,64 @@ public class DDLGenerator
 
    private void initDatabaseMetadata()
    {
-      m_quote = "\"";
-      m_isCatalogAtStart = true;
-      m_catalogSeparator = ".";
-      m_useCatalog = true;
-      m_useSchema = true;
+      dbInfo.quote = "\"";
+      dbInfo.isCatalogAtStart = true;
+      dbInfo.catalogSeparator = ".";
+      dbInfo.useCatalog = true;
+      dbInfo.useSchema = true;
    }
 
-   private void initDatabaseMetadata(DatabaseMetaData meta)
+   private void initDatabaseMetadata(String databaseName, DatabaseMetaData meta)
       throws SQLException
    {
-      m_quote = meta.getIdentifierQuoteString();
-      if (m_quote == null) m_quote = "";
-      m_isCatalogAtStart = meta.isCatalogAtStart();
-      m_catalogSeparator = meta.getCatalogSeparator();
-      if (m_catalogSeparator == null) m_catalogSeparator = ".";
-      if (m_catalogSeparator.length() == 0) m_catalogSeparator = ".";
-      m_useCatalog = meta.supportsCatalogsInTableDefinitions();
-      m_useSchema = meta.supportsSchemasInTableDefinitions();
+      dbInfo.quote = meta.getIdentifierQuoteString();
+      if (dbInfo.quote == null) dbInfo.quote = "";
+      dbInfo.isCatalogAtStart = meta.isCatalogAtStart();
+      dbInfo.catalogSeparator = meta.getCatalogSeparator();
+      if (dbInfo.catalogSeparator == null) dbInfo.catalogSeparator = ".";
+      if (dbInfo.catalogSeparator.length() == 0) dbInfo.catalogSeparator = ".";
+      dbInfo.useCatalog = meta.supportsCatalogsInTableDefinitions();
+      dbInfo.useSchema = meta.supportsSchemasInTableDefinitions();
    }
 
    private void initDataTypeMetadata()
    {
       // Use the default names
 
-      typeNames.put(new Integer(Types.BIGINT), JDBCTypes.getName(Types.BIGINT));
-      typeNames.put(new Integer(Types.BINARY), JDBCTypes.getName(Types.BINARY));
-      typeNames.put(new Integer(Types.BIT), JDBCTypes.getName(Types.BIT));
-      typeNames.put(new Integer(Types.CHAR), JDBCTypes.getName(Types.CHAR));
-      typeNames.put(new Integer(Types.DATE), JDBCTypes.getName(Types.DATE));
-      typeNames.put(new Integer(Types.DECIMAL), JDBCTypes.getName(Types.DECIMAL));
-      typeNames.put(new Integer(Types.DOUBLE), JDBCTypes.getName(Types.DOUBLE));
-      typeNames.put(new Integer(Types.FLOAT), JDBCTypes.getName(Types.FLOAT));
-      typeNames.put(new Integer(Types.INTEGER), JDBCTypes.getName(Types.INTEGER));
-      typeNames.put(new Integer(Types.LONGVARBINARY), JDBCTypes.getName(Types.LONGVARBINARY));
-      typeNames.put(new Integer(Types.LONGVARCHAR), JDBCTypes.getName(Types.LONGVARCHAR));
-      typeNames.put(new Integer(Types.NUMERIC), JDBCTypes.getName(Types.NUMERIC));
-      typeNames.put(new Integer(Types.REAL), JDBCTypes.getName(Types.REAL));
-      typeNames.put(new Integer(Types.SMALLINT), JDBCTypes.getName(Types.SMALLINT));
-      typeNames.put(new Integer(Types.TIME), JDBCTypes.getName(Types.TIME));
-      typeNames.put(new Integer(Types.TIMESTAMP), JDBCTypes.getName(Types.TIMESTAMP));
-      typeNames.put(new Integer(Types.TINYINT), JDBCTypes.getName(Types.TINYINT));
-      typeNames.put(new Integer(Types.VARBINARY), JDBCTypes.getName(Types.VARBINARY));
-      typeNames.put(new Integer(Types.VARCHAR), JDBCTypes.getName(Types.VARCHAR));
+      dbInfo.typeNames.put(new Integer(Types.BIGINT), JDBCTypes.getName(Types.BIGINT));
+      dbInfo.typeNames.put(new Integer(Types.BINARY), JDBCTypes.getName(Types.BINARY));
+      dbInfo.typeNames.put(new Integer(Types.BIT), JDBCTypes.getName(Types.BIT));
+      dbInfo.typeNames.put(new Integer(Types.CHAR), JDBCTypes.getName(Types.CHAR));
+      dbInfo.typeNames.put(new Integer(Types.DATE), JDBCTypes.getName(Types.DATE));
+      dbInfo.typeNames.put(new Integer(Types.DECIMAL), JDBCTypes.getName(Types.DECIMAL));
+      dbInfo.typeNames.put(new Integer(Types.DOUBLE), JDBCTypes.getName(Types.DOUBLE));
+      dbInfo.typeNames.put(new Integer(Types.FLOAT), JDBCTypes.getName(Types.FLOAT));
+      dbInfo.typeNames.put(new Integer(Types.INTEGER), JDBCTypes.getName(Types.INTEGER));
+      dbInfo.typeNames.put(new Integer(Types.LONGVARBINARY), JDBCTypes.getName(Types.LONGVARBINARY));
+      dbInfo.typeNames.put(new Integer(Types.LONGVARCHAR), JDBCTypes.getName(Types.LONGVARCHAR));
+      dbInfo.typeNames.put(new Integer(Types.NUMERIC), JDBCTypes.getName(Types.NUMERIC));
+      dbInfo.typeNames.put(new Integer(Types.REAL), JDBCTypes.getName(Types.REAL));
+      dbInfo.typeNames.put(new Integer(Types.SMALLINT), JDBCTypes.getName(Types.SMALLINT));
+      dbInfo.typeNames.put(new Integer(Types.TIME), JDBCTypes.getName(Types.TIME));
+      dbInfo.typeNames.put(new Integer(Types.TIMESTAMP), JDBCTypes.getName(Types.TIMESTAMP));
+      dbInfo.typeNames.put(new Integer(Types.TINYINT), JDBCTypes.getName(Types.TINYINT));
+      dbInfo.typeNames.put(new Integer(Types.VARBINARY), JDBCTypes.getName(Types.VARBINARY));
+      dbInfo.typeNames.put(new Integer(Types.VARCHAR), JDBCTypes.getName(Types.VARCHAR));
 
       // Use the default create parameters
 
-      createParams.put(new Integer(Types.BINARY), LENGTH);
-      createParams.put(new Integer(Types.CHAR), LENGTH);
-      createParams.put(new Integer(Types.DECIMAL), PRECISIONSCALE);
-      createParams.put(new Integer(Types.FLOAT), PRECISION);
-      createParams.put(new Integer(Types.LONGVARBINARY), LENGTH);
-      createParams.put(new Integer(Types.LONGVARCHAR), LENGTH);
-      createParams.put(new Integer(Types.NUMERIC), PRECISIONSCALE);
-      createParams.put(new Integer(Types.VARBINARY), LENGTH);
-      createParams.put(new Integer(Types.VARCHAR), LENGTH);
+      dbInfo.createParams.put(new Integer(Types.BINARY), LENGTH);
+      dbInfo.createParams.put(new Integer(Types.CHAR), LENGTH);
+      dbInfo.createParams.put(new Integer(Types.DECIMAL), PRECISIONSCALE);
+      dbInfo.createParams.put(new Integer(Types.FLOAT), PRECISION);
+      dbInfo.createParams.put(new Integer(Types.LONGVARBINARY), LENGTH);
+      dbInfo.createParams.put(new Integer(Types.LONGVARCHAR), LENGTH);
+      dbInfo.createParams.put(new Integer(Types.NUMERIC), PRECISIONSCALE);
+      dbInfo.createParams.put(new Integer(Types.VARBINARY), LENGTH);
+      dbInfo.createParams.put(new Integer(Types.VARCHAR), LENGTH);
    }
 
-   private void initDataTypeMetadata(DatabaseMetaData meta)
+   private void initDataTypeMetadata(String databaseName, DatabaseMetaData meta)
       throws SQLException
    {
       ResultSet rs;
@@ -564,17 +619,41 @@ public class DDLGenerator
          params = rs.getString(6);
          if (rs.wasNull()) params = null;
 
-         // Store the type name and create parameters.
+         // Store the type name and create parameters. Note that we check first to see
+         // if the type indicator is already used. This is because the database might
+         // map multiple data types to the same indicator. Although the JDBC spec is
+         // (annoyingly, but not surprisingly) silent on this case, the ODBC spec says
+         // that types with the same indicator are to be returned in the order from
+         // those that most closely match the SQL type to those that least closely
+         // match it. Therefore, for a given indicator, we use the type returned first.
 
-         typeNames.put(type, typeName);
-         if (params != null)
+         if (dbInfo.typeNames.get(type) == null)
          {
-            createParams.put(type, params);
+            dbInfo.typeNames.put(type, typeName);
+            if (params != null)
+            {
+               dbInfo.createParams.put(type, params.toUpperCase());
+            }
          }
       }
 
       // Close the result set.
 
       rs.close();
+   }
+
+   //**************************************************************************
+   // Inner class
+   //**************************************************************************
+
+   private class DBInfo
+   {
+      String    quote = null;
+      String    catalogSeparator = null;
+      boolean   isCatalogAtStart = true;
+      boolean   useCatalog = true;
+      boolean   useSchema = true;
+      Hashtable typeNames = new Hashtable();
+      Hashtable createParams = new Hashtable();
    }
 }

@@ -276,13 +276,24 @@ public class MetadataInitializer
       Column     column;
       boolean    tableFound = false;
       int        rsIndex = 1, type, length, scale, precision, nullability;
+      String     catalogName, schemaName, tableName;
+      char[]     escape;
 
       try
       {
+         // Build the catalog, schema, and table names as needed.
+
+         escape = meta.getSearchStringEscape().toCharArray();
+         catalogName = (meta.supportsCatalogsInDataManipulation()) ?
+                        table.getCatalogName() : null;
+         schemaName = (meta.supportsSchemasInDataManipulation()) ?
+                       escapeDBName(table.getSchemaName(), escape) : null;
+         tableName = escapeDBName(table.getTableName(), escape);
+
          // Get the column metadata result set and process it. Column 4 is column
          // name, column 5 is data type, and column 7 is length in characters.
 
-         rs = meta.getColumns(table.getCatalogName(), table.getSchemaName(), table.getTableName(), null);
+         rs = meta.getColumns(catalogName, schemaName, tableName, null);
 
          while (rs.next())
          {
@@ -352,6 +363,46 @@ public class MetadataInitializer
       {
          throw new XMLMiddlewareException(e);
       }
+   }
+
+   private String escapeDBName(String name, char[] escape)
+   {
+      char[] src, dest;
+      int    len = 0;
+
+      // Allocate the src and dest arrays. Note that the dest array is
+      // allocated for the maximum size -- as if every character needed
+      // to be escaped.
+
+      src = name.toCharArray();
+      dest = new char[name.length() * (escape.length + 1)];
+
+      // Copy characters from the old name to the new name, escaping
+      // them as necessary.
+
+      for (int i = 0; i < name.length(); i++)
+      {
+         if ((src[i] == '_') || (src[i] == '%'))
+         {
+            // If the character used in the name is a JDBC wildcard
+            // character, escape it.
+
+            for (int j = 0; j < escape.length; j++)
+            {
+               dest[len] = escape[j];
+               len++;
+            }
+         }
+
+         // Copy the character.
+
+         dest[len] = src[i];
+         len++;
+      }
+
+      // Return the new string.
+
+      return new String(dest, 0, len);
    }
 
    private void setColumnMetadata(Column column, int rsIndex, int type, int nullability, int length, int precision, int scale)

@@ -63,8 +63,9 @@ public class DBNameChecker
    private int              maxColumnNameLen,
                             maxColumnsInTable,
                             maxTableNameLen;
-   private boolean          mixedCase, lowerCase, upperCase;
+   private boolean          mixedCase, lowerCase, upperCase, useCatalogs, useSchemas;
    private Hashtable        catalogNames = new Hashtable();
+   private char[]           escape;
 
    //**************************************************************************
    // Constants
@@ -245,6 +246,9 @@ String tableName)
       mixedCase = false;
       lowerCase = false;
       upperCase = true;
+      escape = new char[0];
+      useCatalogs = false;
+      useSchemas = false;
    }
 
    private void initialize(Connection conn)
@@ -259,6 +263,9 @@ String tableName)
                   meta.storesMixedCaseQuotedIdentifiers();
       lowerCase = meta.storesLowerCaseQuotedIdentifiers();
       upperCase = meta.storesUpperCaseQuotedIdentifiers();
+      escape = meta.getSearchStringEscape().toCharArray();
+      useCatalogs = meta.supportsCatalogsInDataManipulation();
+      useSchemas = meta.supportsSchemasInDataManipulation();
    }
 
    private Hashtable getTableNames(String catalogName, String schemaName)
@@ -315,7 +322,7 @@ String tableName)
 
          if (((character >= '0') && (character <= '9')) ||
              ((character >= 'a') && (character <= 'z')) ||
-             ((character >= 'A') && (character >= 'Z')) ||
+             ((character >= 'A') && (character <= 'Z')) ||
              (character == '_'))
          {
             newName[position++] = character;
@@ -448,14 +455,71 @@ String tableName)
 
       if (meta == null) return false;
 
+      // Check if we even use the catalog and schema names. Search the schema 
+      // and table name for JDBC wild card characters and escape them.
+
+      if (!useCatalogs)
+      {
+         catalogName = null;
+      }
+      if (!useSchemas)
+      {
+         schemaName = null;
+      }
+      else
+      {
+         schemaName = escapeDBName(schemaName);
+      }
+      tableName = escapeDBName(tableName);
+
       // Get the row for the specified catalog, schema, and table, if any.
-      // If the result set contains any rows, then the table is
-      // already in the database.
+      // If the result set contains any rows, then the table is already
+      // in the database.
 
       rs = meta.getTables(catalogName, schemaName, tableName, null);
       tableFound = rs.next();
       rs.close();
       return tableFound;
+   }
+
+   private String escapeDBName(String name)
+   {
+      char[] src, dest;
+      int    len = 0;
+
+      // Allocate the src and dest arrays. Note that the dest array is
+      // allocated for the maximum size -- as if every character needed
+      // to be escaped.
+
+      src = name.toCharArray();
+      dest = new char[name.length() * (escape.length + 1)];
+
+      // Copy characters from the old name to the new name, escaping
+      // them as necessary.
+
+      for (int i = 0; i < name.length(); i++)
+      {
+         if ((src[i] == '_') || (src[i] == '%'))
+         {
+            // If the character used in the name is a JDBC wildcard
+            // character, escape it.
+
+            for (int j = 0; j < escape.length; j++)
+            {
+               dest[len] = escape[j];
+               len++;
+            }
+         }
+
+         // Copy the character.
+
+         dest[len] = src[i];
+         len++;
+      }
+
+      // Return the new string.
+
+      return new String(dest, 0, len);
    }
 
    private String getSuffixedName(String inputName, int suffixNum, int maxLength)

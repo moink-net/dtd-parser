@@ -21,12 +21,12 @@
 package org.xmlmiddleware.xmldbms.tools;
 
 /**
- * Properties constants for Transfer and MapGenerator.
+ * Properties constants for Transfer and MapManager.
  *
  * @author Adam Flinton
  * @author Ronald Bourret
  * @version 2.0
- * @see MapGenerator
+ * @see MapManager
  * @see Transfer
  * @see PropertyProcessor
  */
@@ -40,6 +40,7 @@ public class XMLDBMSProps
    // Parser properties
 
    public static String PARSERUTILSCLASS = "ParserUtilsClass";
+   public static String VALIDATE = "Validate";
 
    // Database properties
 
@@ -53,17 +54,31 @@ public class XMLDBMSProps
    public static String JNDICONTEXT = "JNDIContext";
    public static String JNDILOOKUPNAME = "JNDILookupName";
 
-   // Transfer properties
+   // Transfer and map manager properties
 
    public static String METHOD = "Method";
+   public static String INPUT = "Input";
+   public static String OUTPUT = "Output";
+
    public static String MAPFILE = "MapFile";
    public static String XMLFILE = "XMLFile";
    public static String ACTIONFILE = "ActionFile";
    public static String FILTERFILE = "FilterFile";
+   public static String DTDFILE = "DTDFile";
+   public static String SQLFILE = "SQLFile";
 
    public static String SELECT = "Select";
    public static String SELECTDBNAME = "SelectDBName";
    public static String SELECTRESULTSETNAME = "SelectResultSetName";
+
+   public static String ROOTDATABASE = "RootDatabase";
+   public static String ROOTCATALOG = "RootCatalog";
+   public static String ROOTSCHEMA = "RootSchema";
+   public static String ROOTTABLE = "RootTable";
+   public static String STOPDATABASE = "StopDatabase";
+   public static String STOPCATALOG = "StopCatalog";
+   public static String STOPSCHEMA = "StopSchema";
+   public static String STOPTABLE = "StopTable";
 
    // Configuration properties
 
@@ -75,13 +90,30 @@ public class XMLDBMSProps
    public static String RETURNFILTER = "ReturnFilter";
    public static String KEYGENERATORNAME = "KeyGeneratorName";
    public static String KEYGENERATORCLASS = "KeyGeneratorClass";
+   public static String ORDERTYPE = "OrderType";
+   public static String DATABASENAME = "DatabaseName";
+   public static String CATALOGNAME = "CatalogName";
+   public static String SCHEMANAME = "SchemaName";
+   public static String PREFIX = "Prefix";
+   public static String URI = "URI";
+   public static String MAPCOLUMNSAS = "MapColumnsAs";
+   public static String FOLLOWPRIMARYKEYS = "FollowPrimaryKeys";
+   public static String FOLLOWFOREIGNKEYS = "FollowForeignKeys";
+   public static String PRETTY = "Pretty";
+   public static String INDENT = "Indent";
+   public static String SQLSEPARATOR = "SQLSeparator";
 
-   // Property values -- methods
+   // Property values -- methods / input / output
 
    public static String STOREDOCUMENT = "StoreDocument";
    public static String RETRIEVEDOCUMENTBYSQL = "RetrieveDocumentBySQL";
    public static String RETRIEVEDOCUMENTBYFILTER = "RetrieveDocumentByFilter";
    public static String DELETEDOCUMENT = "DeleteDocument";
+
+   public static String MAP = "Map";
+   public static String DTD = "DTD";
+   public static String DATABASE = "Database";
+   public static String SQL = "SQL";
 
    // Property values -- commit modes
 
@@ -89,4 +121,27 @@ public class XMLDBMSProps
    public static String AFTERDOCUMENT = "AfterDocument";
    public static String NONE = "None";
    public static String NOTRANSACTIONS = "NoTransactions";
+
+   // Property values -- general
+
+   public static String YES = "Yes";
+   public static String NO = "No";
+
+   // Property values -- validation
+
+   public static String MAPTOKEN = " Map ";
+   public static String XMLTOKEN = " XML ";
+   public static String ACTIONTOKEN = " Action ";
+   public static String FILTERTOKEN = " Filter ";
+
+   // Property values -- order type
+
+   public static String FIXED = "Fixed";
+//   public static String NONE = "None"; // Already declared as a commit mode
+   public static String COLUMNS = "Columns";
+
+   // Property values -- map column as
+
+   public static String ELEMENTTYPES = "ElementTypes";
+   public static String ATTRIBUTES = "Attributes";
 }

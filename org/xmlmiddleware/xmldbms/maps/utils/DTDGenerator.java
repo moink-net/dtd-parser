@@ -553,7 +553,7 @@ public class DTDGenerator
 
       // If the order is fixed, store that number now. Otherwise, store the max.
 
-      if ((orderInfo != null) || (orderInfo.orderValueIsFixed()))
+      if ((orderInfo != null) && (orderInfo.orderValueIsFixed()))
       {
          childOrder.put(elementTypeName, new Long(orderInfo.getFixedOrderValue()));
       }

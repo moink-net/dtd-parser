@@ -136,6 +136,17 @@ public class MapSerializer extends XMLWriter
    //**************************************************************************
 
    /**
+    * Set the Writer.
+    *
+    * @param writer The writer. The writer must implement the write(String,int,int)
+    *    and write(int) methods.
+   **/
+   public void setWriter(Writer writer)
+   {
+      setWriter(writer);
+   }
+
+   /**
     * Use the specified prefixes.
     *
     * @param prefixes An array of namespace prefixes. If this is null, then

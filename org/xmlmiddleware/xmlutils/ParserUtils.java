@@ -46,10 +46,11 @@ public interface ParserUtils
    /**
     * Get a SAX 2.0 XMLReader.
     *
+    * @param validating Whether the XMLReader performs validation.
     * @return An object that implements XMLReader.
     * @exception XMLMiddlewareException Thrown if an error occurs instantiating the XMLReader.
     */
-   public XMLReader getXMLReader()
+   public XMLReader getXMLReader(boolean validating)
       throws XMLMiddlewareException;
 
    /**
@@ -65,11 +66,12 @@ public interface ParserUtils
     * Open an InputSource and create a DOM Document.
     *
     * @param src A SAX InputSource
+    * @param validate Whether the InputSource is validated.
     *
     * @return An object that implements Document.
     * @exception XMLMiddlewareException Thrown if an error occurs creating the DOM Document.
     */
-   public Document openDocument(InputSource src)
+   public Document openDocument(InputSource src, boolean validate)
       throws XMLMiddlewareException;
 
    /**
