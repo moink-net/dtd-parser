@@ -17,6 +17,8 @@
 // Version 2.0
 // Changes from version 1.01: New in 1.1
 // Changes from version 1.1:
+// * Moved to xmlutils.helpers package
+// * Uses 2.0 ParserUtils
 
 package org.xmlmiddleware.xmlutils.external;
 
@@ -94,6 +96,8 @@ public class ParserUtilsXerces implements ParserUtils
     * Get a DOMImplementation object.
     *
     * @return The DOMImplementation object
+    * @exception XMLMiddlewareException Thrown if an error occurs instantiating
+    *    the DOMImplementation.
     */
    public DOMImplementation getDOMImplementation()
       throws XMLMiddlewareException
@@ -113,7 +117,7 @@ public class ParserUtilsXerces implements ParserUtils
     *
     * @param   src SAX InputSource to be parsed into a Document
     * @return  Document containing a DOM representation of InputSource
-    * @exception  XMLMiddlewareException if there is a problem parsing the
+    * @exception  XMLMiddlewareException Thrown if there is a problem parsing the
     *          InputSource
     */
    public Document openDocument(InputSource src)
@@ -143,6 +147,8 @@ public class ParserUtilsXerces implements ParserUtils
     * @param xmlFilename The name of the XML file.
     * @param encoding The output encoding to use. If this is null, the default
     *    encoding is used.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the
+    *    DOM Document.
     */
    public void writeDocument(Document doc, String xmlFilename, String encoding)
       throws XMLMiddlewareException
@@ -177,6 +183,8 @@ public class ParserUtilsXerces implements ParserUtils
     * @param doc The DOM Document.
     *
     * @return The XML string.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the
+    *    DOM Document.
     */
    public String writeDocument(Document doc)
       throws XMLMiddlewareException
