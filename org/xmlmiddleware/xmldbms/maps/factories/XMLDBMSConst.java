@@ -73,6 +73,7 @@ public class XMLDBMSConst
    public static String ELEM_USECLASSMAP       = "UseClassMap";
    public static String ELEM_USECOLUMN         = "UseColumn";
    public static String ELEM_USEFOREIGNKEY     = "UseForeignKey";
+   public static String ELEM_USETABLE          = "UseTable";
    public static String ELEM_USEUNIQUEKEY      = "UseUniqueKey";
    public static String ELEM_XMLTODBMS         = "XMLToDBMS";
    
@@ -114,6 +115,7 @@ public class XMLDBMSConst
                                          ELEM_USECLASSMAP,
                                          ELEM_USECOLUMN,
                                          ELEM_USEFOREIGNKEY,
+                                         ELEM_USETABLE,
                                          ELEM_USEUNIQUEKEY,
                                          ELEM_XMLTODBMS
                                         };
@@ -158,8 +160,9 @@ public class XMLDBMSConst
    public static final int ELEM_TOKEN_USECLASSMAP       = 34;
    public static final int ELEM_TOKEN_USECOLUMN         = 35;
    public static final int ELEM_TOKEN_USEFOREIGNKEY     = 36;
-   public static final int ELEM_TOKEN_USEUNIQUEKEY      = 37;
-   public static final int ELEM_TOKEN_XMLTODBMS         = 38;
+   public static final int ELEM_TOKEN_USETABLE          = 37;
+   public static final int ELEM_TOKEN_USEUNIQUEKEY      = 38;
+   public static final int ELEM_TOKEN_XMLTODBMS         = 39;
    
    public static final int[] ELEM_TOKENS = {
                                             ELEM_TOKEN_ATTRIBUTE,
@@ -199,6 +202,7 @@ public class XMLDBMSConst
                                             ELEM_TOKEN_USECLASSMAP,
                                             ELEM_TOKEN_USECOLUMN,
                                             ELEM_TOKEN_USEFOREIGNKEY,
+                                            ELEM_TOKEN_USETABLE,
                                             ELEM_TOKEN_USEUNIQUEKEY,
                                             ELEM_TOKEN_XMLTODBMS
                                            };
@@ -401,7 +405,7 @@ public class XMLDBMSConst
    // Special attribute values
 
    public static String VALUE_DATABASE = "Database";
-   public static String VALUE_PRIMARYKEY = "Primary Key";
+   public static String VALUE_PRIMARYKEY = "PrimaryKey";
 
    public static String URI_XMLDBMSV2 = "http://www.xmlmiddleware.org/xmldbms/v2";
 }

@@ -354,13 +354,20 @@ public class Table extends MapBase
     *
     * <p>If the primary key already exists, returns the existing primary key.</p>
     *
+    * @param keyName Name of the key. Used in map documents and CREATE TABLE
+    *    statements. If this is null, "PrimaryKey" is used.
+    *
     * @return The primary key.
     */
-   public Key createPrimaryKey()
+   public Key createPrimaryKey(String keyName)
    {
       if (primaryKey == null)
       {
-         primaryKey = Key.createPrimaryKey();
+         primaryKey = Key.createPrimaryKey(keyName);
+      }
+      else if (!primaryKey.getName().equals(keyName))
+      {
+         throw new IllegalArgumentException("The primary key already exists, but has a different name. To change the name of the primary key, delete it and create a new primary key with the new name.");
       }
       return primaryKey;
    }

@@ -589,24 +589,41 @@ public class MapSerializer extends XMLWriter
       writeElementEnd(XMLDBMSConst.ELEM_INLINEMAP);
    }
 
-   private void writeKey(Key key, String elementTypeName)
+   private void writeKey(Key key, String elementTypeName, boolean isForeignKey)
       throws IOException
    {
+      Table remoteTable;
+      int   count;
+
       attrs[0] = XMLDBMSConst.ATTR_NAME;
       values[0] = key.getName();
       writeElementStart(elementTypeName, 1, false);
+      if (isForeignKey)
+      {
+         // Write the <UseTable> element.
+
+         remoteTable = key.getRemoteTable();
+         count = setTableNameAttributes(remoteTable);
+         writeElementStart(XMLDBMSConst.ELEM_USETABLE, count, true);
+
+         // Write the <UseUniqueKey> element.
+
+         attrs[0] = XMLDBMSConst.ATTR_NAME;
+         values[0] = key.getRemoteKey().getName();
+         writeElementStart(XMLDBMSConst.ELEM_USEUNIQUEKEY, 1, true);
+      }
       writeUseColumns(key.getColumns());
       writeElementEnd(elementTypeName);
    }
 
-   private void writeKeys(Enumeration keys, String elementTypeName)
+   private void writeKeys(Enumeration keys, String elementTypeName, boolean isForeignKey)
       throws IOException
    {
       Key key;
       while (keys.hasMoreElements())
       {
          key = (Key)keys.nextElement();
-         writeKey(key, elementTypeName);
+         writeKey(key, elementTypeName, isForeignKey);
       }
    }
 
@@ -942,8 +959,8 @@ public class MapSerializer extends XMLWriter
 
       writeColumns(table);
       writePrimaryKey(table.getPrimaryKey());
-      writeKeys(table.getUniqueKeys(), XMLDBMSConst.ELEM_UNIQUEKEY);
-      writeKeys(table.getForeignKeys(), XMLDBMSConst.ELEM_FOREIGNKEY);
+      writeKeys(table.getUniqueKeys(), XMLDBMSConst.ELEM_UNIQUEKEY, false);
+      writeKeys(table.getForeignKeys(), XMLDBMSConst.ELEM_FOREIGNKEY, true);
 
       // End the Table element
 

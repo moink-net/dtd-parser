@@ -112,7 +112,7 @@ public class MapFactory_MapDocument
    //
    // State                  Affected element types
    // --------------         -----------------------------------------------------
-   // STATE_KEY              UseColumn
+   // STATE_KEY              UseColumn, UseUniqueKey
    // STATE_CLASSMAP         ElementType, PropertyMap, InlineMap, RelatedClass, UseClassMap
    // STATE_USEBASETABLE     UseUniqueKey, UseForeignKey
    // STATE_PROPERTYMAP      ElementType, Order
@@ -158,6 +158,7 @@ public class MapFactory_MapDocument
    private TokenList       elementTokens, enumTokens;
    private Integer         state;
    private Stack           stateStack = new Stack();
+   private Stack           fkWrapperStack = new Stack();
    private Stack           baseTableWrapperStack = new Stack();
    private Stack           rcmWrapperStack = new Stack();
    private Stack           inlineClassMapStack = new Stack();
@@ -557,6 +558,10 @@ public class MapFactory_MapDocument
                processUseForeignKey(attrs);
                break;
 
+            case XMLDBMSConst.ELEM_TOKEN_USETABLE:
+               processUseTable(attrs);
+               break;
+
             case XMLDBMSConst.ELEM_TOKEN_USEUNIQUEKEY:
                processUseUniqueKey(attrs);
                break;
@@ -604,6 +609,10 @@ public class MapFactory_MapDocument
 
          switch (elementTokens.getToken(localName))
          {
+            case XMLDBMSConst.ELEM_TOKEN_DATABASES:
+               resolveFKWrappers();
+               break;
+
             case XMLDBMSConst.ELEM_TOKEN_DATEFORMAT:
                processDateFormat();
                break;
@@ -654,7 +663,6 @@ public class MapFactory_MapDocument
             case XMLDBMSConst.ELEM_TOKEN_CATALOG:
             case XMLDBMSConst.ELEM_TOKEN_COLUMN:
             case XMLDBMSConst.ELEM_TOKEN_DATABASE:
-            case XMLDBMSConst.ELEM_TOKEN_DATABASES:
             case XMLDBMSConst.ELEM_TOKEN_ELEMENTTYPE:
             case XMLDBMSConst.ELEM_TOKEN_EMPTYSTRINGISNULL:
             case XMLDBMSConst.ELEM_TOKEN_EXTENDS:
@@ -673,6 +681,7 @@ public class MapFactory_MapDocument
             case XMLDBMSConst.ELEM_TOKEN_USECLASSMAP:
             case XMLDBMSConst.ELEM_TOKEN_USECOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_USEFOREIGNKEY:
+            case XMLDBMSConst.ELEM_TOKEN_USETABLE:
             case XMLDBMSConst.ELEM_TOKEN_USEUNIQUEKEY:
             case XMLDBMSConst.ELEM_TOKEN_XMLTODBMS:
                // Nothing to do.
@@ -1046,7 +1055,8 @@ One solution is to store the format names in each column, then later have Map.re
    private void processForeignKey(Attributes attrs)
       throws MapException
    {
-      String name;
+      String    name;
+      FKWrapper fkWrapper;
 
       // Initialize the keyColumns Vector.
 
@@ -1058,6 +1068,13 @@ One solution is to store the format names in each column, then later have Map.re
       name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
       key = Key.createForeignKey(name);
       table.addForeignKey(key);
+
+      // Create a new foreign key wrapper and add it to the stack. See processUseTable
+      // for details.
+
+      fkWrapper = new FKWrapper();
+      fkWrapperStack.push(fkWrapper);
+      fkWrapper.foreignKey = key;
    }
 
    private void processFormatStart(Attributes attrs)
@@ -1097,19 +1114,16 @@ One solution is to store the format names in each column, then later have Map.re
 
       column = table.getColumn(name);
       if (column == null)
-          throw new MapException("Order column " + name + " not found in table " + table.getUniversalName());
+          throw new MapException("Key column " + name + " not found in table " + table.getUniversalName());
       keyColumns.addElement(column);
    }
 
    private void processKeyEnd()
    {
       Column[] columns;
-      int      size;
 
-      size = keyColumns.size();
-
-      columns = new Column[size];
-      for (int i = 0; i < size; i++)
+      columns = new Column[keyColumns.size()];
+      for (int i = 0; i < columns.length; i++)
       {
          columns[i] = (Column)keyColumns.elementAt(i);
       }
@@ -1287,7 +1301,7 @@ One solution is to store the format names in each column, then later have Map.re
    private void processPrimaryKey(Attributes attrs)
       throws MapException
    {
-      String keyGenerator;
+      String name, keyGenerator;
       int    generate;
 
       // Initialize the keyColumns Vector.
@@ -1297,7 +1311,8 @@ One solution is to store the format names in each column, then later have Map.re
       // Create a primary key and add it to the table; throws an exception if
       // the table already has a primary key.
 
-      key = Key.createPrimaryKey();
+      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME, XMLDBMSConst.VALUE_PRIMARYKEY);
+      key = Key.createPrimaryKey(name);
       table.addPrimaryKey(key);
 
       // Set the key generation.
@@ -1344,8 +1359,9 @@ One solution is to store the format names in each column, then later have Map.re
    {
       String tableName;
 
-      // Get the table name, create a new table, and add it to the Map. Throws
-      // an exception if the table has already been created.
+      // Get the table name, create a new table, and add it to the Map. We use
+      // Map.addTable because it will throw an exception if the table has already
+      // been created.
 
       tableName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
       table = Table.create(databaseName, catalogName, schemaName, tableName);
@@ -1525,7 +1541,7 @@ One solution is to store the format names in each column, then later have Map.re
       throws MapException
    {
       String   name;
-      Table    foreignKeyTable;
+      Table    foreignKeyTable, uniqueKeyTable;
       Key      foreignKey;
       LinkInfo linkInfo;
 
@@ -1534,11 +1550,20 @@ One solution is to store the format names in each column, then later have Map.re
       switch (state.intValue())
       {
          case iSTATE_TOPROPERTYTABLE:
-            // Get the foreign key and create a LinkInfo object from this and
-            // the key from processUseUniqueKey().
+            // Get the unique and foreign key tables. The unique key comes from
+            // processUseUniqueKey().
 
             foreignKeyTable = (parentKeyIsUnique) ? propertyTable : classMap.getTable();
+            uniqueKeyTable = (parentKeyIsUnique) ? classMap.getTable() : propertyTable;
             foreignKey = getForeignKey(foreignKeyTable, name);
+
+            // Check that the table and unique key referenced by the foreign key are
+            // the table and unique key used in the <RelatedClass> element.
+
+            checkUniqueKey(XMLDBMSConst.ELEM_TOPROPERTYTABLE, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
+
+            // Create a LinkInfo object from the two keys.
+
             linkInfo = (parentKeyIsUnique) ? LinkInfo.create(uniqueKey, foreignKey) :
                                              LinkInfo.create(foreignKey, uniqueKey);
 
@@ -1565,16 +1590,45 @@ One solution is to store the format names in each column, then later have Map.re
       }
    }
 
+   private void processUseTable(Attributes attrs)
+   {
+      FKWrapper fkWrapper;
+
+      // Create a new foreign key wrapper and push it on the stack. We can't
+      // process the remote table/key used by the foreign key now because they
+      // might not have been created yet. The foreign key pointers will be resolved
+      // at the end of the <Databases> element.
+
+      fkWrapper = (FKWrapper)fkWrapperStack.peek();
+
+      // Get the database, catalog, schema, and table names.
+
+      fkWrapper.remoteDatabaseName = getAttrValue(attrs, XMLDBMSConst.ATTR_DATABASE, XMLDBMSConst.DEF_DATABASENAME);
+      fkWrapper.remoteCatalogName = getAttrValue(attrs, XMLDBMSConst.ATTR_CATALOG);
+      fkWrapper.remoteSchemaName = getAttrValue(attrs, XMLDBMSConst.ATTR_SCHEMA);
+      fkWrapper.remoteTableName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+   }
+
    private void processUseUniqueKey(Attributes attrs)
       throws MapException
    {
-      String name;
-      Table  uniqueKeyTable;
+      String    name;
+      Table     uniqueKeyTable;
+      Key       foreignKey;
+      FKWrapper fkWrapper;
 
       name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
 
       switch (state.intValue())
       {
+         case iSTATE_KEY:
+            // Store the name of the unique key used by the foreign key. See
+            // processUseTable for details.
+
+            fkWrapper = (FKWrapper)fkWrapperStack.peek();
+            fkWrapper.remoteKeyName = name;
+            break;
+
          case iSTATE_TOPROPERTYTABLE:
             // Get the unique key and save it. We will create a LinkInfo from
             // it and add it to the PropertyMap in processUseForeignKey(), since
@@ -1645,6 +1699,30 @@ One solution is to store the format names in each column, then later have Map.re
       enumTokens = new TokenList(XMLDBMSConst.ENUMS, XMLDBMSConst.ENUM_TOKENS, XMLDBMSConst.ENUM_TOKEN_INVALID);
    }
 
+   private void resolveFKWrappers()
+      throws MapException
+   {
+      while (!fkWrapperStack.empty())
+      {
+         resolveFKWrapper((FKWrapper)fkWrapperStack.pop());
+      }
+   }
+
+   private void resolveFKWrapper(FKWrapper fkWrapper)
+      throws MapException
+   {
+      Table     remoteTable;
+      Key       remoteKey;
+
+      remoteTable = map.getTable(fkWrapper.remoteDatabaseName, fkWrapper.remoteCatalogName, fkWrapper.remoteSchemaName, fkWrapper.remoteTableName);
+      if (remoteTable == null)
+         throw new MapException("Table not found: " + Table.getUniversalName(fkWrapper.remoteDatabaseName, fkWrapper.remoteCatalogName, fkWrapper.remoteSchemaName, fkWrapper.remoteTableName) + ". Referenced by foreign key: " + fkWrapper.foreignKey.getName());
+
+      remoteKey = getUniqueKey(remoteTable, fkWrapper.remoteKeyName);
+
+      fkWrapper.foreignKey.setRemoteKey(remoteTable, remoteKey);
+   }
+
    private void resolveRCMWrappers()
       throws MapException
    {
@@ -1683,6 +1761,11 @@ One solution is to store the format names in each column, then later have Map.re
 
       foreignKeyTable = (rcmWrapper.parentKeyIsUnique) ? childTable : parentTable;
       foreignKey = getForeignKey(foreignKeyTable, rcmWrapper.foreignKeyName);
+
+      // Check that the table and unique key referenced by the foreign key are
+      // the table and unique key used in the <RelatedClass> element.
+
+      checkUniqueKey(XMLDBMSConst.ELEM_RELATEDCLASS, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
 
       // Create a new LinkInfo object and add it to the RelatedClassMap.
 
@@ -1752,6 +1835,11 @@ One solution is to store the format names in each column, then later have Map.re
 
       foreignKeyTable = (baseTableWrapper.baseKeyIsUnique) ? extendedTable : baseTable;
       foreignKey = getForeignKey(foreignKeyTable, baseTableWrapper.foreignKeyName);
+
+      // Check that the table and unique key referenced by the foreign key are
+      // the table and unique key used in the <RelatedClass> element.
+
+      checkUniqueKey(XMLDBMSConst.ELEM_USEBASETABLE, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
 
       // Create a new LinkInfo object and add it to the ClassMap.
 
@@ -1843,17 +1931,19 @@ One solution is to store the format names in each column, then later have Map.re
    {
       Key uniqueKey;
 
-      if (uniqueKeyName.equals(XMLDBMSConst.VALUE_PRIMARYKEY))
-      {
-         uniqueKey = uniqueKeyTable.getPrimaryKey();
-         if (uniqueKey == null)
-            throw new MapException("Primary key not found in table " + uniqueKeyTable.getUniversalName());
-      }
-      else
+      // Get the primary key.
+
+      uniqueKey = uniqueKeyTable.getPrimaryKey();
+
+      // Check if the uniqueKeyName is the name of the primary key. If so,
+      // use it. If not, check if there is a unique key with the specified
+      // name.
+
+      if (!uniqueKeyName.equals(uniqueKey.getName()))
       {
          uniqueKey = uniqueKeyTable.getUniqueKey(uniqueKeyName);
          if (uniqueKey == null)
-            throw new MapException("Unique key " + uniqueKeyName + " not found in table " + uniqueKeyTable.getUniversalName());
+            throw new MapException("Unique or primary key with the name " + uniqueKeyName + " not found in table " + uniqueKeyTable.getUniversalName());
       }
       return uniqueKey;
    }
@@ -1867,6 +1957,21 @@ One solution is to store the format names in each column, then later have Map.re
       if (foreignKey == null)
          throw new MapException("Foreign key " + foreignKeyName + " not found in table " + foreignKeyTable.getUniversalName());
       return foreignKey;
+   }
+
+   private void checkUniqueKey(String tag, Table foreignKeyTable, Key foreignKey, Table uniqueKeyTable, Key uniqueKey)
+      throws MapException
+   {
+      Table fkUniqueKeyTable;
+      Key   fkUniqueKey;
+
+      fkUniqueKeyTable = foreignKey.getRemoteTable();
+      if (!fkUniqueKeyTable.equals(uniqueKeyTable))
+         throw new MapException("<" + tag + ">" + " uses foreign key " + foreignKey.getName() + " on table " + foreignKeyTable.getUniversalName() + ". This references table " + fkUniqueKeyTable.getUniversalName() + " but <UseUniqueKey> uses table " + uniqueKeyTable.getUniversalName());
+
+      fkUniqueKey = foreignKey.getRemoteKey();
+      if (!fkUniqueKey.equals(uniqueKey))
+         throw new MapException("<" + tag + ">" + " uses foreign key " + foreignKey.getName() + " on table " + foreignKeyTable.getUniversalName() + ". This references unique key " + fkUniqueKey.getName() + " on table " + fkUniqueKeyTable.getUniversalName() + " but <UseUniqueKey> uses key " + uniqueKey.getName() + " on table " + uniqueKeyTable.getUniversalName());
    }
 
    private DateFormat getDateFormat(int type)
@@ -1921,6 +2026,29 @@ One solution is to store the format names in each column, then later have Map.re
       for (int i = 0; i < indent; i++)
       {
          System.out.print(" ");
+      }
+   }
+
+   //**************************************************************************
+   // Inner class: FKWrapper
+   //**************************************************************************
+
+   class FKWrapper
+   {
+      // Stores information about the table and unique key that a foreign key
+      // points to. We process these at the end of the databases, since that is
+      // the only time we are sure that all the tables and unique keys have been
+      // created.
+
+      Key    foreignKey = null;
+      String remoteDatabaseName = null;
+      String remoteCatalogName = null;
+      String remoteSchemaName = null;
+      String remoteTableName = null;
+      String remoteKeyName = null;
+
+      FKWrapper()
+      {
       }
    }
 
