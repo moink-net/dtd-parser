@@ -285,7 +285,9 @@ they can be a series of tokens. -->
 
      The second way to specify a format for a column is to specify that
      a format applies to all columns of a specific type or types. This
-     is done with the DefaultForTypes attribute.
+     is done with the DefaultForTypes attribute, which accepts the name
+     of one or more JDBC types. For example, to set the default format
+     for INTEGER and BIGINT columns, use DefaultForTypes="INTEGER BIGINT".
 
      When deciding which format to use, XML-DBMS first looks for a
      named format and then for a default format for the column's type.
