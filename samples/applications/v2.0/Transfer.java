@@ -30,8 +30,8 @@ import org.w3c.dom.*;
  * <p>The command line syntax for this application is:</p>
  *
  * <pre>
- *    java Transfer -todbms &lt;map-file&gt; &lt;xml-file&gt;
- *    java Transfer -toxml &lt;map-file&gt; &lt;xml-file&gt; &lt;filter-file&gt; [&lt;param&gt;=&lt;value&gt;...]
+ *    java Transfer -todbms &lt;map-file&gt; &lt;action-file&gt; &lt;xml-file&gt; [insert]
+ *    java Transfer -toxml &lt;map-file&gt; &lt;filter-file&gt; &lt;xml-file&gt; [&lt;param&gt;=&lt;value&gt;...]
  * </pre>
  *
  * <p>where:</p>
@@ -69,27 +69,27 @@ public class Transfer
    {
       String   mapFilename = null,
                xmlFilename = null,
-               filterFilename = null,
+               specialFilename = null,
 //               url = "jdbc:odbc:test";
                url = "jdbc:odbc:xmldbms";
 //               url = "jdbc:easysoft://localhost:8831/xmldbms";
       Hashtable params = new Hashtable();
-      boolean  toxml;
+      boolean   toxml;
+      int       action;
 
       try
       {
-         if (argv.length < 3) throw new IllegalArgumentException();
+         if (argv.length < 4) throw new IllegalArgumentException("\nUsage: java Transfer -toxml <map-file> <action-file> <xml-file> [insert]\n       java Transfer -todbms <map-file> <filter-file> <xml-file> [param=value...]");
 
          if ((!argv[0].equals("-todbms")) && (!argv[0].equals("-toxml")))
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("\nUsage: java Transfer -toxml <map-file> <action-file> <xml-file> [insert]\n       java Transfer -todbms <map-file> <filter-file> <xml-file> [param=value...]");
 
          toxml = (argv[0].equals("-toxml"));
          mapFilename = argv[1];
-         xmlFilename = argv[2];
+         specialFilename = argv[2];
+         xmlFilename = argv[3];
          if (toxml)
          {
-            filterFilename = argv[3];
-
             for (int i = 4; i < argv.length; i++)
             {
                String pair = argv[i];
@@ -98,21 +98,14 @@ public class Transfer
                String value = pair.substring(equals + 1);
                params.put(param, value);
             }
-         }
-
-         if (toxml)
-         {
-            toXML(url, mapFilename, xmlFilename, filterFilename, params);
+            toXML(url, mapFilename, xmlFilename, specialFilename, params);
          }
          else
          {
-            toDBMS(url, mapFilename, xmlFilename);
+            action = (argv.length == 5) ? Action.INSERT : Action.NONE;
+            toDBMS(url, mapFilename, xmlFilename, specialFilename, action);
          }
       }
-//      catch (IllegalArgumentException iae)
-//      {
-//         System.out.println("\nUsage: java Transfer {-todbms|-toxml} <map-file> <xml-file> [<table-name> <key-value>...]\n<table-name> and <key-value> are required when -toxml is chosen.\n");
-//      }
       catch (java.sql.SQLException s)
       {
          System.out.println("SQLSTATE: " + s.getSQLState());
@@ -124,50 +117,42 @@ public class Transfer
       }
    }
 
-   static void toDBMS(String url, String mapFilename, String xmlFilename)
+   static void toDBMS(String url, String mapFilename, String xmlFilename, String actionsFilename, int action)
       throws Exception
    {
-/*
-      Connection       conn1 = null, conn2 = null;
       Map              map;
-      Document         doc;
+      Actions          actions;
+      FilterSet        filterSet;
+      DataSource       ds;
+      DataHandler      handler;
+      TransferInfo     ti;
       DOMToDBMS        domToDBMS;
-//      KeyGeneratorImpl keyGenerator = null;
-      ParserUtils      utils = new ParserUtilsXerces();
+      Document         doc;
 
-      try
+      // Create the Map object.
+      map = createMap(mapFilename);
+
+      // Create a new DBMSToDOM object and transfer the data.
+      domToDBMS = new DOMToDBMS();
+      domToDBMS.setFilterSetReturned(true);
+
+      ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", url);
+      handler = new GenericHandler(ds, null, null);
+      ti = new TransferInfo(map, null, handler);
+
+      doc = utils.openDocument(xmlFilename);
+
+      if (action == Action.NONE)
       {
-         // Get a JDBC driver. You will need to modify this code if
-         // you are using a different driver.
-         Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
-//         Class.forName("easysoft.sql.jobDriver");
-
-         // Connect to the database. 
-//         conn1 = DriverManager.getConnection(url);
-         conn2 = DriverManager.getConnection(url);
-
-         // Create and initialize a key generator
-//         keyGenerator = new KeyGeneratorImpl(conn1);
-//         keyGenerator.initialize();
-
-         // Create the Map object and open the XML document.
-         map = createMap(mapFilename, conn2);
-         doc = utils.openDocument(xmlFilename);
-
-         // Create a new DOMToDBMS object and transfer the data. Note that
-         // different DOM implementations need different NameQualifier
-         // implementations.
-         domToDBMS = new DOMToDBMS(utils);
-//         domToDBMS = new DOMToDBMS(map, keyGenerator, new NQ_Sun());
-//         domToDBMS = new DOMToDBMS(map, keyGenerator, new NQ_DOM2()); // Xerces
-         domToDBMS.storeDocument(doc);
+         actions = createActions(map, actionsFilename);
+         filterSet = domToDBMS.processDocument(ti, doc, actions);
       }
-      finally
+      else
       {
-         if (conn1 != null) conn1.close();
-         if (conn2 != null) conn2.close();
+         filterSet = domToDBMS.processDocument(ti, doc, action);
       }
-*/
+
+      writeFilterSet(filterSet, getBasename(xmlFilename));
    }
 
    static void toXML(String url, String mapFilename, String xmlFilename, String filterFilename, Hashtable params)
@@ -291,6 +276,15 @@ public class Transfer
       return compiler.compile(new InputSource(getFileURL(mapFilename)));
    }
 
+   static Actions createActions(Map map, String actionsFilename) throws Exception
+   {
+      ActionCompiler compiler;
+
+      // Create a new action compiler and create the Actions.
+      compiler = new ActionCompiler(utils.getXMLReader());
+      return compiler.compile(map, new InputSource(getFileURL(actionsFilename)));
+   }
+
    static FilterSet createFilterSet(Map map, String filterFilename) throws Exception
    {
       FilterCompiler compiler;
@@ -300,12 +294,47 @@ public class Transfer
       return compiler.compile(map, new InputSource(getFileURL(filterFilename)));
    }
 
+   static void writeFilterSet(FilterSet filterSet, String basename)
+      throws Exception
+   {
+      FilterSerializer serializer;
+      Writer        writer;
+
+      // Construct a new FileWriter.
+      writer = new FileWriter(basename + ".ftr");
+    
+      // Serialize the map.
+      serializer = new FilterSerializer(writer);
+      serializer.setPrettyPrinting(true, 3);
+      serializer.serialize(filterSet, "filters.dtd", null);
+
+      // Close the file.
+      writer.close();
+   }
+
    static String getFileURL(String fileName)
    {
       File   file;
 
       file = new File(fileName);
       return "file:///" + file.getAbsolutePath();
+   }
+
+   static String getBasename(String filename)
+   {
+      int    period;
+
+      // Get the basename of the file.
+
+      period = filename.lastIndexOf('.', filename.length());
+      if (period == -1)
+      {
+         return filename;
+      }
+      else
+      {
+         return filename.substring(0, period);
+      }
    }
 }
 
