@@ -20,7 +20,7 @@
 package org.xmlmiddleware.xmldbms.helpers;
 
 import org.xmlmiddleware.xmldbms.maps.*;
-import org.xmlmiddleware.xmldbms.helpers.DMLGenerator;
+import org.xmlmiddleware.xmldbms.maps.utils.*;
 import java.lang.*;
 import java.sql.*;
 import java.util.*;

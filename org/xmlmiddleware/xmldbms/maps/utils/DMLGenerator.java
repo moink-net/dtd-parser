@@ -17,7 +17,7 @@
 // Version 2.0
 // Changes from version 1.01: New in version 2.0
 
-package org.xmlmiddleware.xmldbms.helpers;
+package org.xmlmiddleware.xmldbms.maps.utils;
 
 import org.xmlmiddleware.xmldbms.maps.*;
 import java.lang.*;
@@ -99,7 +99,7 @@ public class DMLGenerator
       // Create the INSERT statement.
       
       insert.append(INSERT);
-      insert.append(makeTableName(t));
+      insert.append(getTableName(t));
 
       insert.append(OPENPAREN);
 
@@ -205,7 +205,7 @@ public class DMLGenerator
       update.append(UPDATE);
 
       // Add table name.
-      update.append(makeTableName(t));
+      update.append(getTableName(t));
 
       update.append(SET);
       
@@ -257,11 +257,59 @@ public class DMLGenerator
       delete.append(FROM);
 
       // Add table name.
-      delete.append(makeTableName(t));
+      delete.append(getTableName(t));
 
       delete.append(makeWhereLink(key.getColumns()));
       
       return delete.toString();
+   }
+
+   /** 
+    * Returns a properly quoted (with schema, catalog if 
+    * necessary) table name.
+    *
+    * @param table The table.
+    */
+   public String getTableName(Table table)
+   {
+      String catalog = null, schema;
+      String s = new String();
+
+      // 6/9/00, Ruben Lainez, Ronald Bourret
+      // Use the identifier m_quote character for the table name.
+
+      if(m_useCatalog)
+      {
+         catalog = table.getCatalogName();
+         if((catalog != null) && (m_isCatalogAtStart))
+         {
+            s.concat(makeQuotedName(catalog));
+            s.concat(m_catalogSeparator);
+         }
+      }
+ 
+      if(m_useSchema)
+      {
+         schema = table.getSchemaName();
+         if(schema != null)
+         {
+            s.concat(makeQuotedName(schema));
+            s.concat(PERIOD);
+         }
+      }
+ 
+      s.concat(makeQuotedName(table.getTableName()));
+ 
+      if(m_useCatalog)
+      {
+         if((catalog != null) && (!m_isCatalogAtStart))
+         {
+            s.concat(m_catalogSeparator);
+            s.concat(makeQuotedName(catalog));
+         }
+      }
+
+      return s;
    }
 
    //**************************************************************************
@@ -286,7 +334,7 @@ public class DMLGenerator
       // Add table name.
       
       select.append(FROM);
-      select.append(makeTableName(t));
+      select.append(getTableName(t));
       
       if(whereLink != null)
          select.append(whereLink);
@@ -343,48 +391,6 @@ public class DMLGenerator
          return COMMA + str;
       else
         return str;
-   }
-
-   String makeTableName(Table table)
-   {
-      String catalog = null, schema;
-      String s = new String();
-
-      // 6/9/00, Ruben Lainez, Ronald Bourret
-      // Use the identifier m_quote character for the table name.
-
-      if(m_useCatalog)
-      {
-         catalog = table.getCatalogName();
-         if((catalog != null) && (m_isCatalogAtStart))
-         {
-            s.concat(makeQuotedName(catalog));
-            s.concat(m_catalogSeparator);
-         }
-      }
- 
-      if(m_useSchema)
-      {
-         schema = table.getSchemaName();
-         if(schema != null)
-         {
-            s.concat(makeQuotedName(schema));
-            s.concat(PERIOD);
-         }
-      }
- 
-      s.concat(makeQuotedName(table.getTableName()));
- 
-      if(m_useCatalog)
-      {
-         if((catalog != null) && (!m_isCatalogAtStart))
-         {
-            s.concat(m_catalogSeparator);
-            s.concat(makeQuotedName(catalog));
-         }
-      }
-
-      return s;
    }
 
 

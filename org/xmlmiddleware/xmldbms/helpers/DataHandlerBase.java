@@ -7,6 +7,7 @@ import javax.sql.*;
 
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmldbms.maps.utils.*;
 
 /**
  * Implements basic support for The DataHandler interface. The insert(...) 
@@ -138,12 +139,13 @@ abstract class DataHandlerBase
         PreparedStatement stmt = makeUpdate(table, row, cols);
         int numRows = stmt.executeUpdate();
 
-        executedStatement();
 
         if(numRows == 0)
             throw new SQLException("[xmldbms] Row to be updated is not present in table.");
         else if(numRows > 1)
             throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
+
+        executedStatement();
 
         // TODO: Do we need to refresh values here? I think not. Any changes 
         // should have been done by us, and updating keys is suspect.
@@ -162,12 +164,12 @@ abstract class DataHandlerBase
         PreparedStatement stmt = makeUpdate(table, row, null);  
         int numRows = stmt.executeUpdate();
 
-        executedStatement();
-
         if(numRows == 0)
             insert(table, row);
         else if(numRows > 1)
             throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
+
+        executedStatement();
     }
 
 
@@ -183,12 +185,12 @@ abstract class DataHandlerBase
         PreparedStatement stmt = makeDelete(table, row);
         int numRows = stmt.executeUpdate();
 
-        executedStatement();
-
         if(numRows == 0)
             throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
         else if(numRows > 1)
             throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
+
+        executedStatement();
     }
 
 
@@ -237,7 +239,7 @@ abstract class DataHandlerBase
         Key priKey = table.getPrimaryKey();
 
         // These can be cached. Use SQLStrings
-        String sql = m_strings.getSelect(table, priKey, orderInfo);
+        String sql = m_strings.getSelectRow(table, priKey, orderInfo);
 
         // Make the SELECT statement
         PreparedStatement stmt = m_connection.prepareStatement(sql);
@@ -307,7 +309,8 @@ abstract class DataHandlerBase
                 }
             }
 
-            cols = (Column[])colVec.toArray();
+            cols = new Column[colVec.size()];
+            colVec.copyInto(cols);
         }
 
 
@@ -336,7 +339,7 @@ abstract class DataHandlerBase
         Key priKey = table.getPrimaryKey();
 
         // These can be cached so use SQLStrings
-        String sql = m_strings.getDelete(t, priKey);
+        String sql = m_strings.getDelete(table, priKey);
 
         // Make the DELETE statement
         PreparedStatement stmt = m_connection.prepareStatement(sql);

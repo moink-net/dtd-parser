@@ -121,7 +121,7 @@ import org.xmlmiddleware.xmldbms.maps.*;
         // TODO: More efficient way to do this?
 
         // We create a MySQL statement to get the table definition
-        String sql = MYSQL_COLUMN_SQL + m_dml.makeTableName(table) + ";";
+        String sql = MYSQL_COLUMN_SQL + m_dml.getTableName(table) + ";";
 
         // Execute it
         Statement stmt = m_connection.createStatement();

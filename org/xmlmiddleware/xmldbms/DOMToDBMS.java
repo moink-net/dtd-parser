@@ -83,6 +83,8 @@ public class DOMToDBMS
     // Cached objects. These are here for efficiency (see getAllPropertyMaps)
     private Hashtable m_classAllProperties;
 
+    private static final String DUMMY = "dummy";
+
     // ************************************************************************
     // Constructors
     // ************************************************************************
@@ -201,7 +203,7 @@ public class DOMToDBMS
      * @param action Action to take on the document.
      */
     public DocumentInfo processDocument(TransferInfo transInfo, Document doc, int action)
-        throws SQLException, MapException, KeyException
+        throws SQLException, MapException, KeyException, ConversionException
     {
         return processDocument(transInfo, doc.getDocumentElement(), action);
     }
@@ -215,7 +217,7 @@ public class DOMToDBMS
      * @param action Actions to take on various elements of the document.
      */
     public DocumentInfo processDocument(TransferInfo transInfo, Document doc, Actions actions)
-        throws SQLException, MapException, KeyException
+        throws SQLException, MapException, KeyException, ConversionException
     {
         return processDocument(transInfo, doc.getDocumentElement(), actions);
     }
@@ -229,10 +231,14 @@ public class DOMToDBMS
      * @param action Action to take on the tree.
      */
     public DocumentInfo processDocument(TransferInfo transInfo, Element el, int action)
-        throws SQLException, MapException, KeyException
+        throws SQLException, MapException, KeyException, ConversionException
     {
+        XMLName name = XMLName.create(DUMMY, DUMMY);
+        Action act = new Action(name, ClassMap.create(name));
+        act.setAction(action);
+
         Actions actions = new Actions(transInfo.map);
-        actions.setDefault(action); // TODO: Need this method
+        actions.setDefaultAction(act); 
 
         return processDocument(transInfo, el, actions);
     }
@@ -246,7 +252,7 @@ public class DOMToDBMS
      * @param action Actions to take on various elements of the tree.
      */
     public DocumentInfo processDocument(TransferInfo transInfo, Element el, Actions actions)
-        throws SQLException, MapException, KeyException
+        throws SQLException, MapException, KeyException, ConversionException
     {
         DocumentInfo docInfo = new DocumentInfo();
    
@@ -294,25 +300,25 @@ public class DOMToDBMS
      * @param orderInParent Position of this element in parent
      */
     private void processRoot(DocumentInfo docInfo, Element el, int orderInParent)
-        throws SQLException, MapException, KeyException
+        throws SQLException, MapException, KeyException, ConversionException
     {
-        // Get the default action (see note in processClassRow)
-        Action action = m_actions.getDefault(); // TODO: getDefault method not implemented
-
         // Check if the node is mapped
         ClassMap classMap = m_transInfo.map.getClassMap(el.getNamespaceURI(), el.getLocalName());
 
         if(classMap != null)
         {
             // Process the node
-            Row row = processClassRow(null, classMap, null, el, orderInParent, action);
+            Row row = processClassRow(null, classMap, null, el, orderInParent);
 
-            // Add this row to the DocumentInfo
-            Table table = classMap.getTable();
-            Key priKey = table.getPrimaryKey();
-
-            // TODO: What is the ordercolumn?
-            docInfo.addInfo(table, priKey.getColumns(), row.getColumnValues(priKey.getColumns())/*, null*/);
+            if(row != null)
+            {
+                // Add this row to the DocumentInfo
+                Table table = classMap.getTable();
+                Key priKey = table.getPrimaryKey();
+    
+                // TODO: What is the ordercolumn?
+                docInfo.addInfo(table, priKey.getColumns(), row.getColumnValues(priKey.getColumns())/*, null*/);
+            }
         }
 
         // Otherwise treat like a pass through element
@@ -348,21 +354,19 @@ public class DOMToDBMS
      * @param parentAction Action to inherit if this node does not specify own action.
      */
     private Row processClassRow(Row parentRow, ClassMap classMap, RelatedClassMap relMap, 
-                                Element classNode, int orderInParent, Action parentAction)
-        throws SQLException, KeyException, MapException
+                                Element classNode, int orderInParent)
+        throws SQLException, KeyException, MapException, ConversionException
     {
         // NOTE: This method is called from processRoot (relMap and parentRow 
         // will be null in this case) and processRow
 
 
-        // ACTION NOTE: Actions work like so:
-        // 
-        // - This method receives the action of the parent class. For 
-        // root classes this is the default action passed in to processDocument
-        // - We see if m_actions or an action:Action attribute contains an action 
-        // to override it with
-        // - All children are processed with this action
+        // Get the action for the node
+        Action action = getActionFor(classNode);
 
+        // Get out now for Action.NONE
+        if(action.getAction() == Action.NONE)
+            return null;
 
         // A stack for all our children to be processed after insertion
 	    Stack fkChildren = new Stack();
@@ -374,18 +378,8 @@ public class DOMToDBMS
         if(relMap != null)
             linkInfo = relMap.getLinkInfo();
 
-        // Get the action for the node
-        Action action = getActionFor(classNode);
-        if(action == null)
-        {
-            // Copy the parent action. This is because
-            // we don't want to move over UpdateProperties
 
-            action = new Action(XMLName.create(classNode.getNamespaceURI(), 
-                                               classNode.getLocalName()), classMap);
-            action.setAction(parentAction.getAction());
-        }
-
+        // Get the list of columns we are to use
         Vector useProps = getUseProps(classMap, action);
 
         // This creates a row object, clears it, and sets/generates keys
@@ -410,7 +404,7 @@ public class DOMToDBMS
 
 
             // Now delete all out-of-table properties
-            clearNonTableProps(classRow, useProps);
+            clearNonTableProps(classRow, useProps, action);
 
             
             // Process children left till later 
@@ -441,7 +435,7 @@ public class DOMToDBMS
      */
     private Row processPropRow(Row parentRow, PropertyMap propMap, Node propNode, 
                                int orderInParent, Action action)
-        throws SQLException, MapException, KeyException
+        throws SQLException, MapException, KeyException, ConversionException
     {
         // NOTE: This method is called from processRow
 
@@ -457,8 +451,17 @@ public class DOMToDBMS
         // Set the value
 	    setPropertyColumn(propRow, propMap.getColumn(), propNode, true);
 	  
-        // Do actual row insertion/update
-        storeRow(table, propRow, action.getAction());
+        int act = action.getAction();
+
+        // NOTE: Action.NONE should never get here. 
+        // It's screen out at the processClassRow level
+
+        // Note that these rows are always inserted. 
+        if(act == Action.UPDATE || act == Action.UPDATEORINSERT)
+            act = Action.INSERT;
+
+        // Do actual row insertion
+        storeRow(table, propRow, act);
 
         return propRow;
     }
@@ -468,7 +471,7 @@ public class DOMToDBMS
      * Creates row object and does set up on keys for that row. 
      */
     private Row createRow(Table table, Row parentRow, LinkInfo linkInfo, Vector useProps)
-        throws KeyException
+        throws KeyException, ConversionException
     {
         // NOTE: Called from processClassRow and processPropRow
 
@@ -542,8 +545,8 @@ public class DOMToDBMS
     /**
      * Clears out-of-table properties' rows.
      */
-    private void clearNonTableProps(Row classRow, Vector useProps)
-        throws SQLException, MapException, KeyException
+    private void clearNonTableProps(Row classRow, Vector useProps, Action action)
+        throws SQLException, MapException, KeyException, ConversionException
     {
         for(int i = 0; i < useProps.size(); i++)
         {
@@ -570,7 +573,7 @@ public class DOMToDBMS
      * the parent table.
      */
     private void processFKNodes(Row parentRow, Stack fkNodes, Action action, Vector useProps)
-        throws SQLException, MapException, KeyException
+        throws SQLException, MapException, KeyException, ConversionException
     {
         // NOTE: Called from processClassRow and processPropRow
 
@@ -594,7 +597,7 @@ public class DOMToDBMS
      */
     private void processChildren(Row parentRow, ClassMap parentMap, Node parentNode, 
                                  Stack fkChildren, Action action)
-        throws KeyException, SQLException, MapException
+        throws KeyException, SQLException, MapException, ConversionException
     {
         // NOTE: Called from processClassRow and called recursively for 
         // inline/wrapper classmaps
@@ -658,14 +661,13 @@ public class DOMToDBMS
     }
 
 
-    private static final String DUMMY = "dummy";
 
     /**
      * Adds a property to the class, or if in it's own row sends it for 
      * processing in processChild.
      */
     private void processProperty(Row parentRow, PropertyMap propMap, Node propNode, int order, Stack fkNodes, Action action)
-        throws KeyException, SQLException, MapException
+        throws KeyException, SQLException, MapException, ConversionException
     {
         // NOTE: Called from processChildren
 
@@ -752,7 +754,7 @@ public class DOMToDBMS
      */
     private void processChild(Row parentRow, Object map, LinkInfo linkInfo, Node node, 
                               int orderInParent, Stack fkNodes, Action action)
-        throws KeyException, SQLException, MapException
+        throws KeyException, SQLException, MapException, ConversionException
     {
         // NOTE: This method is called before parentRow has been inserted into the
         // database
@@ -780,9 +782,12 @@ public class DOMToDBMS
         {
             // Otherwise the child key is unique 
             Row childRow = processRow(parentRow, map, node, orderInParent, action);
-
-            // In this case We must copy the key back to the parent
-            setParentKey(parentRow, childRow, linkInfo);
+            
+            if(childRow != null)
+            {
+                // In this case We must copy the key back to the parent
+                setParentKey(parentRow, childRow, linkInfo);
+            }
         }
     }
 
@@ -793,7 +798,7 @@ public class DOMToDBMS
      */
     private Row processRow(Row parentRow, Object map, Node node, int orderInParent, 
                            Action action)
-        throws SQLException, MapException, KeyException
+        throws SQLException, MapException, KeyException, ConversionException
     {
         // NOTE: Called from processChild and processFKNodes
 
@@ -805,9 +810,8 @@ public class DOMToDBMS
         {
             RelatedClassMap relMap = (RelatedClassMap)map;
 
-            // The action here is used as the parentAction
             return processClassRow(parentRow, relMap.getClassMap(), relMap, (Element)node, 
-                                   orderInParent, action);
+                                   orderInParent);
         }
     }
 
@@ -823,7 +827,7 @@ public class DOMToDBMS
     private Vector getUseProps(ClassMap classMap, Action action)
     {
         if(action.getAction() == Action.UPDATE)
-            return action.getUpdateXXXX(); // TODO: Need this method.
+            return action.getUpdatePropertyMaps(); 
 
         else
             return getAllPropertyMaps(classMap);
@@ -877,9 +881,21 @@ public class DOMToDBMS
     private Action getActionFor(Element el)
         throws MapException
     {
+        Action action = m_actions.getAction(el.getNamespaceURI(), el.getLocalName());
+
+        if(action == null)
+            action = m_actions.getDefaultAction();
+
+        if(action == null)
+            throw new MapException("No default action specified.");
+
+        if(action.getAction() == Action.DELETE ||
+           action.getAction() == Action.SOFTDELETE)
+            throw new MapException("DELETE and SOFTDELETE actions cannot be used with DOMToDBMS.");
+
         // TODO: When action: attributes are implemented put code here
 
-        return m_actions.getAction(el.getNamespaceURI(), el.getLocalName());
+        return action;
     }
 
 
@@ -920,6 +936,7 @@ public class DOMToDBMS
      * Set the value for column
      */
     private void setPropertyColumn(Row row, Column column, Node node, boolean force)
+        throws ConversionException
     {
         // Get the value and format.
         StringFormatter formatter = column.getFormatter();
@@ -957,7 +974,7 @@ public class DOMToDBMS
      * Use a KeyGenerator to generate a key.
      */
     private void generateKey(Row row, Key key)
-        throws KeyException
+        throws KeyException, ConversionException
     {
         KeyGenerator keyGen = (KeyGenerator)m_keyGenerators.get(key.getKeyGeneratorName());
 
@@ -981,6 +998,7 @@ public class DOMToDBMS
      * Put the order value in a row.
      */
     private void generateOrder(Row row, OrderInfo o, int orderValue)
+        throws ConversionException
     {
 	    if(o != null && !o.orderValueIsFixed() && o.generateOrder())
         {
