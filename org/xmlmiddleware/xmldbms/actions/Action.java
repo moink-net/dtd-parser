@@ -260,7 +260,7 @@ public class Action
       switch (type)
       {
          case PropertyMap.ELEMENTTYPE:
-            o = classMap.getChildMap(propName.getUniversalName());
+            o = classMap.getChildMap(propName);
             if (o != null)
             {
                if (o instanceof PropertyMap)
@@ -272,7 +272,7 @@ public class Action
             throw new XMLMiddlewareException(propName.getUniversalName() + " not mapped as a property of " + elementTypeName.getUniversalName());
 
          case PropertyMap.ATTRIBUTE:
-            o = classMap.getAttributeMap(propName.getUniversalName());
+            o = classMap.getAttributeMap(propName);
             if (o == null)
                throw new IllegalArgumentException(propName.getUniversalName() + " not mapped as a property of " + elementTypeName.getUniversalName());
             updateAttrs.put(propName, o);

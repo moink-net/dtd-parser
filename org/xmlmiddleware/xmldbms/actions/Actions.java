@@ -172,7 +172,7 @@ public class Actions
 
       // Check that the element type is mapped as a class.
 
-      classMap = map.getClassMap(elementTypeName.getUniversalName());
+      classMap = map.getClassMap(elementTypeName);
       if (classMap == null)
          throw new XMLMiddlewareException("Element type not mapped as a class: " + elementTypeName.getUniversalName());
 

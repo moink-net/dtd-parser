@@ -350,7 +350,7 @@ public class XMLDBMSMap extends MapBase
    private boolean   emptyStringIsNull = false;
    private Hashtable defaultFormatters = new Hashtable(); // Indexed by type
    private Hashtable namedFormatters = new Hashtable();   // Indexed by name
-   private Hashtable classMaps = new Hashtable();         // Indexed by universal name
+   private Hashtable classMaps = new Hashtable();         // Indexed by XMLName
    private Hashtable classTableMaps = new Hashtable();    // Indexed by table name
    private Hashtable tables = new Hashtable();            // Indexed by table name
    private Hashtable uris = new Hashtable();              // Indexed by prefix
@@ -679,7 +679,9 @@ public class XMLDBMSMap extends MapBase
     */
    public final ClassMap getClassMap(String uri, String localName)
    {
-      return getClassMap(XMLName.getUniversalName(uri, localName));
+      // create checks of localName is null.
+
+      return getClassMap(XMLName.create(uri, localName));
    }
 
    /**
@@ -689,20 +691,22 @@ public class XMLDBMSMap extends MapBase
     * use yet another ClassMap, and so on), this method returns the last ClassMap
     * in the chain. This is the ClassMap actually used to transfer data.</p>
     *
-    * @param universalName Universal name of the element type.
+    * @param elementTypeName XMLName of the element type.
     *
     * @return The ClassMap. Null if the element type is not mapped.
     */
-   public final ClassMap getClassMap(String universalName)
+   public final ClassMap getClassMap(XMLName elementTypeName)
    {
       ClassMap classMap = null, useClassMap;
+
+      checkArgNull(elementTypeName, ARG_ELEMENTTYPENAME);
 
       // Navigate the chain of used ClassMaps and return the last ClassMap in
       // the chain. This is the actual ClassMap to be used. Note that this is
       // guaranteed not to generate an infinite loop since ClassMap.useClassMap()
       // checks for loops.
 
-      useClassMap = (ClassMap)classMaps.get(universalName);
+      useClassMap = (ClassMap)classMaps.get(elementTypeName);
       while (useClassMap != null)
       {
          classMap = useClassMap;
@@ -733,6 +737,8 @@ public class XMLDBMSMap extends MapBase
     */
    public ClassMap createClassMap(String uri, String localName)
    {
+      // create checks of localName is null.
+
       return createClassMap(XMLName.create(uri, localName));
    }
 
@@ -748,14 +754,13 @@ public class XMLDBMSMap extends MapBase
    public ClassMap createClassMap(XMLName elementTypeName)
    {
       ClassMap classMap;
-      String   universalName;
 
-      universalName = elementTypeName.getUniversalName();
-      classMap = (ClassMap)classMaps.get(universalName);
+      checkArgNull(elementTypeName, ARG_ELEMENTTYPENAME);
+      classMap = (ClassMap)classMaps.get(elementTypeName);
       if (classMap == null)
       {
          classMap = ClassMap.create(elementTypeName);
-         classMaps.put(universalName, classMap);
+         classMaps.put(elementTypeName, classMap);
       }
       return classMap;
    }
@@ -769,16 +774,16 @@ public class XMLDBMSMap extends MapBase
    public void addClassMap(ClassMap classMap)
       throws XMLMiddlewareException
    {
-      String universalName;
+      XMLName elementTypeName;
       Object o;
 
       checkArgNull(classMap, ARG_CLASSMAP);
 
-      universalName = classMap.getElementTypeName().getUniversalName();
-      o = classMaps.get(universalName);
+      elementTypeName = classMap.getElementTypeName();
+      o = classMaps.get(elementTypeName);
       if (o != null)
-         throw new XMLMiddlewareException("Element type " + universalName + " already mapped.");
-      classMaps.put(universalName, classMap);
+         throw new XMLMiddlewareException("Element type " + elementTypeName.getUniversalName() + " already mapped.");
+      classMaps.put(elementTypeName, classMap);
    }
 
    /**
@@ -792,27 +797,27 @@ public class XMLDBMSMap extends MapBase
    public void removeClassMap(String uri, String localName)
       throws XMLMiddlewareException
    {
-      // getUniversalName checks if localName is null.
+      // create checks if localName is null.
 
-      removeClassMap(XMLName.getUniversalName(uri, localName));
+      removeClassMap(XMLName.create(uri, localName));
    }
 
    /**
     * Remove the ClassMap for an element type.
     *
-    * @param universalName Universal name of the element type.
+    * @param elementTypeName XMLName of the element type.
     *
     * @exception XMLMiddlewareException Thrown if the element type has not been mapped.
     */
-   public void removeClassMap(String universalName)
+   public void removeClassMap(XMLName elementTypeName)
       throws XMLMiddlewareException
    {
       Object o;
 
-      checkArgNull(universalName, ARG_UNIVERSALNAME);
-      o = classMaps.remove(universalName);
+      checkArgNull(elementTypeName, ARG_ELEMENTTYPENAME);
+      o = classMaps.remove(elementTypeName);
       if (o == null)
-         throw new XMLMiddlewareException("Element type " + universalName + " not mapped.");
+         throw new XMLMiddlewareException("Element type " + elementTypeName.getUniversalName() + " not mapped.");
    }
 
    /**

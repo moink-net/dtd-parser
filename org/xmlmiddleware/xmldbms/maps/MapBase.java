@@ -36,6 +36,7 @@ public class MapBase
 
    // Argument names
 
+   static final String ARG_ATTRIBUTENAME        = "attributeName";
    static final String ARG_CHILDKEY             = "childKey";
    static final String ARG_CLASSMAP             = "classMap";
    static final String ARG_CLASSTABLEMAP        = "classTableMap";

@@ -353,15 +353,15 @@ public class ClassMap extends ClassMapBase
    /**
     * Remove the PropertyMap for an attribute.
     *
-    * @param universalName Universal name of the attribute.
+    * @param xmlName XMLName of the attribute.
     *
     * @exception XMLMiddlewareException Thrown if the attribute has not been mapped.
     */
-   public void removeAttributeMap(String universalName)
+   public void removeAttributeMap(XMLName xmlName)
       throws XMLMiddlewareException
    {
       checkState();
-      super.removeAttributeMap(universalName);
+      super.removeAttributeMap(xmlName);
    }
 
    /**
@@ -601,15 +601,15 @@ public class ClassMap extends ClassMapBase
    /**
     * Remove the map for a child element type.
     *
-    * @param universalName Universal name of the child element type.
+    * @param xmlName XML name of the child element type.
     *
     * @exception XMLMiddlewareException Thrown if the child element type has not been mapped.
     */
-   public void removeChildMap(String universalName)
+   public void removeChildMap(XMLName xmlName)
       throws XMLMiddlewareException
    {
       checkState();
-      super.removeChildMap(universalName);
+      super.removeChildMap(xmlName);
    }
 
    /**
