@@ -1,0 +1,120 @@
+<?xml version='1.0' ?>
+<!--
+     This sample tests the storage of multi-valued properties.
+     It maps the schema for the following XML documents:
+
+     <root>
+        <price1>1 2 3</price1>
+     </root>
+
+     <price2 currency="USD">4 5 6</price2>
+
+     <price3 price="7 8 9" />
+-->     
+
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
+
+<XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
+   <Databases>
+      <Database Name="Default" QuoteIdentifiers="Yes">
+         <Catalog>
+            <Schema>
+               <Table Name="Root">
+                  <Column Name="id" DataType="INTEGER" Nullable="No" />
+                  <PrimaryKey KeyGenerator="HighLow">
+                     <UseColumn Name="id"/>
+                  </PrimaryKey>
+               </Table>
+               <Table Name="Price1">
+                  <Column Name="id" DataType="INTEGER" Nullable="No" />
+                  <Column Name="Price" DataType="DECIMAL" Precision="10" Scale="2" Nullable="Yes"/>
+                  <Column Name="OrderInRoot" DataType="INTEGER" Nullable="No" />
+                  <Column Name="PriceOrder" DataType="INTEGER" Nullable="No" />
+                  <ForeignKey Name="root_FK">
+                     <UseTable Name="Root" />
+                     <UseUniqueKey Name="PrimaryKey" />
+                     <UseColumn Name="id"/>
+                  </ForeignKey>
+               </Table>
+               <Table Name="Price2">
+                  <Column Name="id" DataType="INTEGER" Nullable="No" />
+                  <Column Name="Currency" DataType="VARCHAR" Length="3" Nullable = "Yes"/>
+                  <PrimaryKey KeyGenerator="HighLow">
+                     <UseColumn Name="id"/>
+                  </PrimaryKey>
+               </Table>
+               <Table Name="Price2PCDATA">
+                  <Column Name="id" DataType="INTEGER" Nullable="No" />
+                  <Column Name="Price" DataType="DECIMAL" Precision="10" Scale="2" Nullable="Yes"/>
+                  <Column Name="PriceOrder" DataType="INTEGER" Nullable="No" />
+                  <ForeignKey Name="root_FK">
+                     <UseTable Name="Price2" />
+                     <UseUniqueKey Name="PrimaryKey" />
+                     <UseColumn Name="id"/>
+                  </ForeignKey>
+               </Table>
+               <Table Name="Price3">
+                  <Column Name="id" DataType="INTEGER" Nullable="No" />
+                  <PrimaryKey KeyGenerator="HighLow">
+                     <UseColumn Name="id"/>
+                  </PrimaryKey>
+               </Table>
+               <Table Name="Price3Attr">
+                  <Column Name="id" DataType="INTEGER" Nullable="No" />
+                  <Column Name="Price" DataType="DECIMAL" Precision="10" Scale="2" Nullable="Yes"/>
+                  <ForeignKey Name="root_FK">
+                     <UseTable Name="Price3" />
+                     <UseUniqueKey Name="PrimaryKey" />
+                     <UseColumn Name="id"/>
+                  </ForeignKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+   </Databases>
+   <Maps>
+      <ClassMap>
+         <ElementType Name="root"/>
+         <ToClassTable Name="Root"/>
+         <PropertyMap MultiValued="Yes">
+            <ElementType Name="price1"/>
+            <ToPropertyTable Name="Price1" KeyInParentTable="Unique">
+               <UseUniqueKey Name="PrimaryKey" />
+               <UseForeignKey Name="root_FK" />
+            </ToPropertyTable>
+            <ToColumn Name="Price"/>
+            <OrderColumn Name="OrderInRoot" Generate="Yes" />
+            <MVOrderColumn Name="PriceOrder" Generate="Yes" />
+         </PropertyMap>
+      </ClassMap>
+      <ClassMap>
+         <ElementType Name="price2"/>
+         <ToClassTable Name="Price2"/>
+         <PropertyMap>
+            <Attribute Name="currency"/>
+            <ToColumn Name="Currency"/>
+         </PropertyMap>
+         <PropertyMap MultiValued="Yes">
+            <PCDATA/>
+            <ToPropertyTable Name="Price2PCDATA" KeyInParentTable="Unique">
+               <UseUniqueKey Name="PrimaryKey" />
+               <UseForeignKey Name="root_FK" />
+            </ToPropertyTable>
+            <ToColumn Name="Price"/>
+            <MVOrderColumn Name="PriceOrder" Generate="Yes" />
+         </PropertyMap>
+      </ClassMap>
+      <ClassMap>
+         <ElementType Name="price3"/>
+         <ToClassTable Name="Price3"/>
+         <PropertyMap MultiValued="Yes">
+            <Attribute Name="price"/>
+            <ToPropertyTable Name="Price3Attr" KeyInParentTable="Unique">
+               <UseUniqueKey Name="PrimaryKey" />
+               <UseForeignKey Name="root_FK" />
+            </ToPropertyTable>
+            <ToColumn Name="Price"/>
+         </PropertyMap>
+      </ClassMap>
+   </Maps>
+</XMLToDBMS>

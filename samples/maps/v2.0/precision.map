@@ -10,7 +10,7 @@
             <Schema>
                <Table Name="Prec">
                   <Column Name="Column1" DataType="DECIMAL" Precision="10" Scale="2" Nullable="Yes"/>
-                  <Column Name="Column2" DataType="NUMERIC" Precision="15" Scale="-3" Nullabe = "No"/>
+                  <Column Name="Column2" DataType="NUMERIC" Precision="15" Scale="-3" Nullable = "No"/>
                </Table>
             </Schema>
          </Catalog>

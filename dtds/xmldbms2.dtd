@@ -741,9 +741,48 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 
 <!-- ****************** Property maps ************************* -->
 
+<!-- The MultiValued attribute states whether the element type, attribute
+     or PCDATA contains a number of whitespace-separated values. For example:
+
+        <a b="1 2 3" />
+        <a>1 2 3</a>
+
+     It is needed to support list types in XML Schemas. Note that there is one
+     limitation to its use. In the case where multiple elements contain multiple
+     values, which value belongs to which element is not tracked in the database.
+     The result is that a single element with all the values is returned when
+     retrieving data from the database. For example, suppose the following is
+     stored:
+
+        <a>
+           <b>1 2 3</b>
+           <b>4 5 6</b>
+        </a>
+
+     The following is returned when the data is retrieved:
+
+        <a>
+           <b>1 2 3 4 5 6</b>
+        </a>
+
+     If you want to maintain the child elements, then map them with ClassMap and
+     map their PCDATA as a multi-valued property.
+
+     Note also that when MultiValued is Yes, the order information applies to the
+     values in the property, not the order of the property itself.
+-->
+
+<!-- OrderColumn and FixedOrder apply to the order of an element or PCDATA in its
+     parent element. They do not apply to attributes and it is an error to include
+     them for attributes. MVOrderColumn (multi-valued order column) gives the name
+     of a column in which to store the order values for multi-valued properties. It
+     is legal only if the MultiValued property is "Yes". -->
+
 <!ELEMENT %p;PropertyMap ((%p;ElementType | %p;Attribute | %p;PCDATA),
                           %p;ToPropertyTable?, %p;ToColumn,
-                          (%p;OrderColumn | %p;FixedOrder)?)>
+                          (%p;OrderColumn | %p;FixedOrder)?, MVOrderColumn?)>
+<!ATTLIST %p;PropertyMap
+          MultiValued (Yes | No) "No">
 
 <!--
      Unlike in version 1.0, two different properties from two
@@ -790,16 +829,23 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 
 <!-- ****************** Order ************************* -->
 
+<!ENTITY % Direction 'Direction (Ascending | Descending) "Ascending"'>
+<!ENTITY % OrderColumnAttrs 'Name CDATA #REQUIRED
+                             %Direction;
+                             Generate (Yes | No) "No"'>
+
 <!ELEMENT %p;OrderColumn EMPTY>
 <!ATTLIST %p;OrderColumn
-          Name CDATA #REQUIRED
-          Direction (Ascending | Descending) "Ascending"
-          Generate (Yes | No) "No">
+          %OrderColumnAttrs;>
+
+<!ELEMENT %p;MVOrderColumn EMPTY>
+<!ATTLIST %p;MVOrderColumn
+          %OrderColumnAttrs;>
 
 <!ELEMENT %p;FixedOrder EMPTY>
 <!ATTLIST %p;FixedOrder
           Value NMTOKEN #REQUIRED
-          Direction (Ascending | Descending) "Ascending">
+          %Direction;>
 
 <!-- ************************************************************* -->
 <!--                           XML Elements                        -->
@@ -811,7 +857,6 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 
 <!ELEMENT %p;Attribute EMPTY>
 <!ATTLIST %p;Attribute
-          Name NMTOKEN #REQUIRED
-          MultiValued (Yes | No) "No">
+          Name NMTOKEN #REQUIRED>
 
 <!ELEMENT %p;PCDATA EMPTY>

@@ -9,7 +9,7 @@
         <!ELEMENT FirstName (#PCDATA)>
         <!ELEMENT LastName (#PCDATA)>
         <!ELEMENT Address (Street, City, State, PostCode)>
-        <!ELEMENT Address
+        <!ATTLIST Address
                   PostCode CDATA #REQUIRED>
         <!ELEMENT Street (#PCDATA)>
         <!ELEMENT City (#PCDATA)>
@@ -120,6 +120,7 @@
                   <Attribute Name="PostCode"/>
                   <ToColumn Name="AuthorPostCode"/>
                </PropertyMap>
+               <FixedOrder Value="3" />
             </InlineMap>
             <FixedOrder Value="2" />
          </InlineMap>
