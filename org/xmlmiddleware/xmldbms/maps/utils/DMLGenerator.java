@@ -84,12 +84,38 @@ public class DMLGenerator
    {
       m_quote = meta.getIdentifierQuoteString();
       if (m_quote == null) m_quote = "";
-      m_isCatalogAtStart = meta.isCatalogAtStart();
-      m_catalogSeparator = meta.getCatalogSeparator();
-      if (m_catalogSeparator == null) m_catalogSeparator = ".";
-      if (m_catalogSeparator.length() == 0) m_catalogSeparator = ".";
-      m_useCatalog = meta.supportsCatalogsInDataManipulation();
-      m_useSchema = meta.supportsSchemasInDataManipulation();
+
+      // Find out whether the database supports catalogs and schemas, and get the
+      // related information. The JDBC spec is vague about what drivers should do
+      // when the underlying database doesn't support catalogs or schemas, so we
+      // wrap these calls in try/catch clauses. Note that we don't know what exception
+      // will be thrown, so we simply catch Exception and hope that the driver is
+      // not stupid enough to access the database here, which could result in
+      // legitimate exceptions.
+
+      try
+      {
+         m_useCatalog = meta.supportsCatalogsInDataManipulation();
+         if (m_useCatalog)
+         {
+            m_isCatalogAtStart = meta.isCatalogAtStart();
+            m_catalogSeparator = meta.getCatalogSeparator();
+            if (m_catalogSeparator == null) m_catalogSeparator = ".";
+            if (m_catalogSeparator.length() == 0) m_catalogSeparator = ".";
+         }
+      }
+      catch (Exception e)
+      {
+         m_useCatalog = false;
+      }
+      try
+      {
+         m_useSchema = meta.supportsSchemasInDataManipulation();
+      }
+      catch (Exception e)
+      {
+         m_useSchema = false;
+      }
    }
 
    //**************************************************************************
