@@ -29,6 +29,7 @@ import org.xmlmiddleware.xmldbms.filters.*;
 import org.xmlmiddleware.xmldbms.keygenerators.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.factories.*;
+import org.xmlmiddleware.xmldbms.maps.utils.*;
 import org.xmlmiddleware.xmldbms.tools.resolvers.*;
 import org.xmlmiddleware.xmlutils.*;
 
@@ -986,15 +987,22 @@ public class Transfer extends PropertyProcessor
       FilterSet    filterSet;
       Document     doc;
 
-      // Create the various objects needed by DBMSToDOM.retrieveDocument.
+      // Create the map and DB-enabled map objects.
 
       validateStr = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
       validate = (validateStr.indexOf(XMLDBMSProps.MAPTOKEN) != -1);
       map = createMap(configProps, mapLocation, validate);
-      resultSets = createResultSets(selects);
       dbMap = createDBEnabledMap(map);
+
+      // Create the filter set.
+
       validate = (validateStr.indexOf(XMLDBMSProps.FILTERTOKEN) != -1);
       filterSet = createFilterSet(configProps, map, filterLocation, validate);
+
+      // Create the result sets.
+
+      resultSets = createResultSets(selects);
+      initTableMetadata(map, resultSets, filterSet);
 
       // Configure the DBMSToDOM object
 
@@ -1507,6 +1515,63 @@ public class Transfer extends PropertyProcessor
       // Return the result sets.
 
       return resultSets;
+   }
+
+   private void initTableMetadata(XMLDBMSMap map, Hashtable resultSets, FilterSet filterSet)
+      throws XMLMiddlewareException
+   {
+      MetadataInitializer initializer;
+      Vector              filters;
+      Object              o;
+      ResultSetFilter     rsFilter;
+      String              rsName;
+      ResultSet           rs;
+      Table               table;
+
+      // Get a new MetadataInitializer.
+
+      initializer = new MetadataInitializer(map);
+
+      // Get the Vector of RootFilters and ResultSetFilters. Loop through the
+      // filters and, for each ResultSetFilter that is found, use the result set
+      // metadata to initialize the corresponding table metadata. Note that
+      // ResultSetFilters associate result set names with table names.
+
+      filters = filterSet.getFilters();
+      for (int i = 0; i < filters.size(); i++)
+      {
+         // Get the next object and process it if it is a ResultSetFilter.
+
+         o = filters.elementAt(i);
+         if (o instanceof ResultSetFilter)
+         {
+            rsFilter = (ResultSetFilter)o;
+
+            // Get the name of the result set specified in the filter and
+            // get the corresponding ResultSet object.
+
+            rsName = rsFilter.getResultSetName();
+            rs = (ResultSet)resultSets.get(rsName);
+            if (rs == null)
+               throw new XMLMiddlewareException("Filter document specifies a result set with the name " + rsName + ". No result set with this name was specified in the properties passed to Transfer.");
+
+            // Get the name of the table specified in the filter; this is the
+            // name of the table in the map that maps the result set. Get the
+            // corresponding Table object.
+
+            table = map.getTable(rsFilter.getDatabaseName(),
+                                 rsFilter.getCatalogName(),
+                                 rsFilter.getSchemaName(),
+                                 rsFilter.getTableName());
+            if (table == null)
+               throw new XMLMiddlewareException("Table specified in filter document but not found in map: " + Table.getUniversalName(rsFilter.getDatabaseName(), rsFilter.getCatalogName(), rsFilter.getSchemaName(), rsFilter.getTableName()));
+
+            // Initialize the metadata for the columns in the table from
+            // the result set metadata.
+
+            initializer.initializeMetadata(table, rs);
+         }
+      }
    }
 
    private void closeResultSets(Hashtable resultSets)
