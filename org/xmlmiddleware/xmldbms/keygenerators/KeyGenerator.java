@@ -28,29 +28,39 @@ import java.util.*;
 /**
  * Interface for a class that generates key values (object IDs).
  *
- * <p>Applications that want DOMToDBMS to generate key values pass an
- * instance of an object that implements this class to DOMToDBMS. Keys
- * are used to join tables (class table-to-class table or class table-
- * to-property table) and also to retrieve data from root tables.
- * Whether DOMToDBMS generates a key for a given table (or one or more
- * properties are mapped to the key columns) depends on the mapping to
- * that table.</p>
+ * <p>Objects that implement this interface must be able to generate unique
+ * keys. The number of columns in the generated key is the choice of the
+ * key generator, although single column keys are most common. The generateKey
+ * method should have no side effects, as there is no guarantee that all
+ * generated keys are actually used. If a key generator is designed to be
+ * used with Transfer, it must define any initialization properties it needs
+ * and have a zero-argument constructor.</p>
  *
- * <p>Programmers using the lowest level interface to XML-DBMS call
- * initialize before passing a KeyGenerator object to DOMToDBMS and 
- * close after DOMToDBMS returns. They do not call generateKey, which
- * is called only by DOMToDBMS.</p>
+ * <p>Applications that want an external routine to generate the value of
+ * a particular key must do two things. First, they must assign a logical
+ * name to the key generator in the map document. This is done with the
+ * KeyGenerator attribute of the PrimaryKey and UniqueKey elements.</p>
  *
- * <p>Programmers calling higher level interfaces to XML-DBMS do not
- * call any of the methods on this interface. Instead, they specify the
- * name of a class that implements this interface and the properties
- * needed to initialize that class.</p>
+ * <p>Second, they must provide an object that implements the KeyGenerator
+ * interface. If the application writes directly to DOMToDBMS, it uses the
+ * addKeyGenerator method to pass the KeyGenerator object and its logical
+ * name to DOMToDBMS. If the application uses Transfer, it uses the
+ * KeyGeneratorName and KeyGeneratorClass properties, plus any properties
+ * needed to initialize the key generator.</p>
  *
- * <P>The helper class HighLow provides a sample implementation
- * of this interface.</P>
+ * <p>Applications that write directly to DOMToDBMS -- and therefore instantiate
+ * KeyGenerator objects themselves -- should use the initialize and close
+ * methods to initialize and close the KeyGenerator objects. Applications
+ * that use Transfer do not need to use these methods, as Transfer calls
+ * them itself. Applications never need to call the generateKey method, as
+ * this is called only by DOMToDBMS.</p>
+ *
+ * <p>The HighLow class provides a sample implementation of the KeyGenerator
+ * interface. It uses a high-low algorithm to generate keys.</p>
  *
  * @author Ronald Bourret
  * @version 2.0
+ * @see HighLow
  */
 
 public interface KeyGenerator
