@@ -52,6 +52,7 @@ public class XMLDBMSConst
    public static String ELEM_INLINEMAP         = "InlineMap";
    public static String ELEM_LOCALE            = "Locale";
    public static String ELEM_MAPS              = "Maps";
+   public static String ELEM_MVORDERCOLUMN     = "MVOrderColumn";
    public static String ELEM_NAMESPACE         = "Namespace";
    public static String ELEM_NUMBERFORMAT      = "NumberFormat";
    public static String ELEM_OPTIONS           = "Options";
@@ -93,6 +94,7 @@ public class XMLDBMSConst
                                          ELEM_INLINEMAP,
                                          ELEM_LOCALE,
                                          ELEM_MAPS,
+                                         ELEM_MVORDERCOLUMN,
                                          ELEM_NAMESPACE,
                                          ELEM_NUMBERFORMAT,
                                          ELEM_OPTIONS,
@@ -137,29 +139,30 @@ public class XMLDBMSConst
    public static final int ELEM_TOKEN_INLINEMAP         = 13;
    public static final int ELEM_TOKEN_LOCALE            = 14;
    public static final int ELEM_TOKEN_MAPS              = 15;
-   public static final int ELEM_TOKEN_NAMESPACE         = 16;
-   public static final int ELEM_TOKEN_NUMBERFORMAT      = 17;
-   public static final int ELEM_TOKEN_OPTIONS           = 18;
-   public static final int ELEM_TOKEN_ORDERCOLUMN       = 19;
-   public static final int ELEM_TOKEN_PATTERN           = 20;
-   public static final int ELEM_TOKEN_PCDATA            = 21;
-   public static final int ELEM_TOKEN_PRIMARYKEY        = 22;
-   public static final int ELEM_TOKEN_PROPERTYMAP       = 23;
-   public static final int ELEM_TOKEN_RELATEDCLASS      = 24;
-   public static final int ELEM_TOKEN_SCHEMA            = 25;
-   public static final int ELEM_TOKEN_TABLE             = 26;
-   public static final int ELEM_TOKEN_TIMEFORMAT        = 27;
-   public static final int ELEM_TOKEN_TOCLASSTABLE      = 28;
-   public static final int ELEM_TOKEN_TOCOLUMN          = 29;
-   public static final int ELEM_TOKEN_TOPROPERTYTABLE   = 30;
-   public static final int ELEM_TOKEN_UNIQUEKEY         = 31;
-   public static final int ELEM_TOKEN_USEBASETABLE      = 32;
-   public static final int ELEM_TOKEN_USECLASSMAP       = 33;
-   public static final int ELEM_TOKEN_USECOLUMN         = 34;
-   public static final int ELEM_TOKEN_USEFOREIGNKEY     = 35;
-   public static final int ELEM_TOKEN_USETABLE          = 36;
-   public static final int ELEM_TOKEN_USEUNIQUEKEY      = 37;
-   public static final int ELEM_TOKEN_XMLTODBMS         = 38;
+   public static final int ELEM_TOKEN_MVORDERCOLUMN     = 16;
+   public static final int ELEM_TOKEN_NAMESPACE         = 17;
+   public static final int ELEM_TOKEN_NUMBERFORMAT      = 18;
+   public static final int ELEM_TOKEN_OPTIONS           = 19;
+   public static final int ELEM_TOKEN_ORDERCOLUMN       = 20;
+   public static final int ELEM_TOKEN_PATTERN           = 21;
+   public static final int ELEM_TOKEN_PCDATA            = 22;
+   public static final int ELEM_TOKEN_PRIMARYKEY        = 23;
+   public static final int ELEM_TOKEN_PROPERTYMAP       = 24;
+   public static final int ELEM_TOKEN_RELATEDCLASS      = 25;
+   public static final int ELEM_TOKEN_SCHEMA            = 26;
+   public static final int ELEM_TOKEN_TABLE             = 27;
+   public static final int ELEM_TOKEN_TIMEFORMAT        = 28;
+   public static final int ELEM_TOKEN_TOCLASSTABLE      = 29;
+   public static final int ELEM_TOKEN_TOCOLUMN          = 30;
+   public static final int ELEM_TOKEN_TOPROPERTYTABLE   = 31;
+   public static final int ELEM_TOKEN_UNIQUEKEY         = 32;
+   public static final int ELEM_TOKEN_USEBASETABLE      = 33;
+   public static final int ELEM_TOKEN_USECLASSMAP       = 34;
+   public static final int ELEM_TOKEN_USECOLUMN         = 35;
+   public static final int ELEM_TOKEN_USEFOREIGNKEY     = 36;
+   public static final int ELEM_TOKEN_USETABLE          = 37;
+   public static final int ELEM_TOKEN_USEUNIQUEKEY      = 38;
+   public static final int ELEM_TOKEN_XMLTODBMS         = 39;
    
    public static final int[] ELEM_TOKENS = {
                                             ELEM_TOKEN_ATTRIBUTE,
@@ -178,6 +181,7 @@ public class XMLDBMSConst
                                             ELEM_TOKEN_INLINEMAP,
                                             ELEM_TOKEN_LOCALE,
                                             ELEM_TOKEN_MAPS,
+                                            ELEM_TOKEN_MVORDERCOLUMN,
                                             ELEM_TOKEN_NAMESPACE,
                                             ELEM_TOKEN_NUMBERFORMAT,
                                             ELEM_TOKEN_OPTIONS,

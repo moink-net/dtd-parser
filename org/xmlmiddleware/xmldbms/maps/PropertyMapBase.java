@@ -62,6 +62,7 @@ public class PropertyMapBase extends MapBase
    private Column    column = null;
    private int       type = UNKNOWN;
    private OrderInfo orderInfo = null;
+   private OrderInfo mvOrderInfo = null;
    private boolean   multiValued = false;
 
    // ********************************************************************
@@ -188,33 +189,61 @@ public class PropertyMapBase extends MapBase
    }
 
    // ********************************************************************
-   // Attribute multi-valuedness
+   // Multi-valued order information
    // ********************************************************************
 
    /**
-    * Is an attribute multi-valued or not?
+    * Get the information used to order a multi-valued property.
     *
-    * <p>Applies only to attributes. The result of calling this method for
-    * element types or PCDATA is undefined.</p>
+    * <p>Applies only when isMultiValued() returns true.</p>
     *
-    * @return Whether an attribute is multi-valued.
+    * @return The order information. Null if the values are not ordered.
     */
-   public final boolean attributeIsMultiValued()
+   public final OrderInfo getMVOrderInfo()
+   {
+      return mvOrderInfo;
+   }
+
+   /**
+    * Set the information used to order a multi-valued property.
+    *
+    * <p>This method may be called only when isMultiValued() returns true.</p>
+    *
+    * @param mvOrderInfo The order information. Null if the property is not ordered.
+    */
+   public void setMVOrderInfo(OrderInfo mvOrderInfo)
+   {
+      if (!multiValued)
+         throw new IllegalStateException("Cannot call setMVOrderInfo(OrderInfo) when the property being mapped is not multi-valued.");
+      this.mvOrderInfo = mvOrderInfo;
+   }
+
+   // ********************************************************************
+   // Property multi-valuedness
+   // ********************************************************************
+
+   /**
+    * Is an element type, attribute, or PCDATA multi-valued?
+    *
+    * <p>This is used to support multi-valued attributes (as declared in DTDs)
+    * and multi-valued element types and attributes (as declared in XML Schemas
+    * with the list data type).</p>
+    *
+    * @return Whether an element type, attribute, or PCDATA is multi-valued.
+    */
+   public final boolean isMultiValued()
    {
       return multiValued;
    }
 
    /**
-    * Sets whether an attribute multi-valued or not.
+    * Sets whether an element type, attribute, or PCDATA is multi-valued.
     *
-    * <p>Applies only to attributes.</p>
-    *
-    * @param multiValued Whether an attribute is multi-valued.
+    * @param multiValued Whether an element type, attribute, or PCDATA is multi-valued.
     */
-   public void setAttributeIsMultiValued(boolean multiValued)
+   public void setIsMultiValued(boolean multiValued)
    {
-      if (type != ATTRIBUTE)
-         throw new IllegalStateException("Cannot call setAttributeIsMultiValued(boolean) on PropertyMaps for element types or PCDATA.");
       this.multiValued = multiValued;
+      this.mvOrderInfo = null;
    }
 }

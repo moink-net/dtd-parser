@@ -263,6 +263,7 @@ public class MapInverter
       PropertyTableMap newPropTableMap;
       PropertyMapBase  newPropMapBase;
       Table            propTable;
+      boolean          multiValued;
 
       // Check if the property is mapped to a column in the parent table or a property
       // table. In the former case, create a ColumnMap; in the latter case, create a
@@ -300,11 +301,13 @@ public class MapInverter
 
       // Set the common properties.
 
-      if (propMap.getType() == PropertyMapBase.ATTRIBUTE)
+      multiValued = propMap.isMultiValued();
+      newPropMapBase.setIsMultiValued(multiValued);
+      if (multiValued)
       {
-         newPropMapBase.setAttributeIsMultiValued(propMap.attributeIsMultiValued());
+         newPropMapBase.setMVOrderInfo(propMap.getMVOrderInfo());
       }
-      else
+      if (propMap.getType() != PropertyMapBase.ATTRIBUTE)
       {
          newPropMapBase.setOrderInfo(propMap.getOrderInfo());
       }
@@ -507,6 +510,7 @@ public class MapInverter
 
       PropertyMap newPropMap;
       int         type;
+      boolean     multiValued;
 
       // Create a new PropertyMap and add it to the appropriate list.
 
@@ -516,7 +520,6 @@ public class MapInverter
       {
          case PropertyMapBase.ATTRIBUTE:
             newClassMapBase.addAttributeMap(newPropMap);
-            newPropMap.setAttributeIsMultiValued(propMapBase.attributeIsMultiValued());
             break;
 
          case PropertyMapBase.PCDATA:
@@ -538,6 +541,12 @@ public class MapInverter
                           ((PropertyTableMap)propMapBase).getLinkInfo());
       }
 
+      multiValued = propMapBase.isMultiValued();
+      newPropMap.setIsMultiValued(multiValued);
+      if (multiValued)
+      {
+         newPropMap.setMVOrderInfo(propMapBase.getMVOrderInfo());
+      }
       if (type != PropertyMapBase.ATTRIBUTE)
       {
          newPropMap.setOrderInfo(propMapBase.getOrderInfo());

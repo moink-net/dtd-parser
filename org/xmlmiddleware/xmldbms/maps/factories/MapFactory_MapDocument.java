@@ -182,7 +182,7 @@ public class MapFactory_MapDocument
    // State variables -- property maps
    private PropertyMap      propMap;
    private Table            propertyTable;
-   private boolean          parentKeyIsUnique;
+   private boolean          parentKeyIsUnique, multiValued;
    private Key              uniqueKey;
 
    // State variables -- base class tables
@@ -193,9 +193,6 @@ public class MapFactory_MapDocument
 
    // State variables -- inline class maps
    private InlineClassMap   inlineClassMap;
-
-   // State variables -- property, related class, and inline class maps
-   private OrderInfo        orderInfo;
 
    // Debugging variables
    private int              indent;
@@ -335,7 +332,6 @@ public class MapFactory_MapDocument
       table = null;
       key = null;
       classMap = null;
-      orderInfo = null;
       propMap = null;
       inlineClassMap = null;
 //      indent = 0;
@@ -457,6 +453,10 @@ public class MapFactory_MapDocument
                processLocale(attrs);
                break;
 
+            case XMLDBMSConst.ELEM_TOKEN_MVORDERCOLUMN:
+               processOrderColumn(attrs, true);
+               break;
+
             case XMLDBMSConst.ELEM_TOKEN_NAMESPACE:
                processNamespace(attrs);
                break;
@@ -466,7 +466,7 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
-               processOrderColumn(attrs);
+               processOrderColumn(attrs, false);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_PATTERN:
@@ -484,8 +484,7 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_PROPERTYMAP:
-               // Just set the state. We create the propMap when we encounter
-               // the <ElementType>, <Attribute>, or <PCDATA> element.
+               processPropertyMap(attrs);
                stateStack.push(state);
                state = STATE_PROPERTYMAP;
                break;
@@ -658,6 +657,7 @@ public class MapFactory_MapDocument
             case XMLDBMSConst.ELEM_TOKEN_FIXEDORDER:
             case XMLDBMSConst.ELEM_TOKEN_LOCALE:
             case XMLDBMSConst.ELEM_TOKEN_MAPS:
+            case XMLDBMSConst.ELEM_TOKEN_MVORDERCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_NAMESPACE:
             case XMLDBMSConst.ELEM_TOKEN_OPTIONS:
             case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
@@ -792,8 +792,7 @@ public class MapFactory_MapDocument
 
       // Set whether the attribute is multi-valued.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_MULTIVALUED, XMLDBMSConst.DEF_MULTIVALUED);
-      propMap.setAttributeIsMultiValued(isYes(attrValue));
+      propMap.setIsMultiValued(multiValued);
    }
 
    private void processCatalog(Attributes attrs)
@@ -932,9 +931,10 @@ One solution is to store the format names in each column, then later have Map.re
             break;
 
          case iSTATE_PROPERTYMAP:
-            // Create a new PropertyMap.
+            // Create a new PropertyMap and set whether it is multi-valued.
 
             propMap = PropertyMap.create(elementTypeName, PropertyMap.ELEMENTTYPE);
+            propMap.setIsMultiValued(multiValued);
 
             // Check whether the <PropertyMap> element is inside a <ClassMap> or an
             // <InlineMap> element and add it accordingly. This throws an error if
@@ -1033,11 +1033,20 @@ One solution is to store the format names in each column, then later have Map.re
    private void processFixedOrder(Attributes attrs)
       throws MapException
    {
-      String attrValue;
+      OrderInfo orderInfo;
+      String    attrValue;
+
+      // If we're mapping a property and the property is an attribute, return an error.
+
+      if (state.intValue() == iSTATE_PROPERTYMAP)
+      {
+         if (propMap.getType() == PropertyMap.ATTRIBUTE)
+            throw new MapException("A PropertyMap for an attribute may not contain a FixedOrder element. (If the attribute is multi-valued, it may contain an MVOrderColumn element.)");
+      }
 
       // Create an OrderInfo object.
 
-      processOrder(attrs);
+      orderInfo = createOrderInfo(attrs, false);
 
       // Set the fixed order value.
 
@@ -1139,46 +1148,26 @@ One solution is to store the format names in each column, then later have Map.re
       map.addNumberFormat(formatName, numberFormat);
    }
 
-   private void processOrder(Attributes attrs)
-   {
-      String  ascending;
-
-      // Create a new OrderInfo object and add it to the appropriate parent object.
-
-      orderInfo = OrderInfo.create();
-      switch (state.intValue())
-      {
-         case iSTATE_PROPERTYMAP:
-            propMap.setOrderInfo(orderInfo);
-            break;
-
-         case iSTATE_RELATEDCLASS:
-            rcmWrapper.relatedClassMap.setOrderInfo(orderInfo);
-            break;
-
-         case iSTATE_INLINECLASS:
-            inlineClassMap.setOrderInfo(orderInfo);
-            break;
-      }
-
-      // Set whether the order is ascending or descending.
-
-      ascending = getAttrValue(attrs, XMLDBMSConst.ATTR_DIRECTION, XMLDBMSConst.DEF_DIRECTION);
-      orderInfo.setIsAscending(ascending.equals(XMLDBMSConst.ENUM_ASCENDING));
-   }
-
-   private void processOrderColumn(Attributes attrs)
+   private void processOrderColumn(Attributes attrs, boolean multiValued)
       throws MapException
    {
-      String   name;
-      boolean  generate;
-      Column   column;
-      LinkInfo linkInfo;
-      Table    orderColumnTable = null;
+      // This method processes both OrderColumn and MVOrderColumn. In the latter
+      // case, multiValued is true. This is passed to processOrder, which then
+      // calls setMVOrderInfo instead of setOrderInfo.
 
-      // Create an OrderInfo object and get the name of the order column
+      OrderInfo orderInfo;
+      String    name;
+      boolean   generate;
+      Column    column;
+      LinkInfo  linkInfo;
+      Table     orderColumnTable = null;
 
-      processOrder(attrs);
+      // Create an OrderInfo object
+
+      orderInfo = createOrderInfo(attrs, multiValued);
+
+      // Get the name of the order column and whether to generate it
+
       name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
       generate = isYes(getAttrValue(attrs, XMLDBMSConst.ATTR_GENERATE, XMLDBMSConst.DEF_GENERATE));
 
@@ -1187,6 +1176,14 @@ One solution is to store the format names in each column, then later have Map.re
       switch (state.intValue())
       {
          case iSTATE_PROPERTYMAP:
+            if (multiValued)
+            {
+               if (!propMap.isMultiValued())
+                  throw new MapException("A PropertyMap cannot contain an MVOrderColumn element unless the MultiValued attribute is set to 'Yes'.");
+            }
+            else if (propMap.getType() == PropertyMap.ATTRIBUTE)
+               throw new MapException("A PropertyMap for an attribute may not contain an OrderColumn element. (If the attribute is multi-valued, it may contain an MVOrderColumn element.)");
+
             // If the LinkInfo is null, the order column is in the class table.
             // If the LinkInfo is not null, the order column is in the table
             // containing the foreign key. Note that the parent table is the
@@ -1246,9 +1243,10 @@ One solution is to store the format names in each column, then later have Map.re
    private void processPCDATA()
       throws MapException
    {
-      // Create a new PropertyMap.
+      // Create a new PropertyMap and set whether it is multi-valued.
 
       propMap = PropertyMap.create(null, PropertyMap.PCDATA);
+      propMap.setIsMultiValued(multiValued);
 
       // Check whether the <PropertyMap> element is inside a <ClassMap> or an
       // <InlineMap> element and add it accordingly. This throws an error if the
@@ -1300,6 +1298,18 @@ One solution is to store the format names in each column, then later have Map.re
          generate = Key.XMLDBMS;
       }
       key.setKeyGeneration(generate, keyGenerator);
+   }
+
+   private void processPropertyMap(Attributes attrs)
+   {
+      String attrValue;
+
+      // All we do here is save whether the property is multi-valued.
+      // We actually create the propMap when we encounter the
+      // <ElementType>, <Attribute>, or <PCDATA> element.
+
+      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_MULTIVALUED, XMLDBMSConst.DEF_MULTIVALUED);
+      multiValued = isYes(attrValue);
    }
 
    private void processRelatedClass(Attributes attrs)
@@ -1662,6 +1672,46 @@ One solution is to store the format names in each column, then later have Map.re
 
       elementTokens = new TokenList(XMLDBMSConst.ELEMS, XMLDBMSConst.ELEM_TOKENS, XMLDBMSConst.ELEM_TOKEN_INVALID);
       enumTokens = new TokenList(XMLDBMSConst.ENUMS, XMLDBMSConst.ENUM_TOKENS, XMLDBMSConst.ENUM_TOKEN_INVALID);
+   }
+
+   private OrderInfo createOrderInfo(Attributes attrs, boolean multiValued)
+   {
+      OrderInfo orderInfo;
+      String    ascending;
+
+      // Create a new OrderInfo object and add it to the appropriate parent object.
+
+      orderInfo = OrderInfo.create();
+      switch (state.intValue())
+      {
+         case iSTATE_PROPERTYMAP:
+            if (multiValued)
+            {
+               propMap.setMVOrderInfo(orderInfo);
+            }
+            else
+            {
+               propMap.setOrderInfo(orderInfo);
+            }
+            break;
+
+         case iSTATE_RELATEDCLASS:
+            rcmWrapper.relatedClassMap.setOrderInfo(orderInfo);
+            break;
+
+         case iSTATE_INLINECLASS:
+            inlineClassMap.setOrderInfo(orderInfo);
+            break;
+      }
+
+      // Set whether the order is ascending or descending.
+
+      ascending = getAttrValue(attrs, XMLDBMSConst.ATTR_DIRECTION, XMLDBMSConst.DEF_DIRECTION);
+      orderInfo.setIsAscending(ascending.equals(XMLDBMSConst.ENUM_ASCENDING));
+
+      // Return the OrderInfo object
+
+      return orderInfo;
    }
 
    private void resolveFKWrappers()
