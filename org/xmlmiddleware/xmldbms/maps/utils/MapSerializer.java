@@ -30,8 +30,8 @@ import org.xmlmiddleware.utils.XMLName;
 import org.xmlmiddleware.utils.XMLWriter;
 
 import org.xmlmiddleware.conversions.StringFormatter;
-import org.xmlmiddleware.xmldbms.helpers.DateFormatter;
-import org.xmlmiddleware.xmldbms.helpers.NumberFormatter;
+import org.xmlmiddleware.conversions.helpers.DateFormatter;
+import org.xmlmiddleware.conversions.helpers.NumberFormatter;
 
 import org.xmlmiddleware.xmldbms.maps.ClassMap;
 import org.xmlmiddleware.xmldbms.maps.ClassMapBase;
@@ -650,7 +650,9 @@ public class MapSerializer extends XMLWriter
       else
       {
          // Otherwise, the formatter is an instance of a custom formatting
-         // class. In this case, just serialize the class name.
+         // class. In this case, just serialize the class name. Note that this
+         // includes the helper classes Base64Formatter, BooleanFormatter, and
+         // CharFormatter.
 
          attrs[count] = XMLDBMSConst.ATTR_CLASS;
          values[count++] = formatter.getClass().getName();

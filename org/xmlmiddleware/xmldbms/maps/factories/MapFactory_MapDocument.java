@@ -29,8 +29,8 @@ import org.xmlmiddleware.utils.TokenList;
 import org.xmlmiddleware.utils.XMLName;
 
 import org.xmlmiddleware.conversions.StringFormatter;
-import org.xmlmiddleware.xmldbms.helpers.NumberFormatter;
-import org.xmlmiddleware.xmldbms.helpers.DateFormatter;
+import org.xmlmiddleware.conversions.helpers.NumberFormatter;
+import org.xmlmiddleware.conversions.helpers.DateFormatter;
 
 import org.xmlmiddleware.xmldbms.maps.ClassMap;
 import org.xmlmiddleware.xmldbms.maps.Column;
@@ -166,6 +166,7 @@ public class MapFactory_MapDocument
    private Hashtable       propTables = new Hashtable();
    private Hashtable       classTables = new Hashtable();
    private Hashtable       formats = new Hashtable();
+   private Hashtable       formatTypes = new Hashtable();
 
    // State variables -- map
    private Map             map;
@@ -304,6 +305,7 @@ public class MapFactory_MapDocument
       propTables.clear();
       classTables.clear();
       formats.clear();
+      formatTypes.clear();
 
       map = new Map();
       inlineClassMap = null;
@@ -801,7 +803,7 @@ public class MapFactory_MapDocument
    {
       Column          column;
       String          columnName, attrValue;
-      int             type, nullability;
+      int             type = Types.NULL, nullability;
       StringFormatter formatter;
 
       // Create the column and add it to the table. This throws an error if
@@ -882,6 +884,10 @@ public class MapFactory_MapDocument
          if (formatter == null)
             throw new MapException("Column " + columnName + " uses the named format " + attrValue + ". The format was not declared.");
          column.setFormatter(formatter);
+      }
+      else if (type != Types.NULL)
+      {
+         column.setFormatter(map.getDefaultFormatter(type));
       }
    }
 
@@ -1899,11 +1905,20 @@ public class MapFactory_MapDocument
       tokenizer = new StringTokenizer(defaultForTypes, " \n\r\t", false);
       while (tokenizer.hasMoreTokens())
       {
+         // Get the type name and type indicator. Check that the type name is valid and
+         // that no default formatter has already been set for the type.
+
          typeName = tokenizer.nextToken();
          type = JDBCTypes.getType(typeName);
          if (type == Types.NULL)
             throw new MapException("Invalid JDBC type name: " + typeName);
-         map.addDefaultFormatter(type, formatter);
+         if (formatTypes.get(typeName) != null)
+            throw new MapException("Default format already set for type: " + typeName);
+         formatTypes.put(typeName, typeName);
+
+         // Set the default formatter
+
+         map.setDefaultFormatter(type, formatter);
       }
    }
 

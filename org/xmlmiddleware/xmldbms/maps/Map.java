@@ -25,9 +25,17 @@
 package org.xmlmiddleware.xmldbms.maps;
 
 import org.xmlmiddleware.conversions.StringFormatter;
+import org.xmlmiddleware.conversions.helpers.Base64Formatter;
+import org.xmlmiddleware.conversions.helpers.BooleanFormatter;
+import org.xmlmiddleware.conversions.helpers.CharFormatter;
+import org.xmlmiddleware.conversions.helpers.DateFormatter;
+import org.xmlmiddleware.conversions.helpers.NumberFormatter;
 import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.utils.XMLName;
 
+import java.sql.Types;
+import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -361,7 +369,7 @@ public class Map extends MapBase
    /** Construct a new Map. */
    public Map()
    {
-//      initFormats();
+      initFormatters();
    }
 
    //**************************************************************************
@@ -405,7 +413,7 @@ public class Map extends MapBase
     *
     * @param The JDBC type. Must be a valid value from the java.sql.Types class.
     *
-    * @return The formatting object. May be null.
+    * @return The formatting object. This is never null.
     */
    public final StringFormatter getDefaultFormatter(int type)
    {
@@ -425,56 +433,21 @@ public class Map extends MapBase
    }
 
    /**
-    * Add the default formatting object for a type.
+    * Set the default formatting object for a type.
     *
     * <p>The format object must be an object that implements the 
     * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
     * @param type The JDBC type.
-    * @param formatter The formatting object. If this is null, the default format
-    *    object for the column type is removed.
-    * @exception MapException Thrown if a default format has already been set for the type.
+    * @param formatter The formatting object. Must not be null.
     */
-   public void addDefaultFormatter(int type, StringFormatter formatter)
-      throws MapException
+   public void setDefaultFormatter(int type, StringFormatter formatter)
    {
-      Integer i;
-
       if (!JDBCTypes.typeIsValid(type))
          throw new IllegalArgumentException("Not a valid JDBC type: " + type);
       checkArgNull(formatter, ARG_FORMATTER);
 
-      i = new Integer(type);
-      if (defaultFormatters.get(i) != null)
-         throw new IllegalArgumentException("Default format for type " + JDBCTypes.getName(type) + " already set.");
-      defaultFormatters.put(i, formatter);
-   }
-
-   /**
-    * Remove a default formatting object.
-    *
-    * @param type The JDBC type.
-    * @exception MapException Thrown if the formatting object is not found.
-    */
-   public void removeDefaultFormatter(int type)
-      throws MapException
-   {
-      Object o;
-
-      if (!JDBCTypes.typeIsValid(type))
-         throw new IllegalArgumentException("Not a valid JDBC type: " + type);
-
-      o = defaultFormatters.remove(new Integer(type));
-      if (o == null)
-         throw new MapException("Default format for type " + JDBCTypes.getName(type) + " not found.");
-   }
-
-   /**
-    * Remove the default formatting objects for all types.
-    */
-   public void removeAllDefaultFormatters()
-   {
-      defaultFormatters.clear();
+      defaultFormatters.put(new Integer(type), formatter);
    }
 
    //**************************************************************************
@@ -991,13 +964,34 @@ public class Map extends MapBase
    // Private methods
    //**************************************************************************
 
-/*
-   private void initFormats()
+   private void initFormatters()
    {
-      dateFormats.put(DEFAULT, DateFormat.getDateInstance());
-      timeFormats.put(DEFAULT, DateFormat.getTimeInstance());
-      datetimeFormats.put(DEFAULT, DateFormat.getDateTimeInstance());
-      numberFormats.put(DEFAULT, NumberFormat.getInstance());
+      Base64Formatter base64Formatter = new Base64Formatter();
+      CharFormatter   charFormatter = new CharFormatter();
+      NumberFormatter numberFormatter = new NumberFormatter(NumberFormat.getNumberInstance());
+
+      setDefaultFormatter(Types.BINARY, base64Formatter);
+      setDefaultFormatter(Types.VARBINARY, base64Formatter);
+      setDefaultFormatter(Types.LONGVARBINARY, base64Formatter);
+
+      setDefaultFormatter(Types.CHAR, charFormatter);
+      setDefaultFormatter(Types.VARCHAR, charFormatter);
+      setDefaultFormatter(Types.LONGVARCHAR, charFormatter);
+
+      setDefaultFormatter(Types.DOUBLE, numberFormatter);
+      setDefaultFormatter(Types.FLOAT, numberFormatter);
+      setDefaultFormatter(Types.REAL, numberFormatter);
+      setDefaultFormatter(Types.DECIMAL, numberFormatter);
+      setDefaultFormatter(Types.NUMERIC, numberFormatter);
+      setDefaultFormatter(Types.BIGINT, numberFormatter);
+      setDefaultFormatter(Types.INTEGER, numberFormatter);
+      setDefaultFormatter(Types.SMALLINT, numberFormatter);
+      setDefaultFormatter(Types.TINYINT, numberFormatter);
+
+      setDefaultFormatter(Types.BIT, new BooleanFormatter());
+
+      setDefaultFormatter(Types.DATE, new DateFormatter(DateFormat.getDateInstance()));
+      setDefaultFormatter(Types.TIME, new DateFormatter(DateFormat.getTimeInstance()));
+      setDefaultFormatter(Types.TIMESTAMP, new DateFormatter(DateFormat.getDateTimeInstance()));
    }
-*/
 }

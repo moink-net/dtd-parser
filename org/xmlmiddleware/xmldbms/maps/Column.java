@@ -338,7 +338,7 @@ public class Column extends MapBase
     * <p>This method returns an object that implements the
     * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
-    * @return The formatting object. May be null.
+    * @return The formatting object. This should never be null.
     */
    public final StringFormatter getFormatter()
    {
@@ -351,11 +351,13 @@ public class Column extends MapBase
     * <p>The formatting object must implement the
     * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
-    * @param formatter The formatting object. If this is null, the default format
-    *    object for the column type will be used.
+    * <p><b>WARNING!</b> Map factories must set a formatter for each column.</p>
+    *
+    * @param formatter The formatting object. May not be null.
     */
    public void setFormatter(StringFormatter formatter)
    {
+      checkArgNull(formatter, ARG_FORMATTER);
       this.formatter = formatter;
    }
 }

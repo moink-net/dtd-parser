@@ -770,6 +770,7 @@ public class MapFactory_Database
             column.setLength(len);
          }
          column.setNullability(rs.getInt(11));
+         column.setFormatter(map.getDefaultFormatter(type));
 
          // If the column is not part of a foreign key, create a ColumnMap for it.
 
