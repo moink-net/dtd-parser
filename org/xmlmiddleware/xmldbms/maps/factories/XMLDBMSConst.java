@@ -387,11 +387,11 @@ public class XMLDBMSConst
    public static String DEF_MULTIVALUED      = ENUM_NO;
    public static String DEF_QUOTEIDENTIFIERS = ENUM_YES;
    public static String DEF_DATABASENAME     = "Default";
-   public static String DEF_UNIQUEKEYNAME    = "Primary Key";
    public static String DEF_VERSION          = "2.0";
    public static String DEF_DIRECTION        = ENUM_ASCENDING;
 
    // Special attribute values
 
    public static String VALUE_DATABASE = "Database";
+   public static String VALUE_PRIMARYKEY = "Primary Key";
 }

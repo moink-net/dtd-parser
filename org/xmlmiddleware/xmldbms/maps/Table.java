@@ -369,7 +369,7 @@ public class Table extends MapBase
       checkArgNull(key, ARG_KEY);
       if (key.getType() != Key.PRIMARY_KEY)
          throw new IllegalArgumentException("Key is not a primary key.");
-      this.primaryKey = primaryKey;
+      primaryKey = key;
    }
 
    /**
@@ -507,7 +507,7 @@ public class Table extends MapBase
    public void addForeignKey(Key key)
       throws MapException
    {
-      addKey(uniqueKeys, key, Key.FOREIGN_KEY);
+      addKey(foreignKeys, key, Key.FOREIGN_KEY);
    }
 
    /**
@@ -552,11 +552,11 @@ public class Table extends MapBase
       {
          if (type == Key.UNIQUE_KEY)
          {
-            Key.createUniqueKey(keyName);
+            key = Key.createUniqueKey(keyName);
          }
          else if (type == Key.FOREIGN_KEY)
          {
-            Key.createForeignKey(keyName);
+            key = Key.createForeignKey(keyName);
          }
          hash.put(keyName, key);
       }

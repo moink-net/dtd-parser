@@ -236,6 +236,10 @@ public class MapSerializer extends XMLWriter
 
       writeElementStart(XMLDBMSConst.ELEM_CLASSMAP, 0, false);
 
+      // Write the <ElementType> element.
+
+      writeElementType(classMap.getElementTypeName());
+
       // Check whether the ClassMap uses a different ClassMap. If so, write
       // a <UseClassMap> element. If not, write the rest of the <ClassMap> element.
 
@@ -363,11 +367,11 @@ public class MapSerializer extends XMLWriter
                   currCatalogName = null, newCatalogName = null,
                   currSchemaName = null, newSchemaName = null;
       boolean     databaseChange, catalogChange, schemaChange;
+      int         count;
 
       // Start the Databases element.
 
       writeElementStart(XMLDBMSConst.ELEM_DATABASES, 0, false);
-      writeElementEnd(XMLDBMSConst.ELEM_DATABASES);
 
       // Get the tables. Note that this is probably
       // broken in some extremely abusive naming cases...
@@ -390,11 +394,11 @@ public class MapSerializer extends XMLWriter
 
       // Process the tables, grouping them by database, catalog, and schema.
 
-      for (int i = 0; i < tables.size(); i++)
+      for (int i = 0; i < tablesArray.length; i++)
       {
          // Get the names for the next table.
 
-         table = (Table)tables.elementAt(i);
+         table = tablesArray[i];
          newDatabaseName = table.getDatabaseName();
          newCatalogName = table.getCatalogName();
          newSchemaName = table.getSchemaName();
@@ -405,18 +409,18 @@ public class MapSerializer extends XMLWriter
          catalogChange = false;
          schemaChange = false;
 
-         if ((!newDatabaseName.equals(currDatabaseName)) || (i == 0))
+         if (nameChanged(newDatabaseName, currDatabaseName) || (i == 0))
          {
             databaseChange = true;
             catalogChange = true;
             schemaChange = true;
          }
-         else if (!newCatalogName.equals(currCatalogName))
+         else if (nameChanged(newCatalogName, currCatalogName))
          {
             catalogChange = true;
             schemaChange = true;
          }
-         else if (!newSchemaName.equals(currSchemaName))
+         else if (nameChanged(newSchemaName, currSchemaName))
          {
             schemaChange = true;
          }
@@ -453,17 +457,25 @@ public class MapSerializer extends XMLWriter
 
          if (catalogChange)
          {
-            attrs[0] = XMLDBMSConst.ATTR_NAME;
-            values[0] = newCatalogName;
-            writeElementStart(XMLDBMSConst.ELEM_CATALOG, 1, false);
+            count = 0;
+            if (newCatalogName != null)
+            {
+               attrs[count] = XMLDBMSConst.ATTR_NAME;
+               values[count++] = newCatalogName;
+            }
+            writeElementStart(XMLDBMSConst.ELEM_CATALOG, count, false);
             currCatalogName = newCatalogName;
          }
 
          if (schemaChange)
          {
-            attrs[0] = XMLDBMSConst.ATTR_NAME;
-            values[0] = newSchemaName;
-            writeElementStart(XMLDBMSConst.ELEM_SCHEMA, 1, false);
+            count = 0;
+            if (newCatalogName != null)
+            {
+               attrs[count] = XMLDBMSConst.ATTR_NAME;
+               values[count++] = newSchemaName;
+            }
+            writeElementStart(XMLDBMSConst.ELEM_SCHEMA, count, false);
             currSchemaName = newSchemaName;
          }
 
@@ -785,16 +797,16 @@ public class MapSerializer extends XMLWriter
 
       // Write the cached inline class maps
 
-      while ((o = inlineClassMaps.pop()) != null)
+      while (!inlineClassMaps.empty())
       {
-         writeInlineClassMap((InlineClassMap)o);
+         writeInlineClassMap((InlineClassMap)inlineClassMaps.pop());
       }
 
       // Write the cached related class maps
 
-      while ((o = relatedClassMaps.pop()) != null)
+      while (!relatedClassMaps.empty())
       {
-         writeRelatedClassMap((RelatedClassMap)o);
+         writeRelatedClassMap((RelatedClassMap)relatedClassMaps.pop());
       }
    }
 
@@ -1001,7 +1013,8 @@ public class MapSerializer extends XMLWriter
    private String getQualifiedName(XMLName xmlName)
       throws MapException
    {
-      // Constructs a qualified name from an xmlName.
+      // Constructs a qualified name from an xmlName, using the prefixes
+      // passed to the MapSerializer, if any.
 
       try
       {
@@ -1024,8 +1037,15 @@ public class MapSerializer extends XMLWriter
       {
          throw new MapException(e.getMessage());
       }
+   }
 
-
+   private boolean nameChanged(String newName, String oldName)
+   {
+      if (newName == null)
+      {
+         return (oldName != null);
+      }
+      return !newName.equals(oldName);
    }
 
    private void sort(String[] keys, Object[] values)

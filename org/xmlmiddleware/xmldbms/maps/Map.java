@@ -975,12 +975,14 @@ public class Map extends MapBase
    public ClassMap createClassMap(XMLName elementTypeName)
    {
       ClassMap classMap;
+      String   universalName;
 
-      classMap = (ClassMap)classMaps.get(elementTypeName);
+      universalName = elementTypeName.getUniversalName();
+      classMap = (ClassMap)classMaps.get(universalName);
       if (classMap == null)
       {
          classMap = ClassMap.create(elementTypeName);
-         classMaps.put(elementTypeName, classMap);
+         classMaps.put(universalName, classMap);
       }
       return classMap;
    }

@@ -188,8 +188,8 @@ public class MapFactory_MapDocument
    private OrderInfo       orderInfo;
 
    // Debugging variables
-//   private int                 indent;
-//   private boolean             debug = true;
+   private int                 indent;
+   private boolean             debug = false;
 
    //**************************************************************************
    // Constructors
@@ -300,10 +300,10 @@ public class MapFactory_MapDocument
     */
    public void startDocument () throws SAXException
    {
-//      if (debug)
-//      {
-//         System.out.println("Document started.");
-//      }
+      if (debug)
+      {
+         System.out.println("Document started.");
+      }
 
       // Initialize global variables.
       state = STATE_NONE;
@@ -334,16 +334,17 @@ public class MapFactory_MapDocument
       try
       {
         resolveRCMWrappers();
+        // MapInverter.createDBView(map);
       }
       catch (MapException m)
       {
          throw new SAXException(m);
       }
 
-//      if (debug)
-//      {
-//         System.out.println("Document ended.");
-//      }
+      if (debug)
+      {
+         System.out.println("Document ended.");
+      }
    }
 
    /**
@@ -356,12 +357,12 @@ public class MapFactory_MapDocument
    {
       
       // Debugging code.
-//      if (debug)
-//      {
-//         indent();
-//         System.out.println(name + " (start)");
-//         indent += 3;
-//      }
+      if (debug)
+      {
+         indent();
+         System.out.println(name + " (start)");
+         indent += 3;
+      }
 
       try
       {
@@ -559,12 +560,12 @@ public class MapFactory_MapDocument
       int    token;
       
       // Debugging code.
-//      if (debug)
-//      {
-//         indent -= 3;
-//         indent();
-//         System.out.println(name + " (end)");
-//      }
+      if (debug)
+      {
+         indent -= 3;
+         indent();
+         System.out.println(name + " (end)");
+      }
 
       try
       {
@@ -838,6 +839,7 @@ One solution is to store the format names in each column, then later have Map.re
       // Get the qualified element type name and convert it to an XMLName.
 
       qualifiedName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+
       elementTypeName = XMLName.create(qualifiedName, map.getNamespaceURIs());
 
       switch (state.intValue())
@@ -1063,7 +1065,21 @@ One solution is to store the format names in each column, then later have Map.re
       String uri, prefix;
 
       prefix = getAttrValue(attrs, XMLDBMSConst.ATTR_PREFIX);
+      if (prefix == null)
+      {
+         // This is a somewhat annoying predicament. In getAttrValue, we set the
+         // attribute value to null if it is an empty string. This is because some
+         // parsers don't follow the SAX spec and incorrectly return an empty string
+         // when the attribute is not found. However, an empty string is a legal value
+         // for the prefix. Therefore, if prefix is null, we assume an empty value was
+         // actually retrieved. We assume that the prefix attribute was present, since
+         // it is required by the DTD and we have undefined behavior if the document
+         // is not valid. Long term, we need to simply fail with parsers that are bogus...
+
+         prefix = "";
+      }
       uri = getAttrValue(attrs, XMLDBMSConst.ATTR_URI);
+
       map.addNamespace(prefix, uri);
    }
 
@@ -1505,11 +1521,9 @@ One solution is to store the format names in each column, then later have Map.re
    private void resolveRCMWrappers()
       throws MapException
    {
-      RCMWrapper rcmWrapper;
-
-      while ((rcmWrapper = (RCMWrapper)rcmWrapperStack.pop()) != null)
+      while (!rcmWrapperStack.empty())
       {
-         resolveRCMWrapper(rcmWrapper);
+         resolveRCMWrapper((RCMWrapper)rcmWrapperStack.pop());
       }
    }
 
@@ -1657,7 +1671,7 @@ One solution is to store the format names in each column, then later have Map.re
    {
       Key uniqueKey;
 
-      if (uniqueKeyName == null)
+      if (uniqueKeyName.equals(XMLDBMSConst.VALUE_PRIMARYKEY))
       {
          uniqueKey = uniqueKeyTable.getPrimaryKey();
          if (uniqueKey == null)
@@ -1730,13 +1744,13 @@ One solution is to store the format names in each column, then later have Map.re
    // Private methods -- debugging
    //**************************************************************************
 
-//   private void indent()
-//   {
-//      for (int i = 0; i < indent; i++)
-//      {
-//         System.out.print(" ");
-//      }
-//   }
+   private void indent()
+   {
+      for (int i = 0; i < indent; i++)
+      {
+         System.out.print(" ");
+      }
+   }
 
    //**************************************************************************
    // Inner class: RCMWrapper

@@ -31,7 +31,8 @@ import java.util.Hashtable;
  * a colon, and the local name. The universal form is constructed from the
  * namespace URI, a caret (^), and the local name. If the name does not
  * belong to a namespace, then all three forms are the same and the prefix
- * and URI are null. <b>IMPORTANT:</b> Unprefixed attribute names do not
+ * and URI are null. Note that an empty string ("") is used as the prefix
+ * for the default namespace. <b>IMPORTANT:</b> Unprefixed attribute names do not
  * belong to a namespace.</p>
  *
  * <p>For example:</p>
@@ -72,6 +73,16 @@ import java.util.Hashtable;
  *    Universal name:  "element2"
  *    Prefix:          null
  *    Namespace URI:   null<br />
+ *
+ *    &lt;element3 xmlns="http://foo" &gt;<br />
+ *
+ *    element2:
+ *    --------------------------------------
+ *    Local name:      "element3"
+ *    Qualified name:  "element3"
+ *    Universal name:  "http://foo^element3"
+ *    Prefix:          ""
+ *    Namespace URI:   "http://foo"<br />
  *
  * </pre>
  *
@@ -142,7 +153,8 @@ public class XMLName
     *
     * @param uri The namespace URI. May be null.
     * @param local The local name.
-    * @param prefix The namespace prefix. May be null.
+    * @param prefix The namespace prefix. May be null. Use an empty string for
+    *    the default namespace.
     *
     * @return The XMLName.
     */
@@ -196,7 +208,8 @@ public class XMLName
     *
     * @param qualifiedName Qualified name. Not required to contain a prefix.
     * @param uris Hashtable containing prefixes as keys and namespace URIs as
-    *   values.
+    *   values. If qualifiedName does not contain a colon, this may be null.
+    *   Use an empty string ("") for the prefix of the default namespace.
     * @return The XMLName.
     * @exception IllegalArgumentException Thrown if the qualified name contains
     *   more than one colon or the Hashtable does not contain the prefix as a
@@ -211,41 +224,47 @@ public class XMLName
       String local = qualifiedName, prefix = null, uri = null;
       int    colon;
 
-      // If the Hashtable is null, namespaces are not being used. In this
-      // case, just return an XMLName 
-      if (uris == null)
-         throw new IllegalArgumentException("Argument uris must not be null.");
-
       checkQualifiedName(qualifiedName);
 
-      // Search the qualified name for a colon and get the prefix
+      // Search the qualified name for a colon and get the prefix,
       // namespace URI, and local name.
 
       colon = qualifiedName.indexOf(COLON);
       if (colon == -1)
       {
-         // Check for a default namespace.
-         uri = (String)uris.get("");
+         // If namespaces are used, check for a default namespace. If one is found,
+         // set the prefix to an empty string.
+
+         if (uris != null)
+         {
+            uri = (String)uris.get("");
+            if (uri != null)
+            {
+               prefix = "";
+            }
+         }
       }
       else
       {
+         if (uris == null)
+            throw new IllegalArgumentException("Argument uris must not be null when the qualified name contains a prefix.");
+
          // Get the local name, prefix, and namespace URI.
          
          prefix = qualifiedName.substring(0, colon);
          local = qualifiedName.substring(colon + 1);
-         if (prefix.toLowerCase().equals(XMLNS))
-         {
-            // If the prefix is xmlns, there is no namespace (by definition).
-            // Therefore, leave the URI null.
-         }
-         else if (prefix.toLowerCase().equals(XML))
+         if (prefix.toLowerCase().equals(XML))
          {
             // By definition, xml prefixes have a namespace of
             // http://www.w3.org/XML/1998/namespace.
             uri = W3CNAMESPACE;
          }
-         else
+         else if (!prefix.toLowerCase().equals(XMLNS))
          {
+            // If the prefix is xmlns, there is no namespace (by definition).
+            // Therefore, leave the URI null. Otherwise, get the URI corresponding
+            // to the prefix.
+
             uri = (String)uris.get(prefix);
             if (uri == null)
                throw new IllegalArgumentException("No namespace URI corresponding to prefix: " + prefix);
@@ -280,7 +299,7 @@ public class XMLName
     * Construct a qualified name. Returns the local name if the URI is
     * null.
     *
-    * @param prefix The namespace prefix.
+    * @param prefix The namespace prefix. May be null or empty.
     * @param localName The local name.
     */
    public static String getQualifiedName(String prefix, String localName)
@@ -288,7 +307,10 @@ public class XMLName
       checkLocalName(localName);
       checkPrefix(prefix);
 
-      if (prefix == null) return localName;
+      // Return the local name if there is no prefix or if the prefix is
+      // the empty string.
+
+      if ((prefix == null) || (prefix.length() == 0)) return localName;
       return prefix + COLON + localName;
    }
 
@@ -298,7 +320,8 @@ public class XMLName
     *
     * @param universalName The universal name. Not required to contain a URI.
     * @param prefixes Hashtable containing namespace URIs as keys and prefixes as
-    *    values.
+    *    values. If the universal name does not contain a caret, this may be null.
+    *    Use an empty string ("") for the prefix of the default namespace.
     * @exception IllegalArgumentException Thrown if no prefix corresponding to the
     *    namespace URI was found.
     */
@@ -306,17 +329,24 @@ public class XMLName
    {
       String uri, prefix, localName;
 
-      if (prefixes == null)
-         throw new IllegalArgumentException("prefixes argument cannot be null.");
-
       uri = getURIFromUniversal(universalName);
       localName = getLocalFromUniversal(universalName);
       if (uri == null) return localName;
 
+      if (prefixes == null)
+         throw new IllegalArgumentException("prefixes argument cannot be null when the universal name contains a URI.");
+
       prefix = (String)prefixes.get(uri);
       if (prefix == null)
          throw new IllegalArgumentException("No prefix corresponding to the namespace URI: " + uri);
-      return prefix + COLON + localName;
+      if (prefix.length() == 0)
+      {
+         return localName;
+      }
+      else
+      {
+         return prefix + COLON + localName;
+      }
    }
 
    /**
@@ -350,9 +380,6 @@ public class XMLName
       String local = qualifiedName, prefix = null, uri = null;
       int    colon;
 
-      if (uris == null)
-         throw new IllegalArgumentException("Argument uris must not be null.");
-
       checkQualifiedName(qualifiedName);
 
       // Search the qualified name for a colon and get the prefix
@@ -361,28 +388,34 @@ public class XMLName
       colon = qualifiedName.indexOf(COLON);
       if (colon == -1)
       {
-         // Check for a default namespace.
-         uri = (String)uris.get("");
+         // If namespaces are used, check for a default namespace.
+
+         if (uris != null)
+         {
+            uri = (String)uris.get("");
+         }
       }
       else
       {
+         if (uris == null)
+            throw new IllegalArgumentException("Argument uris must not be null when the qualified name contains a prefix.");
+
          // Get the local name, prefix, and namespace URI.
          
          prefix = qualifiedName.substring(0, colon);
          local = qualifiedName.substring(colon + 1);
-         if (prefix.toLowerCase().equals(XMLNS))
-         {
-            // If the prefix is xmlns, there is no namespace (by definition).
-            // Therefore, leave the URI null.
-         }
-         else if (prefix.toLowerCase().equals(XML))
+
+         if (prefix.toLowerCase().equals(XML))
          {
             // By definition, xml prefixes have a namespace of
             // http://www.w3.org/XML/1998/namespace.
             uri = W3CNAMESPACE;
          }
-         else
+         else if (!prefix.toLowerCase().equals(XMLNS))
          {
+            // If the prefix is xmlns, there is no namespace (by definition).
+            // Therefore, leave the URI null. Otherwise, get the URI.
+
             uri = (String)uris.get(prefix);
             if (uri == null)
                throw new IllegalArgumentException("No namespace URI corresponding to prefix: " + prefix);
@@ -606,9 +639,6 @@ public class XMLName
       // Check for valid characters not implemented
 
       if (prefix == null) return;
-
-      if (prefix.length() == 0)
-         throw new IllegalArgumentException("Prefix must have non-zero length.");
 
       if (prefix.indexOf(COLON) != -1)
          throw new IllegalArgumentException("Prefix contains a colon: " + prefix);

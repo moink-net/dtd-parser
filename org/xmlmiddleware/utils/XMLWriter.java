@@ -70,6 +70,9 @@ import java.io.Writer;
  *    writer.close();
  * </pre>
  *
+ * <p><b>WARNING:</b> This class does not check that you write a valid XML document.
+ * For example, you could write two DOCTYPE statements or improperly nested elements.</p>
+ *
  * @author Ronald Bourret, 1998-9, 2001
  * @version 2.0
  */
@@ -121,8 +124,7 @@ public class XMLWriter
                              AMP    = '&',
                              SPACE  = ' ',
                              EQUALS = '=',
-                             SLASH  = '/'
-;
+                             SLASH  = '/';
 
    //**************************************************************************
    // Variables
@@ -136,7 +138,7 @@ public class XMLWriter
 
    private Writer  writer = null;
    private boolean pretty = false, charsWritten = false;
-   private int     indent = 0, saveIndent = 0, increment = 3;
+   private int     saveIndent = -1, increment = 3, indent = -1 * increment;
 
    //**************************************************************************
    // Constructors
@@ -175,6 +177,8 @@ public class XMLWriter
    /**
     * Set the Writer.
     *
+    * <p>This method should not be called after you have started writing the document.</p>
+    *
     * @param writer The writer. The writer must implement the write(String,int,int)
     *    and write(int) methods
     */
@@ -186,6 +190,8 @@ public class XMLWriter
    /**
     * Set the pretty printing options.
     *
+    * <p>This method should not be called after you have started writing the document.</p>
+    *
     * @param pretty Whether to perform pretty printing.
     * @param increment The number of spaces by which to indent nested
     *  child elements in their parent. If this is less then 0, it is
@@ -195,6 +201,7 @@ public class XMLWriter
    {
       this.pretty = pretty;
       this.increment = (increment < 0) ? 3 : increment;
+      this.indent = -1 * this.increment;
    }
 
    /**
@@ -268,16 +275,28 @@ public class XMLWriter
     *
     * @param name The name of the element type.
     * @param attrs The number of entries in the attrs and values arrays. May be 0.
+    *    These entries must be non-null.
     * @param empty Whether the element is empty. 
     */
    public void writeElementStart(String name, int numAttrs, boolean empty)
       throws IOException
    {
+      // Increment the indent value.
+
+      indent += increment;
+
+      // If we are starting a new element, it is not in mixed content
+      // (charsWritten equals false), and we are doing pretty-printing,
+      // then indent the element.
+
       if (!charsWritten && pretty)
       {
          writer.write(RETURN, 0, lRETURN);
          indent();
       }
+
+      // Write the element start tag, including any attributes.
+
       writer.write(LT);
       writer.write(name, 0, name.length());
       if (attrs != null)
@@ -287,17 +306,20 @@ public class XMLWriter
             writer.write(SPACE);
             writer.write(attrs[i], 0, attrs[i].length());
             writer.write(EQUALS);
-            writeAttribute(values[i]);
+            writeAttributeValue(values[i]);
          }
       }
+
+      // If this is an empty element, close it and decrement the indent level.
+
       if (empty)
       {
          writer.write(SLASH);
+         indent -= increment;
       }
-      else
-      {
-         indent += increment;
-      }
+
+      // Finish the start tag.
+
       writer.write(GT);
    }
 
@@ -309,21 +331,40 @@ public class XMLWriter
    public void writeElementEnd(String name)
       throws IOException
    {
-      indent -= increment;
-      if (!charsWritten && pretty)
+      if (charsWritten)
       {
-         writer.write(RETURN);
+         // If the element being ended contained text or mixed content, check if
+         // it was the outermost element that did so. If so, reset charsWritten
+         // and saveIndent. Resetting charsWritten allows us to start printing indents
+         // again. Resetting saveIndent allows us to flag the start of the next
+         // element that contains character or mixed content.
+
+         if (saveIndent == indent)
+         {
+            // See notes in writeCharacters().
+            charsWritten = false;
+            saveIndent = -1;
+         }
+      }
+      else if (pretty)
+      {
+         // If the element being ended had element or empty content and we are
+         // pretty printing, then start a new line and indent.
+
+         writer.write(RETURN, 0, lRETURN);
          indent();
       }
+
+      // Decrement the indent level.
+
+      indent -= increment;
+
+      // Write the element end tag and flush the writer.
+
       writer.write(LT);
       writer.write(SLASH);
       writer.write(name, 0, name.length());
       writer.write(GT);
-      if (indent == saveIndent)
-      {
-         // See note in writeCharacters().
-         charsWritten = false;
-      }
       writer.flush();
    }
 
@@ -346,15 +387,37 @@ public class XMLWriter
    public void writeCharacters(char[] characters, int start, int length)
       throws IOException
    {
-      // Write out the characters, flag that characters have been written, and
-      // save the indent level. We save the indent level because we assume that
-      // once we are inside an element with mixed content, we no longer want to
-      // perform any indents. We use the indent level as a flag to tell us when
-      // we leave that mixed element.
+      // Write out the characters.
 
       characters(characters, start, length);
+
+      // Flag that characters have been written. When we are inside an element in
+      // which characters have been written and we start a new element, we will
+      // not perform any indentation. This is because the the new element is in
+      // mixed content and indentation would be wrong. For example, we don't indent
+      // before the <b> element in the following:
+      //
+      //    <p>We indent the paragraph element <b>but not the bold element</b>.</p>
+      //
+      // We also won't perform indentation before ending the element. For example,
+      // we don't indent before </price> in the following:
+      //
+      //    <price>12.34</price>
+
       charsWritten = true;
-      saveIndent = indent;
+
+      // If the saved indent level is -1, then we have just started an element with
+      // character or mixed content. Save the indent level of this element so we
+      // can determine when we end it. After we end this element, we will start
+      // indenting again. Note that if we are already inside an element with character
+      // or mixed content (saveIndent is not -1), we don't overwrite saveIndent.
+      // (Note also that we could use saveIndent as a flag in place of charsWritten.
+      // However, it is less confusing(?) to have separate flags.)
+
+      if (saveIndent == -1)
+      {
+         saveIndent = indent;
+      }
    }
 
    /**
@@ -389,7 +452,7 @@ public class XMLWriter
       }
    }
 
-   private void writeAttribute(String value) throws IOException
+   private void writeAttributeValue(String value) throws IOException
    {
       writer.write(QUOT);
       characters(value.toCharArray(), 0, value.length());
