@@ -595,6 +595,7 @@ public class MapFactory_DTD
    private void addPropertyMap(ClassMap classMap, XMLName name, boolean multiValued, boolean optional, int type)
       throws XMLMiddlewareException, SQLException
    {
+      XMLName     propName;
       PropertyMap propMap;
       Table       table;
       Column      column;
@@ -602,9 +603,13 @@ public class MapFactory_DTD
       int         nullable;
       OrderInfo   orderInfo;
 
-      // Create a new PropertyMap and add it to the ClassMap.
+      // Create a new PropertyMap. We use a null name for PCDATA maps.
 
-      propMap = PropertyMap.create(name, type);
+      propName = (type == PropertyMap.PCDATA) ? null : name;
+      propMap = PropertyMap.create(propName, type);
+
+      // Add the PropertyMap to the ClassMap.
+
       if (type == PropertyMap.ATTRIBUTE)
       {
          classMap.addAttributeMap(propMap);
