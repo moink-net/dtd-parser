@@ -56,8 +56,8 @@ public class DDLGenerator
    // Class variables
    //**************************************************************************
 
-   private Hashtable dbInfos;
-   private DBInfo    dbInfo;
+   private Hashtable        dbInfos;
+   private DBInfo           dbInfo;
 
    //**************************************************************************
    // Constants
@@ -555,49 +555,62 @@ public class DDLGenerator
    {
       dbInfo.quote = meta.getIdentifierQuoteString();
       if (dbInfo.quote == null) dbInfo.quote = "";
-      dbInfo.isCatalogAtStart = meta.isCatalogAtStart();
-      dbInfo.catalogSeparator = meta.getCatalogSeparator();
-      if (dbInfo.catalogSeparator == null) dbInfo.catalogSeparator = ".";
-      if (dbInfo.catalogSeparator.length() == 0) dbInfo.catalogSeparator = ".";
-      dbInfo.useCatalog = meta.supportsCatalogsInTableDefinitions();
-      dbInfo.useSchema = meta.supportsSchemasInTableDefinitions();
+
+      // Find out whether the database supports catalogs and schemas, and get the
+      // related information. The JDBC spec is vague about what drivers should do
+      // when the underlying database doesn't support catalogs or schemas, so we
+      // wrap these calls in try/catch clauses. Note that we don't know what exception
+      // will be thrown, so we simply catch Exception and hope that the driver is
+      // not stupid enough to access the database here, which could result in
+      // legitimate exceptions.
+
+      try
+      {
+         dbInfo.useCatalog = meta.supportsCatalogsInTableDefinitions();
+         if (dbInfo.useCatalog)
+         {
+            dbInfo.isCatalogAtStart = meta.isCatalogAtStart();
+            dbInfo.catalogSeparator = meta.getCatalogSeparator();
+            if (dbInfo.catalogSeparator == null) dbInfo.catalogSeparator = ".";
+            if (dbInfo.catalogSeparator.length() == 0) dbInfo.catalogSeparator = ".";
+         }
+      }
+      catch (Exception e)
+      {
+         dbInfo.useCatalog = false;
+      }
+      try
+      {
+         dbInfo.useSchema = meta.supportsSchemasInTableDefinitions();
+      }
+      catch (Exception e)
+      {
+         dbInfo.useSchema = false;
+      }
    }
 
    private void initDataTypeMetadata()
    {
-      // Use the default names
+      Integer type;
+      String  params;
 
-      dbInfo.typeNames.put(new Integer(Types.BIGINT), JDBCTypes.getName(Types.BIGINT));
-      dbInfo.typeNames.put(new Integer(Types.BINARY), JDBCTypes.getName(Types.BINARY));
-      dbInfo.typeNames.put(new Integer(Types.BIT), JDBCTypes.getName(Types.BIT));
-      dbInfo.typeNames.put(new Integer(Types.CHAR), JDBCTypes.getName(Types.CHAR));
-      dbInfo.typeNames.put(new Integer(Types.DATE), JDBCTypes.getName(Types.DATE));
-      dbInfo.typeNames.put(new Integer(Types.DECIMAL), JDBCTypes.getName(Types.DECIMAL));
-      dbInfo.typeNames.put(new Integer(Types.DOUBLE), JDBCTypes.getName(Types.DOUBLE));
-      dbInfo.typeNames.put(new Integer(Types.FLOAT), JDBCTypes.getName(Types.FLOAT));
-      dbInfo.typeNames.put(new Integer(Types.INTEGER), JDBCTypes.getName(Types.INTEGER));
-      dbInfo.typeNames.put(new Integer(Types.LONGVARBINARY), JDBCTypes.getName(Types.LONGVARBINARY));
-      dbInfo.typeNames.put(new Integer(Types.LONGVARCHAR), JDBCTypes.getName(Types.LONGVARCHAR));
-      dbInfo.typeNames.put(new Integer(Types.NUMERIC), JDBCTypes.getName(Types.NUMERIC));
-      dbInfo.typeNames.put(new Integer(Types.REAL), JDBCTypes.getName(Types.REAL));
-      dbInfo.typeNames.put(new Integer(Types.SMALLINT), JDBCTypes.getName(Types.SMALLINT));
-      dbInfo.typeNames.put(new Integer(Types.TIME), JDBCTypes.getName(Types.TIME));
-      dbInfo.typeNames.put(new Integer(Types.TIMESTAMP), JDBCTypes.getName(Types.TIMESTAMP));
-      dbInfo.typeNames.put(new Integer(Types.TINYINT), JDBCTypes.getName(Types.TINYINT));
-      dbInfo.typeNames.put(new Integer(Types.VARBINARY), JDBCTypes.getName(Types.VARBINARY));
-      dbInfo.typeNames.put(new Integer(Types.VARCHAR), JDBCTypes.getName(Types.VARCHAR));
+      // Use the default names and create parameters.
 
-      // Use the default create parameters
+      for (int i = 0; i < JDBCTypes.JDBCTYPE_TOKENS.length; i++)
+      {
+         // Set the type name.
 
-      dbInfo.createParams.put(new Integer(Types.BINARY), LENGTH);
-      dbInfo.createParams.put(new Integer(Types.CHAR), LENGTH);
-      dbInfo.createParams.put(new Integer(Types.DECIMAL), PRECISIONSCALE);
-      dbInfo.createParams.put(new Integer(Types.FLOAT), PRECISION);
-      dbInfo.createParams.put(new Integer(Types.LONGVARBINARY), LENGTH);
-      dbInfo.createParams.put(new Integer(Types.LONGVARCHAR), LENGTH);
-      dbInfo.createParams.put(new Integer(Types.NUMERIC), PRECISIONSCALE);
-      dbInfo.createParams.put(new Integer(Types.VARBINARY), LENGTH);
-      dbInfo.createParams.put(new Integer(Types.VARCHAR), LENGTH);
+         type = new Integer(JDBCTypes.JDBCTYPE_TOKENS[i]);
+         dbInfo.typeNames.put(type, JDBCTypes.getName(JDBCTypes.JDBCTYPE_TOKENS[i]));
+
+         // Set the create parameters, if any.
+
+         params = getDefaultParams(JDBCTypes.JDBCTYPE_TOKENS[i]);
+         if (params != null)
+         {
+            dbInfo.createParams.put(type, params);
+         }
+      }
    }
 
    private void initDataTypeMetadata(String databaseName, DatabaseMetaData meta)
@@ -640,6 +653,58 @@ public class DDLGenerator
       // Close the result set.
 
       rs.close();
+
+      // There's no guarantee that a given database supports all types, so we
+      // need to fill in any unsupported types with default names and create
+      // parameters. Granted, this means that the resulting CREATE TABLE statement
+      // will have unsupported types in it, but a compliant database will convert
+      // these to its own types. For example, Oracle converts INTEGER to a fixed
+      // width type -- NUMERIC(5, 0), if I remember correctly.
+
+      for (int i = 0; i < JDBCTypes.JDBCTYPE_TOKENS.length; i++)
+      {
+         // Check if the type is supported.
+
+         type = new Integer(JDBCTypes.JDBCTYPE_TOKENS[i]);
+         if (dbInfo.typeNames.get(type) == null)
+         {
+            // If not, set the type name...
+
+            dbInfo.typeNames.put(type, JDBCTypes.getName(JDBCTypes.JDBCTYPE_TOKENS[i]));
+
+            // ... and the create parameters, if any.
+
+            params = getDefaultParams(JDBCTypes.JDBCTYPE_TOKENS[i]);
+            if (params != null)
+            {
+               dbInfo.createParams.put(type, params);
+            }
+         }
+      }
+   }
+
+   private String getDefaultParams(int type)
+   {
+      switch (type)
+      {
+         case Types.BINARY:
+         case Types.VARBINARY:
+         case Types.LONGVARBINARY:
+         case Types.CHAR:
+         case Types.VARCHAR:
+         case Types.LONGVARCHAR:
+            return LENGTH;
+
+         case Types.DECIMAL:
+         case Types.NUMERIC:
+            return PRECISIONSCALE;
+
+         case Types.FLOAT:
+            return PRECISION;
+
+         default:
+            return null;
+      }
    }
 
    //**************************************************************************
