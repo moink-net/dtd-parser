@@ -87,7 +87,7 @@ public class MySQLHandler
                 PreparedStatement selStmt = m_connection.prepareStatement(sql);
 
                 // Put the last insert value in
-                Parameters.setParameter(selStmt, 1, key.getColumns()[0].getType(), lastInsert);
+                Parameters.setParameter(selStmt, 1, key.getColumns()[0], lastInsert);
 
                 // Execute it 
                 ResultSet rs = selStmt.executeQuery();

@@ -42,7 +42,7 @@ import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 
 /**
- * Implements ParserUtils for the Xerces parser.
+ * Implements ParserUtils for the Xerces parser, version 1.4.
  *
  * @author Adam Flinton
  * @version 2.0
