@@ -381,6 +381,11 @@ public class DBMSToDOM
       return doc;
    }
 */
+
+   public void setDBErrorHandling??
+   public SQLException getSQLExceptions??
+   public SQLException getSQLWarnings??
+
    // ************************************************************************
    // Helper methods for getting started
    // ************************************************************************

@@ -32,19 +32,20 @@ public class ActionConst
    // Action attributes and values
    //*********************************************************************
 
-   public static String URI_ACTION = "http://www.xmlmiddleware.org/xmldbms/actions/v2";
-   public static String ATTR_ACTION = "Action";
+   public static String URI_ACTION            = "http://www.xmlmiddleware.org/xmldbms/actions/v2";
+
+   public static String ATTR_ACTION           = "Action";
    public static String ATTR_UPDATEPROPERTIES = "UpdateProperties";
 
-   public static String VALUE_NONE = "None";
-   public static String VALUE_INSERT = "Insert";
-   public static String VALUE_SOFTINSERT = "SoftInsert";
-   public static String VALUE_UPDATEORINSERT = "UpdateOrInsert";
-   public static String VALUE_DELETE = "Delete";
-   public static String VALUE_SOFTDELETE = "SoftDelete";
+   public static String VALUE_NONE            = "None";
+   public static String VALUE_INSERT          = "Insert";
+   public static String VALUE_SOFTINSERT      = "SoftInsert";
+   public static String VALUE_UPDATEORINSERT  = "UpdateOrInsert";
+   public static String VALUE_DELETE          = "Delete";
+   public static String VALUE_SOFTDELETE      = "SoftDelete";
 
-   public static String VALUE_ALL = "#All";
-   public static String VALUE_PCDATA = "#PCDATA";
+   public static String VALUE_ALL             = "#All";
+   public static String VALUE_PCDATA          = "#PCDATA";
 
    //*********************************************************************
    // Action language element strings and tokens
