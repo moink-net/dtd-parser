@@ -52,6 +52,26 @@ public interface DataHandler
     public void delete(Table table, Row row, Key key)
         throws SQLException;
 
-    public ResultSet select(Table table, Key key, Object[] keyValue, OrderInfo orderInfo)
+    /**
+     * Select rows from a given table.
+     *
+     * <p>The SELECT statement has the form:</p>
+     *
+     * <pre>
+     *    SELECT * FROM Table WHERE Key = ? AND &lt;where> ORDER BY ?
+     * </pre>
+     *
+     * @param t The table to select from. Must not be null.
+     * @param key The key to restrict with. May be null.
+     * @param keyValue The value of the key.
+     * @param where An additional where constraint. May be null.
+     * @param paramColumns The columns corresponding to parameters in the where constraint.
+     *    Null if there are no parameters.
+     * @param paramValues The values of parameters in the where constraint. Null if there
+     *    are no parameters.
+     * @param order The sort information. May be null.
+     * @return The result set.
+     */
+    public ResultSet select(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
         throws SQLException;
 }

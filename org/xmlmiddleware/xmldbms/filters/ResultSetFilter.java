@@ -83,7 +83,7 @@ public class ResultSetFilter extends FilterBase
     *
     * @return The catalog name
     */
-   public final String getCatalogame()
+   public final String getCatalogName()
    {
       return catalogName;
    }

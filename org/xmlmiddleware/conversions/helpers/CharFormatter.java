@@ -91,4 +91,20 @@ public class CharFormatter implements StringFormatter
       else
          throw new ConversionException("Object must be a String.");
    }
+
+   /**
+    * Whether the class can convert to/from a certain type of object.
+    *
+    * <p>This method returns true for Types.CHAR, VARCHAR, and LONGVARCHAR.
+    * It returns false for all other types.</p>
+    *
+    * @param type The JDBC Types value corresponding to the object type.
+    * @return Whether the type is supported
+    */
+   public boolean canConvert(int type)
+   {
+      return ((type == Types.CHAR) ||
+              (type == Types.VARCHAR) ||
+              (type == Types.LONGVARCHAR));
+   }
 }

@@ -28,6 +28,24 @@ package org.xmlmiddleware.conversions;
  * type of object, such as Boolean. Other times, they support formatting for
  * a number of object types, such as all numeric types or all date/time types.</p>
  *
+ * <p>This interface uses JDBC Types values to specify the types of the underlying
+ * objects. The type mapping is as follows, and corresponds to the default mapping
+ * of JDBC types to Java, except for the binary types, which are mapped to ByteArray.</p>
+ *
+ * <pre>
+ * BINARY, VARBINARY, LONGVARBINARY:  org.xmlmiddleware.conversions.ByteArray<br />
+ * CHAR, VARCHAR, LONGVARCHAR:        String<br />
+ * DATE, TIME, TIMESTAMP:             java.sql.Date<br />
+ * BIGINT:                            Long<br />
+ * INTEGER:                           Integer<br />
+ * SMALLINT:                          Short<br />
+ * TINYINT:                           Byte<br />
+ * DECIMAL, NUMERIC:                  BigDecimal<br />
+ * DOUBLE, FLOAT:                     Double<br />
+ * REAL:                              Float<br />
+ * BIT:                               Boolean<br />
+ * </pre>
+ *
  * <p><b>NOTE:</b> One possible use of custom formatting classes is a
  * to convert binary data to/from Base64. This could easily be done by
  * wrapping a Base64 converter with an Formatter class.</p>
@@ -44,23 +62,6 @@ public interface StringFormatter
 
    /**
     * Parse a string and create an object.
-    *
-    * <p>The calling application specifies the type of object it wants using
-    * a JDBC Types value. JDBC types map to Java types as follows:</p>
-    *
-    * <pre>
-    * CHAR, VARCHAR, LONGVARCHAR:        String<br />
-    * DATE, TIME, TIMESTAMP:             java.sql.Date<br />
-    * BIGINT:                            Long<br />
-    * INTEGER:                           Integer<br />
-    * SMALLINT:                          Short<br />
-    * TINYINT:                           Byte<br />
-    * DECIMAL, NUMERIC:                  BigDecimal<br />
-    * DOUBLE, FLOAT:                     Double<br />
-    * REAL:                              Float<br />
-    * BINARY, VARBINARY, LONGVARBINARY:  org.xmlmiddleware.conversions.ByteArray<br />
-    * BIT:                               Boolean<br />
-    * </pre>
     *
     * @param The string to parse.
     * @param A JDBC Types value indicating the type of object to return.
@@ -84,4 +85,15 @@ public interface StringFormatter
     *    calling code passes a Date.
     */
    public String format(Object o) throws ConversionException;
+
+   /**
+    * Whether the implementing class can convert to/from a certain type of object.
+    *
+    * <p>This method is generally used by tools to determine whether a given
+    * formatter is appropriate for a column.</p>
+    *
+    * @param type The JDBC Types value corresponding to the object type.
+    * @return Whether the type is supported
+    */
+   public boolean canConvert(int type);
 }

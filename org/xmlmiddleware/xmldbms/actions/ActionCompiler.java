@@ -54,7 +54,7 @@ import org.xml.sax.XMLReader;
  *    compiler = new ActionCompiler(xmlReader);<br />
  *
  *    // Compile sales.act into an Actions object.
- *    map = compiler.compile(new InputSource(new FileReader("sales.act")));<br />
+ *    actions = compiler.compile(new InputSource(new FileReader("sales.act")));<br />
  * </pre>
  *
  * @author Ronald Bourret, 2001
@@ -121,8 +121,8 @@ public class ActionCompiler implements ContentHandler
    /**
     * Compile an action document into an Actions object.
     *
-    * @param src A SAX InputSource for the action document.
     * @param map The map to which the actions apply.
+    * @param src A SAX InputSource for the action document.
     * @return The Actions object
     * @exception SAXException Thrown if the action document contains an error.
     * @exception IOException Thrown if an IO error occurs.

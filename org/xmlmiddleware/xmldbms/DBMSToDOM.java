@@ -30,6 +30,12 @@ import org.xmlmiddleware.domutils.FragmentBuilder;
 import org.xmlmiddleware.domutils.ParserUtils;
 import org.xmlmiddleware.domutils.ParserUtilsException;
 import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.xmldbms.filters.FilterBase;
+import org.xmlmiddleware.xmldbms.filters.FilterConditions;
+import org.xmlmiddleware.xmldbms.filters.FilterSet;
+import org.xmlmiddleware.xmldbms.filters.RootFilter;
+import org.xmlmiddleware.xmldbms.filters.ResultSetFilter;
+import org.xmlmiddleware.xmldbms.filters.TableFilter;
 import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
 import org.xmlmiddleware.xmldbms.maps.Column;
 import org.xmlmiddleware.xmldbms.maps.ColumnMap;
@@ -48,6 +54,8 @@ import org.xmlmiddleware.xmldbms.maps.Table;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
+import org.w3c.dom.DocumentType;
+import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -57,8 +65,10 @@ import org.xml.sax.SAXException;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 
 /**
  * Transfers data from the database to a DOM tree.
@@ -106,6 +116,7 @@ public class DBMSToDOM
    // ************************************************************************
 
    private Map          map;
+   private FilterBase   filterBase;
    private Document     doc;
 
    // 8/01 Adam Flinton
@@ -114,6 +125,8 @@ public class DBMSToDOM
    private ParserUtils     utils;
    private FragmentBuilder fragmentBuilder;
    private TransferInfo    transferInfo;
+   private String          publicID;
+   private String          systemID;
 
    // ************************************************************************
    // Constants
@@ -124,6 +137,7 @@ public class DBMSToDOM
    private static String FAKESTARTTAG = "<fake>";
    private static String FAKEENDTAG = "</fake>";
    private static String XMLNS = "xmlns:";
+   private static String XMLNSURI = "http://www.w3.org/2000/xmlns/";
 
    private static final XMLName PCDATA = XMLName.create(null, "#PCDATA");
 
@@ -150,241 +164,139 @@ public class DBMSToDOM
    // ************************************************************************
 
    /**
-    * Construct a DOM Document starting with data from the specified table.
+    * Set the system and public IDs to use in the DOCTYPE statement.
     *
-    * <p>Data will be retrieved from other subordinate tables according to the map.
-    * If more than one row is retrieved from the specified table, the list of
-    * wrapper element names must contain at least one entry.</p>
-    *
-    * @param transferInfo A TransferInfo object containing a Map and at least
-    *    one DataSource.
-    * @param databaseName The name of the database in which the table resides. If this
-    *    is null, "Default" is used.
-    * @param catalogName The name of the catalog in which the table resides. May be null.
-    * @param schemaName The name of the schema in which the table resides. May be null.
-    * @param tableName The name of the table from which to retrieve data.
-    * @param key The key used to retrieve data. This array will contain as many
-    *    values are there are columns in the key. If you want to retrieve multiple
-    *    rows from the same table using different keys, use the forms of retrieveDocument
-    *    that accept an array of keys.
-    * @param wrapperURIs A list of URIs for element types in which to wrap the retrieved
-    *    data. May be null. If this is not null, it must have the same number of values
-    *    as wrapperNames.
-    * @param wrapperNames A list of qualified names of the element types in which to
-    *    wrap the retrieved data. May be null.
+    * @param systemID The system ID. Non-null if the public ID is non-null. Otherwise,
+    *    may be null.
+    * @param publicID The public ID. May be null.
     */
-   public Document retrieveDocument(TransferInfo transferInfo, String databaseName, String catalogName, String schemaName, String tableName, Object[] key, String[] wrapperURIs, String[] wrapperNames)
+   public void setDTDInfo(String systemID, String publicID)
+   {
+      if ((publicID != null) && (systemID == null))
+         throw new IllegalArgumentException("If the public ID is non-null, the system ID must also be non-null.");
+      this.systemID = systemID;
+      this.publicID = publicID;
+   }
+
+   /**
+    * Retrieve a document based on the specified filters.
+    *
+    * <p>The filter set must contain at least one root filter.</p>
+    *
+    * @param transferInfo Map and connection information.
+    * @param filterSet The filter set specifying the data to retrieve.
+    * @param params A Hashtable containing the names (keys) and values (elements) of
+    *    any parameters used in the filters. Null if there are no parameters.
+    * @rootNode The Node to which the retrieved document is to be added. If this is
+    *    null, retrieveDocument will create a new Document.
+    * @return The document. If rootNode is not null, this is the owner Document.
+    *    Otherwise, it is a new Document.
+    */
+   public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable params, Node rootNode)
       throws ParserUtilsException, SQLException, MapException
    {
-      OrderedNode rootNode;
+      OrderedNode   orderedRootNode;
+      Vector        filters;
 
       // Set things up.
 
       initGlobals(transferInfo);
-      rootNode = initDoc(wrapperURIs, wrapperNames);
 
-      // Build and return the Document.
+      // Do some ugly checking on the filters. (In the future, this probably won't be
+      // necessary as we will accept a mixture of root filters and result set filters.)
 
-      retrieveRootTableData(rootNode, databaseName, catalogName, schemaName, tableName, key);
-      addNamespaceDecls(doc.getDocumentElement());
+      filters = filterSet.getFilters();
+      if (filters.size() < 1)
+         throw new IllegalArgumentException("You must specify at least one root filter.");
+      if (filters.elementAt(0) instanceof ResultSetFilter)
+         throw new IllegalArgumentException("The filter set contains a result set filter, but you did not pass a result set.");
+
+      // Set the filter parameters. We do this here because the filters are optimized
+      // for the parameters only being set once.
+
+      setFilterParameters(filters, params);
+
+      // Get an OrderedNode over the Node to which elements will be added.
+
+      orderedRootNode = getOrderedRootNode(rootNode, filterSet);
+
+      // Retrieve the data.
+
+      retrieveRootTableData(orderedRootNode, filters);
+
+      // Add namespace declarations to the children of the real root node. We add these
+      // to the children instead of the root for two reasons. First, the root might be
+      // a Document node. Second, if the root is a wrapper element, we don't want to
+      // collide with the wrapper element namespaces.
+
+      addNamespaceDeclsToChildren(orderedRootNode.realNode, map.getNamespaceURIs());
+
+      // Return the document.
+
       return doc;
    }
 
    /**
-    * Construct a DOM Document starting with multiple rows of data from the specified table.
+    * Retrieve a document based on a result set.
     *
-    * <p>Data will be retrieved from other subordinate tables according to the map.
-    * If more than one row is retrieved from the specified table, the list of
-    * wrapper element names must contain at least one entry.</p>
+    * <p>The filter set must contain exactly one result set filter.</p>
     *
-    * @param transferInfo A TransferInfo object containing a Map and at least
-    *    one DataSource.
-    * @param databaseName The name of the database in which the table resides. If this
-    *    is null, "Default" is used.
-    * @param catalogName The name of the catalog in which the table resides. May be null.
-    * @param schemaName The name of the schema in which the table resides. May be null.
-    * @param tableName The name of the table from which to retrieve data.
-    * @param key The keys used to retrieve data. The primary index
-    *    distinguishes keys; the secondary index distinguishes column values in a key.
-    * @param wrapperURIs A list of URIs for element types in which to wrap the retrieved
-    *    data. May be null. If this is not null, it must have the same number of values
-    *    as wrapperNames.
-    * @param wrapperNames A list of qualified names of the element types in which to
-    *    wrap the retrieved data. May be null.
-    */
-   public Document retrieveDocument(TransferInfo transferInfo, String databaseName, String catalogName, String schemaName, String tableName, Object[][] key, String[] wrapperURIs, String[] wrapperNames)
-      throws ParserUtilsException, SQLException, MapException
-   {
-      OrderedNode rootNode;
-
-      // Set things up.
-
-      initGlobals(transferInfo);
-      rootNode = initDoc(wrapperURIs, wrapperNames);
-
-      // Build and return the Document.
-
-      for (int i = 0; i < key.length; i++)
-      {
-         retrieveRootTableData(rootNode, databaseName, catalogName, schemaName, tableName, key[i]);
-      }
-      addNamespaceDecls(doc.getDocumentElement());
-      return doc;
-   }
-
-   /**
-    * Construct a DOM Document starting with data from the specified tables.
-    *
-    * <p>Data will be retrieved from other subordinate tables according to the map.
-    * If more than one row is retrieved from the specified tables, the list of
-    * wrapper element names must contain at least one entry.</p>
-    *
-    * @param transferInfo A TransferInfo object containing a Map and at least
-    *    one DataSource.
-    * @param databaseNames The names of the databases in which the tables reside. If the
-    *    array is null, "Default" is used for all tables. If an individual value is null,
-    *    "Default" is used for that value.
-    * @param catalogNames The names of the catalogs in which the tables reside. The array
-    *    or entries in the array may be null.
-    * @param schemaNames The names of the schemas in which the tables reside. The array or
-    *    entries in the array may be null.
-    * @param tableNames The names of the tables from which to retrieve data.
-    * @param key The keys used to retrieve data from each table. The primary index
-    *    distinguishes keys; the secondary index distinguishes column values in a key.
-    * @param wrapperURIs A list of URIs for element types in which to wrap the retrieved
-    *    data. May be null. If this is not null, it must have the same number of values
-    *    as wrapperNames.
-    * @param wrapperNames A list of qualified names of the element types in which to
-    *    wrap the retrieved data. May be null.
-    */
-   public Document retrieveDocument(TransferInfo transferInfo, String[] databaseNames, String[] catalogNames, String[] schemaNames, String[] tableNames, Object[][] keys, String[] wrapperURIs, String[] wrapperNames)
-      throws ParserUtilsException, SQLException, MapException
-   {
-      OrderedNode rootNode;
-      String      databaseName, catalogName, schemaName;
-
-      // Set things up.
-
-      initGlobals(transferInfo);
-      rootNode = initDoc(wrapperURIs, wrapperNames);
-
-      // Build and return the Document.
-
-      for (int i = 0; i < tableNames.length; i++)
-      {
-         databaseName = (databaseNames == null) ? null : databaseNames[i];
-         catalogName = (catalogNames == null) ? null : catalogNames[i];
-         schemaName = (schemaNames == null) ? null : schemaNames[i];
-         retrieveRootTableData(rootNode, databaseName, catalogName, schemaName, tableNames[i], keys[i]);
-      }
-      addNamespaceDecls(doc.getDocumentElement());
-      return doc;
-   }
-
-   /**
-    * Construct a DOM Document starting with data from the result set.
-    *
-    * <p>This method retrieves all rows in the result set, but does not close it.</p>
-    *
-    * <p>Data will be retrieved from other subordinate tables according to the map.
-    * If more than one row is retrieved from the result set, the list of
-    * wrapper element names must contain at least one entry.</p>
-    *
-    * @param transferInfo A TransferInfo object containing a Map and at least
-    *    one DataSource.
+    * @param transferInfo Map and connection information.
+    * @param filterSet The filter set specifying the data to retrieve.
     * @param rs The result set.
-    * @param rsDatabaseName The name of the database used to map the result set. If this
-    *    is null, "Default" is used.
-    * @param rsCatalogName The name of the catalog used to map the result set. May be null.
-    * @param rsSchemaName The name of the schema used to map the result set. May be null.
-    * @param rsTableName The name of the table used to map the result set.
-    * @param wrapperURIs A list of URIs for element types in which to wrap the retrieved
-    *    data. May be null. If this is not null, it must have the same number of values
-    *    as wrapperNames.
-    * @param wrapperNames A list of qualified names of the element types in which to
-    *    wrap the retrieved data. May be null.
+    * @param params A Hashtable containing the names (keys) and values (elements) of
+    *    any parameters used in the filters. Null if there are no parameters.
+    * @rootNode The Node to which the retrieved document is to be added. If this is
+    *    null, retrieveDocument will create a new Document.
+    * @return The document. If rootNode is not null, this is the owner Document.
+    *    Otherwise, it is a new Document.
     */
-   public Document retrieveDocument(TransferInfo transferInfo, ResultSet rs, String rsDatabaseName, String rsCatalogName, String rsSchemaName, String rsTableName, String[] wrapperURIs, String[] wrapperNames)
+   public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, ResultSet rs, Hashtable params, Node rootNode)
       throws ParserUtilsException, SQLException, MapException
    {
-      OrderedNode   rootNode;
-      ClassTableMap rootTableMap;
+      OrderedNode     orderedRootNode;
+      Vector          filters;
+      ResultSetFilter rsFilter;
+      ClassTableMap   rootTableMap;
 
       // Set things up.
 
       initGlobals(transferInfo);
-      rootNode = initDoc(wrapperURIs, wrapperNames);
-      rootTableMap = map.getClassTableMap(rsDatabaseName, rsCatalogName, rsSchemaName, rsTableName);
 
-      // Build and return the Document.
+      // Do some ugly checking on the filters. (In the future, this probably won't be
+      // necessary as we will accept a mixture of root filters and result set filters.)
 
-      processClassResultSet(rootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
-      addNamespaceDecls(doc.getDocumentElement());
-      return doc;
-   }
+      filters = filterSet.getFilters();
+      if ((filters.size() != 1) || (filters.elementAt(0) instanceof RootFilter))
+         throw new IllegalArgumentException("When you pass a result set, you must specify exactly one result set filter.");
 
-   /**
-    * Construct a DOM Document starting with data specified by a DocumentInfo object.
-    *
-    * <p>Data will be retrieved from other subordinate tables according to the map.
-    * If the DocumentInfo object specifies more than one row, the list of
-    * wrapper element names must contain at least one entry.</p>
-    *
-    * @param transferInfo A TransferInfo object containing a Map and at least
-    *    one DataSource.
-    * @param docInfo The DocumentInfo specifying which rows to retrieve.
-    * @param wrapperURIs A list of URIs for element types in which to wrap the retrieved
-    *    data. May be null. If this is not null, it must have the same number of values
-    *    as wrapperNames.
-    * @param wrapperNames A list of qualified names of the element types in which to
-    *    wrap the retrieved data. May be null.
-    */
-/*   public Document retrieveDocument(TransferInfo transferInfo, DocumentInfo docInfo, String[] wrapperURIs, String[] wrapperNames)
-      throws ParserUtilsException, SQLException, MapException
-   {
-     RootTableMap      rootTableMap;
-     TableMap          tableMap = null;
-     Column[]          valueCols = null;
-     Column            orderCol = null;
-     PreparedStatement select = null;
-     ResultSet         rs;
-     Order             order = new Order();
+      // Set the filter parameters. We do this here because the filters are optimized
+      // for the parameters only being set once.
 
-      // Set things up.
+      setFilterParameters(filters, params);
 
-      initGlobals(transferInfo);
-      rootNode = initDoc(wrapperURIs, wrapperNames);
+      // Get an OrderedNode over the Node to which elements will be added.
 
-      // Process the entries in the DocumentInfo object.
-      for (int i = 0; i < docInfo.size(); i++)
-      {
-         // Get the RootTableMap for the next table in the DocumentInfo. If it
-         // is different from the previous table, build a new SELECT statement.
+      orderedRootNode = getOrderedRootNode(rootNode, filterSet);
 
-         rootTableMap = map.getRootTableMap(docInfo.getTableName(i));
-         if (tableMap != rootTableMap.tableMap)
-         {
-            tableMap = rootTableMap.tableMap;
-            valueCols = tableMap.table.getColumns(docInfo.getKeyColumnNames(i));
-            orderCol = tableMap.table.getColumn(docInfo.getOrderColumnName(i));
-            if (select != null)
-            {
-               map.checkInSelectStmt(select);
-            }
-            select = map.checkOutSelectStmt(tableMap.table, valueCols, orderCol);
-          }
+      // Retrieve the data.
 
-          // Set the parameters in the SELECT statement to the key values,
-          // then execute the SELECT statement and process the result set.
+      rsFilter = (ResultSetFilter)filters.elementAt(0);
+      filterBase = rsFilter;
+      rootTableMap = map.getClassTableMap(rsFilter.getDatabaseName(), rsFilter.getCatalogName(), rsFilter.getSchemaName(), rsFilter.getTableName());
+      processClassResultSet(orderedRootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
 
-          parameters.setParameters(select, docInfo.getKey(i), valueCols);
-          rs = select.executeQuery();
-          processRootResultSet(rootTableMap, rs, orderCol, order);
-      }
+      // Add namespace declarations to the children of the real root node. We add these
+      // to the children instead of the root for two reasons. First, the root might be
+      // a Document node. Second, if the root is a wrapper element, we don't want to
+      // collide with the wrapper element namespaces.
+
+      addNamespaceDeclsToChildren(orderedRootNode.realNode, map.getNamespaceURIs());
+
+      // Return the document.
 
       return doc;
    }
-*/
 
 /*
    public void setDBErrorHandling??
@@ -395,23 +307,51 @@ public class DBMSToDOM
    // Helper methods for getting started
    // ************************************************************************
 
-   private void retrieveRootTableData(OrderedNode rootNode, String databaseName, String catalogName, String schemaName, String tableName, Object[] keyValue)
+   private void retrieveRootTableData(OrderedNode rootNode, Vector filters)
       throws ParserUtilsException, SQLException, MapException
    {
-      ClassTableMap rootTableMap;
-      Table         rootTable;
-      DataHandler   dataHandler;
-      ResultSet     rs;
+      RootFilter rootFilter;
 
-      // Get the map for the table, construct a result set
-      // over it, and process the result set.
+      for (int i = 0; i < filters.size(); i++)
+      {
+         // Get the next RootFilter and set the filterBase global. filterBase
+         // parallels map in that it contains filters for all class tables.
 
-      rootTableMap = map.getClassTableMap(databaseName, catalogName, schemaName, tableName);
-      rootTable = rootTableMap.getTable();
+         rootFilter = (RootFilter)filters.elementAt(i);
+         filterBase = rootFilter;
+
+         // Get the data according to the filter.
+
+         retrieveRootTableData(rootNode, rootFilter);
+      }
+   }
+
+   private void retrieveRootTableData(OrderedNode rootNode, RootFilter rootFilter)
+      throws ParserUtilsException, SQLException, MapException
+   {
+      Table            rootTable;
+      ClassTableMap    rootTableMap;
+      FilterConditions rootConditions;
+      DataHandler      dataHandler;
+      String           where;
+      Column[]         columns;
+      Object[]         params;
+      ResultSet        rs;
+
+      // Get the root table and the map for it.
+
+      rootConditions = rootFilter.getRootFilterConditions();
+      rootTable = rootConditions.getTable();
+      rootTableMap = map.getClassTableMap(rootTable.getDatabaseName(), rootTable.getCatalogName(), rootTable.getSchemaName(), rootTable.getTableName());
+
+      // Get a DataHandler and construct a result set based on the filter conditions.
 
       dataHandler = transferInfo.getDataHandler(rootTable.getDatabaseName());
+      where = rootConditions.getWhereCondition();
+      columns = rootConditions.getColumns();
+      params = rootConditions.getParameterValues();
 
-      rs = dataHandler.select(rootTable, rootTable.getPrimaryKey(), keyValue, null);
+      rs = dataHandler.select(rootTable, null, null, where, columns, params, null);
       processClassResultSet(rootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
       rs.close();
    }
@@ -439,10 +379,12 @@ public class DBMSToDOM
       throws SQLException, MapException
    {
       Row         classRow;
+      Table       table;
       Node        realClassNode;
       OrderedNode classNode;
       long        orderValue;
       boolean     ascending;
+      TableFilter classTableFilter;
 
       // Create a new row.
 
@@ -454,7 +396,8 @@ public class DBMSToDOM
       {
          // Cache the row data so we can access it randomly
 
-         populateRow(classTableMap.getTable(), classRow, rs);
+         table = classTableMap.getTable();
+         populateRow(table, classRow, rs);
 
          // Create an element node for the row, get the order information, and
          // insert the node into the parent node. An OrderedNode is returned.
@@ -469,7 +412,9 @@ public class DBMSToDOM
          // for the row.
 
          processColumns(classNode, classRow, classTableMap.getColumnMaps());
-         processRelatedTables(classNode, classRow, classTableMap);
+
+         classTableFilter = filterBase.getTableFilter(table.getDatabaseName(), table.getCatalogName(), table.getSchemaName(), table.getTableName());
+         processRelatedTables(classNode, classRow, classTableMap, classTableFilter);
 
          // We are done processing this class. Clear the children in the ordered DOM
          // tree. (This doesn't affect the real DOM tree.)
@@ -487,6 +432,9 @@ public class DBMSToDOM
       while (columnMaps.hasMoreElements())
       {
          // Get the next column map, add any inlined elements, and process the column.
+         // Note that we do not process columns for which the type is Types.NULL. These
+         // occur when a result set is passed to retrieveDocument and the map maps more
+         // columns not found in the result set.
          //
          // Inlined elements occur between the class (table) node and the property
          // (column) node. Column values are actually added as nodes of the lowest
@@ -494,6 +442,7 @@ public class DBMSToDOM
          // is used.
 
          columnMap = (ColumnMap)columnMaps.nextElement();
+         if (columnMap.getColumn().getType() == Types.NULL) continue;
          parentNode = addInlinedElements(classNode, classRow, columnMap.getElementInsertionList());
          processColumn(parentNode, classRow, columnMap);
       }
@@ -566,12 +515,13 @@ public class DBMSToDOM
       }
    }
 
-   private void processRelatedTables(OrderedNode classNode, Row classRow, ClassTableMap classTableMap)
+   private void processRelatedTables(OrderedNode classNode, Row classRow, ClassTableMap classTableMap, TableFilter classTableFilter)
       throws SQLException, MapException
    {
       Enumeration          relatedClassTableMaps, propTableMaps;
       RelatedClassTableMap relatedClassTableMap;
       PropertyTableMap     propTableMap;
+      FilterConditions     relatedTableFilter;
 
       // Process the related class tables.
 
@@ -579,7 +529,10 @@ public class DBMSToDOM
       while (relatedClassTableMaps.hasMoreElements())
       {
          relatedClassTableMap = (RelatedClassTableMap)relatedClassTableMaps.nextElement();
-         processRelatedClassTable(classNode, classRow, relatedClassTableMap);
+         relatedTableFilter = (classTableFilter == null) ?
+                               null :
+                               classTableFilter.getRelatedTableFilter(relatedClassTableMap);
+         processRelatedClassTable(classNode, classRow, relatedClassTableMap, relatedTableFilter);
       }
 
       // Process the property tables.
@@ -588,11 +541,14 @@ public class DBMSToDOM
       while (propTableMaps.hasMoreElements())
       {
          propTableMap = (PropertyTableMap)propTableMaps.nextElement();
-         processPropertyTable(classNode, classRow, propTableMap);
+         relatedTableFilter = (classTableFilter == null) ?
+                               null :
+                               classTableFilter.getRelatedTableFilter(propTableMap);
+         processPropertyTable(classNode, classRow, propTableMap, relatedTableFilter);
       }
    }
 
-   private void processRelatedClassTable(OrderedNode classNode, Row classRow, RelatedClassTableMap relatedClassTableMap)
+   private void processRelatedClassTable(OrderedNode classNode, Row classRow, RelatedClassTableMap relatedClassTableMap, FilterConditions relatedTableFilter)
       throws SQLException, MapException
    {
       OrderedNode   parentNode;
@@ -603,6 +559,9 @@ public class DBMSToDOM
       Key           childKey;
       DataHandler   dataHandler;
       OrderInfo     orderInfo;
+      String        where = null;
+      Column[]      columns = null;
+      Object[]      params = null;
       ResultSet     rs;
 
       // Add any inlined elements between the class element and the elements
@@ -624,8 +583,15 @@ public class DBMSToDOM
 
       // Get the result set over the related class table and process it.
 
+      if (relatedTableFilter != null)
+      {
+         where = relatedTableFilter.getWhereCondition();
+         columns = relatedTableFilter.getColumns();
+         params = relatedTableFilter.getParameterValues();
+      }
       orderInfo = relatedClassTableMap.getOrderInfo();
-      rs = dataHandler.select(childTable, childKey, keyValue, orderInfo);
+
+      rs = dataHandler.select(childTable, childKey, keyValue, where, columns, params, orderInfo);
       processClassResultSet(classNode,
                             rs,
                             relatedClassTableMap.getElementTypeName(),
@@ -634,7 +600,7 @@ public class DBMSToDOM
       rs.close();
    }
 
-   private void processPropertyTable(OrderedNode classNode, Row classRow, PropertyTableMap propTableMap)
+   private void processPropertyTable(OrderedNode classNode, Row classRow, PropertyTableMap propTableMap, FilterConditions relatedTableFilter)
       throws SQLException, MapException
    {
       OrderedNode parentNode;
@@ -644,6 +610,9 @@ public class DBMSToDOM
       Key         propTableKey;
       DataHandler dataHandler;
       OrderInfo   rsOrderInfo;
+      String      where = null;
+      Column[]    columns = null;
+      Object[]    params = null;
       ResultSet   rs;
 
       // Add any inlined elements between the class element and the property elements.
@@ -667,9 +636,17 @@ public class DBMSToDOM
       // the normal OrderInfo gives us the position of the token-list element or
       // PCDATA in its parent. This value is retrieved by processColumn.
 
+      if (relatedTableFilter != null)
+      {
+         where = relatedTableFilter.getWhereCondition();
+         columns = relatedTableFilter.getColumns();
+         params = relatedTableFilter.getParameterValues();
+      }
       rsOrderInfo = (propTableMap.isTokenList()) ? propTableMap.getTokenListOrderInfo() :
                                                    propTableMap.getOrderInfo();
-      rs = dataHandler.select(propTable, propTableKey, keyValue, rsOrderInfo);
+
+      rs = dataHandler.select(propTable, propTableKey, keyValue, where, columns, params, rsOrderInfo);
+
       processPropResultSet(parentNode, rs, propTableMap);
       rs.close();
    }
@@ -687,7 +664,7 @@ public class DBMSToDOM
    }
 
    // ************************************************************************
-   // Helper methods -- general
+   // Helper methods -- initialization
    // ************************************************************************
 
    private void initGlobals(TransferInfo transferInfo)
@@ -698,89 +675,212 @@ public class DBMSToDOM
       map = transferInfo.getMap();
    }
 
-   private OrderedNode initDoc(String[] wrapperURIs, String[] wrapperNames)
+   private OrderedNode getOrderedRootNode(Node rootNode, FilterSet filterSet)
       throws ParserUtilsException
    {
-      Node realRoot;
+      Vector          wrapperNames, filters;
+      Node            realRootNode = null;
+      Object          filter;
+      ResultSetFilter rsFilter;
+      Table           rootTable;
+      ClassTableMap   rootTableMap;
 
-      // Create a new document.
+      wrapperNames = filterSet.getWrapperNames();
 
-      doc = utils.createDocument();
+      // There are four cases:
+      //
+      // Case 1: The root node is null and there are wrappers:
+      //    Document created?   Yes
+      //    Root element type:  Top-level wrapper
+      //    Returned node:      Bottom-level wrapper
+      //
+      // Case 2: The root node is null and there are no wrappers:
+      //    Document created?   Yes
+      //    Root element type:  Type to which the root filter or result set is mapped
+      //    Returned node:      Document node
+      //
+      // Case 3: The root node is not null and there are wrappers:
+      //    Document created?   No
+      //    Root element type:  Already exists
+      //    Returned node:      Bottom-level wrapper
+      //
+      // Case 4: The root node is not null and there are no wrappers:
+      //    Document created?   No
+      //    Root element type:  Already exists
+      //    Returned node:      Root node
+      //
+      // The returned node is the node to which DBMSToDOM will append new children.
 
-      // Add the wrapper elements, if any.
+      if (rootNode == null)
+      {
+         if (!wrapperNames.isEmpty())
+         {
+            // Case 1: The root node is null and there are wrappers
 
-      realRoot = addWrapperElements(wrapperURIs, wrapperNames);
+            createDocument((XMLName)wrapperNames.elementAt(0));
+            realRootNode = addWrapperElements(doc, wrapperNames, filterSet.getNamespaceURIs());
+         }
+         else
+         {
+            // Case 2: The root node is null and there are no wrappers
 
-      // Return an ordered node that will serve as the root for the retrieved data.
+            filters = filterSet.getFilters();
+            if (filters.size() > 1)
+               throw new IllegalArgumentException("There is more than one root filter and no wrapper elements.");
+            filter = filters.elementAt(0);
+            if (filter instanceof RootFilter)
+            {
+               rootTable = ((RootFilter)filter).getRootFilterConditions().getTable();
+               rootTableMap = map.getClassTableMap(rootTable.getDatabaseName(), rootTable.getCatalogName(), rootTable.getSchemaName(), rootTable.getTableName());
+            }
+            else // if (filter instanceof ResultSetFilter)
+            {
+               rsFilter = (ResultSetFilter)filter;
+               rootTableMap = map.getClassTableMap(rsFilter.getDatabaseName(), rsFilter.getCatalogName(), rsFilter.getSchemaName(), rsFilter.getTableName());
+            }
+            createDocument(rootTableMap.getElementTypeName());
+            realRootNode = doc;
+         }
+      }
+      else // if (rootNode != null)
+      {
+         doc = rootNode.getOwnerDocument();
+         if (!wrapperNames.isEmpty())
+         {
+            // Case 3: The root node is not null and there are wrappers
 
-      return new OrderedNode(realRoot, OrderInfo.UNORDERED, null);
+            realRootNode = addWrapperElements(rootNode, wrapperNames, filterSet.getNamespaceURIs());
+         }
+         else
+         {
+            // Case 4: The root node is not null and there are no wrappers
+
+            realRootNode = rootNode;
+         }
+      }
+      return new OrderedNode(realRootNode, OrderInfo.UNORDERED, null);
    }
 
-   private void addNamespaceDecls(Element root)
-      throws MapException
+   private void createDocument(XMLName rootName)
+      throws ParserUtilsException
+   {
+      DOMImplementation domImpl;
+      DocumentType      docType;
+      Element           root;
+
+      domImpl = utils.getDOMImplementation();
+      docType = domImpl.createDocumentType(rootName.getQualifiedName(), publicID, systemID);
+      doc = domImpl.createDocument(rootName.getURI(), rootName.getQualifiedName(), docType);
+
+      // DOMImplementation.createDocument creates the root element. This screws up
+      // a lot of recursive code, so get rid of it. It is added later.
+
+      root = doc.getDocumentElement();
+      doc.removeChild(root);
+   }
+
+   private Node addWrapperElements(Node rootNode, Vector wrapperNames, Hashtable namespaceURIs)
+   {
+      Node    wrapper, newWrapper, topWrapper;
+      XMLName wrapperName;
+      int     i;
+
+      if (wrapperNames.size() == 0) return rootNode;
+
+      wrapper = rootNode;
+      for (i = 0; i < wrapperNames.size(); i++)
+      {
+         wrapperName = (XMLName)wrapperNames.elementAt(i);
+         newWrapper = doc.createElementNS(wrapperName.getURI(), wrapperName.getQualifiedName());
+         wrapper.appendChild(newWrapper);
+         wrapper = newWrapper;
+      }
+
+      // Add namespace declarations to the top wrapper element. Since we appended
+      // wrapper elements to the end of the children of the root node, we need to
+      // get the last child of the root node, which is the first wrapper element
+      // in the chain.
+
+      addNamespaceDecls((Element)rootNode.getLastChild(), namespaceURIs);
+
+      // Return the lowest level wrapper element.
+
+      return wrapper;
+   }
+
+   private void addNamespaceDeclsToChildren(Node node, Hashtable namespaceURIs)
+   {
+      Node child;
+
+      child = node.getFirstChild();
+      while (child != null)
+      {
+// BUG! If the application passes a root node, that root node has children, and
+// the map uses namespaces, this code will add namespace declarations to the element
+// children of the root node. To solve this, OrderedNode needs to keep track of
+// the first child that we add to the root node and start adding namespaces from
+// there...
+
+         if (child instanceof Element)
+         {
+            addNamespaceDecls((Element)child, namespaceURIs);
+         }
+         child = child.getNextSibling();
+      }
+   }
+
+   private void addNamespaceDecls(Element element, Hashtable namespaceURIs)
    {
       Enumeration prefixes;
       String      prefix, uri;
 
-      // Loop through the namespaces used in the map and add xlmns attributes for
-      // them. Note that we are safe doing this on the root element because the
-      // map allows exactly one prefix per URI.
+      // Loop through the namespaces prefix/URI pairs and add xlmns
+      // attributes for them.
 
-      prefixes = map.getNamespacePrefixes().keys();
+      prefixes = namespaceURIs.keys();
       while (prefixes.hasMoreElements())
       {
          prefix = (String)prefixes.nextElement();
-         uri = map.getNamespaceURI(prefix);
-         root.setAttributeNS(uri, XMLNS + prefix, uri);
+         uri = (String)namespaceURIs.get(prefix);
+         element.setAttributeNS(XMLNSURI, XMLNS + prefix, uri);
+      }
+   }
+
+   private void setFilterParameters(Vector filters, Hashtable params)
+   {
+      // Set the filter parameters. We do this here because the filters
+      // are optimized for the parameters only being set once.
+
+      FilterBase       filter;
+      Enumeration      tableFilters, relatedTableFilters;
+      TableFilter      tableFilter;
+      FilterConditions relatedTableFilter;
+
+      for (int i = 0; i < filters.size(); i++)
+      {
+         filter = (FilterBase)filters.elementAt(i);
+         if (filter instanceof RootFilter)
+         {
+            ((RootFilter)filter).getRootFilterConditions().setParameters(params);
+         }
+
+         tableFilters = filter.getTableFilters();
+         while (tableFilters.hasMoreElements())
+         {
+            tableFilter = (TableFilter)tableFilters.nextElement();
+            relatedTableFilters = tableFilter.getRelatedTableFilters();
+            while (relatedTableFilters.hasMoreElements())
+            {
+               relatedTableFilter = (FilterConditions)relatedTableFilters.nextElement();
+               relatedTableFilter.setParameters(params);
+            }
+         }
       }
    }
 
    // ************************************************************************
    // Helper methods -- inlined elements
    // ************************************************************************
-
-   private Node addWrapperElements(String[] wrapperURIs, String[] wrapperNames)
-   {
-      NodeList wrapperList;
-      Node     wrapper, newWrapper;
-      String   uri;
-      int      i;
-
-      // If there are no wrapper element names, just return the document node.
-
-      if (wrapperNames == null) return doc;
-
-      // Check if the wrapper elements have already been added. If so, return
-      // the lowest level wrapper. Note that we only need to get the first child
-      // of each node, since the wrapper elements are a chain of single nodes.
-
-      uri = (wrapperURIs == null) ? null : wrapperURIs[0];
-      wrapperList = doc.getElementsByTagNameNS(uri, wrapperNames[0]);
-      if (wrapperList.getLength() != 0)
-      {
-         wrapper = wrapperList.item(0);
-         for (i = 1; i < wrapperNames.length; i++)
-         {
-            wrapper = wrapper.getFirstChild();
-         }
-         return wrapper;
-      }
-
-      // Add the wrapper elements.
-
-      wrapper = doc;
-      for (i = 0; i < wrapperNames.length; i++)
-      {
-         uri = (wrapperURIs == null) ? null : wrapperURIs[i];
-         newWrapper = doc.createElementNS(uri, wrapperNames[i]);
-         wrapper.appendChild(newWrapper);
-         wrapper = newWrapper;
-      }
-
-      // Return the lowest level wrapper element.
-
-      return wrapper;
-   }
 
    private OrderedNode addInlinedElements(OrderedNode parentNode, Row row, ElementInsertionList list)
    {

@@ -203,19 +203,28 @@ abstract class DataHandlerBase
         executedStatement();
     }
 
-
-    /** 
+    /**
      * Select rows from a given table.
-     * 
-     * @param table Table to retrieve from.
-     * @param key Key to use in WHERE clause.
-     * @param keyValue Key value.
-     * @param orderInfo Ordering info for query.
+     *
+     * <p>The SELECT statement has the form:</p>
+     *
+     * <pre>
+     *    SELECT * FROM Table WHERE Key = ? AND &lt;where> ORDER BY ?
+     * </pre>
+     *
+     * @param t The table to select from. Must not be null.
+     * @param key The key to restrict with.
+     * @param keyValue The value of the key
+     * @param where An additional where constraint. May be null.
+     * @param order The sort information. May be null.
+     * @param paramColumns The columns corresponding to parameters in the where constraint
+     * @param paramValues The values of parameters in the where constraint
+     * @return The result set.
      */
-    public ResultSet select(Table table, Key key, Object[] keyValue, OrderInfo orderInfo)
-        throws SQLException
+    public ResultSet select(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
+       throws SQLException
     {
-        PreparedStatement stmt = makeSelect(table, key, keyValue, orderInfo);
+        PreparedStatement stmt = makeSelect(table, key, keyValue, where, paramColumns, paramValues, orderInfo);
         return stmt.executeQuery();
     }
 
@@ -242,17 +251,27 @@ abstract class DataHandlerBase
     /**
      * Makes a SELECT statement
      */
-    protected PreparedStatement makeSelect(Table table, Key key, Object[] keyValue, OrderInfo orderInfo)
+    protected PreparedStatement makeSelect(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
         throws SQLException
     {
         // These can be cached. Use SQLStrings
-        String sql = m_strings.getSelectRow(table, key, orderInfo);
+        String sql = m_strings.getSelectWhere(table, key, where, orderInfo);
 
         // Make the SELECT statement
         PreparedStatement stmt = m_connection.prepareStatement(sql);
 
-        // Set the paremeters
-        Parameters.setParameters(stmt, 0, key.getColumns(), keyValue);
+        // Set the parameters
+        int start = 0;
+        if (key != null)
+        {
+           Column[] keyColumns = key.getColumns();
+           Parameters.setParameters(stmt, 0, keyColumns, keyValue);
+           start = keyColumns.length;
+        }
+        if (paramColumns != null)
+        {
+           Parameters.setParameters(stmt, start, paramColumns, paramValues);
+        }
 
         return stmt;
     }

@@ -618,6 +618,30 @@ public class Table extends MapBase
    }
 
    // ********************************************************************
+   // Column metadata
+   // ********************************************************************
+
+   /**
+    * Checks whether metadata has been set for the columns in the table.
+    *
+    * @return The first Column for which metadata has not been set or
+    *    null if metadata has been set for all columns.
+    */
+   public Column checkMetadata()
+   {
+      Enumeration columns;
+      Column      column;
+
+      columns = getColumns();
+      while (columns.hasMoreElements())
+      {
+         column = (Column)columns.nextElement();
+         if (!column.isMetadataSet()) return column;
+      }
+      return null;
+   }
+
+   // ********************************************************************
    // Private methods
    // ********************************************************************
 

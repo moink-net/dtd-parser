@@ -36,7 +36,7 @@ import java.util.Hashtable;
  * <pre>
  *    // Compile an actions document.
  *    compiler = new ActionCompiler(parserUtils);
- *    actions = compiler.compile(new InputSource(new FileReader("salesactions.act")));
+ *    actions = compiler.compile(map, new InputSource(new FileReader("salesactions.act")));
  *
  *    // Use a user-defined function to create a DOM tree over sales_in.xml
  *    doc = openDocument("sales_in.xml");

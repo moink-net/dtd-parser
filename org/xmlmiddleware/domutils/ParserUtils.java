@@ -23,6 +23,7 @@ package org.xmlmiddleware.domutils;
 
 import org.xml.sax.XMLReader;
 import org.w3c.dom.Document;
+import org.w3c.dom.DOMImplementation;
 
 import java.io.InputStream;
 
@@ -30,7 +31,7 @@ import java.io.InputStream;
  * Interface for a class that generates implements parser-specific methods.
  *
  * <p>DOM and SAX do not cover all areas of functionality. This interface
- * encapsulates bootstrapping (creating a DOM Document and getting a SAX
+ * encapsulates bootstrapping (getting a DOMImplementation object and getting a SAX
  * parser) and serializing a DOM Document to both a string and a file.
  * Eventually, this should disappear through widespread implementation
  * of JAXP and DOM level 3.</p>
@@ -51,11 +52,11 @@ public interface ParserUtils
       throws ParserUtilsException;
 
    /**
-    * Create an empty Document.
+    * Get a DOMImplementation object.
     *
-    * @return The Document
+    * @return The DOMImplementation object
     */
-   public Document createDocument()
+   public DOMImplementation getDOMImplementation()
       throws ParserUtilsException;
 
    /**

@@ -20,7 +20,7 @@
 package org.xmlmiddleware.xmldbms.actions;
 
 /**
- * Action language strings and tokens. <b>Only used internally.</b>
+ * Action language strings and tokens. <b>For internal use.</b>
  *
  * @author Ronald Bourret, 2001
  * @version 2.0

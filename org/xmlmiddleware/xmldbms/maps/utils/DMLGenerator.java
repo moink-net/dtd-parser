@@ -176,17 +176,47 @@ public class DMLGenerator
       return buildSelect(t, makeWhereLink(key.getColumns()), cols, null);
    }
 
+/*
+   This is currently not used and just confuses things. We can resurrect it if needed.
+
    /** 
-    * Returns a "SELECT cols WHERE <whereclause>" SQL string for a given table
+    * Returns a "SELECT cols WHERE &lt;where> ORDER BY ?" SQL string for a given table
     * 
     * @param t The table to select from. Must not be null.
     * @param where The entire where clause
     * @param cols The columns to select.
+    * @param order The sort information. May be null.
+    * @return The SELECT string.
+    *
+   public String getSelect(Table t, String where, Column[] cols, OrderInfo order)
+   {
+      return buildSelect(t, WHERE + where, cols, order);
+   }
+*/
+
+   /** 
+    * Returns a "SELECT * WHERE Key = ? AND &lt;where> ORDER BY ?"
+    * SQL string for a given table
+    * 
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with. May be null.
+    * @param where An additional where constraint. May be null.
+    * @param order The sort information. May be null.
     * @return The SELECT string.
     */
-   public String getSelect(Table t, String where, Column[] cols)
+   public String getSelect(Table t, Key key, String where, OrderInfo order)
    {
-      return buildSelect(t, WHERE + where, cols, null);
+      String whereClause = null;
+
+      if (key != null)
+      {
+         whereClause = makeWhereLink(key.getColumns());
+      }
+      if (where != null)
+      {
+         whereClause = (whereClause == null) ? WHERE + where : whereClause + AND + where;
+      }
+      return buildSelect(t, whereClause, t.getResultSetColumns(), order);
    }
 
    /**
@@ -329,6 +359,7 @@ public class DMLGenerator
       // Add value column names.
       for(int i = 0; i < valueColumns.length; i++)
       {
+         if (valueColumns[i].getType() == Types.NULL) continue;
          select.append(makeColumnName(valueColumns[i], comma));
          comma = true;
       }
@@ -352,7 +383,6 @@ public class DMLGenerator
    protected String makeWhereLink(Column[] keyColumns)
    {
       // Add WHERE clause.
-      boolean first = false;
       String str = new String();
 
       str += WHERE;

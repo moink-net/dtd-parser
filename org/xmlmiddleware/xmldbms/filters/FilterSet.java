@@ -232,7 +232,7 @@ public class FilterSet
    /**
     * Get the wrapper element names.
     *
-    * @return A Vector containing the XMLNames of the wrapper elements
+    * @return A Vector containing the XMLNames of the wrapper elements. May be empty.
     */
    public final Vector getWrapperNames()
    {

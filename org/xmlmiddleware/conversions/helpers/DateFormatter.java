@@ -141,6 +141,22 @@ public class DateFormatter implements StringFormatter
    }
 
    /**
+    * Whether the class can convert to/from a certain type of object.
+    *
+    * <p>This method returns true for Types.DATE, TIME, and TIMESTAMP.
+    * It returns false for all other types.</p>
+    *
+    * @param type The JDBC Types value corresponding to the object type.
+    * @return Whether the type is supported
+    */
+   public boolean canConvert(int type)
+   {
+      return ((type == Types.DATE) ||
+              (type == Types.TIME) ||
+              (type == Types.TIMESTAMP));
+   }
+
+   /**
     * Get the underlying DateFormat object.
     *
     * @return The DateFormat object.

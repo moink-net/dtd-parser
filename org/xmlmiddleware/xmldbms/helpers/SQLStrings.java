@@ -134,6 +134,41 @@ public class SQLStrings
    }
 
    /**
+    * Returns a "SELECT * WHERE key = ? AND &lt;where> ORDER BY ?" SQL string for a 
+    * given table. 
+    * 
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with. May be null.
+    * @param where An additional where clause. May be null.
+    * @param order The sort information. May be null.
+    * @return The SELECT string.
+    */
+   public String getSelectWhere(Table t, Key key, String where, OrderInfo order)
+      throws SQLException
+   {
+      String id;
+
+      id = "SELECTWHERE_" + t.getUniversalName();
+      if (key != null)
+      {
+         id += key.getName();
+      }
+      if (where != null)
+      {
+         id += ";" + String.valueOf(where.hashCode());
+      }
+      if (order != null)
+      {
+         id += ";" + String.valueOf(order.hashCode());
+      }
+
+      if(!m_strings.containsKey(id))
+         m_strings.put(id, m_dml.getSelect(t, key, where, order));
+
+      return (String)m_strings.get(id);
+   }
+
+   /**
     * Returns an UPDATE SQL string for a given table, key, and set of columns.
     *
     * @param t The table to update. Must not be null.

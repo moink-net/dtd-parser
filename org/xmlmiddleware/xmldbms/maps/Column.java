@@ -70,13 +70,13 @@ public class Column extends MapBase
 
    private String name = null;
 
-   private int             resultSetIndex = -1;
-   private int             type = Types.NULL;
-   private int             length = -1;
-   private int             precision = -1;
-   private int             scale = Integer.MIN_VALUE;
-   private int             nullability = DatabaseMetaData.columnNullableUnknown;
-   private StringFormatter formatter = null;
+   private int             resultSetIndex;
+   private int             type;
+   private int             length;
+   private int             precision;
+   private int             scale;
+   private int             nullability;
+   private StringFormatter formatter;
 
    // ********************************************************************
    // Constructors
@@ -85,6 +85,7 @@ public class Column extends MapBase
    private Column(String name)
    {
       this.name = name;
+      resetMetadata();
    }
 
    // ********************************************************************
@@ -360,5 +361,42 @@ public class Column extends MapBase
    {
       checkArgNull(formatter, ARG_FORMATTER);
       this.formatter = formatter;
+   }
+
+   // ********************************************************************
+   // All metadata
+   // ********************************************************************
+
+   /**
+    * Sets the metadata (type, length, etc.) to its initial state. Does not change the name.
+    */
+   public void resetMetadata()
+   {
+      resultSetIndex = -1;
+      type = Types.NULL;
+      length = -1;
+      precision = -1;
+      scale = Integer.MIN_VALUE;
+      nullability = DatabaseMetaData.columnNullableUnknown;
+      formatter = null;
+   }
+
+   /**
+    * Checks whether metadata has been set for the column.
+    *
+    * @return Whether metadata has been set for the column.
+    */
+   public boolean isMetadataSet()
+   {
+      if (resultSetIndex == -1) return false;
+      if (type == Types.NULL) return false;
+      if ((JDBCTypes.typeIsChar(type) || JDBCTypes.typeIsBinary(type)) && (length == -1)) return false;
+      if ((type == Types.DECIMAL) || (type == Types.NUMERIC))
+      {
+         if (precision == -1) return false;
+         if (scale == Integer.MIN_VALUE) return false;
+      }
+      if (formatter == null) return false;
+      return true;
    }
 }

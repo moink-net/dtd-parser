@@ -169,7 +169,6 @@ public class MapCompiler
    private Vector          keyColumns = new Vector();
    private Hashtable       propTables = new Hashtable();
    private Hashtable       classTables = new Hashtable();
-   private Hashtable       formats = new Hashtable();
    private Hashtable       formatTypes = new Hashtable();
 
    // State variables -- map
@@ -304,7 +303,6 @@ public class MapCompiler
       inlineClassMapStack.removeAllElements();
       propTables.clear();
       classTables.clear();
-      formats.clear();
       formatTypes.clear();
 
       map = new Map();
@@ -345,76 +343,76 @@ public class MapCompiler
 
       try
       {
-         if (!uri.equals(XMLDBMSConst.URI_XMLDBMSV2))
+         if (!uri.equals(MapConst.URI_XMLDBMSV2))
             throw new MapException("Unrecognized namespace URI: " + uri);
 
          switch (elementTokens.getToken(localName))
          {
-            case XMLDBMSConst.ELEM_TOKEN_ATTRIBUTE:
+            case MapConst.ELEM_TOKEN_ATTRIBUTE:
                processAttribute(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_CATALOG:
+            case MapConst.ELEM_TOKEN_CATALOG:
                processCatalog(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_CLASSMAP:
+            case MapConst.ELEM_TOKEN_CLASSMAP:
                // Just set the state. We create the ClassMap in processElementType().
                stateStack.push(state);
                state = STATE_CLASSMAP;
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_COLUMN:
+            case MapConst.ELEM_TOKEN_COLUMN:
                processColumn(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_DATABASE:
+            case MapConst.ELEM_TOKEN_DATABASE:
                processDatabase(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_DATABASES:
+            case MapConst.ELEM_TOKEN_DATABASES:
                // Nothing to do.
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_DATEFORMAT:
+            case MapConst.ELEM_TOKEN_DATEFORMAT:
                processDateFormatStart(attrs, true, false);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_DATETIMEFORMAT:
+            case MapConst.ELEM_TOKEN_DATETIMEFORMAT:
                processDateFormatStart(attrs, true, true);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_DECIMALFORMAT:
+            case MapConst.ELEM_TOKEN_DECIMALFORMAT:
                processDecimalFormatStart(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_ELEMENTTYPE:
+            case MapConst.ELEM_TOKEN_ELEMENTTYPE:
                processElementType(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_EMPTYSTRINGISNULL:
+            case MapConst.ELEM_TOKEN_EMPTYSTRINGISNULL:
                processEmptyStringIsNull();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_EXTENDS:
+            case MapConst.ELEM_TOKEN_EXTENDS:
                processExtends(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_FIXEDORDER:
+            case MapConst.ELEM_TOKEN_FIXEDORDER:
                processFixedOrder(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_FOREIGNKEY:
+            case MapConst.ELEM_TOKEN_FOREIGNKEY:
                stateStack.push(state);
                state = STATE_KEY;
                processForeignKey(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_FORMATCLASS:
+            case MapConst.ELEM_TOKEN_FORMATCLASS:
                processFormatClass(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_INLINEMAP:
+            case MapConst.ELEM_TOKEN_INLINEMAP:
                // Set the state and push the current inlineClassMap onto the stack. We
                // set the new inlineClassMap when we process the <ElementType> element.
                stateStack.push(state);
@@ -422,39 +420,39 @@ public class MapCompiler
                inlineClassMapStack.push(inlineClassMap);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_LOCALE:
+            case MapConst.ELEM_TOKEN_LOCALE:
                processLocale(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_NAMESPACE:
+            case MapConst.ELEM_TOKEN_NAMESPACE:
                processNamespace(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_NUMBERFORMAT:
+            case MapConst.ELEM_TOKEN_NUMBERFORMAT:
                processFormatStart(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
+            case MapConst.ELEM_TOKEN_ORDERCOLUMN:
                processOrderColumn(attrs, false);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_PCDATA:
+            case MapConst.ELEM_TOKEN_PCDATA:
                processPCDATA();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_PRIMARYKEY:
+            case MapConst.ELEM_TOKEN_PRIMARYKEY:
                stateStack.push(state);
                state = STATE_KEY;
                processPrimaryKey(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_PROPERTYMAP:
+            case MapConst.ELEM_TOKEN_PROPERTYMAP:
                processPropertyMap(attrs);
                stateStack.push(state);
                state = STATE_PROPERTYMAP;
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_RELATEDCLASS:
+            case MapConst.ELEM_TOKEN_RELATEDCLASS:
                // Set the state. We create the relatedClassMap when we encounter
                // the <ElementType> element.
                stateStack.push(state);
@@ -462,82 +460,82 @@ public class MapCompiler
                processRelatedClass(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_SCHEMA:
+            case MapConst.ELEM_TOKEN_SCHEMA:
                processSchema(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_SIMPLEDATEFORMAT:
+            case MapConst.ELEM_TOKEN_SIMPLEDATEFORMAT:
                processSimpleDateFormatStart(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_TABLE:
+            case MapConst.ELEM_TOKEN_TABLE:
                processTableStart(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_TIMEFORMAT:
+            case MapConst.ELEM_TOKEN_TIMEFORMAT:
                processDateFormatStart(attrs, false, true);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_TLORDERCOLUMN:
+            case MapConst.ELEM_TOKEN_TLORDERCOLUMN:
                processOrderColumn(attrs, true);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_TOCLASSTABLE:
+            case MapConst.ELEM_TOKEN_TOCLASSTABLE:
                processToClassTable(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_TOCOLUMN:
+            case MapConst.ELEM_TOKEN_TOCOLUMN:
                processToColumn(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_TOPROPERTYTABLE:
+            case MapConst.ELEM_TOKEN_TOPROPERTYTABLE:
                processToPropertyTable(attrs);
                stateStack.push(state);
                state = STATE_TOPROPERTYTABLE;
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_UNIQUEKEY:
+            case MapConst.ELEM_TOKEN_UNIQUEKEY:
                stateStack.push(state);
                state = STATE_KEY;
                processUniqueKey(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_USEBASETABLE:
+            case MapConst.ELEM_TOKEN_USEBASETABLE:
                processUseBaseTable(attrs);
                stateStack.push(state);
                state = STATE_USEBASETABLE;
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_USECLASSMAP:
+            case MapConst.ELEM_TOKEN_USECLASSMAP:
                processUseClassMap(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_USECOLUMN:
+            case MapConst.ELEM_TOKEN_USECOLUMN:
                processUseColumn(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_USEFOREIGNKEY:
+            case MapConst.ELEM_TOKEN_USEFOREIGNKEY:
                processUseForeignKey(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_USETABLE:
+            case MapConst.ELEM_TOKEN_USETABLE:
                processUseTable(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_USEUNIQUEKEY:
+            case MapConst.ELEM_TOKEN_USEUNIQUEKEY:
                processUseUniqueKey(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_XMLTODBMS:
+            case MapConst.ELEM_TOKEN_XMLTODBMS:
                processXMLToDBMS(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_MAPS:
-            case XMLDBMSConst.ELEM_TOKEN_OPTIONS:
+            case MapConst.ELEM_TOKEN_MAPS:
+            case MapConst.ELEM_TOKEN_OPTIONS:
                // Nothing to do.
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_INVALID:
+            case MapConst.ELEM_TOKEN_INVALID:
                throw new MapException("Unrecognized XML-DBMS mapping language element type: " + localName);
          }
       }
@@ -560,101 +558,101 @@ public class MapCompiler
 
       try
       {
-         if (!uri.equals(XMLDBMSConst.URI_XMLDBMSV2))
+         if (!uri.equals(MapConst.URI_XMLDBMSV2))
             throw new MapException("Unrecognized namespace URI: " + uri);
 
          switch (elementTokens.getToken(localName))
          {
-            case XMLDBMSConst.ELEM_TOKEN_DATABASES:
+            case MapConst.ELEM_TOKEN_DATABASES:
                resolveFKWrappers();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_DATEFORMAT:
+            case MapConst.ELEM_TOKEN_DATEFORMAT:
                processDateFormatEnd();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_DATETIMEFORMAT:
+            case MapConst.ELEM_TOKEN_DATETIMEFORMAT:
                processDateTimeFormatEnd();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_DECIMALFORMAT:
+            case MapConst.ELEM_TOKEN_DECIMALFORMAT:
                processDecimalFormatEnd();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_FOREIGNKEY:
+            case MapConst.ELEM_TOKEN_FOREIGNKEY:
                processKeyEnd();
                state = (Integer)stateStack.pop();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_INLINEMAP:
+            case MapConst.ELEM_TOKEN_INLINEMAP:
                state = (Integer)stateStack.pop();
                inlineClassMap = (InlineClassMap)inlineClassMapStack.pop();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_NUMBERFORMAT:
+            case MapConst.ELEM_TOKEN_NUMBERFORMAT:
                processNumberFormatEnd();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_PRIMARYKEY:
+            case MapConst.ELEM_TOKEN_PRIMARYKEY:
                processKeyEnd();
                state = (Integer)stateStack.pop();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_SIMPLEDATEFORMAT:
+            case MapConst.ELEM_TOKEN_SIMPLEDATEFORMAT:
                processSimpleDateFormatEnd();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_TABLE:
+            case MapConst.ELEM_TOKEN_TABLE:
                processTableEnd();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_TIMEFORMAT:
+            case MapConst.ELEM_TOKEN_TIMEFORMAT:
                processTimeFormatEnd();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_UNIQUEKEY:
+            case MapConst.ELEM_TOKEN_UNIQUEKEY:
                processKeyEnd();
                state = (Integer)stateStack.pop();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_CLASSMAP:
-            case XMLDBMSConst.ELEM_TOKEN_PROPERTYMAP:
-            case XMLDBMSConst.ELEM_TOKEN_RELATEDCLASS:
-            case XMLDBMSConst.ELEM_TOKEN_TOPROPERTYTABLE:
-            case XMLDBMSConst.ELEM_TOKEN_USEBASETABLE:
+            case MapConst.ELEM_TOKEN_CLASSMAP:
+            case MapConst.ELEM_TOKEN_PROPERTYMAP:
+            case MapConst.ELEM_TOKEN_RELATEDCLASS:
+            case MapConst.ELEM_TOKEN_TOPROPERTYTABLE:
+            case MapConst.ELEM_TOKEN_USEBASETABLE:
                // Only need to pop the state.
                state = (Integer)stateStack.pop();
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_ATTRIBUTE:
-            case XMLDBMSConst.ELEM_TOKEN_CATALOG:
-            case XMLDBMSConst.ELEM_TOKEN_COLUMN:
-            case XMLDBMSConst.ELEM_TOKEN_DATABASE:
-            case XMLDBMSConst.ELEM_TOKEN_ELEMENTTYPE:
-            case XMLDBMSConst.ELEM_TOKEN_EMPTYSTRINGISNULL:
-            case XMLDBMSConst.ELEM_TOKEN_EXTENDS:
-            case XMLDBMSConst.ELEM_TOKEN_FIXEDORDER:
-            case XMLDBMSConst.ELEM_TOKEN_FORMATCLASS:
-            case XMLDBMSConst.ELEM_TOKEN_LOCALE:
-            case XMLDBMSConst.ELEM_TOKEN_MAPS:
-            case XMLDBMSConst.ELEM_TOKEN_NAMESPACE:
-            case XMLDBMSConst.ELEM_TOKEN_OPTIONS:
-            case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
-            case XMLDBMSConst.ELEM_TOKEN_PCDATA:
-            case XMLDBMSConst.ELEM_TOKEN_SCHEMA:
-            case XMLDBMSConst.ELEM_TOKEN_TLORDERCOLUMN:
-            case XMLDBMSConst.ELEM_TOKEN_TOCLASSTABLE:
-            case XMLDBMSConst.ELEM_TOKEN_TOCOLUMN:
-            case XMLDBMSConst.ELEM_TOKEN_USECLASSMAP:
-            case XMLDBMSConst.ELEM_TOKEN_USECOLUMN:
-            case XMLDBMSConst.ELEM_TOKEN_USEFOREIGNKEY:
-            case XMLDBMSConst.ELEM_TOKEN_USETABLE:
-            case XMLDBMSConst.ELEM_TOKEN_USEUNIQUEKEY:
-            case XMLDBMSConst.ELEM_TOKEN_XMLTODBMS:
+            case MapConst.ELEM_TOKEN_ATTRIBUTE:
+            case MapConst.ELEM_TOKEN_CATALOG:
+            case MapConst.ELEM_TOKEN_COLUMN:
+            case MapConst.ELEM_TOKEN_DATABASE:
+            case MapConst.ELEM_TOKEN_ELEMENTTYPE:
+            case MapConst.ELEM_TOKEN_EMPTYSTRINGISNULL:
+            case MapConst.ELEM_TOKEN_EXTENDS:
+            case MapConst.ELEM_TOKEN_FIXEDORDER:
+            case MapConst.ELEM_TOKEN_FORMATCLASS:
+            case MapConst.ELEM_TOKEN_LOCALE:
+            case MapConst.ELEM_TOKEN_MAPS:
+            case MapConst.ELEM_TOKEN_NAMESPACE:
+            case MapConst.ELEM_TOKEN_OPTIONS:
+            case MapConst.ELEM_TOKEN_ORDERCOLUMN:
+            case MapConst.ELEM_TOKEN_PCDATA:
+            case MapConst.ELEM_TOKEN_SCHEMA:
+            case MapConst.ELEM_TOKEN_TLORDERCOLUMN:
+            case MapConst.ELEM_TOKEN_TOCLASSTABLE:
+            case MapConst.ELEM_TOKEN_TOCOLUMN:
+            case MapConst.ELEM_TOKEN_USECLASSMAP:
+            case MapConst.ELEM_TOKEN_USECOLUMN:
+            case MapConst.ELEM_TOKEN_USEFOREIGNKEY:
+            case MapConst.ELEM_TOKEN_USETABLE:
+            case MapConst.ELEM_TOKEN_USEUNIQUEKEY:
+            case MapConst.ELEM_TOKEN_XMLTODBMS:
                // Nothing to do.
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_INVALID:
+            case MapConst.ELEM_TOKEN_INVALID:
                throw new MapException("Unrecognized XML-DBMS mapping language element type: " + localName);
          }
       }
@@ -727,7 +725,7 @@ public class MapCompiler
       // Get the attribute's name and create an XMLName, then create an
       // attribute map.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_NAME);
       xmlName = XMLName.create(attrValue, map.getNamespaceURIs());
       propMap = PropertyMap.create(xmlName, PropertyMap.ATTRIBUTE);
 
@@ -753,7 +751,7 @@ public class MapCompiler
 
    private void processCatalog(Attributes attrs)
    {
-      catalogName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      catalogName = getAttrValue(attrs, MapConst.ATTR_NAME);
    }
 
    private void processColumn(Attributes attrs)
@@ -767,13 +765,13 @@ public class MapCompiler
       // Create the column and add it to the table. This throws an error if
       // the column already exists.
 
-      columnName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      columnName = getAttrValue(attrs, MapConst.ATTR_NAME);
       column = Column.create(columnName);
       table.addColumn(column);
 
       // Get the data type, if any.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_DATATYPE);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_DATATYPE);
       if (attrValue != null)
       {
          type = JDBCTypes.getType(attrValue);
@@ -784,7 +782,7 @@ public class MapCompiler
 
       // Get the column length, if any.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_LENGTH);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_LENGTH);
       if (attrValue != null)
       {
          column.setLength(parseInt(attrValue));
@@ -792,7 +790,7 @@ public class MapCompiler
 
       // Get the column precision, if any.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_PRECISION);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_PRECISION);
       if (attrValue != null)
       {
          column.setPrecision(parseInt(attrValue));
@@ -800,7 +798,7 @@ public class MapCompiler
 
       // Get the column scale, if any.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_SCALE);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_SCALE);
       if (attrValue != null)
       {
          column.setScale(parseInt(attrValue));
@@ -809,21 +807,21 @@ public class MapCompiler
       // Get the nullability, if any. We translate here between the token
       // values and the DatabaseMetaData values.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_NULLABLE);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_NULLABLE);
       if (attrValue != null)
       {
          nullability = enumTokens.getToken(attrValue);
          switch (nullability)
          {
-            case XMLDBMSConst.ENUM_TOKEN_YES:
+            case MapConst.ENUM_TOKEN_YES:
                nullability = DatabaseMetaData.columnNullable;
                break;
 
-            case XMLDBMSConst.ENUM_TOKEN_NO:
+            case MapConst.ENUM_TOKEN_NO:
                nullability = DatabaseMetaData.columnNoNulls;
                break;
 
-            case XMLDBMSConst.ENUM_TOKEN_UNKNOWN:
+            case MapConst.ENUM_TOKEN_UNKNOWN:
                nullability = DatabaseMetaData.columnNullableUnknown;
                break;
 
@@ -835,10 +833,10 @@ public class MapCompiler
 
       // Get the named column format if any.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_FORMAT);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_FORMAT);
       if (attrValue != null)
       {
-         formatter = (StringFormatter)formats.get(attrValue);
+         formatter = map.getNamedFormatter(attrValue);
          if (formatter == null)
             throw new MapException("Column " + columnName + " uses the named format " + attrValue + ". The format was not declared.");
          column.setFormatter(formatter);
@@ -851,7 +849,7 @@ public class MapCompiler
 
    private void processDatabase(Attributes attrs)
    {
-      databaseName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME, XMLDBMSConst.DEF_DATABASENAME);
+      databaseName = getAttrValue(attrs, MapConst.ATTR_NAME, MapConst.DEF_DATABASENAME);
    }
 
    private void processDateFormatEnd()
@@ -877,11 +875,11 @@ public class MapCompiler
       processFormatStart(attrs);
       if (getDateStyle)
       {
-         dateStyle = enumTokens.getToken(getAttrValue(attrs, XMLDBMSConst.ATTR_DATESTYLE));
+         dateStyle = enumTokens.getToken(getAttrValue(attrs, MapConst.ATTR_DATESTYLE));
       }
       if (getTimeStyle)
       {
-         timeStyle = enumTokens.getToken(getAttrValue(attrs, XMLDBMSConst.ATTR_TIMESTYLE));
+         timeStyle = enumTokens.getToken(getAttrValue(attrs, MapConst.ATTR_TIMESTYLE));
       }
    }
 
@@ -907,7 +905,7 @@ public class MapCompiler
    {
       processFormatStart(attrs);
 
-      pattern = getAttrValue(attrs, XMLDBMSConst.ATTR_PATTERN);
+      pattern = getAttrValue(attrs, MapConst.ATTR_PATTERN);
    }
 
    private void processDecimalFormatEnd()
@@ -949,7 +947,7 @@ public class MapCompiler
 
       // Get the qualified element type name and convert it to an XMLName.
 
-      qualifiedName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      qualifiedName = getAttrValue(attrs, MapConst.ATTR_NAME);
 
       elementTypeName = XMLName.create(qualifiedName, map.getNamespaceURIs());
 
@@ -1062,7 +1060,7 @@ public class MapCompiler
       // the class map for that element type, and set the base class map on the
       // current class map.
 
-      qualifiedName = getAttrValue(attrs, XMLDBMSConst.ATTR_ELEMENTTYPE);
+      qualifiedName = getAttrValue(attrs, MapConst.ATTR_ELEMENTTYPE);
       baseClassMap = map.createClassMap(XMLName.create(qualifiedName, map.getNamespaceURIs()));
       classMap.setBaseClassMap(baseClassMap);
 */
@@ -1088,7 +1086,7 @@ public class MapCompiler
 
       // Set the fixed order value.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_VALUE);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_VALUE);
       orderInfo.setFixedOrderValue(parseInt(attrValue));
    }
 
@@ -1105,7 +1103,7 @@ public class MapCompiler
       // Create a foreign key and add it to the table; throws an exception if
       // the table already has a foreign key with this name.
 
-      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      name = getAttrValue(attrs, MapConst.ATTR_NAME);
       key = Key.createForeignKey(name);
       table.addForeignKey(key);
 
@@ -1129,7 +1127,7 @@ public class MapCompiler
 
       // Instantiate an object of the custom formatting class.
 
-      className = getAttrValue(attrs, XMLDBMSConst.ATTR_CLASS);
+      className = getAttrValue(attrs, MapConst.ATTR_CLASS);
       try
       {
          formatter = (StringFormatter)Class.forName(className).newInstance();
@@ -1152,8 +1150,8 @@ public class MapCompiler
       // Get the attribute values and check that the Name or DefaultForTypes
       // or both attributes are present.
 
-      formatName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
-      defaultForTypes = getAttrValue(attrs, XMLDBMSConst.ATTR_DEFAULTFORTYPES);
+      formatName = getAttrValue(attrs, MapConst.ATTR_NAME);
+      defaultForTypes = getAttrValue(attrs, MapConst.ATTR_DEFAULTFORTYPES);
       if ((formatName == null) && (defaultForTypes == null))
          throw new MapException("At least one of the attributes Name and DefaultForTypes must be present on a formatting element.");
 
@@ -1177,8 +1175,8 @@ public class MapCompiler
    {
       String country, language;
 
-      country = getAttrValue(attrs, XMLDBMSConst.ATTR_COUNTRY);
-      language = getAttrValue(attrs, XMLDBMSConst.ATTR_LANGUAGE);
+      country = getAttrValue(attrs, MapConst.ATTR_COUNTRY);
+      language = getAttrValue(attrs, MapConst.ATTR_LANGUAGE);
       locale = new Locale(language, country);
    }
 
@@ -1187,7 +1185,7 @@ public class MapCompiler
    {
       String uri, prefix;
 
-      prefix = getAttrValue(attrs, XMLDBMSConst.ATTR_PREFIX);
+      prefix = getAttrValue(attrs, MapConst.ATTR_PREFIX);
       if (prefix == null)
       {
          // This is a somewhat annoying predicament. In getAttrValue, we set the
@@ -1201,7 +1199,7 @@ public class MapCompiler
 
          prefix = "";
       }
-      uri = getAttrValue(attrs, XMLDBMSConst.ATTR_URI);
+      uri = getAttrValue(attrs, MapConst.ATTR_URI);
 
       map.addNamespace(prefix, uri);
    }
@@ -1242,8 +1240,8 @@ public class MapCompiler
 
       // Get the name of the order column and whether to generate it
 
-      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
-      generate = isYes(getAttrValue(attrs, XMLDBMSConst.ATTR_GENERATE, XMLDBMSConst.DEF_GENERATE));
+      name = getAttrValue(attrs, MapConst.ATTR_NAME);
+      generate = isYes(getAttrValue(attrs, MapConst.ATTR_GENERATE, MapConst.DEF_GENERATE));
 
       // Get the table that the order column is in.
 
@@ -1352,18 +1350,18 @@ public class MapCompiler
       // Create a primary key and add it to the table; throws an exception if
       // the table already has a primary key.
 
-      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME, XMLDBMSConst.VALUE_PRIMARYKEY);
+      name = getAttrValue(attrs, MapConst.ATTR_NAME, MapConst.VALUE_PRIMARYKEY);
       key = Key.createPrimaryKey(name);
       table.addPrimaryKey(key);
 
       // Set the key generation.
 
-      keyGenerator = getAttrValue(attrs, XMLDBMSConst.ATTR_KEYGENERATOR);
+      keyGenerator = getAttrValue(attrs, MapConst.ATTR_KEYGENERATOR);
       if (keyGenerator == null)
       {
          generate = Key.DOCUMENT;
       }
-      else if (keyGenerator.equals(XMLDBMSConst.VALUE_DATABASE))
+      else if (keyGenerator.equals(MapConst.VALUE_DATABASE))
       {
          generate = Key.DATABASE;
          keyGenerator = null;
@@ -1383,10 +1381,10 @@ public class MapCompiler
       // column to which it is mapped contains XML. We actually create the propMap
       // when we encounter the <ElementType>, <Attribute>, or <PCDATA> element.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_TOKENLIST, XMLDBMSConst.DEF_TOKENLIST);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_TOKENLIST, MapConst.DEF_TOKENLIST);
       isTokenList = isYes(attrValue);
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_CONTAINSXML, XMLDBMSConst.DEF_CONTAINSXML);
+      attrValue = getAttrValue(attrs, MapConst.ATTR_CONTAINSXML, MapConst.DEF_CONTAINSXML);
       containsXML = isYes(attrValue);
    }
 
@@ -1402,12 +1400,12 @@ public class MapCompiler
       rcmWrapper = new RCMWrapper();
       rcmWrapperStack.push(rcmWrapper);
       rcmWrapper.parentClassMap = classMap;
-      rcmWrapper.parentKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINPARENTTABLE);
+      rcmWrapper.parentKeyIsUnique = getParentKeyIsUnique(attrs, MapConst.ATTR_KEYINPARENTTABLE);
    }
 
    private void processSchema(Attributes attrs)
    {
-      schemaName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      schemaName = getAttrValue(attrs, MapConst.ATTR_NAME);
    }
 
    private void processSimpleDateFormatEnd()
@@ -1431,7 +1429,7 @@ public class MapCompiler
       throws MapException
    {
       processFormatStart(attrs);
-      pattern = getAttrValue(attrs, XMLDBMSConst.ATTR_PATTERN);
+      pattern = getAttrValue(attrs, MapConst.ATTR_PATTERN);
    }
 
    private void processTableStart(Attributes attrs)
@@ -1443,7 +1441,7 @@ public class MapCompiler
       // Map.addTable because it will throw an exception if the table has already
       // been created.
 
-      tableName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      tableName = getAttrValue(attrs, MapConst.ATTR_NAME);
       table = Table.create(databaseName, catalogName, schemaName, tableName);
       map.addTable(table);
    }
@@ -1527,7 +1525,7 @@ public class MapCompiler
       // Get the name of the column, then get the column, then set the column in
       // the PropertyMap.
 
-      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      name = getAttrValue(attrs, MapConst.ATTR_NAME);
       column = propTable.getColumn(name);
       if (column == null)
          throw new MapException("Property column " + name + " not found in table " + propTable.getUniversalName());
@@ -1545,7 +1543,7 @@ public class MapCompiler
       // have all the necessary information.
 
       propertyTable = getTable(attrs);
-      parentKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINPARENTTABLE);
+      parentKeyIsUnique = getParentKeyIsUnique(attrs, MapConst.ATTR_KEYINPARENTTABLE);
 
       // Check that the table is not already mapped and add it to the list of mapped tables.
 
@@ -1569,7 +1567,7 @@ public class MapCompiler
       // Create a unique key and add it to the table; throws an exception if
       // the table already has a unique key with this name.
 
-      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      name = getAttrValue(attrs, MapConst.ATTR_NAME);
       key = Key.createUniqueKey(name);
       table.addUniqueKey(key);
    }
@@ -1586,7 +1584,7 @@ public class MapCompiler
       baseTableWrapper = new BaseTableWrapper();
       baseTableWrapperStack.push(baseTableWrapper);
       baseTableWrapper.extendedClassMap = classMap;
-      baseTableWrapper.baseKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINBASETABLE);
+      baseTableWrapper.baseKeyIsUnique = getParentKeyIsUnique(attrs, MapConst.ATTR_KEYINBASETABLE);
    }
 
    private void processUseClassMap(Attributes attrs)
@@ -1599,7 +1597,7 @@ public class MapCompiler
       // 1) Get the name of the element type whose ClassMap is to be used. This
       //    is stored in the ElementType attribute of the <UseClassMap> element.
 
-      useQualifiedName = getAttrValue(attrs, XMLDBMSConst.ATTR_ELEMENTTYPE);
+      useQualifiedName = getAttrValue(attrs, MapConst.ATTR_ELEMENTTYPE);
       useXMLName = XMLName.create(useQualifiedName, map.getNamespaceURIs());
 
       // 2) Get/create the ClassMap for the used element type. We use createClassMap
@@ -1629,7 +1627,7 @@ public class MapCompiler
 
       // Get the name of the column to use in the key.
 
-      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      name = getAttrValue(attrs, MapConst.ATTR_NAME);
 
       // Get the key column. This is in the table for the ClassMap being
       // declared. Note that the column must have been declared or an error
@@ -1649,7 +1647,7 @@ public class MapCompiler
       Key      foreignKey;
       LinkInfo linkInfo;
 
-      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      name = getAttrValue(attrs, MapConst.ATTR_NAME);
 
       switch (state.intValue())
       {
@@ -1664,7 +1662,7 @@ public class MapCompiler
             // Check that the table and unique key referenced by the foreign key are
             // the table and unique key used in the <RelatedClass> element.
 
-            checkUniqueKey(XMLDBMSConst.ELEM_TOPROPERTYTABLE, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
+            checkUniqueKey(MapConst.ELEM_TOPROPERTYTABLE, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
 
             // Create a LinkInfo object from the two keys.
 
@@ -1707,10 +1705,10 @@ public class MapCompiler
 
       // Get the database, catalog, schema, and table names.
 
-      fkWrapper.remoteDatabaseName = getAttrValue(attrs, XMLDBMSConst.ATTR_DATABASE, XMLDBMSConst.DEF_DATABASENAME);
-      fkWrapper.remoteCatalogName = getAttrValue(attrs, XMLDBMSConst.ATTR_CATALOG);
-      fkWrapper.remoteSchemaName = getAttrValue(attrs, XMLDBMSConst.ATTR_SCHEMA);
-      fkWrapper.remoteTableName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      fkWrapper.remoteDatabaseName = getAttrValue(attrs, MapConst.ATTR_DATABASE, MapConst.DEF_DATABASENAME);
+      fkWrapper.remoteCatalogName = getAttrValue(attrs, MapConst.ATTR_CATALOG);
+      fkWrapper.remoteSchemaName = getAttrValue(attrs, MapConst.ATTR_SCHEMA);
+      fkWrapper.remoteTableName = getAttrValue(attrs, MapConst.ATTR_NAME);
    }
 
    private void processUseUniqueKey(Attributes attrs)
@@ -1721,7 +1719,7 @@ public class MapCompiler
       Key       foreignKey;
       FKWrapper fkWrapper;
 
-      name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      name = getAttrValue(attrs, MapConst.ATTR_NAME);
 
       switch (state.intValue())
       {
@@ -1786,8 +1784,8 @@ public class MapCompiler
       // getAttrValue now returns the default if no version attribute
       // was specified, so remove check for version == null
 
-      version = getAttrValue(attrs, XMLDBMSConst.ATTR_VERSION, XMLDBMSConst.DEF_VERSION);
-      if (!version.equals(XMLDBMSConst.DEF_VERSION))
+      version = getAttrValue(attrs, MapConst.ATTR_VERSION, MapConst.DEF_VERSION);
+      if (!version.equals(MapConst.DEF_VERSION))
          throw new MapException("Unsupported XML-DBMS version: " + version);
    }
 
@@ -1799,8 +1797,8 @@ public class MapCompiler
    {
       // Set up tokens for element names and enumerated values.
 
-      elementTokens = new TokenList(XMLDBMSConst.ELEMS, XMLDBMSConst.ELEM_TOKENS, XMLDBMSConst.ELEM_TOKEN_INVALID);
-      enumTokens = new TokenList(XMLDBMSConst.ENUMS, XMLDBMSConst.ENUM_TOKENS, XMLDBMSConst.ENUM_TOKEN_INVALID);
+      elementTokens = new TokenList(MapConst.ELEMS, MapConst.ELEM_TOKENS, MapConst.ELEM_TOKEN_INVALID);
+      enumTokens = new TokenList(MapConst.ENUMS, MapConst.ENUM_TOKENS, MapConst.ENUM_TOKEN_INVALID);
    }
 
    private OrderInfo createOrderInfo(Attributes attrs, boolean isTokenList)
@@ -1835,8 +1833,8 @@ public class MapCompiler
 
       // Set whether the order is ascending or descending.
 
-      ascending = getAttrValue(attrs, XMLDBMSConst.ATTR_DIRECTION, XMLDBMSConst.DEF_DIRECTION);
-      orderInfo.setIsAscending(ascending.equals(XMLDBMSConst.ENUM_ASCENDING));
+      ascending = getAttrValue(attrs, MapConst.ATTR_DIRECTION, MapConst.DEF_DIRECTION);
+      orderInfo.setIsAscending(ascending.equals(MapConst.ENUM_ASCENDING));
 
       // Return the OrderInfo object
 
@@ -1847,9 +1845,7 @@ public class MapCompiler
       throws MapException
    {
       if (formatName == null) return;
-      if (formats.get(formatName) != null)
-         throw new MapException("Format name " + formatName + " used more than once.");
-      formats.put(formatName, formatter);
+      map.addNamedFormatter(formatName, formatter);
    }
 
    private void addDefaultFormatter(String defaultForTypes, StringFormatter formatter)
@@ -1946,7 +1942,7 @@ public class MapCompiler
       // Check that the table and unique key referenced by the foreign key are
       // the table and unique key used in the <RelatedClass> element.
 
-      checkUniqueKey(XMLDBMSConst.ELEM_RELATEDCLASS, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
+      checkUniqueKey(MapConst.ELEM_RELATEDCLASS, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
 
       // Create a new LinkInfo object and add it to the RelatedClassMap.
 
@@ -2020,7 +2016,7 @@ public class MapCompiler
       // Check that the table and unique key referenced by the foreign key are
       // the table and unique key used in the <RelatedClass> element.
 
-      checkUniqueKey(XMLDBMSConst.ELEM_USEBASETABLE, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
+      checkUniqueKey(MapConst.ELEM_USEBASETABLE, foreignKeyTable, foreignKey, uniqueKeyTable, uniqueKey);
 
       // Create a new LinkInfo object and add it to the ClassMap.
 
@@ -2078,7 +2074,7 @@ public class MapCompiler
       String attrValue;
 
       attrValue = getAttrValue(attrs, attrName);
-      return attrValue.equals(XMLDBMSConst.ENUM_UNIQUE);
+      return attrValue.equals(MapConst.ENUM_UNIQUE);
    }
 
    private Table getTable(Attributes attrs)
@@ -2087,10 +2083,10 @@ public class MapCompiler
       String databaseName, catalogName, schemaName, tableName;
       Table  table;
 
-      databaseName = getAttrValue(attrs, XMLDBMSConst.ATTR_DATABASE, XMLDBMSConst.DEF_DATABASENAME);
-      catalogName = getAttrValue(attrs, XMLDBMSConst.ATTR_CATALOG);
-      schemaName = getAttrValue(attrs, XMLDBMSConst.ATTR_SCHEMA);
-      tableName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      databaseName = getAttrValue(attrs, MapConst.ATTR_DATABASE, MapConst.DEF_DATABASENAME);
+      catalogName = getAttrValue(attrs, MapConst.ATTR_CATALOG);
+      schemaName = getAttrValue(attrs, MapConst.ATTR_SCHEMA);
+      tableName = getAttrValue(attrs, MapConst.ATTR_NAME);
 
       table = map.getTable(databaseName, catalogName, schemaName, tableName);
       if (table == null)
@@ -2100,7 +2096,7 @@ public class MapCompiler
 
    private boolean isYes(String yesNo)
    {
-      return yesNo.equals(XMLDBMSConst.ENUM_YES);
+      return yesNo.equals(MapConst.ENUM_YES);
    }
 
    private int parseInt(String string)

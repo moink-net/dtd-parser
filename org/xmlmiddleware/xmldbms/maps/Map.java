@@ -355,12 +355,13 @@ public class Map extends MapBase
    //  Options
 
    private boolean   emptyStringIsNull = false;
-   private Hashtable defaultFormatters = new Hashtable();  // Indexed by type
-   private Hashtable classMaps = new Hashtable();       // Indexed by universal name
-   private Hashtable classTableMaps = new Hashtable();  // Indexed by table name
-   private Hashtable tables = new Hashtable();          // Indexed by table name
-   private Hashtable uris = new Hashtable();            // Indexed by prefix
-   private Hashtable prefixes = new Hashtable();        // Indexed by URI
+   private Hashtable defaultFormatters = new Hashtable(); // Indexed by type
+   private Hashtable namedFormatters = new Hashtable();   // Indexed by name
+   private Hashtable classMaps = new Hashtable();         // Indexed by universal name
+   private Hashtable classTableMaps = new Hashtable();    // Indexed by table name
+   private Hashtable tables = new Hashtable();            // Indexed by table name
+   private Hashtable uris = new Hashtable();              // Indexed by prefix
+   private Hashtable prefixes = new Hashtable();          // Indexed by URI
 
    //**************************************************************************
    // Constructors
@@ -369,7 +370,7 @@ public class Map extends MapBase
    /** Construct a new Map. */
    public Map()
    {
-      initFormatters();
+      resetDefaultFormatters();
    }
 
    //**************************************************************************
@@ -411,7 +412,7 @@ public class Map extends MapBase
     * <p>This method returns an object that implements the
     * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
-    * @param The JDBC type. Must be a valid value from the java.sql.Types class.
+    * @param type The JDBC type. Must be a valid value from the java.sql.Types class.
     *
     * @return The formatting object. This is never null.
     */
@@ -448,6 +449,103 @@ public class Map extends MapBase
       checkArgNull(formatter, ARG_FORMATTER);
 
       defaultFormatters.put(new Integer(type), formatter);
+   }
+
+   /**
+    * Reset the default formatting objects to their initial state.
+    */
+   public void resetDefaultFormatters()
+   {
+      Base64Formatter base64Formatter = new Base64Formatter();
+      CharFormatter   charFormatter = new CharFormatter();
+      NumberFormatter numberFormatter = new NumberFormatter(NumberFormat.getNumberInstance());
+
+      setDefaultFormatter(Types.BINARY, base64Formatter);
+      setDefaultFormatter(Types.VARBINARY, base64Formatter);
+      setDefaultFormatter(Types.LONGVARBINARY, base64Formatter);
+
+      setDefaultFormatter(Types.CHAR, charFormatter);
+      setDefaultFormatter(Types.VARCHAR, charFormatter);
+      setDefaultFormatter(Types.LONGVARCHAR, charFormatter);
+
+      setDefaultFormatter(Types.DOUBLE, numberFormatter);
+      setDefaultFormatter(Types.FLOAT, numberFormatter);
+      setDefaultFormatter(Types.REAL, numberFormatter);
+      setDefaultFormatter(Types.DECIMAL, numberFormatter);
+      setDefaultFormatter(Types.NUMERIC, numberFormatter);
+      setDefaultFormatter(Types.BIGINT, numberFormatter);
+      setDefaultFormatter(Types.INTEGER, numberFormatter);
+      setDefaultFormatter(Types.SMALLINT, numberFormatter);
+      setDefaultFormatter(Types.TINYINT, numberFormatter);
+
+      setDefaultFormatter(Types.BIT, new BooleanFormatter());
+
+      setDefaultFormatter(Types.DATE, new DateFormatter(DateFormat.getDateInstance()));
+      setDefaultFormatter(Types.TIME, new DateFormatter(DateFormat.getTimeInstance()));
+      setDefaultFormatter(Types.TIMESTAMP, new DateFormatter(DateFormat.getDateTimeInstance()));
+   }
+
+   //**************************************************************************
+   // Named formatting objects
+   //**************************************************************************
+
+   /**
+    * Get a named formatting object.
+    *
+    * @param name The name of the the formatting object. Must not be null.
+    *
+    * @return The formatting object. May be null.
+    */
+   public final StringFormatter getNamedFormatter(String name)
+   {
+      return (StringFormatter)namedFormatters.get(name);
+   }
+
+   /**
+    * Get a Hashtable containing all named formatting objects hashed by name.
+    *
+    * @return The Hashtable.
+    */
+   public final Hashtable getNamedFormatters()
+   {
+      return (Hashtable)namedFormatters.clone();
+   }
+
+   /**
+    * Add a named formatting object.
+    *
+    * @param name The name. Must not be null.
+    * @param formatter The formatting object. Must not be null.
+    */
+   public void addNamedFormatter(String name, StringFormatter formatter)
+      throws MapException
+   {
+      checkArgNull(name, ARG_NAME);
+      checkArgNull(formatter, ARG_FORMATTER);
+      if (namedFormatters.get(name) != null)
+         throw new MapException("Formatter with the name " + name + " already exists.");
+      namedFormatters.put(name, formatter);
+   }
+
+   /**
+    * Remove a named formatting object.
+    *
+    * @param name The name. Must not be null.
+    */
+   public void removeNamedFormatter(String name, StringFormatter formatter)
+      throws MapException
+   {
+      checkArgNull(name, ARG_NAME);
+      if (namedFormatters.remove(name) == null)
+         throw new MapException("No formatter with the name " + name + " found.");
+   }
+
+   /**
+    * Remove all named formatting objects.
+    */
+   public void removeAllNamedFormatters()
+   {
+      namedFormatters.clear();
    }
 
    //**************************************************************************
@@ -960,38 +1058,30 @@ public class Map extends MapBase
       tables.clear();
    }
 
-   //**************************************************************************
-   // Private methods
-   //**************************************************************************
+   // ********************************************************************
+   // Table metadata
+   // ********************************************************************
 
-   private void initFormatters()
+   /**
+    * Checks whether metadata has been set for the columns in all tables.
+    *
+    * <p>If the returned value is non-null, it can be used to determine
+    * the column for which metadata has not been set.</p>
+    *
+    * @return The first Table for which metadata has not been set or
+    *    null if metadata has been set for all tables.
+    */
+   public Table checkMetadata()
    {
-      Base64Formatter base64Formatter = new Base64Formatter();
-      CharFormatter   charFormatter = new CharFormatter();
-      NumberFormatter numberFormatter = new NumberFormatter(NumberFormat.getNumberInstance());
+      Enumeration tables;
+      Table       table;
 
-      setDefaultFormatter(Types.BINARY, base64Formatter);
-      setDefaultFormatter(Types.VARBINARY, base64Formatter);
-      setDefaultFormatter(Types.LONGVARBINARY, base64Formatter);
-
-      setDefaultFormatter(Types.CHAR, charFormatter);
-      setDefaultFormatter(Types.VARCHAR, charFormatter);
-      setDefaultFormatter(Types.LONGVARCHAR, charFormatter);
-
-      setDefaultFormatter(Types.DOUBLE, numberFormatter);
-      setDefaultFormatter(Types.FLOAT, numberFormatter);
-      setDefaultFormatter(Types.REAL, numberFormatter);
-      setDefaultFormatter(Types.DECIMAL, numberFormatter);
-      setDefaultFormatter(Types.NUMERIC, numberFormatter);
-      setDefaultFormatter(Types.BIGINT, numberFormatter);
-      setDefaultFormatter(Types.INTEGER, numberFormatter);
-      setDefaultFormatter(Types.SMALLINT, numberFormatter);
-      setDefaultFormatter(Types.TINYINT, numberFormatter);
-
-      setDefaultFormatter(Types.BIT, new BooleanFormatter());
-
-      setDefaultFormatter(Types.DATE, new DateFormatter(DateFormat.getDateInstance()));
-      setDefaultFormatter(Types.TIME, new DateFormatter(DateFormat.getTimeInstance()));
-      setDefaultFormatter(Types.TIMESTAMP, new DateFormatter(DateFormat.getDateTimeInstance()));
+      tables = getTables();
+      while (tables.hasMoreElements())
+      {
+         table = (Table)tables.nextElement();
+         if (table.checkMetadata() != null) return table;
+      }
+      return null;
    }
 }

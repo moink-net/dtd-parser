@@ -29,10 +29,7 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 /**
- * An action to take on an element type mapped as a class.
- *
- * <p>Action objects are constructed through Actions objects. For more
- * information, see the Actions class.</p>
+ * An action to take on an element type mapped as a class. <b>For internal use.</b>
  *
  * @author Ronald Bourret, 2001
  * @version 2.0

@@ -491,7 +491,7 @@ public class FilterCompiler implements ContentHandler
    private void processWrapper(Attributes attrs)
       throws SAXException
    {
-      String         qualifiedName;
+      String  qualifiedName;
       XMLName wrapperName;
 
       // Get the qualified element type name and convert it to an XMLName.

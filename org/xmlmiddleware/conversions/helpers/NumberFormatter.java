@@ -96,7 +96,7 @@ public class NumberFormatter implements StringFormatter
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
-               throw new ConversionException("Use an implementation of StringFormatter to convert to strings.");
+               throw new ConversionException("Conversion to string types not supported.");
 
             case Types.DOUBLE:
             case Types.FLOAT:
@@ -147,7 +147,7 @@ public class NumberFormatter implements StringFormatter
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
-               throw new ConversionException("Use an implementation of StringFormatter to convert to strings.");
+               throw new ConversionException("Conversion to string types not supported.");
 
             case Types.DOUBLE:
             case Types.FLOAT:
@@ -211,6 +211,30 @@ public class NumberFormatter implements StringFormatter
       }
       else
          throw new ConversionException("Object must be a Long, Integer, Short, Byte, Double, or Float.");
+   }
+
+   /**
+    * Whether the class can convert to/from a certain type of object.
+    *
+    * <p>This method returns true for Types.DOUBLE, FLOAT, REAL,
+    * DECIMAL, NUMERIC, BIGINT, INTEGER, SMALLINT, TINYINT, and BIT.
+    * It returns false for all other types.</p>
+    *
+    * @param type The JDBC Types value corresponding to the object type.
+    * @return Whether the type is supported
+    */
+   public boolean canConvert(int type)
+   {
+      return ((type == Types.DOUBLE) ||
+              (type == Types.FLOAT) ||
+              (type == Types.REAL) ||
+              (type == Types.DECIMAL) ||
+              (type == Types.NUMERIC) ||
+              (type == Types.BIGINT) ||
+              (type == Types.INTEGER) ||
+              (type == Types.SMALLINT) ||
+              (type == Types.TINYINT) ||
+              (type == Types.BIT));
    }
 
    /**

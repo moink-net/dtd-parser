@@ -26,6 +26,7 @@ import org.xmlmiddleware.domutils.ParserUtilsException;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.w3c.dom.Document;
+import org.w3c.dom.DOMImplementation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -34,6 +35,7 @@ import java.io.InputStream;
 
 // Imports for the Xerces parser
 
+import org.apache.xerces.dom.DOMImplementationImpl;
 import org.apache.xerces.parsers.DOMParser;
 import org.apache.xerces.parsers.SAXParser;
 import org.apache.xml.serialize.OutputFormat;
@@ -75,15 +77,16 @@ public class ParserUtilsXerces implements ParserUtils
    }
 
    /**
-    * Create an empty Document.
+    * Get a DOMImplementation object.
     *
-    * @return The Document
+    * @return The DOMImplementation object
     */
-   public Document createDocument() throws ParserUtilsException
+   public DOMImplementation getDOMImplementation()
+      throws ParserUtilsException
    {
       try
       {
-         return new org.apache.xerces.dom.DocumentImpl();
+         return new DOMImplementationImpl();
       }
       catch (Exception e)
       {

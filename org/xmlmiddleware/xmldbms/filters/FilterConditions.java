@@ -20,6 +20,7 @@
 package org.xmlmiddleware.xmldbms.filters;
 
 import org.xmlmiddleware.xmldbms.maps.Table;
+import org.xmlmiddleware.xmldbms.maps.Column;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -41,7 +42,9 @@ public class FilterConditions
    private Table     table;
    private Vector    conditions = new Vector();
    private String[]  parsedConditions = null;
-   private Vector    paramNames = new Vector();
+   private Vector    paramNames = new Vector(), paramColumns = new Vector();
+   private Object[]  paramValues;
+   private Column[]  columns;
    private Hashtable vectorConditions = new Hashtable(), params = new Hashtable();
    private String    whereCondition;
    private boolean   parseConditions = true, parseVectorConditions = true;
@@ -168,8 +171,11 @@ public class FilterConditions
    /**
     * Set the parameters to be used with the conditions.
     *
-    * <p>If the conditions have any named parameters, this must be
-    * called before calling getWhereCondition() or getParameterValues().</p>
+    * <p>If the conditions have any named parameters, this must be called
+    * before calling getWhereCondition(), getParameterValues(), or getColumns().
+    * Note that calling this method causes conditions with IN parameters to
+    * be reparsed, even if the Hashtable of parameters has not changed. Thus,
+    * it is best to call it as little as possible.</p>
     *
     * @param params A Hashtable containing parameter names and values. Parameter
     *    names must start with a dollar sign ($). If a parameter value is null,
@@ -190,7 +196,7 @@ public class FilterConditions
     *
     * @return The condition. This may be zero-length but is never null.
     * @exception IllegalArgumentException Thrown if a named parameter is found in
-    *    a condition but no corresponding parameter value is provided.
+    *    a condition but no corresponding column is found in the table.
     */
    public final String getWhereCondition()
    {
@@ -199,38 +205,32 @@ public class FilterConditions
    }
 
    /**
+    * Get a list of Column objects corresponding to the parameters.
+    *
+    * <p>These occur in the order the corresponding names appear in the WHERE condition.</p>
+    *
+    * @return The list. May be null.
+    * @exception IllegalArgumentException Thrown if a named parameter is found in
+    *    a condition but no corresponding column is found in the table.
+    */
+   public final Column[] getColumns()
+   {
+      parse();
+      return columns;
+   }
+
+   /**
     * Get a list of parameter values.
     *
     * <p>These occur in the order the corresponding names appear in the WHERE condition.</p>
     *
-    * @return The list. May be empty.
+    * @return The list. May be null.
     * @exception IllegalArgumentException Thrown if a named parameter is found in
-    *    a condition but no corresponding parameter value is provided.
+    *    a condition but no corresponding column is found in the table.
     */
-   public final Vector getParameterValues()
+   public final Object[] getParameterValues()
    {
-      Vector v, paramValues = new Vector();
-      Object paramValue;
-
       parse();
-
-      for (int i = 0; i < paramNames.size(); i++)
-      {
-         paramValue = params.get(paramNames.elementAt(i));
-         if (paramValue instanceof Vector)
-         {
-            v = (Vector)paramValue;
-            for (int j = 0; j < v.size(); j++)
-            {
-               paramValues.addElement(v.elementAt(j));
-            }
-         }
-         else
-         {
-            paramValues.addElement(paramValue);
-         }
-      }
-
       return paramValues;
    }
 
@@ -251,16 +251,20 @@ public class FilterConditions
          parsedConditions = new String[conditions.size()];
 
          paramNames.removeAllElements();
+         paramColumns.removeAllElements();
          vectorConditions.clear();
 
          parseConditions();
          appendConditions();
+         buildParameterValues();
       }
       else if (parseVectorConditions)
       {
          parseVectorConditions();
          appendConditions();
+         buildParameterValues();
       }
+
       parseConditions = false;
       parseVectorConditions = false;
    }
@@ -300,9 +304,11 @@ public class FilterConditions
       String       condition, paramName;
       char[]       src;
       StringBuffer dest = new StringBuffer();
-      int          save = 0, dollar = 0, state = FINDDOLLAR, numParams;
+      int          save = 0, dollar = 0, state = FINDDOLLAR, numParams, lastDollar;
       Object       paramValue;
       boolean      inOperator = false;
+      String       columnName;
+      Column       column;
 
       condition = (String)conditions.elementAt(index);
       src = condition.toCharArray();
@@ -334,6 +340,7 @@ public class FilterConditions
                   // Start parsing the parameter name.
 
                   state = DOLLARFOUND;
+System.out.println("dollar found: " + i);
                   dollar = i;
                   break;
 
@@ -349,6 +356,7 @@ public class FilterConditions
                case 0x20:   // Space
                case 0x0d:   // Tab
 
+System.out.println("whitespace found: " + i);
                   // Parse until we hit whitespace.
 
                   // If the parameter name is zero-length -- that is, we
@@ -401,6 +409,16 @@ public class FilterConditions
                      // parameter values from the params Hashtable.
 
                      paramNames.addElement(paramName);
+
+                     // Save the Column corresponding to the parameter. We need this
+                     // to retrieve type information when setting parameters.
+
+                     lastDollar = paramName.lastIndexOf('$');
+                     columnName = (lastDollar > 0) ? paramName.substring(1, lastDollar) : paramName.substring(1);
+                     column = table.getColumn(columnName);
+                     if (column == null)
+                        throw new IllegalArgumentException("Filter parameter names must be of the form $Column[$Suffix], where Column matches the name of the column in the table to which the parameter applies. No column was found in table " + table.getUniversalName() + " corresponding to the parameter name " + paramName);
+                     paramColumns.addElement(column);
                   }
 
                   // Start all over...
@@ -473,8 +491,9 @@ public class FilterConditions
 
    private void appendConditions()
    {
-      StringBuffer sb = new StringBuffer('(');
+      StringBuffer sb = new StringBuffer();
 
+      sb.append('(');
       for (int i = 0; i < parsedConditions.length; i++)
       {
          if (parsedConditions[i] != null)
@@ -485,5 +504,49 @@ public class FilterConditions
       }
       sb.append(')');
       whereCondition = sb.toString();
+   }
+
+   private void buildParameterValues()
+   {
+      // Build parallel lists of parameter values and Column objects.
+
+      Vector v, values = new Vector(), cols = new Vector();
+      Object paramValue;
+      Column column;
+      int    numParams;
+
+      for (int i = 0; i < paramNames.size(); i++)
+      {
+         paramValue = params.get(paramNames.elementAt(i));
+         column = (Column)paramColumns.elementAt(i);
+         if (paramValue instanceof Vector)
+         {
+            v = (Vector)paramValue;
+            for (int j = 0; j < v.size(); j++)
+            {
+               values.addElement(v.elementAt(j));
+               cols.addElement(column);
+            }
+         }
+         else
+         {
+            values.addElement(paramValue);
+            cols.addElement(column);
+         }
+      }
+
+      numParams = values.size();
+      if (numParams > 0)
+      {
+         paramValues = new Object[numParams];
+         values.copyInto(paramValues);
+         columns = new Column[numParams];
+         cols.copyInto(columns);
+      }
+      else
+      {
+         paramValues = null;
+         columns = null;
+      }
    }
 }

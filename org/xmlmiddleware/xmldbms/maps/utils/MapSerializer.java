@@ -46,7 +46,7 @@ import org.xmlmiddleware.xmldbms.maps.PropertyMap;
 import org.xmlmiddleware.xmldbms.maps.RelatedClassMap;
 import org.xmlmiddleware.xmldbms.maps.Table;
 
-import org.xmlmiddleware.xmldbms.maps.factories.XMLDBMSConst;
+import org.xmlmiddleware.xmldbms.maps.factories.MapConst;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -63,14 +63,6 @@ import java.util.Vector;
 
 /**
  * Serializes a Map object to a character stream.
- *
- * <p><b>WARNING:</b> MapSerializer cannot generate DateFormat, TimeFormat,
- * DateTimeFormat, and NumberFormat elements. This is because the
- * underlying formatting objects do not contain enough information to
- * construct these elements. MapSerializer can generate SimpleDateFormat,
- * DecimalFormat, and FormatClass elements, but cannot generate Locale
- * children of SimpleDateFormat and DecimalFormat elements, again due to
- * lack of information. However, it can generate localized patterns.</p>
  *
  * <p>If you want to use a specific encoding, the Writer must be an OutputStreamWriter
  * or a subclass of an OutputStreamWriter. For example, you might use the following
@@ -111,6 +103,14 @@ import java.util.Vector;
  *    writer.close();
  * </pre>
  *
+ * <p><b>WARNING:</b> MapSerializer cannot generate DateFormat, TimeFormat,
+ * DateTimeFormat, and NumberFormat elements. This is because the
+ * underlying formatting objects do not contain enough information to
+ * construct these elements. MapSerializer can generate SimpleDateFormat,
+ * DecimalFormat, and FormatClass elements, but cannot generate Locale
+ * children of SimpleDateFormat and DecimalFormat elements, again due to
+ * lack of information. However, it can generate localized patterns.</p>
+ *
  * @author Ronald Bourret, 1998-9, 2001
  * @version 2.0
  */
@@ -122,7 +122,6 @@ public class MapSerializer extends XMLWriter
    //**************************************************************************
 
    private static String XMLDBMS2DTD = "xmldbms2.dtd";
-   private static String FORMAT = "Format";
    private static String SPACE = " ";
 
    //**************************************************************************
@@ -133,8 +132,7 @@ public class MapSerializer extends XMLWriter
    private Hashtable uris = null;
    private Hashtable prefixes = null;
    private Hashtable defaultFormatters = new Hashtable();
-   private Hashtable namedFormatters = new Hashtable();
-   private int       formatterNumber = 0;
+   private Hashtable formatterNames = new Hashtable();
 
    //**************************************************************************
    // Constructors
@@ -247,9 +245,9 @@ public class MapSerializer extends XMLWriter
    private void writeAttribute(XMLName attributeName)
       throws IOException, MapException
    {
-      attrs[0] = XMLDBMSConst.ATTR_NAME;
+      attrs[0] = MapConst.ATTR_NAME;
       values[0] = getQualifiedName(attributeName);
-      writeElementStart(XMLDBMSConst.ELEM_ATTRIBUTE, 1, true);
+      writeElementStart(MapConst.ELEM_ATTRIBUTE, 1, true);
    }
 
    private void writeClassMap(ClassMap classMap)
@@ -261,7 +259,7 @@ public class MapSerializer extends XMLWriter
 
       // Start the <ClassMap> element.
 
-      writeElementStart(XMLDBMSConst.ELEM_CLASSMAP, 0, false);
+      writeElementStart(MapConst.ELEM_CLASSMAP, 0, false);
 
       // Write the <ElementType> element.
 
@@ -285,7 +283,7 @@ public class MapSerializer extends XMLWriter
 
          table = classMap.getTable();
          count = setTableNameAttributes(table);
-         writeElementStart(XMLDBMSConst.ELEM_TOCLASSTABLE, count, true);
+         writeElementStart(MapConst.ELEM_TOCLASSTABLE, count, true);
 
          // Write the property maps, inline class maps, and related class maps.
 
@@ -294,7 +292,7 @@ public class MapSerializer extends XMLWriter
 
       // End the <ClassMap> element.
 
-      writeElementEnd(XMLDBMSConst.ELEM_CLASSMAP);
+      writeElementEnd(MapConst.ELEM_CLASSMAP);
    }
 
    private void writeClassMaps()
@@ -332,13 +330,13 @@ public class MapSerializer extends XMLWriter
       StringFormatter formatter;
       String          formatName;
 
-      attrs[count] = XMLDBMSConst.ATTR_NAME;
+      attrs[count] = MapConst.ATTR_NAME;
       values[count++] = column.getName();
 
       type = column.getType();
       if (type != Types.NULL)
       {
-         attrs[count] = XMLDBMSConst.ATTR_DATATYPE;
+         attrs[count] = MapConst.ATTR_DATATYPE;
          values[count++] = JDBCTypes.getName(column.getType());
       }
 
@@ -347,7 +345,7 @@ public class MapSerializer extends XMLWriter
          length = column.getLength();
          if (length != -1)
          {
-            attrs[count] = XMLDBMSConst.ATTR_LENGTH;
+            attrs[count] = MapConst.ATTR_LENGTH;
             values[count++] = String.valueOf(length);
          }
       }
@@ -357,14 +355,14 @@ public class MapSerializer extends XMLWriter
          precision = column.getPrecision();
          if (precision != -1)
          {
-            attrs[count] = XMLDBMSConst.ATTR_PRECISION;
+            attrs[count] = MapConst.ATTR_PRECISION;
             values[count++] = String.valueOf(precision);
          }
 
          scale = column.getScale();
          if (scale != Integer.MIN_VALUE)
          {
-            attrs[count] = XMLDBMSConst.ATTR_SCALE;
+            attrs[count] = MapConst.ATTR_SCALE;
             values[count++] = String.valueOf(scale);
          }
       }
@@ -372,27 +370,27 @@ public class MapSerializer extends XMLWriter
       nullability = column.getNullability();
       if (nullability == DatabaseMetaData.columnNullable)
       {
-         attrs[count] = XMLDBMSConst.ATTR_NULLABLE;
-         values[count++] = XMLDBMSConst.ENUM_YES;
+         attrs[count] = MapConst.ATTR_NULLABLE;
+         values[count++] = MapConst.ENUM_YES;
       }
       else if (nullability == DatabaseMetaData.columnNoNulls)
       {
-         attrs[count] = XMLDBMSConst.ATTR_NULLABLE;
-         values[count++] = XMLDBMSConst.ENUM_NO;
+         attrs[count] = MapConst.ATTR_NULLABLE;
+         values[count++] = MapConst.ENUM_NO;
       }
 
       formatter = column.getFormatter();
       if (formatter != null)
       {
-         formatName = (String)namedFormatters.get(formatter);
+         formatName = (String)formatterNames.get(formatter);
          if (formatName != null)
          {
-            attrs[count] = XMLDBMSConst.ATTR_FORMAT;
+            attrs[count] = MapConst.ATTR_FORMAT;
             values[count++] = formatName;
          }
       }
 
-      writeElementStart(XMLDBMSConst.ELEM_COLUMN, count, true);
+      writeElementStart(MapConst.ELEM_COLUMN, count, true);
    }
 
    private void writeDatabases()
@@ -411,7 +409,7 @@ public class MapSerializer extends XMLWriter
 
       // Start the Databases element.
 
-      writeElementStart(XMLDBMSConst.ELEM_DATABASES, 0, false);
+      writeElementStart(MapConst.ELEM_DATABASES, 0, false);
 
       // Get the tables.
 
@@ -470,15 +468,15 @@ public class MapSerializer extends XMLWriter
          {
             if (schemaChange)
             {
-               writeElementEnd(XMLDBMSConst.ELEM_SCHEMA);
+               writeElementEnd(MapConst.ELEM_SCHEMA);
             }
             if (catalogChange)
             {
-               writeElementEnd(XMLDBMSConst.ELEM_CATALOG);
+               writeElementEnd(MapConst.ELEM_CATALOG);
             }
             if (databaseChange)
             {
-               writeElementEnd(XMLDBMSConst.ELEM_DATABASE);
+               writeElementEnd(MapConst.ELEM_DATABASE);
             }
          }
 
@@ -486,9 +484,9 @@ public class MapSerializer extends XMLWriter
 
          if (databaseChange)
          {
-            attrs[0] = XMLDBMSConst.ATTR_NAME;
+            attrs[0] = MapConst.ATTR_NAME;
             values[0] = newDatabaseName;
-            writeElementStart(XMLDBMSConst.ELEM_DATABASE, 1, false);
+            writeElementStart(MapConst.ELEM_DATABASE, 1, false);
             currDatabaseName = newDatabaseName;
          }
 
@@ -497,10 +495,10 @@ public class MapSerializer extends XMLWriter
             count = 0;
             if (newCatalogName != null)
             {
-               attrs[count] = XMLDBMSConst.ATTR_NAME;
+               attrs[count] = MapConst.ATTR_NAME;
                values[count++] = newCatalogName;
             }
-            writeElementStart(XMLDBMSConst.ELEM_CATALOG, count, false);
+            writeElementStart(MapConst.ELEM_CATALOG, count, false);
             currCatalogName = newCatalogName;
          }
 
@@ -509,10 +507,10 @@ public class MapSerializer extends XMLWriter
             count = 0;
             if (newSchemaName != null)
             {
-               attrs[count] = XMLDBMSConst.ATTR_NAME;
+               attrs[count] = MapConst.ATTR_NAME;
                values[count++] = newSchemaName;
             }
-            writeElementStart(XMLDBMSConst.ELEM_SCHEMA, count, false);
+            writeElementStart(MapConst.ELEM_SCHEMA, count, false);
             currSchemaName = newSchemaName;
          }
 
@@ -521,10 +519,10 @@ public class MapSerializer extends XMLWriter
 
       // Close the Schema, Catalog, Database, and Databases elements
 
-      writeElementEnd(XMLDBMSConst.ELEM_SCHEMA);
-      writeElementEnd(XMLDBMSConst.ELEM_CATALOG);
-      writeElementEnd(XMLDBMSConst.ELEM_DATABASE);
-      writeElementEnd(XMLDBMSConst.ELEM_DATABASES);
+      writeElementEnd(MapConst.ELEM_SCHEMA);
+      writeElementEnd(MapConst.ELEM_CATALOG);
+      writeElementEnd(MapConst.ELEM_DATABASE);
+      writeElementEnd(MapConst.ELEM_DATABASES);
    }
 
    private void writeDefaultFormatElements()
@@ -544,7 +542,7 @@ public class MapSerializer extends XMLWriter
       {
          formatter = (StringFormatter)formatters.nextElement();
          typeVector = (Vector)defaultFormatters.get(formatter);
-         name = (String)namedFormatters.get(formatter);
+         name = (String)formatterNames.get(formatter);
          writeFormatElement(formatter, typeVector, name);
       }
    }
@@ -552,9 +550,9 @@ public class MapSerializer extends XMLWriter
    private void writeElementType(XMLName elementTypeName)
       throws IOException, MapException
    {
-      attrs[0] = XMLDBMSConst.ATTR_NAME;
+      attrs[0] = MapConst.ATTR_NAME;
       values[0] = getQualifiedName(elementTypeName);
-      writeElementStart(XMLDBMSConst.ELEM_ELEMENTTYPE, 1, true);
+      writeElementStart(MapConst.ELEM_ELEMENTTYPE, 1, true);
    }
 
    private void writeEmptyStringIsNull()
@@ -562,7 +560,7 @@ public class MapSerializer extends XMLWriter
    {
       if (map.emptyStringIsNull())
       {
-         writeElementStart(XMLDBMSConst.ELEM_EMPTYSTRINGISNULL, 0, true);
+         writeElementStart(MapConst.ELEM_EMPTYSTRINGISNULL, 0, true);
       }
    }
 
@@ -575,21 +573,21 @@ public class MapSerializer extends XMLWriter
       baseClassMap = classMap.getBaseClassMap();
       if (baseClassMap == null) return;
 
-      attrs[0] = XMLDBMSConst.ATTR_ELEMENTTYPE;
+      attrs[0] = MapConst.ATTR_ELEMENTTYPE;
       values[0] = getQualifiedName(baseClassMap.getElementTypeName());
-      writeElementStart(XMLDBMSConst.ELEM_EXTENDS, 1, false);
+      writeElementStart(MapConst.ELEM_EXTENDS, 1, false);
 
       baseLinkInfo = classMap.getBaseLinkInfo();
       if (baseLinkInfo == null) return;
 
-      attrs[0] = XMLDBMSConst.ATTR_KEYINBASETABLE;
-      values[0] = (baseLinkInfo.parentKeyIsUnique()) ? XMLDBMSConst.ENUM_UNIQUE : XMLDBMSConst.ENUM_FOREIGN;
-      writeElementStart(XMLDBMSConst.ELEM_USEBASETABLE, 1, false);
+      attrs[0] = MapConst.ATTR_KEYINBASETABLE;
+      values[0] = (baseLinkInfo.parentKeyIsUnique()) ? MapConst.ENUM_UNIQUE : MapConst.ENUM_FOREIGN;
+      writeElementStart(MapConst.ELEM_USEBASETABLE, 1, false);
 
       writeLinkInfo(baseLinkInfo);
 
-      writeElementEnd(XMLDBMSConst.ELEM_USEBASETABLE);
-      writeElementEnd(XMLDBMSConst.ELEM_EXTENDS);
+      writeElementEnd(MapConst.ELEM_USEBASETABLE);
+      writeElementEnd(MapConst.ELEM_EXTENDS);
    }
 
    private void writeFormatElement(StringFormatter formatter, Vector types, String name)
@@ -609,13 +607,13 @@ public class MapSerializer extends XMLWriter
             type = ((Integer)types.elementAt(i)).intValue();
             sb.append(JDBCTypes.getName(type));
          }
-         attrs[count] = XMLDBMSConst.ATTR_DEFAULTFORTYPES;
+         attrs[count] = MapConst.ATTR_DEFAULTFORTYPES;
          values[count++] = sb.toString();
       }
 
       if (name != null)
       {
-         attrs[count] = XMLDBMSConst.ATTR_NAME;
+         attrs[count] = MapConst.ATTR_NAME;
          values[count++] = name;
       }
 
@@ -628,9 +626,9 @@ public class MapSerializer extends XMLWriter
          nf = ((NumberFormatter)formatter).getNumberFormat();
          if (nf instanceof DecimalFormat)
          {
-            attrs[count] = XMLDBMSConst.ATTR_PATTERN;
+            attrs[count] = MapConst.ATTR_PATTERN;
             values[count++] = ((DecimalFormat)nf).toLocalizedPattern();
-            writeElementStart(XMLDBMSConst.ELEM_DECIMALFORMAT, count, true);
+            writeElementStart(MapConst.ELEM_DECIMALFORMAT, count, true);
          }
       }
       else if (formatter instanceof DateFormatter)
@@ -642,9 +640,9 @@ public class MapSerializer extends XMLWriter
          df = ((DateFormatter)formatter).getDateFormat();
          if (df instanceof SimpleDateFormat)
          {
-            attrs[count] = XMLDBMSConst.ATTR_PATTERN;
+            attrs[count] = MapConst.ATTR_PATTERN;
             values[count++] = ((SimpleDateFormat)df).toLocalizedPattern();
-            writeElementStart(XMLDBMSConst.ELEM_SIMPLEDATEFORMAT, count, true);
+            writeElementStart(MapConst.ELEM_SIMPLEDATEFORMAT, count, true);
          }
       }
       else
@@ -654,17 +652,17 @@ public class MapSerializer extends XMLWriter
          // includes the helper classes Base64Formatter, BooleanFormatter, and
          // CharFormatter.
 
-         attrs[count] = XMLDBMSConst.ATTR_CLASS;
+         attrs[count] = MapConst.ATTR_CLASS;
          values[count++] = formatter.getClass().getName();
-         writeElementStart(XMLDBMSConst.ELEM_FORMATCLASS, count, true);
+         writeElementStart(MapConst.ELEM_FORMATCLASS, count, true);
       }
    }
 
    private void writeFormatElements()
       throws IOException
    {
-      buildDefaultFormatTable();
-      buildNamedFormatTable();
+      buildDefaultFormatters();
+      buildFormatterNames();
       writeDefaultFormatElements();
       writeNamedFormatElements();
    }
@@ -672,11 +670,11 @@ public class MapSerializer extends XMLWriter
    private void writeInlineClassMap(InlineClassMap inlineClassMap)
       throws IOException, MapException
    {
-      writeElementStart(XMLDBMSConst.ELEM_INLINEMAP, 0, false);
+      writeElementStart(MapConst.ELEM_INLINEMAP, 0, false);
       writeElementType(inlineClassMap.getElementTypeName());
       writeOrderInfo(inlineClassMap.getOrderInfo(), false);
       writePropertyInlineRelatedMaps(inlineClassMap);
-      writeElementEnd(XMLDBMSConst.ELEM_INLINEMAP);
+      writeElementEnd(MapConst.ELEM_INLINEMAP);
    }
 
    private void writeKey(Key key, String elementTypeName, boolean isForeignKey)
@@ -685,7 +683,7 @@ public class MapSerializer extends XMLWriter
       Table remoteTable;
       int   count;
 
-      attrs[0] = XMLDBMSConst.ATTR_NAME;
+      attrs[0] = MapConst.ATTR_NAME;
       values[0] = key.getName();
       writeElementStart(elementTypeName, 1, false);
       if (isForeignKey)
@@ -694,13 +692,13 @@ public class MapSerializer extends XMLWriter
 
          remoteTable = key.getRemoteTable();
          count = setTableNameAttributes(remoteTable);
-         writeElementStart(XMLDBMSConst.ELEM_USETABLE, count, true);
+         writeElementStart(MapConst.ELEM_USETABLE, count, true);
 
          // Write the <UseUniqueKey> element.
 
-         attrs[0] = XMLDBMSConst.ATTR_NAME;
+         attrs[0] = MapConst.ATTR_NAME;
          values[0] = key.getRemoteKey().getName();
-         writeElementStart(XMLDBMSConst.ELEM_USEUNIQUEKEY, 1, true);
+         writeElementStart(MapConst.ELEM_USEUNIQUEKEY, 1, true);
       }
       writeUseColumns(key.getColumns());
       writeElementEnd(elementTypeName);
@@ -729,41 +727,41 @@ public class MapSerializer extends XMLWriter
 
       // Write the <UseUniqueKey> element.
 
-      attrs[0] = XMLDBMSConst.ATTR_NAME;
+      attrs[0] = MapConst.ATTR_NAME;
       values[0] = linkInfo.parentKeyIsUnique() ? parentKeyName : childKeyName;
-      writeElementStart(XMLDBMSConst.ELEM_USEUNIQUEKEY, 1, true);
+      writeElementStart(MapConst.ELEM_USEUNIQUEKEY, 1, true);
 
       // Write the <UseForeignKey> element.
 
       values[0] = linkInfo.parentKeyIsUnique() ? childKeyName : parentKeyName;
-      writeElementStart(XMLDBMSConst.ELEM_USEFOREIGNKEY, 1, true);
+      writeElementStart(MapConst.ELEM_USEFOREIGNKEY, 1, true);
    }
 
    private void writeMapEnd()
       throws IOException
    {
-      writeElementEnd(XMLDBMSConst.ELEM_XMLTODBMS);
+      writeElementEnd(MapConst.ELEM_XMLTODBMS);
    }
 
    private void writeMaps()
       throws IOException, MapException
    {
-      writeElementStart(XMLDBMSConst.ELEM_MAPS, 0, false);
+      writeElementStart(MapConst.ELEM_MAPS, 0, false);
       writeClassMaps();
-      writeElementEnd(XMLDBMSConst.ELEM_MAPS);
+      writeElementEnd(MapConst.ELEM_MAPS);
    }
 
    private void writeMapStart(String systemID, String publicID)
       throws IOException
    {
-      attrs[0] = XMLDBMSConst.ATTR_VERSION;
-      values[0] = XMLDBMSConst.DEF_VERSION;
+      attrs[0] = MapConst.ATTR_VERSION;
+      values[0] = MapConst.DEF_VERSION;
       attrs[1] = "xmlns";
-      values[1] = XMLDBMSConst.URI_XMLDBMSV2;
+      values[1] = MapConst.URI_XMLDBMSV2;
 
       writeXMLDecl();
-      writeDOCTYPE(XMLDBMSConst.ELEM_XMLTODBMS, systemID, publicID);
-      writeElementStart(XMLDBMSConst.ELEM_XMLTODBMS, 2, false);
+      writeDOCTYPE(MapConst.ELEM_XMLTODBMS, systemID, publicID);
+      writeElementStart(MapConst.ELEM_XMLTODBMS, 2, false);
    }
 
    private void writeNamedFormatElements()
@@ -777,12 +775,12 @@ public class MapSerializer extends XMLWriter
       // named format objects that are also default format objects. This
       // is because they have already been written with writeDefaultFormatElements().
 
-      formatters = namedFormatters.keys();
+      formatters = formatterNames.keys();
       while (formatters.hasMoreElements())
       {
          formatter = (StringFormatter)formatters.nextElement();
          if (defaultFormatters.get(formatter) != null) continue;
-         name = (String)namedFormatters.get(formatter);
+         name = (String)formatterNames.get(formatter);
          writeFormatElement(formatter, null, name);
       }
    }
@@ -809,22 +807,22 @@ public class MapSerializer extends XMLWriter
       while (prefixes.hasMoreElements())
       {
          prefix = (String)prefixes.nextElement();
-         attrs[0] = XMLDBMSConst.ATTR_PREFIX;
+         attrs[0] = MapConst.ATTR_PREFIX;
          values[0] = prefix;
-         attrs[1] = XMLDBMSConst.ATTR_URI;
+         attrs[1] = MapConst.ATTR_URI;
          values[1] = (String)uris.get(prefix);
-         writeElementStart(XMLDBMSConst.ELEM_NAMESPACE, 2, true);
+         writeElementStart(MapConst.ELEM_NAMESPACE, 2, true);
       }
    }
 
    private void writeOptions()
       throws IOException
    {
-      writeElementStart(XMLDBMSConst.ELEM_OPTIONS, 0, false);
+      writeElementStart(MapConst.ELEM_OPTIONS, 0, false);
       writeEmptyStringIsNull();
       writeFormatElements();
       writeNamespaces();
-      writeElementEnd(XMLDBMSConst.ELEM_OPTIONS);
+      writeElementEnd(MapConst.ELEM_OPTIONS);
    }
 
    private void writeOrderInfo(OrderInfo orderInfo, boolean isTokenList)
@@ -834,22 +832,22 @@ public class MapSerializer extends XMLWriter
 
       if (orderInfo == null) return;
 
-      attrs[0] = XMLDBMSConst.ATTR_DIRECTION;
-      values[0] = (orderInfo.isAscending()) ? XMLDBMSConst.ENUM_ASCENDING : XMLDBMSConst.ENUM_DESCENDING;
+      attrs[0] = MapConst.ATTR_DIRECTION;
+      values[0] = (orderInfo.isAscending()) ? MapConst.ENUM_ASCENDING : MapConst.ENUM_DESCENDING;
 
       if (orderInfo.orderValueIsFixed())
       {
-         attrs[1] = XMLDBMSConst.ATTR_VALUE;
+         attrs[1] = MapConst.ATTR_VALUE;
          values[1] = String.valueOf(orderInfo.getFixedOrderValue());
-         writeElementStart(XMLDBMSConst.ELEM_FIXEDORDER, 2, true);
+         writeElementStart(MapConst.ELEM_FIXEDORDER, 2, true);
       }
       else
       {
-         attrs[1] = XMLDBMSConst.ATTR_NAME;
+         attrs[1] = MapConst.ATTR_NAME;
          values[1] = orderInfo.getOrderColumn().getName();
-         attrs[2] = XMLDBMSConst.ATTR_GENERATE;
-         values[2] = orderInfo.generateOrder() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
-         name = (isTokenList) ? XMLDBMSConst.ELEM_TLORDERCOLUMN : XMLDBMSConst.ELEM_ORDERCOLUMN;
+         attrs[2] = MapConst.ATTR_GENERATE;
+         values[2] = orderInfo.generateOrder() ? MapConst.ENUM_YES : MapConst.ENUM_NO;
+         name = (isTokenList) ? MapConst.ELEM_TLORDERCOLUMN : MapConst.ELEM_ORDERCOLUMN;
          writeElementStart(name, 3, true);
       }
    }
@@ -865,7 +863,7 @@ public class MapSerializer extends XMLWriter
          keyGeneration = key.getKeyGeneration();
          if (keyGeneration == Key.DATABASE)
          {
-            keyGeneratorName = XMLDBMSConst.VALUE_DATABASE;
+            keyGeneratorName = MapConst.VALUE_DATABASE;
          }
          else if (keyGeneration == Key.XMLDBMS)
          {
@@ -874,12 +872,12 @@ public class MapSerializer extends XMLWriter
 
          if (keyGeneratorName != null)
          {
-            attrs[count] = XMLDBMSConst.ATTR_KEYGENERATOR;
+            attrs[count] = MapConst.ATTR_KEYGENERATOR;
             values[count++] = keyGeneratorName;
          }
-         writeElementStart(XMLDBMSConst.ELEM_PRIMARYKEY, count, false);
+         writeElementStart(MapConst.ELEM_PRIMARYKEY, count, false);
          writeUseColumns(key.getColumns());
-         writeElementEnd(XMLDBMSConst.ELEM_PRIMARYKEY);
+         writeElementEnd(MapConst.ELEM_PRIMARYKEY);
       }
    }
 
@@ -954,14 +952,14 @@ public class MapSerializer extends XMLWriter
 
       // Start the <PropertyMap> element.
 
-      attrs[count] = XMLDBMSConst.ATTR_TOKENLIST;
-      values[count++] = propMap.isTokenList() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
+      attrs[count] = MapConst.ATTR_TOKENLIST;
+      values[count++] = propMap.isTokenList() ? MapConst.ENUM_YES : MapConst.ENUM_NO;
       if (propMap.getType() == PropertyMap.ELEMENTTYPE)
       {
-         attrs[count] = XMLDBMSConst.ATTR_CONTAINSXML;
-         values[count++] = propMap.containsXML() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
+         attrs[count] = MapConst.ATTR_CONTAINSXML;
+         values[count++] = propMap.containsXML() ? MapConst.ENUM_YES : MapConst.ENUM_NO;
       }
-      writeElementStart(XMLDBMSConst.ELEM_PROPERTYMAP, count, false);
+      writeElementStart(MapConst.ELEM_PROPERTYMAP, count, false);
 
       // Write the <Attribute>, <PCDATA>, or <ElementType> element.
 
@@ -972,7 +970,7 @@ public class MapSerializer extends XMLWriter
             break;
 
          case PropertyMap.PCDATA:
-            writeElementStart(XMLDBMSConst.ELEM_PCDATA, 0, true);
+            writeElementStart(MapConst.ELEM_PCDATA, 0, true);
             break;
 
          case PropertyMap.ELEMENTTYPE:
@@ -992,7 +990,7 @@ public class MapSerializer extends XMLWriter
 
       // End the <PropertyMap> element.
 
-      writeElementEnd(XMLDBMSConst.ELEM_PROPERTYMAP);
+      writeElementEnd(MapConst.ELEM_PROPERTYMAP);
    }
 
    private void writeRelatedClassMap(RelatedClassMap relatedClassMap)
@@ -1007,9 +1005,9 @@ public class MapSerializer extends XMLWriter
 
       // Start the <RelatedClass> element.
 
-      attrs[0] = XMLDBMSConst.ATTR_KEYINPARENTTABLE;
-      values[0] = (linkInfo.parentKeyIsUnique()) ? XMLDBMSConst.ENUM_UNIQUE : XMLDBMSConst.ENUM_FOREIGN;
-      writeElementStart(XMLDBMSConst.ELEM_RELATEDCLASS, 1, false);
+      attrs[0] = MapConst.ATTR_KEYINPARENTTABLE;
+      values[0] = (linkInfo.parentKeyIsUnique()) ? MapConst.ENUM_UNIQUE : MapConst.ENUM_FOREIGN;
+      writeElementStart(MapConst.ELEM_RELATEDCLASS, 1, false);
 
       // Get the name of the element type in the RelatedClassMap and create an
       // <ElementType> element for it.
@@ -1035,7 +1033,7 @@ public class MapSerializer extends XMLWriter
 
       // End the <RelatedClass> element.
 
-      writeElementEnd(XMLDBMSConst.ELEM_RELATEDCLASS);
+      writeElementEnd(MapConst.ELEM_RELATEDCLASS);
    }
 
    private void writeTable(Table table)
@@ -1043,28 +1041,28 @@ public class MapSerializer extends XMLWriter
    {
       // Start the Table element
 
-      attrs[0] = XMLDBMSConst.ATTR_NAME;
+      attrs[0] = MapConst.ATTR_NAME;
       values[0] = table.getTableName();
-      writeElementStart(XMLDBMSConst.ELEM_TABLE, 1, false);
+      writeElementStart(MapConst.ELEM_TABLE, 1, false);
 
       // Write the children of the Table element
 
       writeColumns(table);
       writePrimaryKey(table.getPrimaryKey());
-      writeKeys(table.getUniqueKeys(), XMLDBMSConst.ELEM_UNIQUEKEY, false);
-      writeKeys(table.getForeignKeys(), XMLDBMSConst.ELEM_FOREIGNKEY, true);
+      writeKeys(table.getUniqueKeys(), MapConst.ELEM_UNIQUEKEY, false);
+      writeKeys(table.getForeignKeys(), MapConst.ELEM_FOREIGNKEY, true);
 
       // End the Table element
 
-      writeElementEnd(XMLDBMSConst.ELEM_TABLE);
+      writeElementEnd(MapConst.ELEM_TABLE);
    }
 
    private void writeToColumn(Column column)
       throws IOException
    {
-      attrs[0] = XMLDBMSConst.ATTR_NAME;
+      attrs[0] = MapConst.ATTR_NAME;
       values[0] = column.getName();
-      writeElementStart(XMLDBMSConst.ELEM_TOCOLUMN, 1, true);
+      writeElementStart(MapConst.ELEM_TOCOLUMN, 1, true);
    }
 
    private void writeToPropertyTable(PropertyMap propMap)
@@ -1084,10 +1082,10 @@ public class MapSerializer extends XMLWriter
 
       count = setTableNameAttributes(table);
       linkInfo = propMap.getLinkInfo();
-      attrs[count] = XMLDBMSConst.ATTR_KEYINPARENTTABLE;
+      attrs[count] = MapConst.ATTR_KEYINPARENTTABLE;
       values[count++] = (linkInfo.parentKeyIsUnique()) ?
-                        XMLDBMSConst.ENUM_UNIQUE : XMLDBMSConst.ENUM_FOREIGN;
-      writeElementStart(XMLDBMSConst.ELEM_TOPROPERTYTABLE, count, false);
+                        MapConst.ENUM_UNIQUE : MapConst.ENUM_FOREIGN;
+      writeElementStart(MapConst.ELEM_TOPROPERTYTABLE, count, false);
 
       // Write the <UseUniqueKey> and <UseForeignKey> elements.
 
@@ -1095,23 +1093,23 @@ public class MapSerializer extends XMLWriter
 
       // End the <ToPropertyTable> element.
 
-      writeElementEnd(XMLDBMSConst.ELEM_TOPROPERTYTABLE);
+      writeElementEnd(MapConst.ELEM_TOPROPERTYTABLE);
    }
 
    private void writeUseClassMap(ClassMap classMap)
       throws IOException, MapException
    {
-      attrs[0] = XMLDBMSConst.ATTR_ELEMENTTYPE;
+      attrs[0] = MapConst.ATTR_ELEMENTTYPE;
       values[0] = getQualifiedName(classMap.getElementTypeName());
-      writeElementStart(XMLDBMSConst.ELEM_USECLASSMAP, 1, true);
+      writeElementStart(MapConst.ELEM_USECLASSMAP, 1, true);
    }
 
    private void writeUseColumn(Column column)
       throws IOException
    {
-      attrs[0] = XMLDBMSConst.ATTR_NAME;
+      attrs[0] = MapConst.ATTR_NAME;
       values[0] = column.getName();
-      writeElementStart(XMLDBMSConst.ELEM_USECOLUMN, 1, true);
+      writeElementStart(MapConst.ELEM_USECOLUMN, 1, true);
    }
 
    private void writeUseColumns(Column[] columns)
@@ -1133,24 +1131,24 @@ public class MapSerializer extends XMLWriter
       int    count = 0;
 
       name = table.getDatabaseName();
-      if (!name.equals(XMLDBMSConst.DEF_DATABASENAME))
+      if (!name.equals(MapConst.DEF_DATABASENAME))
       {
-         attrs[count] = XMLDBMSConst.ATTR_DATABASE;
+         attrs[count] = MapConst.ATTR_DATABASE;
          values[count++] = name;
       }
       name = table.getCatalogName();
       if (name != null)
       {
-         attrs[count] = XMLDBMSConst.ATTR_CATALOG;
+         attrs[count] = MapConst.ATTR_CATALOG;
          values[count++] = name;
       }
       name = table.getSchemaName();
       if (name != null)
       {
-         attrs[count] = XMLDBMSConst.ATTR_SCHEMA;
+         attrs[count] = MapConst.ATTR_SCHEMA;
          values[count++] = name;
       }
-      attrs[count] = XMLDBMSConst.ATTR_NAME;
+      attrs[count] = MapConst.ATTR_NAME;
       values[count++] = table.getTableName();
 
       return count;
@@ -1190,7 +1188,7 @@ public class MapSerializer extends XMLWriter
    // Private methods - formatting stuff
    //**************************************************************************
 
-   private void buildDefaultFormatTable()
+   private void buildDefaultFormatters()
    {
       Hashtable       formatsByType;
       StringFormatter formatter;
@@ -1241,44 +1239,27 @@ public class MapSerializer extends XMLWriter
       }
    }
 
-   private void buildNamedFormatTable()
+   private void buildFormatterNames()
    {
-      Enumeration     tables, columns;
-      Table           table;
-      Column          column;
+      Enumeration     names;
+      String          name;
       StringFormatter formatter;
 
-      // Initialize the namedFormatters Hashtable and the format number.
+      // Initialize the formatterNames Hashtable.
 
-      namedFormatters.clear();
-      formatterNumber = 0;
+      formatterNames.clear();
 
-      // Get the list of tables in the Map. For each table, get
-      // the list of columns. For each column, get the formatting
-      // object (if any). If the formatting object exists, is
-      // serializable (see formatterSerializable), and hasn't
-      // yet been processed, add it to the hashtable of named
-      // format objects.
+      // Get a list of formatters that have names. Construct a hashtable
+      // of those named formatters that are serializable.
 
-      tables = map.getTables();
-      while (tables.hasMoreElements())
+      names = map.getNamedFormatters().keys();
+      while (names.hasMoreElements())
       {
-         table = (Table)tables.nextElement();
-         columns = table.getColumns();
-         while (columns.hasMoreElements())
+         name = (String)names.nextElement();
+         formatter = map.getNamedFormatter(name);
+         if (formatterSerializable(formatter))
          {
-            column = (Column)columns.nextElement();
-            formatter = column.getFormatter();
-            if (formatter != null)
-            {
-               if (formatterSerializable(formatter))
-               {
-                  if (namedFormatters.get(formatter) == null)
-                  {
-                     namedFormatters.put(formatter, getFormatName());
-                  }
-               }
-            }
+            formatterNames.put(formatter, name);
          }
       }
    }
@@ -1318,13 +1299,5 @@ public class MapSerializer extends XMLWriter
       // we can serialize because we can get its name.
 
       return true;
-   }
-
-   private String getFormatName()
-   {
-      // Construct format names of the form Format1, Format2, ...
-
-      formatterNumber++;
-      return (FORMAT + formatterNumber);
    }
 }
