@@ -7,7 +7,7 @@
 <body>
 
 <center>
-<h1>XML-DBMS, Version 2.0, Alpha 2</h1>
+<h1>XML-DBMS, Version 2.0, Alpha 3</h1>
 <h2>Java Middleware for Transferring Data between<br />XML Documents and Relational Databases</h2>
 </center>
 
@@ -15,17 +15,25 @@
 
 <p>
 <a href="#Intro">1.0 Introduction</a><br />
-<a href="#GettingStarted">2.0 Getting Started</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Requirements">2.1 System Requirements</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Install">2.2 Downloading and Installing XML-DBMS</a><br />
-<a href="#Apps">3.0 Using Version 2.0</a><br />
+<a href="#GettingStarted">2.0 Getting started</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Requirements">2.1 System requirements</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Install">2.2 Downloading and installing XML-DBMS</a><br />
+<a href="#Apps">3.0 Using version 2.0</a><br />
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#Configure">3.1 Configuring XML-DBMS</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Transfer">3.2 Using the Transfer Tool</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#OwnApp">3.3 Writing Your Own Application</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Interfaces">3.4 Interfaces</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Bugs">3.5 Known Bugs</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Missing">3.6 Missing Components</a><br />
-<a href="#LandS">4.0 Licensing and Support</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Convert">3.2 Converting 1.x maps to 2.0 maps</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapManager">3.3 Using the MapManager tool</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapCommandLine">3.3.1 Using the MapManager tool from the command line</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapManagerAPI">3.3.2 Using the MapManager tool API</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapManagerSamples">3.3.3 Samples</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Transfer">3.4 Using the Transfer tool</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#CommandLine">3.4.1 Using the Transfer tool from the command line</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#TransferAPI">3.4.2 Using the Transfer tool API</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Samples">3.4.3 Samples</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#OwnApp">3.5 Writing your own application</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Interfaces">3.6 Interfaces</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Bugs">3.7 Known bugs</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Missing">3.8 Missing components</a><br />
+<a href="#LandS">4.0 Licensing and support</a><br />
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#License">4.1 Licensing</a><br />
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#Support">4.2 Support</a><br />
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#Help">4.3 How can I help?</a><br />
@@ -34,7 +42,7 @@
 
 <h2><a name="Intro">1.0 Introduction</a></h2>
 
-<p>XML-DBMS is a set of Java packages for transferring data between XML documents and relational databases. This is the documentation for XML-DBMS version 2.0, alpha release 2. If you are not familiar with XML-DBMS, see the <a href="http://www.rpbourret.com/xmldbms/readme.htm">version 1.01 readme file</a>. Although a number of things have changed in version 2.0, this will get you started until more complete documentation is available for version 2.0.</p>
+<p>XML-DBMS is a set of Java packages for transferring data between XML documents and relational databases. This is the documentation for XML-DBMS version 2.0, alpha release 3. If you are not familiar with XML-DBMS, see the <a href="http://www.rpbourret.com/xmldbms/readme.htm">version 1.01 readme file</a>. Although a number of things have changed in version 2.0, this will get you started until more complete documentation is available for version 2.0.</p>
 
 <p>Version 2.0 adds a number of new features, including:</p>
 
@@ -45,15 +53,17 @@
 <li>Database-generated keys and per-table key generation</li>
 <li>Connection and statement pooling</li>
 <li>Generation of maps from database schema</li>
+<li>Generation of DTDs from maps</li>
 <li>Specifying the order of generated elements</li>
 <li>Abstract types, such as are found in XML Schemas</li>
 <li>Per-property formatting, as well as number formatting and custom formatting</li>
 <li>A command line tool for transferring data</li>
+<li>A command line tool for generating maps, DTDs, and CREATE TABLE statements.</li>
 </ul>
 
-<h2><a name="GettingStarted">2.0 Getting Started</a></h2>
+<h2><a name="GettingStarted">2.0 Getting started</a></h2>
 
-<h3><a name="Requirements">2.1 System Requirements</a></h3>
+<h3><a name="Requirements">2.1 System requirements</a></h3>
 
 <p>To run XML-DBMS, you need the following software:</p>
 
@@ -126,7 +136,7 @@ Both commercial and Open Source XML parsers are available. For a partial list of
 
 </ul>
 
-<h3><a name="Install">2.2 Downloading and Installing XML-DBMS</a></h3>
+<h3><a name="Install">2.2 Downloading and installing XML-DBMS</a></h3>
 
 <p>To download XML-DBMS version 2.0, see:</p>
 
@@ -166,7 +176,7 @@ Version 2.0 code is in the org module, DTDs are in the dtds module, and sample a
 <li><p>Compile the .java files.</p></li>
 </ol>
 
-<h2><a name="Apps">3.0 Using Version 2.0</a></h2>
+<h2><a name="Apps">3.0 Using version 2.0</a></h2>
 
 <p>You can use XML-DBMS in one of two ways:</p>
 
@@ -183,7 +193,7 @@ Version 2.0 code is in the org module, DTDs are in the dtds module, and sample a
 
 <ol>
 
-<li><p>Write a 2.0 map file. For more information, see <a href="dtds/xmldbms2.dtd">xmldbms2.dtd</a>.</p></li>
+<li><p>Write or generate a 2.0 map file, or convert a 1.x map file to 2.0. For more information, see <a href="#MapManager">Using the MapManager tool</a>, <a href="#">Converting 1.x maps to 2.0 maps</a>, and <a href="dtds/xmldbms2.dtd">xmldbms2.dtd</a>.</p></li>
 
 <li><p>If you will use the Transfer tool to transfer data from XML to the database or to delete data, write one or more action documents. You also need action documents if you are calling DOMToDBMS or DBMSDelete directly and want to perform more than a single action on the data in your document -- for example, you want to mix inserts and insert-or-updates. For more information, see <a href="dtds/actions.dtd">actions.dtd</a>.</p></li>
 
@@ -192,18 +202,103 @@ Version 2.0 code is in the org module, DTDs are in the dtds module, and sample a
 <li><p>Write/compile implementations of interfaces as needed. For more information, see <a href="#Interfaces">Interfaces</a>.</p></li>
 </ol>
 
-<h3><a name="Transfer">3.2 Using the Transfer Tool</a></h3>
+<h3><a name="Convert">3.2 Converting 1.x maps to 2.0 maps</a></h3>
+
+<p>XML-DBMS version 2.0 ships with an XSLT style sheet that converts 1.x map files to 2.0 map files. This is named V1MapToV2Map.xslt and can be found in the directory you installed XML-DBMS in. Thanks to Dan Wolfe for writing this.</p>
+
+<p><b>WARNING:</b> The conversion is only partial -- you need to edit the resulting XSLT file -- but should help in converting large numbers of map files. Changes to the XSLT file that make the conversion more complete are welcome.</p>
+
+<h3><a name="MapManager">3.3 Using the MapManager tool</a></h3>
+
+<p>The MapManager tool in the org.xmlmiddleware.xmldbms.tools package provides a simple command line interface for generating maps and related documents, such as DTDs and CREATE TABLE statements. It also provides a simple, high-level API for people writing map editing tools. It is designed so all configuration information (which parser and JDBC driver to use, database URL, etc.) can be stored in properties files.</p>
+
+<p>As a general rule, you will start with a DTD and generate a map file and a set of CREATE TABLE statements, or you will start with a database schema and generate a map file and a DTD. Regardless of where you start, <b>you will probably need to edit the resulting map file and DTD / database schema by hand</b>. There are two reasons for this. First, the generation tools cannot possibly predict some things, such as the data types to use when generating a map from a DTD. Second, your database structure will rarely exactly match your XML document structure. Although XML-DBMS can perform some simple transformations, you may need to map the database to a document with a different structure than yours (but which XML-DBMS can handle) and then use XSLT to transform this document to/from your own document when you actually transfer data.</p>
+
+<h4><a name="MapCommandLine">3.3.1 Using the MapManager tool from the command line</a></h4>
+
+<p>The command line interface is the easiest way to use MapManager. With this, you pass information to MapManager as a series of property/value pairs. For example, the following command generates a map file and a database schema from a DTD:</p>
+
+<pre>
+   java org.xmlmiddleware.xmldbms.tools.MapManager File1=xerces.props File2=db.props
+          Input=DTD DTDFile=orders.dtd
+          Output1=Map MapFile=orders.map Output2=SQL SQLFile=orders.sql
+</pre>
+
+<p>The Input property specifies the source of the map; legal values are Map (a map file), DTD, and Database. The Output property specifies what generate from the map; legal values are Map (generate a map file), DTD (generate a DTD file), and SQL (generate a file with CREATE TABLE statements). If you want more than one output, use numbered output properties (Output1, Output2, etc.) The XxxxFile properties specify what files to read from / write to.</p>
+
+<p>The File1 and File2 properties indicate that the property values are the names of property files. These are particularly useful for properties that don't change often, such as parser and database properties.</p>
+
+<p><b>NOTE:</b> People who are not using XML-DBMS can still use the MapManager tool to generate DTDs from database schema and vice versa. To do this, just specify an Input value of DTD and an Output value of SQL, or an Input value of Database and an Output value of DTD, along with any other necessary properties.</p>
+
+<p>For complete details about MapManager's command line syntax and what other properties are available, see the JavaDocs for <a href="docs/org.xmlmiddleware.xmldbms.tools.MapManager.html">MapManager</a>.</p>
+
+<h4><a name="MapManagerAPI">3.3.2 Using the MapManager tool API</a></h4>
+
+<p>You can also use MapManager programmatically. This is generally useful only if you are writing a map editing tool, such as a GUI-based map editor. MapManager provides a very simple API that consists of the following methods:</p>
+
+<ul>
+<li>compileMap</li>
+<li>createMapFromDatabase</li>
+<li>createMapFromDTD</li>
+<li>writeMap</li>
+<li>createDTD</li>
+<li>createSQL</li>
+</ul>
+
+<p>For complete details, see the the JavaDocs for <a href="docs/org.xmlmiddleware.xmldbms.tools.MapManager.html">MapManager</a>.</p>
+
+<h4><a name="MapManagerSamples">3.3.3 Samples</a></h4>
+
+<p>The MapManager comes with a small set of samples, which you can find in the samples subdirectory:</p>
+
+<pre>
+   orders.dtd -- DTD for a sales order document
+</pre>
+
+<p>There is also a DOS batch file (manage.bat) that runs the MapManager tool. It assumes that the parser properties are in parser.props, the database properties are in db.props, and the map manager properties (what you actually want to do) are in a file passed in on the command line. To use this, just type the following:</p>
+
+<pre>
+   manage &lt;property-file>
+</pre>
+
+<p>For example:</p>
+
+<pre>
+   manage map.props
+</pre>
+
+<p>is equivalent to:</p>
+
+<pre>
+   java org.xmlmiddleware.xmldbms.tools.MapManager File1=parser.props File2=db.props File3=map.props
+</pre>
+
+<p>The samples directory includes the following sample property files:</p>
+
+<pre>
+   parser.props -- Parser properties for the Xerces parser
+   db.props     -- Database properties to use the Sun JDBC-ODBC Bridge
+   map.props    -- File to read a DTD and create a map file and an SQL file
+</pre>
+
+<h3><a name="Transfer">3.4 Using the Transfer tool</a></h3>
 
 <p>The Transfer tool in the org.xmlmiddleware.xmldbms.tools package provides a simple command line interface to XML-DBMS, as well as a simple, high-level API. It is designed so all configuration information (which parser and JDBC driver to use, database URL, etc.) can be stored in properties files.</p>
 
-<p>The command line interface is the easiest way to use Transfer. With this, you pass information to Transfer as a series of property/value pairs. For example, to store the contents of the orders.xml document in the database according to the orders.map map file and orders.act action file, using the parser properties in xerces.props and the database properties in db.props, you would use the following command line:</p>
+<h4><a name="CommandLine">3.4.1 Using the Transfer tool from the command line</a></h4>
+
+<p>The command line interface is the easiest way to use Transfer. With this, you pass information to Transfer as a series of property/value pairs. For example, the following command stores the contents of the orders.xml document in the database:</p>
 
 <pre>
    java org.xmlmiddleware.xmldbms.tools.Transfer File1=xerces.props File2=db.props
           Method=StoreDocument MapFile=orders.map XMLFile=orders.xml ActionFile=orders.act
 </pre>
 
-<p>For complete details about Transfer's command line syntax, see the JavaDocs for <a href="docs/org.xmlmiddleware.xmldbms.tools.Transfer.html">Transfer</a>. You can find sample property files in the samples directory.</p>
+<p>The Method property specifies the method to call (StoreDocument) and the MapFile, XMLFile, and ActionFile properties specify the names of the map, XML, and action files to use. The File1 and File2 properties indicate that the property values are the names of property files. These are particularly useful for properties that don't change often, such as parser and database properties.</p>
+
+<p>For complete details about Transfer's command line syntax and what other properties are available, see the JavaDocs for <a href="docs/org.xmlmiddleware.xmldbms.tools.Transfer.html">Transfer</a>.</p>
+
+<h4><a name="TransferAPI">3.4.2 Using the Transfer tool API</a></h4>
 
 <p>You can also use Transfer programmatically. It provides a very simple API for XML-DBMS that consists of the following methods:</p>
 
@@ -216,7 +311,52 @@ Version 2.0 code is in the org module, DTDs are in the dtds module, and sample a
 
 <p>Transfer is optimized to reuse things like database connections and compiled map objects on subsequent calls, so it is a reasonably efficient way to use XML-DBMS with little effort. Again, for complete details, see the the JavaDocs for <a href="docs/org.xmlmiddleware.xmldbms.tools.Transfer.html">Transfer</a>.</p>
 
-<h3><a name="OwnApp">3.3 Writing Your Own Application</a></h3>
+<h4><a name="Samples">3.4.3 Samples</a></h4>
+
+<p>XML-DBMS comes with a small set of samples, which you can find in the samples subdirectory. Most of these are sample XML, map, action, and filter files:</p>
+
+<pre>
+   orders.xml       -- XML document showing a sales order
+   orders.sql       -- CREATE TABLE statements for the tables to which orders.xml is mapped
+   orders.map       -- Map file mapping orders.xml to four tables in the database
+   orders1.act      -- Action file for to insert orders.xml
+   orders2.act      -- Action file to update the item quantity in orders.xml
+   delete.act       -- Action file to delete orders and items but not customers or parts
+   orders.ftr       -- Filter file that uses only a root table filter
+   ordersconst.ftr  -- Filter file that uses constant values in WHERE clauses
+   ordersparams.ftr -- Filter file that uses named parameters in WHERE clauses
+   ordersrs.ftr     -- Filter file that uses result sets
+</pre>
+
+<p>There is also a DOS batch file (transfer.bat) that runs the Transfer tool. It assumes that the parser properties are in parser.props, the database properties are in db.props, and the method properties (what you actually want to do) are in a file passed in on the command line. To use this, just type the following:</p>
+
+<pre>
+   transfer &lt;property-file>
+</pre>
+
+<p>For example:</p>
+
+<pre>
+   transfer store.props
+</pre>
+
+<p>is equivalent to:</p>
+
+<pre>
+   java org.xmlmiddleware.xmldbms.tools.Transfer File1=parser.props File2=db.props File3=store.props
+</pre>
+
+<p>The samples directory includes the following sample property files:</p>
+
+<pre>
+   parser.props   -- Parser properties for the Xerces parser
+   db.props       -- Database properties to use the Sun JDBC-ODBC Bridge
+   delete.props   -- Method properties to delete an order according to delete.act and orders.ftr
+   retrieve.props -- Method properties to retrieve an order according to orders.ftr
+   store.props    -- Method properties to store an order according to orders1.act
+</pre>
+
+<h3><a name="OwnApp">3.5 Writing your own application</a></h3>
 
 <p>For the most control over XML-DBMS, you can write your own application. Here are the basic steps:</p>
 
@@ -275,7 +415,7 @@ Actions object (or just specify a single action).</li>
 
 <p>Note that the code in Transfer is probably more complex than most of your code will be. This is because Transfer needs to retrieve information from properties and check that it has gotten the correct information.</p>
 
-<h3><a name="Interfaces">3.4 Interfaces</a></h3>
+<h3><a name="Interfaces">3.6 Interfaces</a></h3>
 
 <p>XML-DBMS abstracts a number of types of functionality through interfaces. Depending on your environment, you may need to write and/or compile implementations for these interfaces and add these to your CLASSPATH or the xmldbms20.jar file. The following interfaces are used:</p>
 
@@ -283,17 +423,17 @@ Actions object (or just specify a single action).</li>
 
 <li><p><b>javax.sql.DataSource.</b> Provides JDBC Connections. Normally, you will use a DataSource shipped with your JDBC driver, a third-party DataSource, or one of the DataSources shipped with XML-DBMS.</p></li>
 
-<li><p><b>org.xmlmiddleware.conversions.StringFormatter.</b> Used for string formatting. You need to implement this only if the capabilities of the string formatters shipped with XML-DBMS are insufficient. XML-DBMS has built-in date and number formatters.</p></li>
+<li><p><b>org.xmlmiddleware.conversions.formatters.StringFormatter.</b> Used for string formatting. You need to implement this only if the capabilities of the string formatters shipped with XML-DBMS are insufficient. XML-DBMS has built-in date and number formatters.</p></li>
 
-<li><p><b>org.xmlmiddleware.domutils.ParserUtils.</b> Abstracts parser functionality. You will need to implement this for any parser except Xerces.</p></li>
+<li><p><b>org.xmlmiddleware.xmlutils.ParserUtils.</b> Abstracts parser functionality. You will need to implement this for any parser except Xerces.</p></li>
 
-<li><p><b>org.xmlmiddleware.xmldbms.DataHandler.</b> Executes SQL statements. In most cases, you can use GenericHandler or one of the database-specific implementations shipped with XML-DBMS.</p></li>
+<li><p><b>org.xmlmiddleware.xmldbms.datahandlers.DataHandler.</b> Executes SQL statements. In most cases, you can use GenericHandler or one of the database-specific implementations shipped with XML-DBMS.</p></li>
 
-<li><p><b>org.xmlmiddleware.xmldbms.KeyGenerator.</b> Generates keys. If you want to generate keys yourself, you must implement this. If you want to use the high-low scheme from XML-DBMS v1.01, start with the v1.1 version of this.</p></li>
+<li><p><b>org.xmlmiddleware.xmldbms.keygenerators.KeyGenerator.</b> Generates keys. If you want to generate keys yourself, you must implement this. If you want to use the high-low scheme from XML-DBMS v1.01, start with the v1.1 version of this.</p></li>
 
 </ul>
 
-<p>The following table shows what implementations are included in XML-DBMS version 2.0 alpha 2, and whether compiled versions of these are in xmldbms20.jar.</p>
+<p>The following table shows what implementations are included in XML-DBMS version 2.0 alpha 3, and whether compiled versions of these are in xmldbms20.jar.</p>
 
 <table border="1">
   <tr>
@@ -310,79 +450,81 @@ org.xmlmiddleware.db.StatementPoolDataSource</td>
    <td>Yes<br />Yes<br />Yes<br />Yes</td>
   </tr>
   <tr>
-   <td>org.xmlmiddleware.conversions.StringFormatter</td>
-   <td>org.xmlmiddleware.conversions.helpers.Base64Formatter<br />
-org.xmlmiddleware.conversions.helpers.BooleanFormatter<br />
-org.xmlmiddleware.conversions.helpers.CharFormatter<br />
-org.xmlmiddleware.conversions.helpers.DateFormatter<br />
-org.xmlmiddleware.conversions.helpers.NumberFormatter</td>
+   <td>org.xmlmiddleware.conversions.formatters.StringFormatter</td>
+   <td>org.xmlmiddleware.conversions.formatters.external.Base64Formatter<br />
+org.xmlmiddleware.conversions.formatters.BooleanFormatter<br />
+org.xmlmiddleware.conversions.formatters.CharFormatter<br />
+org.xmlmiddleware.conversions.formatters.DateFormatter<br />
+org.xmlmiddleware.conversions.formatters.NoFormatter<br />
+org.xmlmiddleware.conversions.formatters.NumberFormatter</td>
    <td>Yes<br />Yes<br />Yes<br />Yes<br />Yes</td>
   </tr>
   <tr>
-   <td>org.xmlmiddleware.domutils.ParserUtils</td>
-   <td>org.xmlmiddleware.domutils.helpers.ParserUtilsXerces</td>
+   <td>org.xmlmiddleware.xmlutils.ParserUtils</td>
+   <td>org.xmlmiddleware.xmlutils.external.ParserUtilsXerces</td>
    <td>Yes</td>
   </tr>
   <tr>
-   <td>org.xmlmiddleware.xmldbms.DataHandler</td>
-   <td>org.xmlmiddleware.xmldbms.helpers.GenericHandler<br />
-org.xmlmiddleware.xmldbms.helpers.MySQLHandler<br />
-org.xmlmiddleware.xmldbms.helpers.PostgresHandler<br />
-org.xmlmiddleware.xmldbms.helpers.PostgresJDBXHandler</td>
+   <td>org.xmlmiddleware.xmldbms.datahandlers.DataHandler</td>
+   <td>org.xmlmiddleware.xmldbms.datahandlers.GenericHandler<br />
+org.xmlmiddleware.xmldbms.datahandlers.external.MySQLHandler<br />
+org.xmlmiddleware.xmldbms.datahandlers.external.PostgresHandler<br />
+org.xmlmiddleware.xmldbms.datahandlers.external.PostgresJDBXHandler</td>
    <td>Yes<br />No<br />No<br />No</td>
   </tr>
   <tr>
-   <td>org.xmlmiddleware.xmldbms.KeyGenerator</td>
+   <td>org.xmlmiddleware.xmldbms.keygenerators.KeyGenerator</td>
    <td>-- (KeyGeneratorHighLow to be added later)</td>
    <td>--</td>
   </tr>
 </table>
 
-<h3><a name="Bugs">3.5 Known Bugs</a></h3>
+<h3><a name="Bugs">3.7 Known bugs</a></h3>
 
-<p>Here is a list of known bugs in XML-DBMS version 2.0 alpha 2:</p>
+<p>Here is a list of known bugs in XML-DBMS version 2.0 alpha 3:</p>
 
 <ul>
+
+<li>With most drivers, Sybase and Microsoft SQL Server cannot retrieve data that is nested more than one table deep.</li>
 
 <li>Ordering at the root level is not yet supported by DBMSToDOM.</li>
 
 <li>The All element in the action language is not supported.</li>
 
-<li>The Extends element in the mapping language is not supported.</li>
+<li>The Extends element in the mapping language is not supported. This will not be fixed until version 2.1.</li>
+
+<li>The CREATE TABLE statements generated by DDLGenerator may include duplicate constraint names, which are illegal.</li>
 
 <li>Update and update-or-insert capabilities do not support updating order columns. That is, order columns are guaranteed to be correct only when inserting data. This is unlikely to be fixed.</li>
 
 </ul>
 
-<h3><a name="Missing">3.6 Missing Components</a></h3>
+<h3><a name="Missing">3.8 Missing components</a></h3>
 
-<p>The following components have not yet been added to XML-DBMS version 2.0 alpha 2. While most of these (except MapFactory_W3CSchemas and binary data support) will probably be in the final release, no guarantees are made..</p>
+<p>The following components have not yet been added to XML-DBMS version 2.0 alpha 3. While most of these (except MapFactory_W3CSchemas and binary data support) will probably be included in the final release, no guarantees are made..</p>
 
 <ul>
 <li>ActionSerializer</li>
-<li>MapFactory_DTD</li>
 <li>MapFactory_W3CSchemas</li>
-<li>The ability to generate DTDs and CREATE TABLE statements from map objects</li>
-<li>The GenerateMap tool</li>
 <li>KeyGeneratorHighLow</li>
 <li>Additional implementations of ParserUtils</li>
 <li>Support for binary data using Base64</li>
 </ul>
 
-<h2><a name="LandS">4.0 Licensing and Support</a></h2>
+<h2><a name="LandS">4.0 Licensing and support</a></h2>
 
 <h3><a name="License">4.1 Licensing</a></h3>
 
 <p>XML-DBMS, along with its source code, is in the public domain. It is freely available for use in both commercial and non-commercial settings. It is not copyrighted and has <b>absolutely no warranty</b>. The following limitations apply:</p>
 
 <blockquote>
-The software is provided "as is", without warranty of any kind,
+<b>The software is provided "as is", without warranty of any kind,
 express or implied, including but not limited to the warranties
 of merchantability, fitness for a particular purpose, and
 noninfringement. In no event shall the author(s) be liable for any
 claim, damages, or other liability, whether in an action of
 contract, tort, or otherwise, arising from, out of, or in connection
-with the software or the use or other dealings in the software.
+with the software or the use or other dealings in the software.</b>
 </blockquote>
 
 <h3><a name="Support">4.2 Support</a></h3>
@@ -405,7 +547,13 @@ with the software or the use or other dealings in the software.
 
 <h3><a name="Contributors">4.4 Contributors</a></h3>
 
-<p>Many people have contributed to XML-DBMS in the form of bug reports and suggested features. The following people have contributed significant amounts of code and design work: Adam Flinton, Nick Semenov, Sean Walter, Tobias Schilgen, and Himanshu Gupta. Thanks to everyone.</p>
+<p>Thanks to the many people who have contributed to XML-DBMS in the form of bug reports and suggested features. And special thanks to the following people, who have contributed significant amounts of code and design work:
+<br /><br />
+&nbsp;&nbsp;&nbsp;Adam Flinton<br />
+&nbsp;&nbsp;&nbsp;Nick Semenov<br />
+&nbsp;&nbsp;&nbsp;Sean Walter<br />
+&nbsp;&nbsp;&nbsp;Tobias Schilgen<br />
+&nbsp;&nbsp;&nbsp;Himanshu Gupta</p>
 
 </body>
 </html>
