@@ -24,7 +24,7 @@ public class DOMToDBMS
     public static final int COMMIT_AFTERDOCUMENT = 2;
     public static final int COMMIT_NONE = 3;
     public static final int COMMIT_NOTRANSACTIONS = 4;
-
+    
 
     // TODO: we have a mode variable here for update/insert 
 

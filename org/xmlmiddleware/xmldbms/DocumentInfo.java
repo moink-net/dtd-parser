@@ -41,7 +41,7 @@ public class DocumentInfo
    // Variables
    // ********************************************************************
 
-   private Vector tables = new Vector();        // Contains Strings.
+   private Vector tables = new Vector();        // Contains TableInfo's.
    private Vector keyColumns = new Vector();    // Contains String[]'s.
    private Vector keys = new Vector();          // Contains Object[]'s.
    private Vector orderColumns = new Vector();  // Contains Strings.
@@ -84,9 +84,10 @@ public class DocumentInfo
 	*  which the data values are to be retrieved. Null if there is no order
 	*  column.
 	*/
-   public DocumentInfo(String tableName, String[] keyColumnNames, Object[] key, String orderColumnName)
+   public DocumentInfo(String dbName, String catName, String schName, String tableName, 
+                       String[] keyColumnNames, Object[] key, String orderColumnName)
    {
-	  addInfo(tableName, keyColumnNames, key, orderColumnName);
+	  addInfo(dbName, catName, schName, tableName, keyColumnNames, key, orderColumnName);
    }   
 
    // ********************************************************************
@@ -194,4 +195,20 @@ public class DocumentInfo
 	  orderColumns.addElement(orderColumnName);
    }   
 
+
+    class TableInfo
+    {
+        String database;
+        String catalog;
+        String schema;
+        String table;
+
+        TableInfo(String db, String cat, String sch, String tbl)
+        {
+            database = db;
+            catalog = cat;
+            schema = sch;
+            table = tbl;
+        }
+    };
 }
