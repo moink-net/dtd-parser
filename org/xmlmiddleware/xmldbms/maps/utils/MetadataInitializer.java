@@ -43,8 +43,8 @@ import java.util.Hashtable;
  * database, (3) from a result set, or (4) directly on Column objects.</p>
  *
  * <p>You can use the methods in this class to set metadata from a database
- * or a result set. The "required" argument on initializeMetadata methods
- * specifies whether metadata must be found for all tables in the database.
+ * or a result set. When initializing metadata from a database, the "required"
+ * argument specifies whether metadata must be found for all tables in the database.
  * In most cases, you set this argument to true. You set it to false if you
  * want to retrieve metadata for some tables from the database, then retrieve
  * metadata for other tables from another source, such as a result set.</p>
@@ -183,6 +183,10 @@ public class MetadataInitializer
 
    /**
     * Initialize database metadata from a result set.
+    *
+    * <p>This method initializes metadata only for the specified table. It does
+    * not affect metadata for other tables. Thus, it can be called for different
+    * tables, such as when multiple result sets are passed to DBMSToDOM.retrieveDocument.</p>
     *
     * <p>This method is liberal with respect to metadata. That is, if any columns
     * in the result set are not mapped, or if any columns in the specified table
