@@ -1,0 +1,31 @@
+<?xml version='1.0' ?>
+<!--
+     This sample retrieves data from the Orders table for
+     order number '123'. It only retrieves the first item
+     for the order.
+-->
+
+<!DOCTYPE FilterSet SYSTEM "filters.dtd" >
+
+<FilterSet Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/filters/v2">
+   <Options>
+      <Namespace Prefix="sales" URI = "http://www.sales.org/" />
+      <Wrapper Name="sales:Orders" />
+   </Options>
+   <Filters>
+      <Filter>
+         <RootFilter>
+            <Table Name="Orders" />
+            <Where Condition="Number = '123'" />
+         </RootFilter>
+         <TableFilter>
+            <Table Name="Orders" />
+            <RelatedTableFilter>
+               <Table Name="Items" />
+               <Where Condition="Number = 1" />
+            </RelatedTableFilter>
+         </TableFilter>
+      </Filter>
+   </Filters>
+</FilterSet>
+      

@@ -1,0 +1,27 @@
+<?xml version='1.0' ?>
+<!--
+     This sample filters uses a result set built over the Orders
+     table. It filters the Items table to return only the $ItemNum
+     item.
+-->
+
+<!DOCTYPE FilterSet SYSTEM "filters.dtd" >
+
+<FilterSet Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/filters/v2">
+   <Options>
+      <Namespace Prefix="sales" URI = "http://www.sales.org/" />
+      <Wrapper Name="sales:Orders" />
+   </Options>
+   <Filters>
+      <Filter>
+         <ResultSetInfo Table="Orders" />
+         <TableFilter>
+            <Table Name="Orders" />
+            <RelatedTableFilter>
+               <Table Name="Items" />
+               <Where Condition="Number = $ItemNum" />
+            </RelatedTableFilter>
+         </TableFilter>
+      </Filter>
+   </Filters>
+</FilterSet>

@@ -1,0 +1,293 @@
+<!-- This DTD is in the public domain.
+
+     The DTD is provided "as is", without warranty of any kind,
+     express or implied, including but not limited to the warranties
+     of merchantability, fitness for a particular purpose, and
+     noninfringement. In no event shall the author(s) be liable for
+     any claim, damages, or other liability, whether in an action of
+     contract, tort, or otherwise, arising from, out of, or in
+     connection with the DTD or the use or other dealings in the DTD.
+
+     Version 2.0
+     Changes from version 1.x: New in version 2.0
+
+     Written by Ronald Bourret, 2001
+-->
+
+<!-- ************************************************************* -->
+<!--                         Namespace entities                    -->
+<!-- ************************************************************* -->
+
+<!-- These entities allow the DTD to be used with namespaces. If a
+     non-null prefix is used, the p and s entities must be declared
+     in the internal subset of the map document. The p entity provides
+     the prefix used in element type names and the s entity provides
+     the suffix used in the namespace declaration.
+
+     For example, suppose you want to use the prefix "action".
+     Declare the following entities in the internal subset of your
+     map document; notice that the p entity ends in a colon (:)
+     and the s entity starts with a colon (:)
+
+        <DOCTYPE FilterSet SYSTEM "filters.dtd" [
+           <!ENTITY % p "filter:">
+           <!ENTITY % s ":filter">
+        ]>
+        <filter:FilterSet Version="2.0"
+                 xmlns:filter="http://www.xmlmiddleware.org/xmldbms/filters/v2">
+           <filter:Options>
+              ...
+
+     If you do not declare the p and s entities in the internal subset
+     of your map document, then declare the filters v2 namespace as
+     the default namespace. For example:
+
+        <DOCTYPE FilterSet SYSTEM "filters.dtd">
+        <FilterSet Version="2.0"
+                 xmlns="http://www.xmlmiddleware.org/xmldbms/filters/v2">
+           <Options>
+              ...
+
+     If you are using a parser that reads the external subset, such
+     as a validating parser, you do not need to declare the namespace.
+     This is because it is declared in the DTD. However, this is
+     considered poor practice, as there is no guarantee other users
+     of the map document will use a parser that reads the external
+     subset.
+
+     WARNING: For a map document to validate against this DTD, it
+     must use the same prefix for the actions namespace throughout
+     the entire document. For details, see:
+
+        http://www.rpbourret.com/xml/NamespacesFAQ.htm#s7
+-->
+
+<!ENTITY % p "" >
+<!ENTITY % s "" >
+<!ENTITY % nsdecl "xmlns%s;" >
+
+<!-- ************************************************************* -->
+<!--                         Filter language                       -->
+<!-- ************************************************************* -->
+
+<!--
+     A filter document consists of a set of filters to be applied
+     to the values in the database. This makes it possible to filter
+     the rows retrieved by DBMSToDOM.retrieveDocument. The filter
+     language is layered on the top of the mapping language. That
+     is, it allows you to specify specific conditions under which
+     data is retrieved, while the mapping language provides the
+     structural information (i.e. joins). You can think of the
+     combination of mapping language and filter language as providing
+     a simple query language over the database, with results
+     returned as XML.
+
+     Filter documents are compiled and the resulting object is
+     passed to DBMSToDOM.retrieveDocument:
+
+      public Document retrieveDocument(TransferInfo transferInfo,
+                                       FilterSet filterSet,
+                                       String[] paramNames,
+                                       Object[] params,
+                                       Node rootNode)
+
+      public Document retrieveDocument(TransferInfo transferInfo,
+                                       ResultSet rs,
+                                       FilterSet filterSet,
+                                       String[] paramNames,
+                                       Object[] params,
+                                       Node rootNode)
+-->
+
+<!ELEMENT %p;FilterSet (%p;Options?, %p;Filters)>
+<!ATTLIST %p;FilterSet
+          Version CDATA #FIXED "2.0"
+          %nsdecl; CDATA "http://www.xmlmiddleware.org/xmldbms/filters/v2">
+
+<!--
+     Namespace elements declare the namespace prefixes and URIs to be
+     used in the Name attribute of Wrapper element.
+ -->
+
+<!ELEMENT %p;Options (%p;Namespace*, Wrapper*)>
+<!ELEMENT %p;Namespace EMPTY>
+<!ATTLIST %p;Namespace
+          Prefix NMTOKEN #REQUIRED
+          URI CDATA #REQUIRED>
+<!ELEMENT %p;Wrapper EMPTY>
+<!ATTLIST %p;Wrapper
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT %p;Filters (%p;Filter+)>
+<!ELEMENT %p;Filter ((%p;RootFilter | %p;ResultSetInfo), %p;TableFilter*)>
+
+<!ELEMENT %p;RootFilter (%p;Table, %p;Where+)>
+
+<!ELEMENT %p;ResultSetInfo EMPTY>
+<!ATTLIST %p;ResultSetInfo
+          Number CDATA #FIXED "0"
+          Database CDATA "Default"
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Table CDATA #REQUIRED>
+
+<!ELEMENT %p;TableFilter (%p;Table, %p;RelatedTableFilter+)>
+<!ELEMENT %p;RelatedTableFilter (%p;Table, %p;Where+)>
+<!ATTLIST %p;RelatedTableFilter
+          ParentKey CDATA #IMPLIED
+          ChildKey CDATA #IMPLIED>
+
+<!ELEMENT %p;Table EMPTY>
+<!ATTLIST %p;Table
+          Database CDATA "Default"
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Name CDATA #REQUIRED>
+<!ELEMENT %p;Where EMPTY>
+<!ATTLIST %p;Where
+          Condition CDATA #REQUIRED>
+
+<!--
+Here is an explanation of some of the less obvious element types
+and attributes.
+
+Wrapper: This is one or more elements that are used to wrap the results
+of the query - equivalent to the "ignored root" in version 1.0. If there
+is more than one Wrapper element, the wrappers are applied in the order
+they appear in the filter document. For example, the following set of
+wrappers:
+
+   <Wrapper QName="Foo" />
+   <Wrapper QName="Bar" />
+
+results in the following document:
+
+   <Foo>
+      <Bar>
+          ... results here ...
+      </Bar>
+   </Foo>
+
+RootFilter: These filters are used to specify the values retrieve from
+the root table(s). They are effectively ORed together and are
+equivalent to the table name and key values passed to retrieveDocument
+in version 1.0, although they are obviously more flexible. The same
+table may appear in more than one RootFilter.
+
+ResultSetInfo: This gives the name of the database / catalog / schema /
+table used in the map file to map the result set. That is, there must
+be a ClassMap in the map file that has a ToClassTable element with
+this name.
+
+Any columns in the result set that are not mapped will be ignored.
+Similarly, any columns that are mapped but are not in the result set
+will be ignored. One consequence of the latter rule is that a single
+ClassMap can be used to map multiple result sets. For example, a
+ClassMap used to map all of the columns in a table can be used with any
+result set built over that table.
+
+WARNING: There is currently a restriction that, if a filter document
+contains a Filter with a ResultSetInfo child, there cannot be any other
+Filter elements in the filter document. This is done strictly for UI
+reasons and may be relaxed in the future.
+
+TableFilter: These filters are used to filter values within the
+document. A table may not appear in more than one TableFilter within
+a Filter.
+
+RelatedTableFilter: These filters specify the values to be retrieved
+from the child tables of a given table. For example, in the sales
+example, they could be used to retrieve line items with a specific part
+number.
+
+RelatedTableFilter@ParentKey and ChildKey: The ParentKey and ChildKey
+attributes are used in the rare cases where a given table occurs more
+than once as a child of another table. For example, suppose a Customers
+table has ShipToAddress and BillToAddress columns that are both foreign
+keys pointing to the Addresses table. The ParentKey and ChildKey
+attributes gives the names of the keys in the parent and child tables
+used to join the tables, thereby identifying the occurrence of the
+child table to which the filter applies. The ParentKey and ChildKey
+attributes must be present if a child table occurs more than once in
+a given parent.
+
+Where: The Condition attribute of the Where element specifies the filter
+condition. This is an arbitrary string that is AND'ed to the end of the
+WHERE clause used to query the child table. It must apply to the columns
+in the child table. For example:
+
+   <Where Condition='PartNumber="123"' />
+
+If there is more than one Where element in a given filter, these are
+AND'ed together. For example, this:
+
+   <Where Condition='Price > 100.00' />
+   <Where Condition='MinimumQuantity > 10' />
+
+is equivalent to:
+
+   <Where Condition='Price > 100.00 AND MinimumQuantity > 10' />
+
+If you want more complex conditions, such as grouping and ORs, these
+must be placed inside a single Condition clause. For example:
+
+   <Where Condition="(PartNumber > 100 AND Price = 45.00) OR
+(MinimumQuantity > 10)" />
+
+Condition attributes can contain named parameters. For example:
+
+   <Where Condition="Price > $Price" />
+
+The list of parameter names and values is passed to retrieveDocument.
+
+If an expression contains a [NOT] IN clause, the value of the parameter
+must be a Vector. In this case, the IN clause is expanded to include
+the values in the Vector. For example, if the value of the
+EmployeeNumber parameter is a Vector with the Integers 1, 37, and
+23, then the following condition:
+
+   <Where Condition="EmpNum IN ($EmployeeNumber)" />
+
+is equivalent to:
+
+   <Where Condition="EmpNum IN (1, 37, 23)" />
+
+This is useful in a root filter to retrieve a number of related
+rows. For example, it could be used to retrieve multiple employee
+records and return them all in the same XML document.
+
+Note that the parentheses are required.
+
+WARNINGS:
+=========
+
+1) Less-than signs must be escaped in conditions. This is a
+well-formedness requirement in XML. For example:
+
+   <Where Condition="Price &lt; 100.00" />
+
+2) Any parameter name ($xxxxx) for which no corresponding parameter is
+passed to retrieveDocument is treated as a literal.
+
+3) The replacement of scalar parameters is simplistic: anything of the
+form $token is assumed to be a parameter (regardless of position) and
+is replaced by a parameter marker (?) if a parameter with the same name
+is found. Therefore, if you have data values of the form $token, be
+sure not to name any parameters with the names used by the data values.
+
+4) The replacement of Vector parameters is also simplistic. In
+particular, the parameter is replaced by Vector.size() parameter
+markers without checking to see that it is in an IN clause. The reverse
+is also true. That is, IN clauses are assumed to have Vector parameters
+and all other clauses are assumed to have simple parameters. This is
+done for efficiency in parsing and violation of this rule leads to
+undefined behavior.
+
+5) In general, Conditions should be assumed to be somewhat fragile, and
+no guarantees are given that they will work with anything other than
+simple expressions. For example, if subqueries work, great. If they
+don't, they won't be supported. The reason for this is that filters are
+not intended to be a complete solution - an implementation of XQuery is
+needed for that. Instead, they are designed to quickly and easily
+provide useful functionality.
+-->
