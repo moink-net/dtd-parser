@@ -314,6 +314,11 @@ public class MapInverter
       {
          newPropMapBase.setOrderInfo(propMap.getOrderInfo());
       }
+
+      if (newPropMapBase.getType() == PropertyMapBase.ELEMENTTYPE)
+      {
+         newPropMapBase.setContainsXML(propMap.containsXML());
+      }
    }
 
    private void invertRelatedClassMap(Map map, ClassTableMap newClassTableMap, RelatedClassMap relatedClassMap, ElementInsertionList elementInsertionList)
@@ -553,6 +558,10 @@ public class MapInverter
       if (type != PropertyMapBase.ATTRIBUTE)
       {
          newPropMap.setOrderInfo(propMapBase.getOrderInfo());
+      }
+      if (type == PropertyMapBase.ELEMENTTYPE)
+      {
+         newPropMap.setContainsXML(propMapBase.containsXML());
       }
    }
 

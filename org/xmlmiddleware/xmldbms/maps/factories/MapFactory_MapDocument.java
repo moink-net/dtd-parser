@@ -186,7 +186,7 @@ public class MapFactory_MapDocument
    // State variables -- property maps
    private PropertyMap      propMap;
    private Table            propertyTable;
-   private boolean          parentKeyIsUnique, isTokenList;
+   private boolean          parentKeyIsUnique, isTokenList, containsXML;
    private Key              uniqueKey;
 
    // State variables -- base class tables
@@ -785,6 +785,12 @@ public class MapFactory_MapDocument
       String  attrValue;
       XMLName xmlName;
 
+      // Check if the user attempted to specify that the attribute contained
+      // XML markup and throw an error if this is true.
+
+      if (containsXML)
+         throw new MapException("The ContainsXML attribute may not be set to 'Yes' for PropertyMaps that map attributes.");
+
       // Get the attribute's name and create an XMLName, then create an
       // attribute map.
 
@@ -1021,10 +1027,11 @@ public class MapFactory_MapDocument
             break;
 
          case iSTATE_PROPERTYMAP:
-            // Create a new PropertyMap and set whether it is a token list.
+            // Create a new PropertyMap. Set whether it is a token list and contains XML.
 
             propMap = PropertyMap.create(elementTypeName, PropertyMap.ELEMENTTYPE);
             propMap.setIsTokenList(isTokenList);
+            propMap.setContainsXML(containsXML);
 
             // Check whether the <PropertyMap> element is inside a <ClassMap> or an
             // <InlineMap> element and add it accordingly. This throws an error if
@@ -1364,6 +1371,12 @@ public class MapFactory_MapDocument
    private void processPCDATA()
       throws MapException
    {
+      // Check if the user attempted to specify that the PCDATA contained
+      // XML markup and throw an error if this is true.
+
+      if (containsXML)
+         throw new MapException("The ContainsXML attribute may not be set to 'Yes' for PropertyMaps that map PCDATA.");
+
       // Create a new PropertyMap and set whether it contains a token list.
 
       propMap = PropertyMap.create(null, PropertyMap.PCDATA);
@@ -1425,12 +1438,15 @@ public class MapFactory_MapDocument
    {
       String attrValue;
 
-      // All we do here is save whether the property contains a token list.
-      // We actually create the propMap when we encounter the
-      // <ElementType>, <Attribute>, or <PCDATA> element.
+      // All we do here is save whether the property contains a token list and the
+      // column to which it is mapped contains XML. We actually create the propMap
+      // when we encounter the <ElementType>, <Attribute>, or <PCDATA> element.
 
       attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_TOKENLIST, XMLDBMSConst.DEF_TOKENLIST);
       isTokenList = isYes(attrValue);
+
+      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_CONTAINSXML, XMLDBMSConst.DEF_CONTAINSXML);
+      containsXML = isYes(attrValue);
    }
 
    private void processRelatedClass(Attributes attrs)

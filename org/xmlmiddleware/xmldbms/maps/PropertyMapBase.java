@@ -64,9 +64,10 @@ public class PropertyMapBase extends MapBase
    private XMLName   xmlName = null;
    private Column    column = null;
    private int       type = UNKNOWN;
+   private boolean   containsXML = false;
    private OrderInfo orderInfo = null;
-   private OrderInfo tokenListOrderInfo = null;
    private boolean   isTokenList = false;
+   private OrderInfo tokenListOrderInfo = null;
 
    // ********************************************************************
    // Constructors
@@ -133,6 +134,11 @@ public class PropertyMapBase extends MapBase
          throw new IllegalArgumentException("Type must be ELEMENTTYPE, ATTRIBUTE, or PCDATA.");
       this.xmlName = xmlName;
       this.type = type;
+
+      if (type != ELEMENTTYPE)
+      {
+         containsXML = false;
+      }
    }
 
    // ********************************************************************
@@ -158,6 +164,37 @@ public class PropertyMapBase extends MapBase
    {
       checkArgNull(column, ARG_COLUMN);
       this.column = column;
+   }
+
+   // ********************************************************************
+   // Whether the column contains XML
+   // ********************************************************************
+
+   /**
+    * Does the column contain XML?
+    *
+    * <p>Applies only to element types. This always returns false for
+    * attributes and PCDATA.</p>
+    *
+    * @return Whether the column contains XML.
+    */
+   public final boolean containsXML()
+   {
+      return containsXML;
+   }
+
+   /**
+    * Set whether the column contains XML.
+    *
+    * <p>This method can only be called for element types.</p>
+    *
+    * @param containsXML Whether the column contains XML.
+    */
+   public void setContainsXML(boolean containsXML)
+   {
+      if (type != ELEMENTTYPE)
+         throw new IllegalStateException("Can call setContainsXML only for element types.");
+      this.containsXML = containsXML;
    }
 
    // ********************************************************************

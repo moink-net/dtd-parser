@@ -224,7 +224,7 @@ public class XMLDBMSConst
 
    // Enumeration value strings
 
-   // ATTR_TOKENLIST, ATTR_USEBASETABLE, ATTR_GENERATE, ATTR_NULLABLE
+   // ATTR_TOKENLIST, ATTR_USEBASETABLE, ATTR_GENERATE, ATTR_NULLABLE, ATTR_CONTAINSXML
    public static String ENUM_NO      = "No";
    public static String ENUM_YES     = "Yes";
    public static String ENUM_UNKNOWN = "Unknown"; // ATTR_NULLABLE only
@@ -264,7 +264,7 @@ public class XMLDBMSConst
    
    public static final int ENUM_TOKEN_INVALID = -999;
 
-   // ATTR_TOKENLIST, ATTR_USEBASETABLE, ATTR_NULLABLE
+   // ATTR_TOKENLIST, ATTR_USEBASETABLE, ATTR_GENERATE, ATTR_NULLABLE, ATTR_CONTAINSXML
    public static final int ENUM_TOKEN_NO  = 0;
    public static final int ENUM_TOKEN_YES = 1;
    public static final int ENUM_TOKEN_UNKNOWN = 2; // ATTR_NULLABLE only
@@ -308,6 +308,7 @@ public class XMLDBMSConst
 
    public static String ATTR_CATALOG          = "Catalog";
    public static String ATTR_CLASS            = "Class";
+   public static String ATTR_CONTAINSXML      = "ContainsXML";
    public static String ATTR_COUNTRY          = "Country";
    public static String ATTR_DATABASE         = "Database";
    public static String ATTR_DATATYPE         = "DataType";
@@ -339,6 +340,7 @@ public class XMLDBMSConst
    public static final String[] ATTRS = {
                                          ATTR_CATALOG,
                                          ATTR_CLASS,
+                                         ATTR_CONTAINSXML,
                                          ATTR_COUNTRY,
                                          ATTR_DATABASE,
                                          ATTR_DATATYPE,
@@ -373,37 +375,39 @@ public class XMLDBMSConst
    public static final int ATTR_TOKEN_INVALID          = -999;
    public static final int ATTR_TOKEN_CATALOG          = 0;
    public static final int ATTR_TOKEN_CLASS            = 1;
-   public static final int ATTR_TOKEN_COUNTRY          = 2;
-   public static final int ATTR_TOKEN_DATABASE         = 3;
-   public static final int ATTR_TOKEN_DATATYPE         = 4;
-   public static final int ATTR_TOKEN_DATESTYLE        = 5;
-   public static final int ATTR_TOKEN_DEFAULTFORTYPES  = 6;
-   public static final int ATTR_TOKEN_DIRECTION        = 7;
-   public static final int ATTR_TOKEN_ELEMENTTYPE      = 8;
-   public static final int ATTR_TOKEN_FORMAT           = 9;
-   public static final int ATTR_TOKEN_GENERATE         = 10;
-   public static final int ATTR_TOKEN_KEYGENERATOR     = 11;
-   public static final int ATTR_TOKEN_KEYINBASETABLE   = 12;
-   public static final int ATTR_TOKEN_KEYINPARENTTABLE = 13;
-   public static final int ATTR_TOKEN_LANGUAGE         = 14;
-   public static final int ATTR_TOKEN_LENGTH           = 15;
-   public static final int ATTR_TOKEN_TOKENLIST        = 16;
-   public static final int ATTR_TOKEN_NAME             = 17;
-   public static final int ATTR_TOKEN_NULLABLE         = 18;
-   public static final int ATTR_TOKEN_PATTERN          = 19;
-   public static final int ATTR_TOKEN_PRECISION        = 20;
-   public static final int ATTR_TOKEN_PREFIX           = 21;
-   public static final int ATTR_TOKEN_SCALE            = 22;
-   public static final int ATTR_TOKEN_SCHEMA           = 23;
-   public static final int ATTR_TOKEN_TIMESTYLE        = 24;
-   public static final int ATTR_TOKEN_URI              = 25;
-   public static final int ATTR_TOKEN_USEBASETABLE     = 26;
-   public static final int ATTR_TOKEN_VALUE            = 27;
-   public static final int ATTR_TOKEN_VERSION          = 28;
+   public static final int ATTR_TOKEN_CONTAINSXML      = 2;
+   public static final int ATTR_TOKEN_COUNTRY          = 3;
+   public static final int ATTR_TOKEN_DATABASE         = 4;
+   public static final int ATTR_TOKEN_DATATYPE         = 5;
+   public static final int ATTR_TOKEN_DATESTYLE        = 6;
+   public static final int ATTR_TOKEN_DEFAULTFORTYPES  = 7;
+   public static final int ATTR_TOKEN_DIRECTION        = 8;
+   public static final int ATTR_TOKEN_ELEMENTTYPE      = 9;
+   public static final int ATTR_TOKEN_FORMAT           = 10;
+   public static final int ATTR_TOKEN_GENERATE         = 11;
+   public static final int ATTR_TOKEN_KEYGENERATOR     = 12;
+   public static final int ATTR_TOKEN_KEYINBASETABLE   = 13;
+   public static final int ATTR_TOKEN_KEYINPARENTTABLE = 14;
+   public static final int ATTR_TOKEN_LANGUAGE         = 15;
+   public static final int ATTR_TOKEN_LENGTH           = 16;
+   public static final int ATTR_TOKEN_TOKENLIST        = 17;
+   public static final int ATTR_TOKEN_NAME             = 18;
+   public static final int ATTR_TOKEN_NULLABLE         = 19;
+   public static final int ATTR_TOKEN_PATTERN          = 20;
+   public static final int ATTR_TOKEN_PRECISION        = 21;
+   public static final int ATTR_TOKEN_PREFIX           = 22;
+   public static final int ATTR_TOKEN_SCALE            = 23;
+   public static final int ATTR_TOKEN_SCHEMA           = 24;
+   public static final int ATTR_TOKEN_TIMESTYLE        = 25;
+   public static final int ATTR_TOKEN_URI              = 26;
+   public static final int ATTR_TOKEN_USEBASETABLE     = 27;
+   public static final int ATTR_TOKEN_VALUE            = 28;
+   public static final int ATTR_TOKEN_VERSION          = 29;
 
    public static final int[] ATTR_TOKENS = {
                                             ATTR_TOKEN_CATALOG,
                                             ATTR_TOKEN_CLASS,
+                                            ATTR_TOKEN_CONTAINSXML,
                                             ATTR_TOKEN_COUNTRY,
                                             ATTR_TOKEN_DATABASE,
                                             ATTR_TOKEN_DATATYPE,
@@ -435,11 +439,12 @@ public class XMLDBMSConst
 
    // Attribute defaults
 
-   public static String DEF_TOKENLIST        = ENUM_NO;
-   public static String DEF_GENERATE         = ENUM_NO;
+   public static String DEF_CONTAINSXML      = ENUM_NO;
    public static String DEF_DATABASENAME     = "Default";
-   public static String DEF_VERSION          = "2.0";
    public static String DEF_DIRECTION        = ENUM_ASCENDING;
+   public static String DEF_GENERATE         = ENUM_NO;
+   public static String DEF_TOKENLIST        = ENUM_NO;
+   public static String DEF_VERSION          = "2.0";
 
    // Special attribute values
 

@@ -944,15 +944,22 @@ public class MapSerializer extends XMLWriter
    private void writePropertyMap(PropertyMap propMap)
       throws IOException, MapException
    {
+      int count = 0;
+
       // If the property map is null, just return.
 
       if (propMap == null) return;
 
       // Start the <PropertyMap> element.
 
-      attrs[0] = XMLDBMSConst.ATTR_TOKENLIST;
-      values[0] = propMap.isTokenList() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
-      writeElementStart(XMLDBMSConst.ELEM_PROPERTYMAP, 1, false);
+      attrs[count] = XMLDBMSConst.ATTR_TOKENLIST;
+      values[count++] = propMap.isTokenList() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
+      if (propMap.getType() == PropertyMap.ELEMENTTYPE)
+      {
+         attrs[count] = XMLDBMSConst.ATTR_CONTAINSXML;
+         values[count++] = propMap.containsXML() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
+      }
+      writeElementStart(XMLDBMSConst.ELEM_PROPERTYMAP, count, false);
 
       // Write the <Attribute>, <PCDATA>, or <ElementType> element.
 

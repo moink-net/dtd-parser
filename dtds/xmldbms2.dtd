@@ -919,11 +919,35 @@ they can be a series of tokens. -->
      of a column in which to store the order values for token list properties. It
      is legal only if the TokenList property is "Yes". -->
 
+<!-- The ContainsXML attribute states whether the contents of an
+     element are to be treated as XML. This has two main effects:
+
+     1) When the contents of the element are stored in the database,
+        if ContainsXML is set to "Yes", then the content is serialized
+        as XML and markup characters used in text (<, >, &, etc.) are
+        replaced by entity references. If ContainsXML is set to "No",
+        then such characters are not replaced by entity references.
+
+     2) When the value of a column is retrieved from the database, if
+        ContainsXML is set to "Yes", then the value is parsed as XML
+        and a document fragment is created from it. If ContainsXML is
+        set to "No", then the value is not parsed and any markup
+        characters are treated as literals. In other words, the value
+        is treated as if it were in a CDATA section.
+
+     ContainsXML should be set to "No" except when you want to store
+     a document fragment, such as an XHTML description, in a column.
+     The reason for this is that the data in the database will be more
+     easily searchable (it won't contain any entity references) and
+     the retrieval speed will be faster (the column value is not parsed).
+-->
+
 <!ELEMENT %p;PropertyMap ((%p;ElementType | %p;Attribute | %p;PCDATA),
                           %p;ToPropertyTable?, %p;ToColumn,
                           (%p;OrderColumn | %p;FixedOrder)?, TLOrderColumn?)>
 <!ATTLIST %p;PropertyMap
-          TokenList (Yes | No) "No">
+          TokenList (Yes | No) "No"
+          ContainsXML (Yes | No) "No">
 
 <!--
      Unlike in version 1.0, two different properties from two

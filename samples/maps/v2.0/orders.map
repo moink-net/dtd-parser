@@ -96,7 +96,7 @@
             <ElementType Name="Price"/>
             <ToColumn Name="Price"/>
          </PropertyMap>
-         <PropertyMap>
+         <PropertyMap ContainsXML="Yes">
             <ElementType Name="Description"/>
             <ToColumn Name="Description"/>
          </PropertyMap>
