@@ -155,7 +155,7 @@ following throws an exception if B is inlined:
 
 This is necessary for reconstructing the inlined element. -->
 
-<!-- MULTIVALUED PROPERTIES. Elements and PCDATA can now be multi-valued. That is,
+<!-- TOKEN-LIST-VALUED PROPERTIES. Elements and PCDATA can now be token list-valued. That is,
 they can be a series of tokens. -->
 
 <!-- ************************************************************* -->
@@ -882,7 +882,7 @@ they can be a series of tokens. -->
 
 <!-- ****************** Property maps ************************* -->
 
-<!-- The MultiValued attribute states whether the element type, attribute
+<!-- The TokenList attribute states whether the element type, attribute
      or PCDATA contains a number of whitespace-separated values. For example:
 
         <a b="1 2 3" />
@@ -907,23 +907,23 @@ they can be a series of tokens. -->
         </a>
 
      If you want to maintain the child elements, then map them with ClassMap and
-     map their PCDATA as a multi-valued property.
+     map their PCDATA as a token-list-valued property.
 
-     Note also that when MultiValued is Yes, the order information applies to the
+     Note also that when TokenList is Yes, the order information applies to the
      values in the property, not the order of the property itself.
 -->
 
 <!-- OrderColumn and FixedOrder apply to the order of an element or PCDATA in its
      parent element. They do not apply to attributes and it is an error to include
-     them for attributes. MVOrderColumn (multi-valued order column) gives the name
-     of a column in which to store the order values for multi-valued properties. It
-     is legal only if the MultiValued property is "Yes". -->
+     them for attributes. TLOrderColumn (token list order column) gives the name
+     of a column in which to store the order values for token list properties. It
+     is legal only if the TokenList property is "Yes". -->
 
 <!ELEMENT %p;PropertyMap ((%p;ElementType | %p;Attribute | %p;PCDATA),
                           %p;ToPropertyTable?, %p;ToColumn,
-                          (%p;OrderColumn | %p;FixedOrder)?, MVOrderColumn?)>
+                          (%p;OrderColumn | %p;FixedOrder)?, TLOrderColumn?)>
 <!ATTLIST %p;PropertyMap
-          MultiValued (Yes | No) "No">
+          TokenList (Yes | No) "No">
 
 <!--
      Unlike in version 1.0, two different properties from two
@@ -979,8 +979,8 @@ they can be a series of tokens. -->
 <!ATTLIST %p;OrderColumn
           %OrderColumnAttrs;>
 
-<!ELEMENT %p;MVOrderColumn EMPTY>
-<!ATTLIST %p;MVOrderColumn
+<!ELEMENT %p;TLOrderColumn EMPTY>
+<!ATTLIST %p;TLOrderColumn
           %OrderColumnAttrs;>
 
 <!ELEMENT %p;FixedOrder EMPTY>
