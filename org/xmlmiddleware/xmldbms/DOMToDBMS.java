@@ -980,7 +980,7 @@ public class DOMToDBMS
         Key priKey = table.getPrimaryKey();
         if(priKey != null)
         {
-            if(priKey.getKeyGeneration() == Key.XMLDBMS)
+            if(priKey.getKeyGeneration() == Key.KEYGENERATOR)
                 generateKey(row, priKey);
         }
 
@@ -992,7 +992,7 @@ public class DOMToDBMS
         while (e.hasMoreElements())
         {
             Key uniqueKey = (Key)e.nextElement();
-            if (uniqueKey.getKeyGeneration() == Key.XMLDBMS)
+            if (uniqueKey.getKeyGeneration() == Key.KEYGENERATOR)
                 generateKey(row, uniqueKey);
         }
 */

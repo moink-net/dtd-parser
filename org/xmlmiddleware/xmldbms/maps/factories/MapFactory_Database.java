@@ -160,7 +160,7 @@ import java.util.*;
  *
  * <p>A word of final warning. No matter what options you choose, you should expect to
  * modify your map by hand after it is generated. It is very easy to find examples of
- * useful maps that cannot be generated from these criteria, and enhancing them is not a
+ * useful maps that cannot be generated from these criteria, and adding new criteria is not a
  * high priority. In such cases, the best thing to do is to generate a map with too many
  * tables, then remove and rearrange ClassMap and RelatedClass elements to get the map
  * you want.</p>
