@@ -312,14 +312,14 @@ public class ClassMap extends ClassMapBase
     *
     * <p>If the attribute has already been mapped, returns the existing PropertyMap.</p>
     *
-    * @param xmlName XMLName of the attribute.
+    * @param attributeName XMLName of the attribute.
     *
     * @return The PropertyMap for the attribute.
     */
-   public PropertyMap createAttributeMap(XMLName xmlName)
+   public PropertyMap createAttributeMap(XMLName attributeName)
    {
       checkState();
-      return super.createAttributeMap(xmlName);
+      return super.createAttributeMap(attributeName);
    }
 
    /**
@@ -353,15 +353,15 @@ public class ClassMap extends ClassMapBase
    /**
     * Remove the PropertyMap for an attribute.
     *
-    * @param xmlName XMLName of the attribute.
+    * @param attributeName XMLName of the attribute.
     *
     * @exception XMLMiddlewareException Thrown if the attribute has not been mapped.
     */
-   public void removeAttributeMap(XMLName xmlName)
+   public void removeAttributeMap(XMLName attributeName)
       throws XMLMiddlewareException
    {
       checkState();
-      super.removeAttributeMap(xmlName);
+      super.removeAttributeMap(attributeName);
    }
 
    /**
@@ -601,15 +601,15 @@ public class ClassMap extends ClassMapBase
    /**
     * Remove the map for a child element type.
     *
-    * @param xmlName XML name of the child element type.
+    * @param elementTypeName XML name of the child element type.
     *
     * @exception XMLMiddlewareException Thrown if the child element type has not been mapped.
     */
-   public void removeChildMap(XMLName xmlName)
+   public void removeChildMap(XMLName elementTypeName)
       throws XMLMiddlewareException
    {
       checkState();
-      super.removeChildMap(xmlName);
+      super.removeChildMap(elementTypeName);
    }
 
    /**
