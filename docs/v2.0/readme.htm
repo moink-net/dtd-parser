@@ -1,0 +1,412 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+   <title>XML-DBMS, Version 2.0</title>
+</head>
+<body>
+
+<center>
+<h1>XML-DBMS, Version 2.0, Alpha 2</h1>
+<h2>Java Middleware for Transferring Data between<br />XML Documents and Relational Databases</h2>
+</center>
+
+<h2>Contents</h2>
+
+<p>
+<a href="#Intro">1.0 Introduction</a><br />
+<a href="#GettingStarted">2.0 Getting Started</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Requirements">2.1 System Requirements</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Install">2.2 Downloading and Installing XML-DBMS</a><br />
+<a href="#Apps">3.0 Using Version 2.0</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Configure">3.1 Configuring XML-DBMS</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Transfer">3.2 Using the Transfer Tool</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#OwnApp">3.3 Writing Your Own Application</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Interfaces">3.4 Interfaces</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Bugs">3.5 Known Bugs</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Missing">3.6 Missing Components</a><br />
+<a href="#LandS">4.0 Licensing and Support</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#License">4.1 Licensing</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Support">4.2 Support</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Help">4.3 How can I help?</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Contributors">4.4 Contributors</a><br />
+</p>
+
+<h2><a name="Intro">1.0 Introduction</a></h2>
+
+<p>XML-DBMS is a set of Java packages for transferring data between XML documents and relational databases. This is the documentation for XML-DBMS version 2.0, alpha release 2. If you are not familiar with XML-DBMS, see the <a href="http://www.rpbourret.com/xmldbms/readme.htm">version 1.01 readme file</a>. Although a number of things have changed in version 2.0, this will get you started until more complete documentation is available for version 2.0.</p>
+
+<p>Version 2.0 adds a number of new features, including:</p>
+
+<ul>
+<li>Updates and deletes, including insert-or-update semantics</li>
+<li>A filter language for use when retrieving results</li>
+<li>Heterogeneous joins</li>
+<li>Database-generated keys and per-table key generation</li>
+<li>Connection and statement pooling</li>
+<li>Generation of maps from database schema</li>
+<li>Specifying the order of generated elements</li>
+<li>Abstract types, such as are found in XML Schemas</li>
+<li>Per-property formatting, as well as number formatting and custom formatting</li>
+<li>A command line tool for transferring data</li>
+</ul>
+
+<h2><a name="GettingStarted">2.0 Getting Started</a></h2>
+
+<h3><a name="Requirements">2.1 System Requirements</a></h3>
+
+<p>To run XML-DBMS, you need the following software:</p>
+
+<ul>
+<li>
+<b>XML-DBMS</b>
+<br /><br />
+Download: <a href="http://www.rpbourret.com/xmldbms/index.htm">http://www.rpbourret.com/xmldbms/index.htm</a>
+<br /><br />
+</li>
+
+<li>
+<b>JDK (Java Development Kit) 1.1.x or later</b>
+<br /><br />
+Download: <a href="http://java.sun.com/products/jdk/1.1/index.html">http://java.sun.com/products/jdk/1.1/index.html</a>
+<br /><br />
+</li>
+
+<li>
+<b>A relational database such as Oracle, DB2, Informix, MS Access, or MySQL</b>
+<br /><br />
+You will need to buy this or find a free relational database on the Web. If you are thinking about using XML-DBMS, you probably already have a relational database.
+<br /><br />
+</li>
+
+<li>
+<b>A JDBC driver for your database</b>
+<br /><br />
+Most relational databases are shipped with JDBC and ODBC drivers. If you have an ODBC driver but not a JDBC driver, you can use an JDBC-ODBC bridge as your JDBC driver. This converts JDBC calls to ODBC calls. An experimental (and therefore somewhat buggy) JDBC-ODBC bridge is shipped with the JDK; JDBC-ODBC bridges are available from other companies as well. Note that the quality of JDBC drivers varies considerably, so if one JDBC driver does not work, you can try another. For a list of available JDBC drivers, see:
+<br /><br />
+<a href="http://industry.java.sun.com/products/jdbc/drivers">http://industry.java.sun.com/products/jdbc/drivers</a>
+<br /><br />
+</li>
+
+<li>
+<b>JDBC 2.0 Optional Package Binary</b>
+<br /><br />
+This is named jdbc2_0-stdext.jar and contains the javax.sql classes. If you are using JDK 1.2 or 1.3, you might already have this. Check your directories to be sure. If you are using JDK 1.1.x, you will always need to download this. To download, go to the JDBC 2.0 Optional Package section of the following site and click the "continue" button for JDBC 2.0 Optional Package Binary.<br /><br />
+Download: <a href="http://java.sun.com/products/jdbc/download.html">http://java.sun.com/products/jdbc/download.html</a>
+<br /><br />
+</li>
+
+<li>
+<b>JNDI Package Binary</b>
+<br /><br />
+This is named jndi.jar and contains the javax.naming classes. If you are using JDK 1.2 or 1.3, you should already have this. Check your directories to be sure. If you are using JDK 1.1.x, you need to download this <b>only if you want to rebuild the XML-DBMS jar</b>. To download, go to the JNDI 1.2.1 section of the following site and click the "continue" button, then accept the license agreement, and then download the jndi-1_2_1.zip file.
+<br /><br />
+Download: <a href="http://java.sun.com/products/jndi/">http://java.sun.com/products/jndi/</a>
+<br /><br />
+</li>
+
+<li>
+<b>A DataSource that implements connection and statement pooling</b>
+<br /><br />
+XML-DBMS ships four different DataSources that implement connection and statement pooling.  However, these are simple implementations and you might get better performance and/or more options from other products. If your JDBC driver includes a DataSource that implements both connection and statement pooling, you can use that. You can also use a third-party DataSource, such as that from PoolMan. (PoolMan is Open Source.)
+<br /><br />
+Download: <a href="http://www.codestudio.com/PoolMan/">http://www.codestudio.com/PoolMan/</a>
+<br /><br />
+</li>
+
+<li>
+<b>An XML parser written in Java that supports SAX 2 and DOM Level 2 Core</b>
+<br /><br />
+Both commercial and Open Source XML parsers are available. For a partial list of available parsers, see:
+<br /><br />
+<a href="http://www.xmlsoftware.com/parsers/">http://www.xmlsoftware.com/parsers/</a><br />
+<a href="http://www.garshol.priv.no/download/xmltools/cat_ix.html#SC_XML">http://www.garshol.priv.no/download/xmltools/cat_ix.html#SC_XML</a>
+<br /><br />
+</li>
+
+</ul>
+
+<h3><a name="Install">2.2 Downloading and Installing XML-DBMS</a></h3>
+
+<p>To download XML-DBMS version 2.0, see:</p>
+
+<ul>
+<li><a href="http://www.rpbourret.com/xmldbms/index.htm">http://www.rpbourret.com/xmldbms/index.htm</a></li>
+</ul>
+
+<p>To install XML-DBMS version 2.0 from a .zip file:</p>
+
+<ol>
+<li><p>Unzip the downloaded file with a tool such as jar or WinZip.</p></li>
+
+<li><p>Add xmldbms20.jar to your CLASSPATH. For example:
+<br /><br />
+<pre>
+   c:\java\xmldbms20\xmldbms20.jar;c:\java\jdk1.2.1\bin;c:\java\xerces-1_4_4\xerces.jar;.\
+</pre>
+</p></li>
+</ol>
+
+<p>To install XML-DBMS version 2.0 from CVS:</p>
+
+<ol>
+<li><p>Follow the instructions on:
+<br /><br />
+<a href="http://sourceforge.net/cvs/?group_id=13613">http://sourceforge.net/cvs/?group_id=13613</a>
+<br /><br />
+Version 2.0 code is in the org module, DTDs are in the dtds module, and sample applications, maps, etc. are in the samples module.</p></li>
+
+<li><p>Add your CVS directory to your CLASSPATH. For example:
+<br /><br />
+<pre>
+   [<i>CVS directory</i>];c:\java\jdk1.2.1\bin;c:\java\xerces-1_4_4\xerces.jar;.\
+</pre>
+</p></li>
+
+<li><p>Compile the .java files.</p></li>
+</ol>
+
+<h2><a name="Apps">3.0 Using Version 2.0</a></h2>
+
+<p>You can use XML-DBMS in one of two ways:</p>
+
+<ul>
+<li>Through the Transfer tool</li>
+<li>Through your own application</li>
+</ul>
+
+<p>If you write your own application, please note that <b>version 2.0 is NOT backwards-compatible with version 1.x</b>.</p>
+
+<h3><a name="Configure">3.1 Configuring XML-DBMS</a></h3>
+
+<p>Regardless of how you use XML-DBMS, you will need to configure it to use your database, XML documents, XML parser, etc. This consists of the following steps:</p>
+
+<ol>
+
+<li><p>Write a 2.0 map file. For more information, see <a href="dtds/xmldbms2.dtd">xmldbms2.dtd</a>.</p></li>
+
+<li><p>If you will use the Transfer tool to transfer data from XML to the database or to delete data, write one or more action documents. You also need action documents if you are calling DOMToDBMS or DBMSDelete directly and want to perform more than a single action on the data in your document -- for example, you want to mix inserts and insert-or-updates. For more information, see <a href="dtds/actions.dtd">actions.dtd</a>.</p></li>
+
+<li><p>If you will transfer data from the database to XML or delete data, write one or more filter documents. For more information, see <a href="dtds/filters.dtd">filters.dtd</a>.</p></li>
+
+<li><p>Write/compile implementations of interfaces as needed. For more information, see <a href="#Interfaces">Interfaces</a>.</p></li>
+</ol>
+
+<h3><a name="Transfer">3.2 Using the Transfer Tool</a></h3>
+
+<p>The Transfer tool in the org.xmlmiddleware.xmldbms.tools package provides a simple command line interface to XML-DBMS, as well as a simple, high-level API. It is designed so all configuration information (which parser and JDBC driver to use, database URL, etc.) can be stored in properties files.</p>
+
+<p>The command line interface is the easiest way to use Transfer. With this, you pass information to Transfer as a series of property/value pairs. For example, to store the contents of the orders.xml document in the database according to the orders.map map file and orders.act action file, using the parser properties in xerces.props and the database properties in db.props, you would use the following command line:</p>
+
+<pre>
+   java org.xmlmiddleware.xmldbms.tools.Transfer File1=xerces.props File2=db.props
+          Method=StoreDocument MapFile=orders.map XMLFile=orders.xml ActionFile=orders.act
+</pre>
+
+<p>For complete details about Transfer's command line syntax, see the JavaDocs for <a href="docs/org.xmlmiddleware.xmldbms.tools.Transfer.html">Transfer</a>. You can find sample property files in the samples directory.</p>
+
+<p>You can also use Transfer programmatically. It provides a very simple API for XML-DBMS that consists of the following methods:</p>
+
+<ul>
+<li>setDatabaseProperties</li>
+<li>storeDocument (variations for passing XML as a file, a string, and an InputStream)</li>
+<li>retrieveDocument (variations for retrieving XML as a file or a string, by filter or by result set)</li>
+<li>deleteDocument</li>
+</ul>
+
+<p>Transfer is optimized to reuse things like database connections and compiled map objects on subsequent calls, so it is a reasonably efficient way to use XML-DBMS with little effort. Again, for complete details, see the the JavaDocs for <a href="docs/org.xmlmiddleware.xmldbms.tools.Transfer.html">Transfer</a>.</p>
+
+<h3><a name="OwnApp">3.3 Writing Your Own Application</a></h3>
+
+<p>For the most control over XML-DBMS, you can write your own application. Here are the basic steps:</p>
+
+<ol>
+
+<li><p>Write code to set up your databases:</p>
+<ol>
+<li>Call MapCompiler.compile to compile your map.</li>
+<li>Instantiate a DataSource for each database you will use.</li>
+<li>Call MetadataInitializer if you did not include database metadata in your map file.</li>
+<li>Instantiate a DataHandler for each database you will use.</li>
+<li>Build a TransferInfo object from your Map and each of your DataHandlers.</li>
+</ol>
+<p></p>
+</li>
+
+<li><p>Write code to transfer data from an XML document to the database (if needed):</p>
+<ol>
+<li>Call ActionCompiler.compile to compiler your action documents (if used).</li>
+<li>Instantiate DOMToDBMS and set any key generators and the commit mode.</li>
+<li>Open your document using ParserUtils.openDocument().</li>
+<li>Call DOMToDBMS.processDocument and pass the TransferInfo, DOM tree, and
+Actions object (or just specify a single action).</li>
+</ol>
+<p></p>
+</li>
+
+<li></p>Write code to transfer data from the database to an XML document (if needed):</p>
+<ol>
+<li>Call FilterCompiler.compile to compiler your filter documents.</li>
+<li>Build a Hashtable with containing the parameters used in your filter (if any).</li>
+<li>Instantiate DBMSToDOM.</li>
+<li>Call DOMToDBMS.retrieveDocument.</li>
+</ol>
+<p></p>
+</li>
+
+<li></p>Write code to delete data from the database (if needed):</p>
+<ol>
+<li>Call ActionCompiler.compile to compiler your action documents (if used).</li>
+<li>Call FilterCompiler.compile to compiler your filter documents.</li>
+<li>Build a Hashtable with containing the parameters used in your filter (if any).</li>
+<li>Instantiate DBMSDelete.</li>
+<li>Call DBMSDelete.deleteDocument.</li>
+</ol>
+</li>
+</ol>
+
+<p>For examples of code that does this, see the following methods in the Transfer tool:</p>
+
+<ul>
+<li>storeDocumentInternal</li>
+<li>retrieveDocumentInternal (two variations -- one uses filters and the other uses result sets)</li>
+<li>deleteDocument</li>
+</ul>
+
+<p>Note that the code in Transfer is probably more complex than most of your code will be. This is because Transfer needs to retrieve information from properties and check that it has gotten the correct information.</p>
+
+<h3><a name="Interfaces">3.4 Interfaces</a></h3>
+
+<p>XML-DBMS abstracts a number of types of functionality through interfaces. Depending on your environment, you may need to write and/or compile implementations for these interfaces and add these to your CLASSPATH or the xmldbms20.jar file. The following interfaces are used:</p>
+
+<ul>
+
+<li><p><b>javax.sql.DataSource.</b> Provides JDBC Connections. Normally, you will use a DataSource shipped with your JDBC driver, a third-party DataSource, or one of the DataSources shipped with XML-DBMS.</p></li>
+
+<li><p><b>org.xmlmiddleware.conversions.StringFormatter.</b> Used for string formatting. You need to implement this only if the capabilities of the string formatters shipped with XML-DBMS are insufficient. XML-DBMS has built-in date and number formatters.</p></li>
+
+<li><p><b>org.xmlmiddleware.domutils.ParserUtils.</b> Abstracts parser functionality. You will need to implement this for any parser except Xerces.</p></li>
+
+<li><p><b>org.xmlmiddleware.xmldbms.DataHandler.</b> Executes SQL statements. In most cases, you can use GenericHandler or one of the database-specific implementations shipped with XML-DBMS.</p></li>
+
+<li><p><b>org.xmlmiddleware.xmldbms.KeyGenerator.</b> Generates keys. If you want to generate keys yourself, you must implement this. If you want to use the high-low scheme from XML-DBMS v1.01, start with the v1.1 version of this.</p></li>
+
+</ul>
+
+<p>The following table shows what implementations are included in XML-DBMS version 2.0 alpha 2, and whether compiled versions of these are in xmldbms20.jar.</p>
+
+<table border="1">
+  <tr>
+   <th align="left" width="250">Interface</th>
+   <th align="left" width="350">Implementations</th>
+   <th align="left" width="100">.class in jar?</th>
+  </tr>
+  <tr>
+   <td>javax.sql.DataSource</td>
+   <td>org.xmlmiddleware.db.ArrayDataSource<br />
+org.xmlmiddleware.db.JDBC1DataSource<br />
+org.xmlmiddleware.db.JDBC2DataSource<br />
+org.xmlmiddleware.db.StatementPoolDataSource</td>
+   <td>Yes<br />Yes<br />Yes<br />Yes</td>
+  </tr>
+  <tr>
+   <td>org.xmlmiddleware.conversions.StringFormatter</td>
+   <td>org.xmlmiddleware.conversions.helpers.Base64Formatter<br />
+org.xmlmiddleware.conversions.helpers.BooleanFormatter<br />
+org.xmlmiddleware.conversions.helpers.CharFormatter<br />
+org.xmlmiddleware.conversions.helpers.DateFormatter<br />
+org.xmlmiddleware.conversions.helpers.NumberFormatter</td>
+   <td>Yes<br />Yes<br />Yes<br />Yes<br />Yes</td>
+  </tr>
+  <tr>
+   <td>org.xmlmiddleware.domutils.ParserUtils</td>
+   <td>org.xmlmiddleware.domutils.helpers.ParserUtilsXerces</td>
+   <td>Yes</td>
+  </tr>
+  <tr>
+   <td>org.xmlmiddleware.xmldbms.DataHandler</td>
+   <td>org.xmlmiddleware.xmldbms.helpers.GenericHandler<br />
+org.xmlmiddleware.xmldbms.helpers.MySQLHandler<br />
+org.xmlmiddleware.xmldbms.helpers.PostgresHandler<br />
+org.xmlmiddleware.xmldbms.helpers.PostgresJDBXHandler</td>
+   <td>Yes<br />No<br />No<br />No</td>
+  </tr>
+  <tr>
+   <td>org.xmlmiddleware.xmldbms.KeyGenerator</td>
+   <td>-- (KeyGeneratorHighLow to be added later)</td>
+   <td>--</td>
+  </tr>
+</table>
+
+<h3><a name="Bugs">3.5 Known Bugs</a></h3>
+
+<p>Here is a list of known bugs in XML-DBMS version 2.0 alpha 2:</p>
+
+<ul>
+
+<li>Ordering at the root level is not yet supported by DBMSToDOM.</li>
+
+<li>The All element in the action language is not supported.</li>
+
+<li>The Extends element in the mapping language is not supported.</li>
+
+<li>Update and update-or-insert capabilities do not support updating order columns. That is, order columns are guaranteed to be correct only when inserting data. This is unlikely to be fixed.</li>
+
+</ul>
+
+<h3><a name="Missing">3.6 Missing Components</a></h3>
+
+<p>The following components have not yet been added to XML-DBMS version 2.0 alpha 2. While most of these (except MapFactory_W3CSchemas and binary data support) will probably be in the final release, no guarantees are made..</p>
+
+<ul>
+<li>ActionSerializer</li>
+<li>MapFactory_DTD</li>
+<li>MapFactory_W3CSchemas</li>
+<li>The ability to generate DTDs and CREATE TABLE statements from map objects</li>
+<li>The GenerateMap tool</li>
+<li>KeyGeneratorHighLow</li>
+<li>Additional implementations of ParserUtils</li>
+<li>Support for binary data using Base64</li>
+</ul>
+
+<h2><a name="LandS">4.0 Licensing and Support</a></h2>
+
+<h3><a name="License">4.1 Licensing</a></h3>
+
+<p>XML-DBMS, along with its source code, is in the public domain. It is freely available for use in both commercial and non-commercial settings. It is not copyrighted and has <b>absolutely no warranty</b>. The following limitations apply:</p>
+
+<blockquote>
+The software is provided "as is", without warranty of any kind,
+express or implied, including but not limited to the warranties
+of merchantability, fitness for a particular purpose, and
+noninfringement. In no event shall the author(s) be liable for any
+claim, damages, or other liability, whether in an action of
+contract, tort, or otherwise, arising from, out of, or in connection
+with the software or the use or other dealings in the software.
+</blockquote>
+
+<h3><a name="Support">4.2 Support</a></h3>
+
+<p>If you have questions about how to use XML-DBMS, the first thing you should do is read the documentation and look at the sample programs. If you want to check for known bugs, you have two options. First, check the <a href="http://sourceforge.net/tracker/?group_id=13613&atid=113613">XML-DBMS bug database</a> on SourceForge. Second, look at the archives of the <a href="http://groups.yahoo.com/group/xml-dbms">XML-DBMS mailing list</a>, which lists many known bugs and frequently asked questions.</p>
+
+<p>If you still have a question, you can send email to the mailing list at <a href="mailto:xml-dbms@yahoogroups.com">xml-dbms@yahoogroups.com</a>. Although you must be a member of the mailing list to post messages, anyone can read the messages in the archives. You can join the mailing list and read the archives at:</p>
+
+<p>&nbsp;&nbsp;&nbsp;<a href="http://groups.yahoo.com/group/xml-dbms">http://groups.yahoo.com/group/xml-dbms</a></p>
+
+<h3><a name="Help">4.3 How can I help?</a></h3>
+
+<p>XML-DBMS is an ongoing Open Source project and depends on users for feedback, bug reports, and new code. The best way to help out is to join the mailing list and actively participate in discussions, find and fix bugs, suggest new features, and submit changes you have made for inclusion in future releases. For the latest news, check the XML-DBMS home page at:</p>
+
+<p>&nbsp;&nbsp;&nbsp;<a href="http://www.rpbourret.com/xmldbms/index.htm">http://www.rpbourret.com/xmldbms/index.htm</a></p>
+
+<p>or the XML-DBMS project page on SourceForge:</p>
+
+<p>&nbsp;&nbsp;&nbsp;<a href="https://sourceforge.net/projects/xmldbms/">https://sourceforge.net/projects/xmldbms/</a></p>
+
+<h3><a name="Contributors">4.4 Contributors</a></h3>
+
+<p>Many people have contributed to XML-DBMS in the form of bug reports and suggested features. The following people have contributed significant amounts of code and design work: Adam Flinton, Nick Semenov, Sean Walter, Tobias Schilgen, and Himanshu Gupta. Thanks to everyone.</p>
+
+</body>
+</html>
+
