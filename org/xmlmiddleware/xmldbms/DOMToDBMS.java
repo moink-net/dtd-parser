@@ -392,7 +392,7 @@ public class DOMToDBMS
 
             // Okay work on all the children. Children to be processed later
             // (due to key constraints) are put in the fkChildren stack.
-	        processChildren(classRow, classMap, classNode, fkChildren, action);
+	        processChildren(classRow, classMap, classNode, fkChildren, action, useProps);
 
 
             // Do the actual row insertion/update
@@ -403,7 +403,7 @@ public class DOMToDBMS
 
             
             // Process children left till later 
-            processFKNodes(classRow, fkChildren, action, useProps);
+            processFKNodes(classRow, fkChildren, action);
 
         }
         catch(SQLException e)
@@ -444,7 +444,7 @@ public class DOMToDBMS
 	    generateOrder(propRow, propMap.getOrderInfo(), orderInParent);
 
         // Set the value
-	    setPropertyColumn(propRow, propMap.getColumn(), propNode, true);
+	    setPropertyColumn(propRow, propMap, propNode, true);
 	  
         int act = action.getAction();
 
@@ -570,21 +570,18 @@ public class DOMToDBMS
      * Processes rows that were left till later because of key constraints on
      * the parent table.
      */
-    private void processFKNodes(Row parentRow, Stack fkNodes, Action action, Vector useProps)
+    private void processFKNodes(Row parentRow, Stack fkNodes, Action action)
         throws SQLException, MapException, KeyException, ConversionException
     {
         // NOTE: Called from processClassRow and processPropRow
 
 	    FKNode fkNode;
 
+        // Note that instead of processing this stack LIFO we do FIFO
+
 	    while(!fkNodes.empty())
 	    {
-		    fkNode = (FKNode)fkNodes.pop();
-
-            // Only process if this property is being used (useProps)
-            if(!useProps.contains(fkNode.map))
-                continue;
-
+		    fkNode = (FKNode)fkNodes.remove(0);
             processRow(parentRow, fkNode.map, fkNode.node, fkNode.orderInParent, action);
         }
     }   
@@ -594,13 +591,13 @@ public class DOMToDBMS
      * Process children of a class.
      */
     private void processChildren(Row parentRow, ClassMap parentMap, Node parentNode, 
-                                 Stack fkChildren, Action action)
+                                 Stack fkChildren, Action action, Vector useProps)
         throws KeyException, SQLException, MapException, ConversionException
     {
         // NOTE: Called from processClassRow and called recursively for 
         // inline/wrapper classmaps
 
-        Node child = LogicalNodeUtils.getFirstChild(parentNode);
+        Node child = DOMNormalizer.getFirstChild(parentNode);
         int childOrder = 1;
 
         while(child != null)
@@ -618,51 +615,82 @@ public class DOMToDBMS
                 childMap = parentMap.getChildMap(child.getNamespaceURI(), child.getLocalName());
                 break;
 
-            case Node.ATTRIBUTE_NODE:
-                childMap = parentMap.getAttributeMap(child.getNamespaceURI(), child.getLocalName());
-                break;
 		    }
 
+            processChild(parentRow, parentMap, childMap, child, childOrder, 
+                         fkChildren, action, useProps);
 
-            // If the child has been mapped, then process it. Otherwise, ignore.
-		    if(childMap != null)
-		    {
-			    if(childMap instanceof InlineClassMap)
-                {
-                    // Store the order of this inline element
-                    generateOrder(parentRow, ((InlineClassMap)childMap).getOrderInfo(), 
-                                  childOrder);
-                    
-                    // For inline just recursively call this function with a 
-                    // new parentNode, so as to process the grand-children just 
-                    // like children
-                    processChildren(parentRow, parentMap, child, fkChildren, action);
-                }
-                else if(childMap instanceof PropertyMap)
-                {
-                    // Properties first go through processProperty.
-                    // If they are rows then they go through to processChild
-                    processProperty(parentRow, (PropertyMap)childMap, child,
-                                    childOrder, fkChildren, action);
-                }
-                else if(childMap instanceof RelatedClassMap)
-                {
-                    // Process the child node
-                    processChild(parentRow, childMap, ((RelatedClassMap)childMap).getLinkInfo(), 
-                                 child, childOrder, fkChildren, action);
-                }
-
-		    }
 
             // TODO: Should this be in the brace above? That is should
             // it only increment for mapped nodes. Currently copying 
             // behavior in v1.0
             childOrder++;
 
-	        child = LogicalNodeUtils.getNextSibling(child);
+	        child = DOMNormalizer.getNextSibling(child);
 	    }
+
+
+        // Attributes get processed separately
+        NamedNodeMap attrs = parentNode.getAttributes();
+        if(attrs != null)
+        {
+            for(int i = 0; i < attrs.getLength(); i++)
+            {
+	            Object childMap = null;
+
+                child = attrs.item(i);
+                childMap = parentMap.getAttributeMap(child.getNamespaceURI(), child.getLocalName());
+
+                processChild(parentRow, parentMap, childMap, child, childOrder, 
+                             fkChildren, action, useProps);
+
+                childOrder++;
+            }
+        }
     }
 
+
+    /** 
+     * This is the other half of processChildren. Called for every node that was mapped.
+     */
+    private void processChild(Row parentRow, ClassMap parentMap, Object childMap, Node childNode,
+                              int childOrder, Stack fkChildren, Action action, Vector useProps)
+        throws KeyException, SQLException, MapException, ConversionException
+    {
+        // NOTE: Called from processChildren
+
+        if(childMap == null)
+        {
+            return;
+        }
+        else if(childMap instanceof InlineClassMap)
+        {
+            // Store the order of this inline element
+            generateOrder(parentRow, ((InlineClassMap)childMap).getOrderInfo(), 
+                          childOrder);
+                    
+            // For inline just recursively call this function with a 
+            // new parentNode, so as to process the grand-children just 
+            // like children
+            processChildren(parentRow, parentMap, childNode, fkChildren, action, useProps);
+        }
+        else if(childMap instanceof PropertyMap)
+        {
+            // Only process if this property is being used (useProps)
+            if(useProps.contains(childMap))
+
+                // Properties first go through processProperty.
+                // If they are rows then they go through to processChild
+                processProperty(parentRow, (PropertyMap)childMap, childNode,
+                                childOrder, fkChildren, action);
+        }
+        else if(childMap instanceof RelatedClassMap)
+        {
+            // Process the child node
+            processChildRow(parentRow, childMap, ((RelatedClassMap)childMap).getLinkInfo(), 
+                            childNode, childOrder, fkChildren, action);
+        }
+    }
 
 
     /**
@@ -686,7 +714,7 @@ public class DOMToDBMS
    			// value in the attribute, not order of the attribute in the
     		// element (attributes are unordered).
 
-            StringTokenizer s = new StringTokenizer(getNodeValue(propNode), " ", false);
+            StringTokenizer s = new StringTokenizer(getNodeValue(propNode, propMap.containsXML()), " ", false);
 
             int tokenOrder = 1;
             Document doc = propNode.getOwnerDocument();
@@ -696,8 +724,11 @@ public class DOMToDBMS
 
             tokenMap.setTable(propMap.getTable(), propMap.getLinkInfo());
             tokenMap.setColumn(propMap.getColumn());
-            tokenMap.setOrderInfo(propMap.getTokenListOrderInfo());
             tokenMap.setIsTokenList(false);
+
+            if(propMap.getType() != PropertyMap.ATTRIBUTE)
+                tokenMap.setOrderInfo(propMap.getTokenListOrderInfo());
+
 
 
 			while(s.hasMoreElements())
@@ -706,21 +737,22 @@ public class DOMToDBMS
 
                 switch(propNode.getNodeType())
                 {
+                // 
                 case Node.ELEMENT_NODE:
                     tokenNode = doc.createElement(DUMMY);
+                    tokenNode.appendChild(doc.createTextNode(s.nextToken()));
+                    break;
+                case Node.TEXT_NODE:
+                    tokenNode = doc.createTextNode(s.nextToken());
                     break;
                 case Node.ATTRIBUTE_NODE:
                     tokenNode = doc.createAttribute(DUMMY);
-                    break;
-                case Node.TEXT_NODE:
-                    tokenNode = doc.createTextNode("");
+                    tokenNode.setNodeValue(s.nextToken());
                     break;
                 };
              
                 if(tokenNode != null)
                 {
-                    tokenNode.setNodeValue(s.nextToken());
-
                     // Now call ourselves with this property (no endless loop possible 
                     // because we clear the tokenList flag above)
                     processProperty(parentRow, tokenMap, tokenNode, tokenOrder, 
@@ -739,14 +771,14 @@ public class DOMToDBMS
             if(propMap.getTable() == null)
             {
                 // And insert the value
-			    setPropertyColumn(parentRow, propMap.getColumn(), propNode, false);
+			    setPropertyColumn(parentRow, propMap, propNode, false);
             }
 
             else 
             {
                 // Otherwise it's a property from another table, so send for other processing
-                processChild(parentRow, propMap, propMap.getLinkInfo(), propNode, 
-                             order, fkNodes, action);
+                processChildRow(parentRow, propMap, propMap.getLinkInfo(), propNode, 
+                                order, fkNodes, action);
 	        }
         }
     }
@@ -755,8 +787,8 @@ public class DOMToDBMS
     /**
      * General function for processing child rows. 
      */
-    private void processChild(Row parentRow, Object map, LinkInfo linkInfo, Node node, 
-                              int orderInParent, Stack fkNodes, Action action)
+    private void processChildRow(Row parentRow, Object map, LinkInfo linkInfo, Node node, 
+                                 int orderInParent, Stack fkNodes, Action action)
         throws KeyException, SQLException, MapException, ConversionException
     {
         // NOTE: This method is called before parentRow has been inserted into the
@@ -905,7 +937,7 @@ public class DOMToDBMS
     /**
      * Get (maybe serialized) value for a node.
      */
-    private String getNodeValue(Node propNode)
+    private String getNodeValue(Node propNode, boolean containsXML)
     {
 	    String s;
 
@@ -914,7 +946,7 @@ public class DOMToDBMS
 		    // If the property is stored in an element, then the property's
 		    // value is the the element's contents, serialized as XML.
 
-		    s = LogicalNodeSerializer.serializeNode(propNode, true);
+		    s = DOMNormalizer.serialize(propNode, true, containsXML);
 	    }
 	    else // if (propNode.getNodeType() == Node.TEXT_NODE, Node.ATTRIBUTE_NODE)
 	    {
@@ -938,12 +970,15 @@ public class DOMToDBMS
     /** 
      * Set the value for column
      */
-    private void setPropertyColumn(Row row, Column column, Node node, boolean force)
+    private void setPropertyColumn(Row row, PropertyMap propMap, Node node, 
+                                   boolean force)
         throws ConversionException
     {
+        Column column = propMap.getColumn();
+
         // Get the value and format.
         StringFormatter formatter = column.getFormatter();
-        Object val = formatter.parse(getNodeValue(node), column.getType());
+        Object val = formatter.parse(getNodeValue(node, propMap.containsXML()), column.getType());
 
         // Only set the row if we already have a value for it. 
         // These initial values (NULL) are set in createRow.
