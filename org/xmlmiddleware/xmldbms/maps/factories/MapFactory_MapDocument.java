@@ -206,12 +206,6 @@ public class MapFactory_MapDocument
    // Constructors
    //**************************************************************************
 
-   /** Construct a new MapFactory_MapDocument. */
-   public MapFactory_MapDocument()
-   {
-      init();
-   }
-
    /**
     * Construct a new MapFactory_MapDocument and set the SAX XMLReader (parser).
     */
@@ -226,26 +220,6 @@ public class MapFactory_MapDocument
    //**************************************************************************
 
    /**
-    * Get the SAX XMLReader (parser).
-    *
-    * @return The SAX XMLReader.
-    */
-   public final XMLReader getXMLReader()
-   {
-      return xmlReader;
-   }
-
-   /**
-    * Set the SAX XMLReader (parser).
-    *
-    * @param parser The SAX XMLReader.
-    */
-   public void setXMLReader(XMLReader xmlReader)
-   {
-      this.xmlReader = xmlReader;
-   }
-
-   /**
     * Create a map from a mapping document.
     *
     * <p>You must set the XMLReader (parser) before calling this method.</p>
@@ -254,7 +228,7 @@ public class MapFactory_MapDocument
     * @exception MapException Thrown if the mapping document contains an error.
     */
    public Map createMap(InputSource src)
-      throws Exception
+      throws MapException
    {
       Exception e;
       MapInverter inverter;
