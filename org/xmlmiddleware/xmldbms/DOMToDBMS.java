@@ -395,8 +395,13 @@ public class DOMToDBMS
 	        processChildren(classRow, classMap, classNode, fkChildren, action, useProps);
 
 
+            // Clean up row before storing
+            finalizeRow(classRow, useProps, action);
+
+
             // Do the actual row insertion/update
 	        storeRow(table, classRow, action.getAction());
+
 
             // Now delete all out-of-table properties
             clearNonTableProps(classRow, useProps, action);
@@ -444,7 +449,7 @@ public class DOMToDBMS
 	    generateOrder(propRow, propMap.getOrderInfo(), orderInParent);
 
         // Set the value
-	    setPropertyColumn(propRow, propMap, propNode, true);
+	    setPropertyColumn(propRow, propMap, propNode);
 	  
         int act = action.getAction();
 
@@ -470,7 +475,7 @@ public class DOMToDBMS
         // NOTE: Called from processClassRow and processPropRow
 
         // KEY NOTE: Keys are generated and copied between rows 
-        // in two places. That's createRow and processChild. Keys are 
+        // in two places. That's createRow and processChildRow. Keys are 
         // generated for any key that has XMLDBMS key generation set. 
         // These can be UNIQUE or PRIMARY keys.
         //
@@ -479,7 +484,7 @@ public class DOMToDBMS
         // - Generates child's unique keys in a relationship
         // - Copies parent's unique keys to child
         // 
-        // processChild:
+        // processChildRow:
         // - Generates parent's unique keys in a relationship
         // - Copies child's unique keys to child
 
@@ -487,18 +492,6 @@ public class DOMToDBMS
 
         // Create the actual row
 	    Row row = new Row();
-
-
-        if(useProps != null)
-        {
-            // Set all in-table property columns to null
-            for(int i = 0; i < useProps.size(); i++)
-            {
-                PropertyMap propMap = (PropertyMap)useProps.elementAt(i);
-                if(propMap.getTable() == null)
-                    row.setColumnValue(propMap.getColumn(), null);
-            }
-        }
 
 
         // Check the primary keys on the table 
@@ -527,7 +520,7 @@ public class DOMToDBMS
                 if(key.getKeyGeneration() == Key.XMLDBMS)
                     generateKey(row, key);
 
-                // Key copied to parent row later (in processChild)
+                // Key copied to parent row later (in processChildRow)
             }
         }
 
@@ -537,13 +530,33 @@ public class DOMToDBMS
 
 
     /**
+     * Called before row in stored. Sets missing fields to null
+     */
+    private void finalizeRow(Row classRow, Vector useProps, Action action)
+        throws ConversionException
+    {
+       // Set to null all in-table property columns that aren't set yet
+       for(int i = 0; i < useProps.size(); i++)
+       {
+            PropertyMap propMap = (PropertyMap)useProps.elementAt(i);
+            if(propMap.getTable() == null)
+            {
+                if(!classRow.haveColumn(propMap.getColumn()))
+                    classRow.setColumnValue(propMap.getColumn(), null);
+            }
+        }
+    }
+
+
+    /**
      * Clears out-of-table properties' rows.
      */
     private void clearNonTableProps(Row classRow, Vector useProps, Action action)
         throws SQLException, MapException, KeyException, ConversionException
     {
-        // Skip this for Action.NONE
-        if(action.getAction() != Action.NONE)
+        // Only clear for UPDATE's
+        if(action.getAction() == Action.UPDATE ||
+           action.getAction() == Action.UPDATEORINSERT)
         {
             for(int i = 0; i < useProps.size(); i++)
             {
@@ -554,12 +567,14 @@ public class DOMToDBMS
                 {
                     // NOTE: We assume here than the parent key in the link is unique. 
                     // This should be correct.
+
+                    LinkInfo li = propMap.getLinkInfo();
     
                     // This should create the row and copy the keys from parent row
-                    Row row = createRow(table, classRow, propMap.getLinkInfo(), null);
+                    Row row = createRow(table, classRow, li, null);
 
                     // Delete it!
-                    storeRow(table, row, Action.SOFTDELETE);
+                    deleteRow(table, row, li.getChildKey(), true);
                 }
             }
         }
@@ -680,7 +695,7 @@ public class DOMToDBMS
             if(useProps.contains(childMap))
 
                 // Properties first go through processProperty.
-                // If they are rows then they go through to processChild
+                // If they are rows then they go through to processChildRow
                 processProperty(parentRow, (PropertyMap)childMap, childNode,
                                 childOrder, fkChildren, action);
         }
@@ -695,7 +710,7 @@ public class DOMToDBMS
 
     /**
      * Adds a property to the class, or if in it's own row sends it for 
-     * processing in processChild.
+     * processing in processChildRow.
      */
     private void processProperty(Row parentRow, PropertyMap propMap, Node propNode, int order, Stack fkNodes, Action action)
         throws KeyException, SQLException, MapException, ConversionException
@@ -771,7 +786,7 @@ public class DOMToDBMS
             if(propMap.getTable() == null)
             {
                 // And insert the value
-			    setPropertyColumn(parentRow, propMap, propNode, false);
+			    setPropertyColumn(parentRow, propMap, propNode);
             }
 
             else 
@@ -793,7 +808,7 @@ public class DOMToDBMS
     {
         // NOTE: This method is called before parentRow has been inserted into the
         // database
-        // Called from processChildren and processProperty
+        // Called from processChild and processProperty
 
 
         if(linkInfo.parentKeyIsUnique())
@@ -835,7 +850,7 @@ public class DOMToDBMS
                            Action action)
         throws SQLException, MapException, KeyException, ConversionException
     {
-        // NOTE: Called from processChild and processFKNodes
+        // NOTE: Called from processChildRow and processFKNodes
 
         if(map instanceof PropertyMap)
         {
@@ -861,11 +876,15 @@ public class DOMToDBMS
      */
     private Vector getUseProps(ClassMap classMap, Action action)
     {
-        if(action.getAction() == Action.UPDATE)
-            return action.getUpdatePropertyMaps(); 
+        Vector useProps = null;
 
-        else
-            return getAllPropertyMaps(classMap);
+        if(action.getAction() == Action.UPDATE)
+            useProps = action.getUpdatePropertyMaps(); 
+
+        if(useProps == null)
+            useProps = getAllPropertyMaps(classMap);
+
+        return useProps;
     }
 
 
@@ -924,10 +943,6 @@ public class DOMToDBMS
         if(action == null)
             throw new MapException("No default action specified.");
 
-        if(action.getAction() == Action.DELETE ||
-           action.getAction() == Action.SOFTDELETE)
-            throw new MapException("DELETE and SOFTDELETE actions cannot be used with DOMToDBMS.");
-
         // TODO: When action: attributes are implemented put code here
 
         return action;
@@ -970,8 +985,7 @@ public class DOMToDBMS
     /** 
      * Set the value for column
      */
-    private void setPropertyColumn(Row row, PropertyMap propMap, Node node, 
-                                   boolean force)
+    private void setPropertyColumn(Row row, PropertyMap propMap, Node node)
         throws ConversionException
     {
         Column column = propMap.getColumn();
@@ -980,11 +994,8 @@ public class DOMToDBMS
         StringFormatter formatter = column.getFormatter();
         Object val = formatter.parse(getNodeValue(node, propMap.containsXML()), column.getType());
 
-        // Only set the row if we already have a value for it. 
-        // These initial values (NULL) are set in createRow.
-        // Passing in true for force will override this check
-        if(force || row.haveColumn(column))
-            row.setColumnValue(column, val);
+        // Set in in the column
+        row.setColumnValue(column, ConvertObject.convertObject(val, column.getType()));
     }
     
 
@@ -992,7 +1003,7 @@ public class DOMToDBMS
      * Copy the child key to parent row.
      */
     private void setParentKey(Row parentRow, Row childRow, LinkInfo l)
-        throws KeyException
+        throws KeyException, ConversionException
     {
         Column[] childCols = l.getChildKey().getColumns();
 
@@ -1010,7 +1021,7 @@ public class DOMToDBMS
      * Copy the parent key to a child row.
      */
     private void setChildKey(Row parentRow, Row childRow, LinkInfo l)
-        throws KeyException
+        throws KeyException, ConversionException
     {
         Column[] parentCols = l.getParentKey().getColumns();
 
@@ -1102,10 +1113,8 @@ public class DOMToDBMS
                 break;
 
             case Action.SOFTDELETE:
-                soft = true;
             case Action.DELETE:
-                dataHandler.delete(table, row);
-                break;
+                throw new MapException("DELETE and SOFTDELETE actions cannot be used with DOMToDBMS.");
 
             default:
                 throw new MapException("Invalid action in storeRow.");
@@ -1121,6 +1130,34 @@ public class DOMToDBMS
             
     }
 
+
+    /**
+     * Delete a row or rows.
+     */
+    private void deleteRow(Table table, Row row, Key key, boolean soft)
+	    throws SQLException, MapException
+    {
+        // Get the database 
+        // TODO: (What about the 'null' or default database?)
+        DataHandler dataHandler = m_transInfo.getDataHandler(table.getDatabaseName());
+
+        if(dataHandler == null)
+            throw new MapException("Database '" + table.getDatabaseName() + "' not set.");
+
+        try
+        {
+            dataHandler.delete(table, row, key);
+        }
+        catch(SQLException e)
+        {
+            if(soft)
+                pushWarning(new SQLWarning(e.getMessage(), e.getSQLState()));
+            else
+                throw e;
+        }
+    }
+
+        
     
     /**
      * Adds an SQLException to the chain (returned from getExceptions)

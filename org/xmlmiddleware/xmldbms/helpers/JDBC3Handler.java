@@ -17,7 +17,7 @@ import org.xmlmiddleware.xmldbms.maps.*;
  * @author Sean Walter
  * @version 2.0
  */
-class JDBC3Handler
+public class JDBC3Handler
     extends DataHandlerBase
 {
     /** 

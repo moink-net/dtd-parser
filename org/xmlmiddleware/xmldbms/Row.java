@@ -4,6 +4,7 @@ package org.xmlmiddleware.xmldbms;
 import java.lang.*;
 import java.util.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.conversions.*;
 
 /**
  * Caches data for a single row. For internal use.
@@ -41,6 +42,7 @@ public class Row
 	 * @param value Value to set (null for a NULL value).
 	 */
     public void setColumnValue(Column column, Object value)
+//        throws ConversionException
     {
         // Hashtable won't accept null objects, so we create
         // a placeholder for NULL
@@ -49,7 +51,8 @@ public class Row
             m_columnValues.put(column, new Null());
         else
 	        m_columnValues.put(column, value);
-    }
+        //  m_columnValues.put(column, ConvertObject.convertObject(value, column.getType()));
+        }
 
     
     /**
@@ -97,6 +100,7 @@ public class Row
 	 * @param values Values to set.
 	 */
     public void setColumnValues(Column[] columns, Object[] values)
+//        throws ConversionException
     {
 	    // Typically, this is used to set a multi-column key value.
         for(int i = 0; i < columns.length; i++)
@@ -159,6 +163,7 @@ public class Row
         return array;
     }
 
+
     /**
 	 * Whether a column has a value (including null).
 	 *
@@ -191,7 +196,6 @@ public class Row
         return true;
     }  
  
-
     // ********************************************************************
     // Variables
     // ********************************************************************

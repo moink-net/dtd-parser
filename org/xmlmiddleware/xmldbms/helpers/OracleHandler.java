@@ -19,7 +19,7 @@ import org.xmlmiddleware.xmldbms.maps.*;
  * @author Need Implementor
  * @version 2.0
  */
-class OracleHandler
+public class OracleHandler
     extends DataHandlerBase
 {
 

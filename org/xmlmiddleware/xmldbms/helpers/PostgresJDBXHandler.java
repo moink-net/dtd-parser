@@ -5,6 +5,7 @@ import java.sql.*;
 import javax.sql.*;
 
 import org.xmlmiddleware.xmldbms.*;
+import org.xmlmiddleware.conversions.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 import org.sourceforge.jxdbcon.postgresql.PGPreparedStatement;
@@ -18,7 +19,7 @@ import org.sourceforge.jxdbcon.postgresql.PGPreparedStatement;
  * @author Sean Walter
  * @version 2.0
  */
-class PostgresJDBXHandler
+public class PostgresJDBXHandler
     extends DataHandlerBase
 {
     protected final static String OIDNAME = "oid";

@@ -46,6 +46,9 @@ abstract class DataHandlerBase
     // The current Commit mode
     private int m_commitMode;
 
+    // Cache of refreshCols by table
+    private Hashtable m_refreshCols;
+
 
     // ************************************************************************
     // Constructor
@@ -70,6 +73,7 @@ abstract class DataHandlerBase
 
         m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
         m_dirtyConnection = false;
+        m_refreshCols = new Hashtable();
     }
 
 
@@ -181,16 +185,19 @@ abstract class DataHandlerBase
      * @param table Table to delete from.
      * @param row Row with key values to delete.
      */
-    public void delete(Table table, Row row)
+    public void delete(Table table, Row row, Key key)
         throws SQLException
     {
-        PreparedStatement stmt = makeDelete(table, row);
+        PreparedStatement stmt = makeDelete(table, row, key);
         int numRows = stmt.executeUpdate();
 
-        if(numRows == 0)
-            throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
-        else if(numRows > 1)
-            throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
+        if(key.getType() == Key.PRIMARY_KEY)
+        {
+            if(numRows == 0)
+                throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
+            else if(numRows > 1)
+                throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
+        }
 
         executedStatement();
     }
@@ -262,7 +269,23 @@ abstract class DataHandlerBase
         // NOTE: The PreparedStatements returned cannot be cached, as the row
         // may have a different amount of valid values each time.
 
-        Column[] cols = row.getColumnsFor(table);
+        Vector colVec = row.getColumnVectorFor(table);
+
+        // If any of the database generated key values are null
+        // remove from the insert list. Certain DBMS have problems
+        // otherwise
+        Column[] refreshCols = getRefreshCols(table);
+        for(int i = 0; i < refreshCols.length; i++)
+        {
+            if(colVec.contains(refreshCols[i]) &&
+               row.getColumnValue(refreshCols[i]) == null)
+            {
+                colVec.remove(refreshCols[i]);
+            }
+        }
+
+        Column[] cols = new Column[colVec.size()];
+        colVec.copyInto(cols);
 
         // Make the INSERT statement
         String sql = m_dml.getInsert(table, cols);
@@ -332,21 +355,23 @@ abstract class DataHandlerBase
         return stmt;
     }
 
+
     /**
      * Makes a DELETE statement.
      */
-    protected PreparedStatement makeDelete(Table table, Row row)
+    protected PreparedStatement makeDelete(Table table, Row row, Key key)
         throws SQLException
     {
-        Key priKey = table.getPrimaryKey();
+        if(key == null)
+            key = table.getPrimaryKey();
 
         // These can be cached so use SQLStrings
-        String sql = m_strings.getDelete(table, priKey);
+        String sql = m_strings.getDelete(table, key);
 
         // Make the DELETE statement
         PreparedStatement stmt = m_connection.prepareStatement(sql);
 
-        Column[] cols = priKey.getColumns();
+        Column[] cols = key.getColumns();
         // Set the parameters
         Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
 
@@ -360,6 +385,9 @@ abstract class DataHandlerBase
      */
     protected Column[] getRefreshCols(Table table)
     {
+        if(m_refreshCols.contains(table))
+            return (Column[])m_refreshCols.get(table);
+
         Vector colVec = new Vector();
 
         // Add the primary key
@@ -386,6 +414,9 @@ abstract class DataHandlerBase
 
         Column[] cols = new Column[colVec.size()];
         colVec.copyInto(cols);
+
+        m_refreshCols.put(table, cols);
+
         return cols;
     }
 
@@ -417,4 +448,4 @@ abstract class DataHandlerBase
         else
             return stmt;
     }
-}
+}   

@@ -5,6 +5,7 @@ import java.sql.*;
 import javax.sql.*;
 
 import org.xmlmiddleware.xmldbms.*;
+import org.xmlmiddleware.conversions.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 /**
@@ -15,7 +16,7 @@ import org.xmlmiddleware.xmldbms.maps.*;
  * @author Sean Walter
  * @version 2.0
  */
-class PostgresHandler
+public class PostgresHandler
     extends DataHandlerBase
 {
     protected final static String OIDNAME = "oid";
@@ -79,7 +80,6 @@ class PostgresHandler
             // Set them in the row
             for(int i = 0; i < refreshCols.length; i++)
                 row.setColumnValue(refreshCols[i], rs.getObject(refreshCols[i].getName()));
-
         }
 
     }

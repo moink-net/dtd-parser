@@ -43,9 +43,9 @@ public class DMLGenerator
    private final static String SET          = " SET ";
    private final static String DELETE      = "DELETE ";
    
-   private final static String PARAM         = "?";
+   private final static String PARAM         = "? ";
    private final static String COMMA         = ", ";
-   private final static String COMMAPARAM   = ", ?";
+   private final static String COMMAPARAM   = ", ? ";
    private final static String CLOSEPAREN   = ")";
    private final static String OPENPAREN      = " (";
    private final static String SPACE         = " ";
@@ -55,7 +55,7 @@ public class DMLGenerator
    private final static String ORDERBY      = " ORDER BY ";
    private final static String DESC         = " DESC";
    private final static String AND         = " AND ";
-   private final static String EQUALSPARAM   = " = ?";
+   private final static String EQUALSPARAM   = " = ? ";
    private final static String PERIOD      = ".";
 
    //**************************************************************************
@@ -214,11 +214,12 @@ public class DMLGenerator
          // Add column names.
          for(int i = 0; i < cols.length; i++)
          {
-            if(first)
+            if(!first)
                update.append(COMMA);
-
+               
             update.append(makeColumnName(cols[i], false));
             update.append(EQUALSPARAM);
+
             first = false;   
          }
       }
@@ -227,11 +228,12 @@ public class DMLGenerator
          // Add column names.
          for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
          {
-            if(first)
+            if(!first)
                update.append(COMMA);
 
             update.append(makeColumnName((Column)e.nextElement(), false));
             update.append(EQUALSPARAM);
+
             first = false;
          }
       }

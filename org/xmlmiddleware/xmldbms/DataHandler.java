@@ -49,7 +49,7 @@ public interface DataHandler
     public void updateOrInsert(Table table, Row row)
         throws SQLException;
 
-    public void delete(Table table, Row row)
+    public void delete(Table table, Row row, Key key)
         throws SQLException;
 
     public ResultSet select(Table table, Object[] key, OrderInfo orderInfo)
