@@ -28,7 +28,7 @@ import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.utils.TokenList;
 import org.xmlmiddleware.utils.XMLName;
 
-import org.xmlmiddleware.xmldbms.XMLFormatter;
+import org.xmlmiddleware.conversions.StringFormatter;
 import org.xmlmiddleware.xmldbms.helpers.NumberFormatter;
 import org.xmlmiddleware.xmldbms.helpers.DateFormatter;
 
@@ -795,10 +795,10 @@ public class MapFactory_MapDocument
    private void processColumn(Attributes attrs)
       throws MapException
    {
-      Column       column;
-      String       columnName, attrValue;
-      int          type, nullability;
-      XMLFormatter formatter;
+      Column          column;
+      String          columnName, attrValue;
+      int             type, nullability;
+      StringFormatter formatter;
 
       // Create the column and add it to the table. This throws an error if
       // the column already exists.
@@ -874,7 +874,7 @@ public class MapFactory_MapDocument
       attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_FORMAT);
       if (attrValue != null)
       {
-         formatter = (XMLFormatter)formats.get(attrValue);
+         formatter = (StringFormatter)formats.get(attrValue);
          if (formatter == null)
             throw new MapException("Column " + columnName + " uses the named format " + attrValue + ". The format was not declared.");
          column.setFormatter(formatter);
@@ -889,8 +889,8 @@ public class MapFactory_MapDocument
    private void processDateFormatEnd()
       throws MapException
    {
-      DateFormat   df;
-      XMLFormatter formatter;
+      DateFormat      df;
+      StringFormatter formatter;
 
       df = (locale == null) ? DateFormat.getDateInstance(dateStyle) :
                               DateFormat.getDateInstance(dateStyle, locale);
@@ -920,8 +920,8 @@ public class MapFactory_MapDocument
    private void processDateTimeFormatEnd()
       throws MapException
    {
-      DateFormat   df;
-      XMLFormatter formatter;
+      DateFormat      df;
+      StringFormatter formatter;
 
       df = (locale == null) ? DateFormat.getDateTimeInstance(dateStyle, timeStyle) :
                               DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale);
@@ -945,8 +945,8 @@ public class MapFactory_MapDocument
    private void processDecimalFormatEnd()
       throws MapException
    {
-      NumberFormat nf;
-      XMLFormatter formatter;
+      NumberFormat    nf;
+      StringFormatter formatter;
 
       if (locale != null)
       {
@@ -1148,8 +1148,8 @@ public class MapFactory_MapDocument
    private void processFormatClass(Attributes attrs)
       throws MapException
    {
-      String       className;
-      XMLFormatter formatter;
+      String          className;
+      StringFormatter formatter;
 
       // Get the common attributes.
 
@@ -1160,7 +1160,7 @@ public class MapFactory_MapDocument
       className = getAttrValue(attrs, XMLDBMSConst.ATTR_CLASS);
       try
       {
-         formatter = (XMLFormatter)Class.forName(className).newInstance();
+         formatter = (StringFormatter)Class.forName(className).newInstance();
       }
       catch (Exception e)
       {
@@ -1237,8 +1237,8 @@ public class MapFactory_MapDocument
    private void processNumberFormatEnd()
       throws MapException
    {
-      NumberFormat nf;
-      XMLFormatter formatter;
+      NumberFormat    nf;
+      StringFormatter formatter;
 
       nf = NumberFormat.getInstance(locale);
       formatter = new NumberFormatter(nf);
@@ -1441,8 +1441,8 @@ public class MapFactory_MapDocument
    private void processSimpleDateFormatEnd()
       throws MapException
    {
-      DateFormat   df;
-      XMLFormatter formatter;
+      DateFormat      df;
+      StringFormatter formatter;
 
       df = (locale == null) ? new SimpleDateFormat(pattern) :
                               new SimpleDateFormat(pattern, locale);
@@ -1479,8 +1479,8 @@ public class MapFactory_MapDocument
    private void processTimeFormatEnd()
       throws MapException
    {
-      DateFormat   df;
-      XMLFormatter formatter;
+      DateFormat      df;
+      StringFormatter formatter;
 
       df = (locale == null) ? DateFormat.getTimeInstance(timeStyle) :
                               DateFormat.getTimeInstance(timeStyle, locale);
@@ -1855,7 +1855,7 @@ public class MapFactory_MapDocument
       return orderInfo;
    }
 
-   private void addNamedFormatter(String formatName, XMLFormatter formatter)
+   private void addNamedFormatter(String formatName, StringFormatter formatter)
       throws MapException
    {
       if (formatName == null) return;
@@ -1864,7 +1864,7 @@ public class MapFactory_MapDocument
       formats.put(formatName, formatter);
    }
 
-   private void addDefaultFormatter(String defaultForTypes, XMLFormatter formatter)
+   private void addDefaultFormatter(String defaultForTypes, StringFormatter formatter)
       throws MapException
    {
       StringTokenizer tokenizer;

@@ -24,9 +24,9 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
+import org.xmlmiddleware.conversions.StringFormatter;
 import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.xmldbms.XMLFormatter;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -401,17 +401,17 @@ public class Map extends MapBase
     * Get the default formatting object for a type.
     *
     * <p>This method returns an object that implements the
-    * org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
+    * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
     * @param The JDBC type. Must be a valid value from the java.sql.Types class.
     *
     * @return The formatting object. May be null.
     */
-   public final XMLFormatter getDefaultFormatter(int type)
+   public final StringFormatter getDefaultFormatter(int type)
    {
       if (!JDBCTypes.typeIsValid(type))
          throw new IllegalArgumentException("Not a valid JDBC type: " + type);
-      return (XMLFormatter)defaultFormatters.get(new Integer(type));
+      return (StringFormatter)defaultFormatters.get(new Integer(type));
    }
 
    /**
@@ -428,14 +428,14 @@ public class Map extends MapBase
     * Add the default formatting object for a type.
     *
     * <p>The format object must be an object that implements the 
-    * org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
+    * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
     * @param type The JDBC type.
     * @param formatter The formatting object. If this is null, the default format
     *    object for the column type is removed.
     * @exception MapException Thrown if a default format has already been set for the type.
     */
-   public void addDefaultFormatter(int type, XMLFormatter formatter)
+   public void addDefaultFormatter(int type, StringFormatter formatter)
       throws MapException
    {
       Integer i;

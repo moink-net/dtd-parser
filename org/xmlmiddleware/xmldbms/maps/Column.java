@@ -26,7 +26,7 @@ import java.sql.Types;
 import java.sql.DatabaseMetaData;
 
 import org.xmlmiddleware.db.JDBCTypes;
-import org.xmlmiddleware.xmldbms.XMLFormatter;
+import org.xmlmiddleware.conversions.StringFormatter;
 
 /**
  * Describes a column; <a href="../readme.html#NotForUse">not for general
@@ -102,15 +102,15 @@ public class Column extends MapBase
 
    private String name = null;
 
-   private int          resultSetIndex = -1;
-   private int          rowIndex = -1;
-   private int          parameterIndex = -1;
-   private int          type = Types.NULL;
-   private int          length = -1;
-   private int          precision = -1;
-   private int          scale = Integer.MIN_VALUE;
-   private int          nullability = DatabaseMetaData.columnNullableUnknown;
-   private XMLFormatter formatter = null;
+   private int             resultSetIndex = -1;
+   private int             rowIndex = -1;
+   private int             parameterIndex = -1;
+   private int             type = Types.NULL;
+   private int             length = -1;
+   private int             precision = -1;
+   private int             scale = Integer.MIN_VALUE;
+   private int             nullability = DatabaseMetaData.columnNullableUnknown;
+   private StringFormatter formatter = null;
 
    // ********************************************************************
    // Constructors
@@ -426,11 +426,11 @@ public class Column extends MapBase
     * Get the column formatting object.
     *
     * <p>This method returns an object that implements the
-    * org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
+    * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
     * @return The formatting object. May be null.
     */
-   public final XMLFormatter getFormatter()
+   public final StringFormatter getFormatter()
    {
       return formatter;
    }
@@ -439,12 +439,12 @@ public class Column extends MapBase
     * Set the column formatting object.
     *
     * <p>The formatting object must implement the
-    * org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
+    * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
     * @param formatter The formatting object. If this is null, the default format
     *    object for the column type will be used.
     */
-   public void setFormatter(XMLFormatter formatter)
+   public void setFormatter(StringFormatter formatter)
    {
       this.formatter = formatter;
    }

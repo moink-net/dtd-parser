@@ -19,15 +19,16 @@
 
 package org.xmlmiddleware.xmldbms.helpers;
 
-import org.xmlmiddleware.xmldbms.XMLFormatter;
-import org.xmlmiddleware.xmldbms.XMLFormatterException;
+import org.xmlmiddleware.conversions.StringFormatter;
+import org.xmlmiddleware.conversions.ConversionException;
 
+import java.sql.Types;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
 /**
- * Wraps a DateFormat in an XMLFormatter interface.
+ * Wraps a DateFormat in an StringFormatter interface.
  *
  * <p>This can also be used to wrap subclasses of DateFormat, such as SimpleDateFormat.</p>
  *
@@ -35,7 +36,7 @@ import java.util.Date;
  * @version 2.0
  */
 
-public class DateFormatter implements XMLFormatter
+public class DateFormatter implements StringFormatter
 {
    // ********************************************************************
    // Class variables
@@ -63,18 +64,58 @@ public class DateFormatter implements XMLFormatter
     * by the underlying DateFormat object.
     *
     * @param The string to parse.
+    * @param A JDBC Types value indicating the type of object to return.
     * @return A Date.
-    * @exception XMLFormatterException Thrown if the string can't be parsed.
+    * @exception ConversionException Thrown if the string can't be parsed.
     */
-   public Object parse(String s) throws XMLFormatterException
+   public Object parse(String s, int jdbcType) throws ConversionException
    {
+      java.util.Date datetime;
+
       try
       {
-         return formatter.parse(s);
+         datetime = formatter.parse(s);
       }
       catch (ParseException p)
       {
-         throw new XMLFormatterException(p);
+         throw new ConversionException(p);
+      }
+
+      switch(jdbcType)
+      {
+         case Types.BINARY:
+         case Types.VARBINARY:
+         case Types.LONGVARBINARY:
+            throw new ConversionException("Conversion to binary types not supported.");
+
+         case Types.CHAR:
+         case Types.VARCHAR:
+         case Types.LONGVARCHAR:
+            throw new ConversionException("Use an implementation of StringFormatter to convert to strings.");
+
+         case Types.DOUBLE:
+         case Types.FLOAT:
+         case Types.REAL:
+         case Types.DECIMAL:
+         case Types.NUMERIC:
+         case Types.BIGINT:
+         case Types.INTEGER:
+         case Types.SMALLINT:
+         case Types.TINYINT:
+         case Types.BIT:
+            throw new ConversionException("Conversion to numeric types not supported.");
+
+         case Types.DATE:
+            return new java.sql.Date(datetime.getTime());
+
+         case Types.TIME:
+            return new java.sql.Time(datetime.getTime());
+
+         case Types.TIMESTAMP:
+            return new java.sql.Timestamp(datetime.getTime());
+
+         default:
+            throw new ConversionException("Conversion to specified JDBC type not supported.");
       }
    }
 
@@ -84,16 +125,19 @@ public class DateFormatter implements XMLFormatter
     *
     * @param The object to serialize. Must be a Date.
     * @return The string
-    * @exception XMLFormatterException Thrown if the object is not a Date.
+    * @exception ConversionException Thrown if the object is not a Date.
     */
-   public String format(Object o) throws XMLFormatterException
+   public String format(Object o) throws ConversionException
    {
-      if (o instanceof Date)
+      // Note that this works because java.sql.Date, Time, and Timestamp
+      // all extend java.util.Date.
+
+      if (o instanceof java.util.Date)
       {
          return formatter.format((Date)o);
       }
       else
-         throw new XMLFormatterException("Object must be a Date.");
+         throw new ConversionException("Object must be a Date.");
    }
 
    /**
