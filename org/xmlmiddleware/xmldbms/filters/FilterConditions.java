@@ -63,6 +63,8 @@ public class FilterConditions
    private static final int I                     = 4;
    private static final int WHITESPACEBEFOREIN    = 5;
 
+   private static String AND = " AND ";
+
    private static Object O = new Object();
 
    //*********************************************************************
@@ -498,6 +500,7 @@ System.out.println("whitespace found: " + i);
       {
          if (parsedConditions[i] != null)
          {
+            if (i != 0) sb.append(AND);
             sb.append(parsedConditions[i]);
             sb.append(' ');
          }
