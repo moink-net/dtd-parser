@@ -8,18 +8,14 @@ import javax.sql.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
 
-// TODO: 2) Implementations of update must check to see that the list of
-// updateColumns does not include any primary key or unique key columns.
-// (State this in the comments.)
-
-abstract class DBActionBase
-    implements DBAction
+abstract class DataHandlerBase
+    implements DataHandler
 {
     protected Connection m_connection;
     protected DMLGenerator m_dml;
     protected int m_commitMode;
 
-    DBActionImpl(DataSource dataSource, String user, String password)
+    DataHandlerBase(DataSource dataSource, String user, String password)
         throws SQLException
     {
         m_connection = dataSource.getConnection(user, password);
@@ -65,10 +61,10 @@ abstract class DBActionBase
         throws SQLException; 
 
 
-    public void update(Table table, Row row)
+    public void update(Table table, Row row, Column[] cols)
         throws SQLException
     {
-        int ret = doUpdate(table, row);
+        int ret = doUpdate(table, row, cols);
 
         if(ret == 0)
             throw new SQLException("[xmldbms] Row to be updated is not present in table.");
@@ -83,7 +79,7 @@ abstract class DBActionBase
     public void updateOrInsert(Table table, Row row)
         throws SQLException
     {
-        int ret = doUpdate(table, row);
+        int ret = doUpdate(table, row, null);
 
         if(ret == 0)
             insert(table, row);
@@ -118,49 +114,59 @@ abstract class DBActionBase
         PreparedStatement stmt = m_connection.prepareStatement(sql);
 
         // Set the parameters
-        setParameters(stmt, 0, row.getColumnValues(cols));
+        Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
 
         return stmt.executeUpdate();
     }
 
-    protected int doUpdate(Table table, Row row, )
+    protected int doUpdate(Table table, Row row, Column[] cols)
         throws SQLException
     { 
-        // TODO: Do we assume that the parameter
-
-        // Get the columns that were set
-        Vector cols = row.getColumnVectorFor(table);
-    
-        // Remove the primary key from columns
         Column[] priCols = table.getPrimaryKey().getColumns();
 
-        for(int i = 0; i < priCols.length; i++)
+        if(cols == null)
         {
-            if(!cols.contains(priCols[i]))
-                throw new SQLException("[xmldbms] Primary key value not supplied for UPDATE.");
+            // Get the columns that were set
+            Vector colVec = row.getColumnVectorFor(table);
+    
+            // Remove the primary key from columns
+            for(int i = 0; i < priCols.length; i++)
+            {
+                if(!colVec.contains(priCols[i]))
+                    throw new SQLException("[xmldbms] Primary key value not supplied for UPDATE.");
             
-            cols.remove(priCols[i]);
+                colVec.remove(priCols[i]);
+            }
+
+            // Remove unique key columns. These should not be updated
+            Enumeration e = table.getUniqueKeys();
+            while(e.hasMoreElements())
+            {
+                Column[] keyCols = ((Key)e.nextElement()).getColumns();
+                for(int i = 0; i < keyCols.length; i++)
+                {
+                    colVec.remove(keyCols[i]);
+                }
+            }
+
+            cols = (Column[])colVec.toArray();
         }
-
-        // TODO: Remove unique key columns 
-
-        // Get trimmed array
-        Column[] colArray = (Column[])cols.toArray();
 
 
         // Make the UPDATE statement
-        String sql = m_dml.getUpdate(table, table.getPrimaryKey(), colArray);
+        String sql = m_dml.getUpdate(table, table.getPrimaryKey(), cols);
         PreparedStatement stmt = m_connection.prepareStatement(sql);
 
 
-        // Set the parameters
-        setParameters(stmt, 0, row.getColumnValues(colArray));
-        setParameters(stmt, colArray.length, row.getColumnValues(priCols));
+        // Set the parameters for SET clauses
+        Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
+
+        // And the parameters for the WHERE clause
+        Parameters.setParameters(stmt, cols.length, priCols, row.getColumnValues(priCols));
 
 
         // Execute statement
         return stmt.executeUpdate();
-
     }
 
 
@@ -173,22 +179,41 @@ abstract class DBActionBase
         String sql = m_dml.getDelete(table, priKey);
         PreparedStatement stmt = m_connection.prepareStatement(sql);
 
+        Column[] cols = priKey.getColumns();
         // Set the parameters
-        setParameters(stmt, 0, row.getColumnValues(priKey.getColumns()));
+        Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
 
         // Execute Statement
         return stmt.executeUpdate();
     }
 
 
-
-    protected void setParameters(PreparedStatement stmt, int offset, Object[] values)
-        throws SQLException
+    protected Column[] getRefreshCols(Table table, Row row)
     {
-        // NOTE: offset is 0 based. Add one to offset to get proper parameter index
+        Vector colVec = new Vector();
 
+        // Add the primary key
+        Key priKey = table.getPrimaryKey();
+        if(priKey.getKeyGeneration() == Key.DATABASE)
+        {
+            Column[] priCols = priKey.getColumns();
+            for(int i = 0; i < priCols.length; i++)
+                colVec.addElement(priCols[i]);
+        }
+
+        // Add unique key columns. These should not be updated
+        Enumeration e = table.getUniqueKeys();
+        while(e.hasMoreElements())
+        {
+            Key key = (Key)e.nextElement();
+            if(key.getKeyGeneration() == Key.DATABASE)
+            {
+                Column[] keyCols = key.getColumns();
+                for(int i = 0; i < keyCols.length; i++)
+                    colVec.addElement(keyCols[i]);
+            }
+        }
+
+        return (Column[])colVec.toArray();    
     }
-
-    
-
 }

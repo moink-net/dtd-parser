@@ -4,15 +4,17 @@ import java.lang.*;
 import java.sql.*;
 
 import org.xmlmiddleware.xmldbms.maps.*;
+import org.sourceforge.jxdbcon.postgresql.*;
 
-class PostgresAction
-    extends BaseAction
-    implements DBAction
+class PostgresJDBXHandler
+    extends DataHandlerBase
 {
-    PostgresAction()
+    protected final static String OIDNAME = "oid";
+
+    PostgresJDBXHandler()
     {
         // Create the oid column
-        Column[] keyCols = { Column.create("oid"); }
+        Column[] keyCols = { Column.create(OIDNAME); }
         keyCol[0].setType(Types.INTEGER);
 
         // Make a key out of it
@@ -20,18 +22,19 @@ class PostgresAction
         m_oidKey.setColumns(keyCols);
     }
 
-	public void insert(Connection conn, PreparedStatement stmt, Table table, Row row, Column[] refreshCols)
+	public void insert(Table table, Row row)
         throws SQLException
     {     
-        initDML(conn);
+        int rows = doInsert();
 
-        stmt.executeUpdate();
+        Column[] refreshCols = getRefreshCols(table);
 
         if(refreshCols.length > 0)
         {
             // Get the OID of the last row
-            org.postgresql.Statement psqlStmt = (org.postgresql.Statement)stmt;
-            int oid = psqlStmt.getInsertedOID();
+            PGPreparedStatement psqlStmt = (PGPreparedStatement)stmt;
+            ResultSet oidRs = psqlStmt.getGeneratedKeys();
+            int oid = oidRs.getInt(OIDNAME);
 
             // SELECT the columns with that oid
             String sql = m_dml.getSelect(table, m_oidKey, refreshCols);
@@ -44,7 +47,9 @@ class PostgresAction
             ResultSet rs = selStmt.execute();
 
             // Set them in the row
-            // TODO: !!!! Retrieve values, convert them, put in row !!!!!
+            for(int i = 0; i < refreshCols.length; i++)
+                row.setColumnValue(refreshCols[i], rs.getObject(refreshCols[i].getName()));
+
         }
     }
 
