@@ -1,0 +1,5 @@
+#Properties for XML-DBMS
+#Mon Aug 06 22:18:08 PDT 2001
+Action=CreateMapFromDTD
+SchemaFile=product.dtd
+OrderColumns=Yes
