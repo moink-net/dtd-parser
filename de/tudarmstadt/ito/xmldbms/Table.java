@@ -16,6 +16,14 @@ package de.tudarmstadt.ito.xmldbms;
 // * Added rsColumnNumbers array and modified constructor.
 // Changes from version 1.01: None
 
+// No copyright, no warranty; use as you will.
+// Written by Ronald Bourret, Technical University of Darmstadt, 1998-9
+
+// Version 1.1
+// Changes from version 1.0:
+// * Added rsColumnNumbers array and modified constructor.
+// Changes from version 1.01: None
+
 /**
  * Describes a table; <A HREF="../readme.html#NotForUse">not for general
  * use</A>.
@@ -67,7 +75,7 @@ public class Table
    /** Construct a Table. */
    public Table()
    {
-   }   
+   }      
 
    /** Construct a Table with the specified Columns, name, and number. */
    public Table(Column[] columns, String name, int number)
@@ -97,7 +105,7 @@ public class Table
 	  {
 		 rsColumnNumbers[i] = i + 1;
 	  }
-   }   
+   }      
 
    // ********************************************************************
    // Methods
@@ -125,7 +133,7 @@ public class Table
 	  }
 
 	  return columnArray;
-   }   
+   }      
 
    /**
 	* Get a Column object for the named column. Note that this method is not
@@ -139,7 +147,6 @@ public class Table
    public Column getColumn(String columnName) throws InvalidMapException
    {
 	  Column column = null;
-	//System.out.println("Column = "+columnName);
 	  if (columnName == null) return null;
 
 	  for (int i = 0; i < columns.length; i++)
@@ -153,5 +160,5 @@ public class Table
 
 	  if (column != null) return column;
 	  throw new InvalidMapException("Column " + columnName + " not found in table " + name);
-   }            
+   }               
 }

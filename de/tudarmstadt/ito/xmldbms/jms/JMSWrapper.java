@@ -7,6 +7,7 @@ import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
 import de.tudarmstadt.ito.xmldbms.tools.ProcessProperties;
 import java.util.Properties;
 import javax.naming.*;
+import de.tudarmstadt.ito.xmldbms.jms.JMSProps;
 import java.io.Serializable;
 import java.util.*;
 
@@ -149,23 +150,7 @@ if (!isSonic)
 
 
 
-/**
- * Insert the method's description here.
- * Creation date: (16/04/01 20:23:06)
- * @return int
- * @param Ack java.lang.String
- */
 
- public int setAkMode(String Ack) {
-		//Get Acknowledgement Code (assume AUTO_ACKNOWLEDGE (i.e i = 1)
-		
-		if (Ack.trim().equalsIgnoreCase("CLIENT_ACKNOWLEDGE"))
-		{ak = 2;}
-		else if (Ack.trim().equalsIgnoreCase("DUPS_OK_ACKNOWLEDGE"))
-		{ak = 3;}
-		else {ak = ak;}
-	return ak;
-}
 
 /**
  * Insert the method's description here.
@@ -308,20 +293,20 @@ if (!isSonic)
 public void init(Properties props)  throws javax.naming.NamingException,javax.jms.JMSException  {
 	
 	try {
-		ic = (String)props.getProperty(XMLDBMSProps.JMSCONTEXT).trim();
+		ic = props.getProperty(JMSProps.JMSCONTEXT).trim();
 		//System.out.println("JMS Initial Context = " + ic);	
-		prov_url = (String)props.getProperty(XMLDBMSProps.JMSPROVIDERURL).trim();
+		prov_url = props.getProperty(JMSProps.JMSPROVIDERURL).trim();
 		//System.out.println("prov_url = " + prov_url);
-		JMSTopic = (String)props.getProperty(XMLDBMSProps.JMSTOPIC).trim();
+		JMSTopic = props.getProperty(JMSProps.JMSTOPIC).trim();
 		//System.out.println("JMSTopic = " + JMSTopic);
-				if (props.getProperty(XMLDBMSProps.JMSTCF) != null)
-		{TCF = (String)props.getProperty(XMLDBMSProps.JMSTCF).trim();}
+				if (props.getProperty(JMSProps.JMSTCF) != null)
+		{TCF = props.getProperty(JMSProps.JMSTCF).trim();}
 		
 		} catch(Exception e) {
 				System.out.println("One of JMSContext,JMSProviderURL or JMSTopic Not set");
 			}
-		if (props.getProperty(XMLDBMSProps.JMSACKMODE) != null)
-		{ setAkMode(props.getProperty(XMLDBMSProps.JMSACKMODE));		
+		if (props.getProperty(JMSProps.JMSACKMODE) != null)
+		{ setAckMode(props.getProperty(JMSProps.JMSACKMODE));		
 		}
   
 		if (ic.equalsIgnoreCase(SonicMQ))
@@ -329,10 +314,10 @@ public void init(Properties props)  throws javax.naming.NamingException,javax.jm
 
 		//Now set the base level JMS Info open a connection & setup the session & the topic
 
-		if (props.getProperty(XMLDBMSProps.JMSUSER) != null && props.getProperty(XMLDBMSProps.JMSPASSWORD) != null)
+		if (props.getProperty(JMSProps.JMSUSER) != null && props.getProperty(JMSProps.JMSPASSWORD) != null)
 		{
-		user = props.getProperty(XMLDBMSProps.JMSUSER);
-		password = props.getProperty(XMLDBMSProps.JMSPASSWORD) ;
+		user = props.getProperty(JMSProps.JMSUSER);
+		password = props.getProperty(JMSProps.JMSPASSWORD) ;
 
 		setJMS(ic,prov_url,JMSTopic,TCF,user,password);
 		 
@@ -342,8 +327,58 @@ public void init(Properties props)  throws javax.naming.NamingException,javax.jm
 //		System.out.println("Silent1 = " +silent);
 //		System.out.println("SilPV = " +props.getProperty(XMLDBMSProps.JMSSILENT));
 		
-		if (props.getProperty(XMLDBMSProps.JMSSILENT) != null){
-		if(props.getProperty(XMLDBMSProps.JMSSILENT).equals(XMLDBMSProps.YES))
+		if (props.getProperty(JMSProps.JMSSILENT) != null){
+		if(props.getProperty(JMSProps.JMSSILENT).equals(XMLDBMSProps.YES))
+		{silent = true;}
+//				System.out.println("Silent2 = " +silent);
+		}
+		
+}
+
+/**
+ * Insert the method's description here.
+ * Creation date: (04/07/01 14:42:21)
+ * @param Props java.util.Properties
+ */
+public void init(Properties props,String Topic)  throws javax.naming.NamingException,javax.jms.JMSException  {
+	
+	try {
+		ic = props.getProperty(JMSProps.JMSCONTEXT).trim();
+		//System.out.println("JMS Initial Context = " + ic);	
+		prov_url = props.getProperty(JMSProps.JMSPROVIDERURL).trim();
+		//System.out.println("prov_url = " + prov_url);
+		JMSTopic = Topic.trim();
+		//System.out.println("JMSTopic = " + JMSTopic);
+				if (props.getProperty(JMSProps.JMSTCF) != null)
+		{TCF = props.getProperty(JMSProps.JMSTCF).trim();}
+		
+		} catch(Exception e) {
+				System.out.println("One of JMSContext,JMSProviderURL or JMSTopic Not set");
+			}
+		if (props.getProperty(JMSProps.JMSACKMODE) != null)
+		{ setAckMode(props.getProperty(JMSProps.JMSACKMODE));		
+		}
+  
+		if (ic.equalsIgnoreCase(SonicMQ))
+		{isSonic = true;}
+
+		//Now set the base level JMS Info open a connection & setup the session & the topic
+
+		if (props.getProperty(JMSProps.JMSUSER) != null && props.getProperty(JMSProps.JMSPASSWORD) != null)
+		{
+		user = props.getProperty(JMSProps.JMSUSER);
+		password = props.getProperty(JMSProps.JMSPASSWORD) ;
+
+		setJMS(ic,prov_url,JMSTopic,TCF,user,password);
+		 
+		}
+		else {	setJMS(ic,prov_url,JMSTopic,TCF); }
+		
+//		System.out.println("Silent1 = " +silent);
+//		System.out.println("SilPV = " +props.getProperty(XMLDBMSProps.JMSSILENT));
+		
+		if (props.getProperty(JMSProps.JMSSILENT) != null){
+		if(props.getProperty(JMSProps.JMSSILENT).equals(XMLDBMSProps.YES))
 		{silent = true;}
 //				System.out.println("Silent2 = " +silent);
 		}
@@ -715,6 +750,24 @@ try
 	
 	
 	}
+
+/**
+ * Insert the method's description here.
+ * Creation date: (16/04/01 20:23:06)
+ * @return int
+ * @param Ack java.lang.String
+ */
+
+ public int setAckMode(String Ack) {
+		//Get Acknowledgement Code (assume AUTO_ACKNOWLEDGE (i.e i = 1)
+		
+		if (Ack.trim().equalsIgnoreCase("CLIENT_ACKNOWLEDGE"))
+		{ak = 2;}
+		else if (Ack.trim().equalsIgnoreCase("DUPS_OK_ACKNOWLEDGE"))
+		{ak = 3;}
+		else {ak = ak;}
+	return ak;
+}
 
 /**
  * Insert the method's description here.

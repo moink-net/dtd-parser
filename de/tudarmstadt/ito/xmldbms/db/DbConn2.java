@@ -37,10 +37,10 @@ public java.sql.Connection getConn()  throws java.sql.SQLException {
  */
 public void setDB(java.util.Properties props) throws javax.naming.NamingException {
 
-	 InitContext = (String)props.getProperty(XMLDBMSProps.DBINITIALCONTEXT);
-	 Data_Source = (String)props.getProperty(XMLDBMSProps.DATASOURCE);
-	 user = (String)props.getProperty(XMLDBMSProps.USER);
-	 password = (String)props.getProperty(XMLDBMSProps.PASSWORD);
+	 InitContext = props.getProperty(DBProps.DBINITIALCONTEXT);
+	 Data_Source = props.getProperty(DBProps.DATASOURCE);
+	 user = props.getProperty(DBProps.USER);
+	 password = props.getProperty(DBProps.PASSWORD);
 		 
 	if (InitContext == null) {System.out.println("Initial Context Not Set");}
 

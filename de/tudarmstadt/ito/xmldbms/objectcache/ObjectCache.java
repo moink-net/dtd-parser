@@ -8,7 +8,7 @@ public class ObjectCache {
 /**
  * This hashmap holds associated file names and compiled objects.
 */
-	static private java.util.HashMap cache;
+	static private java.util.Hashtable cache;
 /**
  * This does nothing.
  */
@@ -53,7 +53,14 @@ public static Object get(Object key) {
 }/**
  * This returns the map used to cache the objects.
 */
-	public static java.util.HashMap getMap()
+
+public static void put(Object key, Object value) {
+
+	cache.put(key,value);
+	
+	}
+
+	public static java.util.Hashtable getMap()
 	{
 		if(cache == null)
 		{
@@ -61,7 +68,7 @@ public static Object get(Object key) {
 			{
 				if(cache == null)
 				{
-					cache = new java.util.HashMap();
+					cache = new java.util.Hashtable();
 				}
 			}
 		}
@@ -71,10 +78,5 @@ public static Object get(Object key) {
  * Creation date: (18/04/01 14:08:07)
  * @param key java.lang.Object
  * @param object java.lang.Object
- */ 
-public static void put(Object key, Object value) {
-
-	cache.put(key,value);
-	
-	}
+ */  
 }

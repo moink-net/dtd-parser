@@ -6,7 +6,7 @@
 
 package de.tudarmstadt.ito.xmldbms.tools;
 
-import de.tudarmstadt.ito.domutils.DocumentFactoryException;
+
 import de.tudarmstadt.ito.xmldbms.DOMToDBMS;
 import de.tudarmstadt.ito.xmldbms.InvalidMapException;
 import de.tudarmstadt.ito.xmldbms.KeyException;
@@ -19,6 +19,8 @@ import org.w3c.dom.DOMException;
 
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
+
+import de.tudarmstadt.ito.domutils.ParserUtilsException;
 
 /**
  * Properties-driven and command line interface to XML-DBMS.
@@ -97,6 +99,7 @@ import java.io.ByteArrayInputStream;
 
 public class Transfer extends ProcessProperties
 {
+
    // ************************************************************************
    // Constructor
    // ************************************************************************
@@ -107,7 +110,7 @@ public class Transfer extends ProcessProperties
    public Transfer()
    {
 	  super();
-   }   
+   }      
 
    // ************************************************************************
    // Public methods
@@ -140,7 +143,7 @@ public class Transfer extends ProcessProperties
 	 {
 		e.printStackTrace();
 	 }
-   }   
+   }      
 
    /**
 	* Executes the action specified by the Action property.
@@ -155,12 +158,13 @@ public class Transfer extends ProcessProperties
    public void dispatch(Properties props)
 	  throws Exception
    {
-	 TransferEngine engine = new TransferEngine();
+	
 	 String         action;
 
-	 // Set up the parser and database
-	 engine.setParserProperties(props);
-	 engine.setDatabaseProperties(props);
+	 // Set up the Transfer Engine
+	 init(props);
+//	 engine.setParserProperties(props);
+//	 engine.setDatabaseProperties(props);
 
 	 // Get the action
 	 action = props.getProperty(XMLDBMSProps.ACTION);
@@ -170,89 +174,34 @@ public class Transfer extends ProcessProperties
 	 // Dispatch the action
 	 if (action.equals(XMLDBMSProps.STOREDOCUMENT))
 	 {
-	   dispatchStoreDocument(engine, props);
+	   dispatchStoreDocument(props);
 	 }
 	 else if (action.equals(XMLDBMSProps.RETRIEVEDOCUMENTBYSQL))
 	 {
-	   dispatchRetrieveDocumentBySQL(engine, props);
+	   dispatchRetrieveDocumentBySQL(props);
 	 }
 	 else if (action.equals(XMLDBMSProps.RETRIEVEDOCUMENTBYKEY))
 	 {
-	   dispatchRetrieveDocumentByKey(engine, props);
+	   dispatchRetrieveDocumentByKey(props);
 	 }
 	 else if (action.equals(XMLDBMSProps.RETRIEVEDOCUMENTBYKEYS))
 	 {
-	   dispatchRetrieveDocumentByKeys(engine, props);
+	   dispatchRetrieveDocumentByKeys(props);
 	 }
 	 else
 	 {
 	   throw new IllegalArgumentException("Unknown value of Action property: " + action);
 	 }
 	 
-   }                        
+   }                                       
 
-   // ************************************************************************
-   // Private methods
-   // ************************************************************************
+                           
 
-   private void dispatchStoreDocument(TransferEngine engine, Properties props)
-	  throws Exception
-   {
-	 String mapFilename, xmlFilename, keyGeneratorClass;
-	 int    commitMode;
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
-	 xmlFilename = (String)props.getProperty(XMLDBMSProps.XMLFILE);
+                        
 
-	
-	 if (props.getProperty(XMLDBMSProps.COMMITMODE) == null)
-	 { commitMode = DOMToDBMS.COMMIT_AFTERDOCUMENT;}
-	 else {commitMode = getCommitMode((String)props.getProperty(XMLDBMSProps.COMMITMODE));}
-	 
-	 keyGeneratorClass = (String)props.getProperty(XMLDBMSProps.KEYGENERATORCLASS);
+                     
 
-	 engine.storeDocument(mapFilename, xmlFilename, commitMode, keyGeneratorClass, props);
-   }                                                         
-
-   private void dispatchRetrieveDocumentBySQL(TransferEngine engine, Properties props) 
-	  throws Exception
-   {
-	 String mapFilename, xmlFilename, select;
-
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
-	 xmlFilename = (String)props.getProperty(XMLDBMSProps.XMLFILE);
-	 select = concatNumberedProps(XMLDBMSProps.SELECT, props, true);
-
-	 engine.retrieveDocument(mapFilename, xmlFilename, select);
-   }                           
-
-   private void dispatchRetrieveDocumentByKey(TransferEngine engine, Properties props)
-	  throws Exception
-   {
-	 String   mapFilename, xmlFilename, table;
-	 String[] key;
-
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
-	 xmlFilename = (String)props.getProperty(XMLDBMSProps.XMLFILE);
-	 table = (String)props.getProperty(XMLDBMSProps.TABLE);
-	 key = getNumberedProps(XMLDBMSProps.KEY, props);
-
-	 engine.retrieveDocument(mapFilename, xmlFilename, table, key);
-   }                        
-
-   private void dispatchRetrieveDocumentByKeys(TransferEngine engine, Properties props)
-	  throws Exception
-   {
-	 String     mapFilename, xmlFilename;
-	 String[]   tables;
-	 String[][] keys;
-
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
-	 xmlFilename = (String)props.getProperty(XMLDBMSProps.XMLFILE);
-	 tables = getNumberedProps(XMLDBMSProps.TABLE, props);
-	 keys = getDoubleNumberedProps(XMLDBMSProps.KEY, props, tables.length);
-
-	 engine.retrieveDocument(mapFilename, xmlFilename, tables, keys);
-   }                        
+                     
 
    private int getCommitMode(String modeName)
    {
@@ -266,100 +215,251 @@ public class Transfer extends ProcessProperties
 	 }
 	 else
 	   throw new IllegalArgumentException("Invalid commit mode value: " + modeName);
-   }   
+   }      
 
-   public String dispatchRetrieveDocumentByKey_s (TransferEngine engine, Properties props)
+	 TransferEngine engine = new TransferEngine();
+
+   private void dispatchRetrieveDocumentByKey(Properties props)
 	  throws Exception
    {
 	 String   mapFilename, xmlFilename, table;
 	 String[] key;
 
-
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
-	 xmlFilename = (String)props.getProperty(XMLDBMSProps.XMLFILE);
-	 table = (String)props.getProperty(XMLDBMSProps.TABLE);
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	 xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
+	 table = props.getProperty(XMLDBMSProps.TABLE +String.valueOf(1));
 	 key = getNumberedProps(XMLDBMSProps.KEY, props);
 
-	 String s = null;
-	 s = engine.retrieveDocument_s(mapFilename, xmlFilename, table, key);
-	 return s;
-   }                           
+	 engine.retrieveDocument(mapFilename, xmlFilename, table, key);
+   }               
 
-   public String dispatchRetrieveDocumentByKeys_s (TransferEngine engine, Properties props)
+                                 
+
+   private void dispatchRetrieveDocumentByKeys(Properties props)
 	  throws Exception
    {
 	 String     mapFilename, xmlFilename;
 	 String[]   tables;
 	 String[][] keys;
 
-
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
-	 xmlFilename = (String)props.getProperty(XMLDBMSProps.XMLFILE);
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	 xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
 	 tables = getNumberedProps(XMLDBMSProps.TABLE, props);
 	 keys = getDoubleNumberedProps(XMLDBMSProps.KEY, props, tables.length);
-	 String s = null;
-	 s = engine.retrieveDocument_s(mapFilename, xmlFilename, tables, keys);
-	 return s;
-   }                           
 
-   public String dispatchRetrieveDocumentBySQL_s (TransferEngine engine, Properties props) 
+	 engine.retrieveDocument(mapFilename, xmlFilename, tables, keys);
+   }            
+
+                                 
+
+   private void dispatchRetrieveDocumentBySQL(Properties props) 
 	  throws Exception
    {
 	 String mapFilename, xmlFilename, select;
 
-
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
-	 xmlFilename = (String)props.getProperty(XMLDBMSProps.XMLFILE);
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	 xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
 	 select = concatNumberedProps(XMLDBMSProps.SELECT, props, true);
-	 String s = null;
-	 s = engine.retrieveDocument_s(mapFilename, xmlFilename, select);
-	 return s;
-   }                           
+
+	 System.out.println("SELECT = " +select);
+
+	 engine.retrieveDocument(mapFilename, xmlFilename, select);
+   }               
+
+                                 
 
    // ************************************************************************
    // Private methods
    // ************************************************************************
 
-   public void dispatchStoreDocument(TransferEngine engine, Properties props,java.io.InputStream xmlFile)
+   private void dispatchStoreDocument(Properties props)
 	  throws Exception
    {
-	 String mapFilename, keyGeneratorClass;
+	 String mapFilename, xmlFilename, keyGeneratorClass;
 	 int    commitMode;
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	 xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
 
+	
 	 if (props.getProperty(XMLDBMSProps.COMMITMODE) == null)
 	 { commitMode = DOMToDBMS.COMMIT_AFTERDOCUMENT;}
-	 else {commitMode = getCommitMode((String)props.getProperty(XMLDBMSProps.COMMITMODE));}
+	 else {commitMode = getCommitMode(props.getProperty(XMLDBMSProps.COMMITMODE));}
 	 
+	 keyGeneratorClass = props.getProperty(XMLDBMSProps.KEYGENERATORCLASS);
 
-	 keyGeneratorClass = (String)props.getProperty(XMLDBMSProps.KEYGENERATORCLASS);
-	 engine.storeDocument(mapFilename, xmlFile, commitMode, keyGeneratorClass, props);
+	 engine.storeDocument(mapFilename, xmlFilename, commitMode, keyGeneratorClass, props);
+   }                                       
+
+                              
+
+                                             
+
+/**
+ * This is the init method which sets the Transfer Engine up for Transfer.
+ * Creation date: (13/08/01 13:10:07)
+ * @param props java.util.Properties
+ */
+public void init(Properties props) throws java.lang.Exception {
+	
+	engine.init(props);
+	
+	}
+
+   public String RetrieveDocumentByKey (Properties props,String tableName,Object[] key)
+	  throws Exception
+   {
+	 String   mapFilename,xmlFilename;
+	// String[] key;
+
+
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	 xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
+	// table = props.getProperty(XMLDBMSProps.TABLE +String.valueOf(1));
+	// key = getNumberedProps(XMLDBMSProps.KEY, props);
+
+	 String s = null;
+	 s = engine.retrieveDocument(mapFilename, xmlFilename, tableName, key);
+	 return s;
+   }                  
+
+   public String RetrieveDocumentByKey (Properties props,String tableName,Object[] key,String xmlFilename)
+	  throws Exception
+   {
+	 String   mapFilename;
+	// String[] key;
+
+
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	// xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
+	// table = props.getProperty(XMLDBMSProps.TABLE +String.valueOf(1));
+	// key = getNumberedProps(XMLDBMSProps.KEY, props);
+
+	 String s = null;
+	 s = engine.retrieveDocument(mapFilename, xmlFilename, tableName, key);
+	 return s;
+   }               
+
+   public String RetrieveDocumentByKeys (Properties props,String[] tableNames,Object[][] keys)
+	  throws Exception
+   {
+	 String   mapFilename,xmlFilename;
+	// String[] key;
+
+
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	 xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
+	// table = props.getProperty(XMLDBMSProps.TABLE +String.valueOf(1));
+	// key = getNumberedProps(XMLDBMSProps.KEY, props);
+
+	 String s = null;
+	 s = engine.retrieveDocument(mapFilename, xmlFilename, tableNames, keys);
+	 return s;
+   }                     
+
+   public String RetrieveDocumentByKeys (Properties props,String[] tableNames,Object[][] keys,String xmlFilename)
+	  throws Exception
+   {
+	 String   mapFilename;
+	// String[] key;
+
+
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	// xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
+	// table = props.getProperty(XMLDBMSProps.TABLE +String.valueOf(1));
+	// key = getNumberedProps(XMLDBMSProps.KEY, props);
+
+	 String s = null;
+	 s = engine.retrieveDocument(mapFilename, xmlFilename, tableNames, keys);
+	 return s;
+   }                  
+
+   public String RetrieveDocumentBySQL (Properties props,String sqlString) 
+	  throws Exception
+   {
+	 String mapFilename,xmlFilename,select;
+
+
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	 xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
+
+	if(sqlString != null) {
+	 select = concatNumberedProps(XMLDBMSProps.SELECT, props, true) +sqlString;
+	}
+	else {select = concatNumberedProps(XMLDBMSProps.SELECT, props, true);}
+	
+
+	 String s = null;
+	 s = engine.retrieveDocument(mapFilename, xmlFilename, select);
+	 return s;
    }                        
+
+   public String RetrieveDocumentBySQL (Properties props,String sqlString,String xmlFilename) 
+	  throws Exception
+   {
+	 String mapFilename,select;
+
+
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	// xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
+	if(sqlString != null) {
+	 select = concatNumberedProps(XMLDBMSProps.SELECT, props, true) +sqlString;
+	}
+	else {select = concatNumberedProps(XMLDBMSProps.SELECT, props, true);}
+	
+	 String s = null;
+	 s = engine.retrieveDocument(mapFilename, xmlFilename, select);
+	 return s;
+   }                  
 
    // ************************************************************************
    // Private methods
    // ************************************************************************
 
-   public void dispatchStoreDocument_s(TransferEngine engine, Properties props, String xml)
+   public void StoreDocument(Properties props, String xmlFilename)
+	  throws Exception
+   {
+	 String mapFilename,keyGeneratorClass;
+	 int    commitMode;
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
+	 //xmlFilename = props.getProperty(XMLDBMSProps.XMLFILE);
+
+	
+	 if (props.getProperty(XMLDBMSProps.COMMITMODE) == null)
+	 { commitMode = DOMToDBMS.COMMIT_AFTERDOCUMENT;}
+	 else {commitMode = getCommitMode(props.getProperty(XMLDBMSProps.COMMITMODE));}
+	 
+	 keyGeneratorClass = props.getProperty(XMLDBMSProps.KEYGENERATORCLASS);
+	
+	
+	engine.storeDocument(mapFilename, xmlFilename, commitMode, keyGeneratorClass, props);
+
+	
+   }      
+
+   // ************************************************************************
+   // Private methods
+   // ************************************************************************
+
+   public void StoreXMLString(Properties props, String xmlString)
 	  throws Exception
    {
 	 String mapFilename,  keyGeneratorClass;
 	 int    commitMode;
-	 mapFilename = (String)props.getProperty(XMLDBMSProps.MAPFILE);
+	 mapFilename = props.getProperty(XMLDBMSProps.MAPFILE);
 
 
 	 if (props.getProperty(XMLDBMSProps.COMMITMODE) == null)
 	 { commitMode = DOMToDBMS.COMMIT_AFTERDOCUMENT;}
-	 else {commitMode = getCommitMode((String)props.getProperty(XMLDBMSProps.COMMITMODE));}
+	 else {commitMode = getCommitMode(props.getProperty(XMLDBMSProps.COMMITMODE));}
 	 
-	 keyGeneratorClass = (String)props.getProperty(XMLDBMSProps.KEYGENERATORCLASS);
+	 keyGeneratorClass = props.getProperty(XMLDBMSProps.KEYGENERATORCLASS);
 
 
 
-	byte[] b = xml.getBytes();
+	byte[] b = xmlString.getBytes();
 	InputStream is = new ByteArrayInputStream(b);
 
 	 
 	 engine.storeDocument(mapFilename, is, commitMode, keyGeneratorClass, props);
-   }                                       
+   }         
 }

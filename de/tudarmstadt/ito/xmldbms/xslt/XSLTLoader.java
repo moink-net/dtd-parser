@@ -1,6 +1,6 @@
 
 /**
- * A Class to test XSLT Scripts.
+ * A Class which acts to load XSLT transformers (e.g. Xalan 1 & 2)
  * Creation date: (08/05/01 14:45:51)
  * @author: Adam Flinton
  */
@@ -8,7 +8,7 @@
 
 package de.tudarmstadt.ito.xmldbms.xslt;
 
-import de.tudarmstadt.ito.xmldbms.tools.StringStore;
+
 import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
 import java.util.Properties;
 import de.tudarmstadt.ito.xmldbms.tools.ProcessProperties;
@@ -28,7 +28,7 @@ public XSLTLoader() {
    {
 	 if (interfaceObject == null)
 	   throw new IllegalStateException("Name of class that implements " + interfaceName + " not set.");
-   }                     private Object instantiateClass(String className)
+   }                        private Object instantiateClass(String className)
 	  throws ClassNotFoundException, IllegalAccessException, InstantiationException
    {
 	 if (className == null) return null;
@@ -48,8 +48,8 @@ public XSLTLoader() {
    public void setXSLTProperties(Properties props)
 	  throws ClassNotFoundException, IllegalAccessException, InstantiationException
    {
-	 processxslt = (ProcessXslt)instantiateClass((String)props.getProperty(XMLDBMSProps.XSLTCLASS));
-   }                     
+	 processxslt = (ProcessXslt)instantiateClass(props.getProperty(XSLTProps.XSLTCLASS));
+   }                              
    
    
    /**

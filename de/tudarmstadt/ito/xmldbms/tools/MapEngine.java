@@ -33,6 +33,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.Parser;
 
 import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+import de.tudarmstadt.ito.xmldbms.db.*;
 import de.tudarmstadt.ito.xmldbms.tools.GetFileException;
 
 /**
@@ -81,9 +82,9 @@ public class MapEngine
    /**
 	* Set the properties used to connect to the database.
 	*
-	* <p>This method must be called before generating a map. A
-	* database connection is needed to retrieve information about
-	* CREATE TABLE statements.</p>
+	* <p>This method must be called before transferring data between
+	* an XML document and a database. The following properties are
+	* accepted:</p>
 	*
 	* <ul>
 	* <li>Driver: Name of the JDBC driver class to use. Required.</li>
@@ -93,26 +94,38 @@ public class MapEngine
 	* </ul>
 	*
 	* @param props A Properties object containing the above properties.
+	* Changed by Adam Flinton 08/04/2001. Now the method evaluates the JDBC level to work out
+	* which JDBC level to use (presently 1 or 2). Level 2 requires JNDI & Javax.sql so to compensate
+	* for the possibility of level 1 useage instantiation is used.
+	* If & when JDBC level 3 comes along shoving it in as well should be easy.
 	*/
 
    public void setDatabaseProperties(Properties props)
-	  throws ClassNotFoundException
+	 throws ClassNotFoundException, IllegalAccessException, InstantiationException, java.lang.Exception
+
    {
-	 String driver;
+	   int i = 0;
+	String JDBC = props.getProperty(DBProps.JDBCLEVEL);
+	if (JDBC == null) {i = 1; }
 
-	 // Get the database properties;
-	 driver = (String)props.getProperty(XMLDBMSProps.DRIVER);
-	 if (driver == null)
-	   throw new IllegalArgumentException("No Driver property set.");
-	 url = (String)props.getProperty(XMLDBMSProps.URL);
-	 if (url == null)
-	   throw new IllegalArgumentException("No URL property set.");
-	 user = (String)props.getProperty(XMLDBMSProps.USER);
-	 password = (String)props.getProperty(XMLDBMSProps.PASSWORD);
+	else {
+	try {
+		i = Integer.parseInt(JDBC.trim());
+	}
+	catch (NumberFormatException nfe)
+	{ System.out.println ("JDBC Level MUST be a number " + nfe.getMessage());
+		//For safety try resorting to JDBC level 1
+		i = 1;	
+	}
 
-	 // Load the driver.
-	 Class.forName(driver);
-   }            
+	}	
+	switch (i) {
+		case 1: dbConn = (DbConn)instantiateClass("de.tudarmstadt.ito.xmldbms.db.DbConn1"); break;
+		case 2: dbConn = (DbConn)instantiateClass("de.tudarmstadt.ito.xmldbms.db.DbConn2"); break;
+	}
+	dbConn.setDB(props);
+	
+   }                     
 
    /**
 	* Set the user name and password.
@@ -147,8 +160,8 @@ public class MapEngine
    public void setParserProperties(Properties props)
 	  throws ClassNotFoundException, IllegalAccessException, InstantiationException
    {
-	 parserUtils = (ParserUtils)instantiateClass((String)props.getProperty(XMLDBMSProps.PARSERUTILSCLASS));
-   }            
+	 parserUtils = (ParserUtils)instantiateClass(props.getProperty(XMLDBMSProps.PARSERUTILSCLASS));
+   }               
 
    /**
 	* Create a map from a DDML file.
@@ -402,4 +415,18 @@ public class MapEngine
 	 if (className == null) return null;
 	 return Class.forName(className).newInstance();
    }   
+
+   private DbConn			dbConn;
+
+/**
+ * The init(props) method combines the SetDatabaseProperties & the SetParserProperties methods.
+ * @author Adam Flinton 
+ * Creation date: (01/05/01 13:59:54)
+ */
+public void init(Properties props) throws ClassNotFoundException, IllegalAccessException, InstantiationException, java.lang.Exception
+{
+	setDatabaseProperties(props);
+	setParserProperties(props);
+	
+	}
 }

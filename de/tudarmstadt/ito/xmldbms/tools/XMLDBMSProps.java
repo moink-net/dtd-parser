@@ -26,20 +26,37 @@ package de.tudarmstadt.ito.xmldbms.tools;
 public class XMLDBMSProps
 {
 
+		
+   // ************************************************************************
+   // Constructor
+   // ************************************************************************
+
+   public XMLDBMSProps()
+   {
+	  super();
+   }         
+		
    // Database properties
 
    /** Database URL */
-   public static String URL      = "URL";
+//   public static String URL      = "URL";
 
    /** JDBC driver class name */
-   public static String DRIVER   = "Driver";
+//   public static String DRIVER   = "Driver";
 
    /**  Database user name */
-   public static String USER     = "User";
+//   public static String USER     = "User";
 
    /**  Database password */
-   public static String PASSWORD = "Password";
+//   public static String PASSWORD = "Password";
 
+		/** JDBC Level & JDBC 2.0 */	
+//	public static String DBINITIALCONTEXT = "DBInitialContext";
+//		public static String JDBCLEVEL     = "JDBCLevel";
+//		public static String DATASOURCE = "DataSource";   
+
+
+		 
    // Parser properties
 
    /**  Name of class that implements the de.tudarmstadt.ito.domutils.NameQualifier interface */
@@ -172,27 +189,17 @@ public class XMLDBMSProps
    /** Name of the output file in which to store properties. */
    public static String OUTPUTFILE = "OutputFile";
 
-   // ************************************************************************
-   // Constructor
-   // ************************************************************************
-
-   public XMLDBMSProps()
-   {
-	  super();
-   }   
-
-	public static String DATASOURCE = "DataSource";
-/** JDBC Level & JDBC 2.0 */	
-	public static String DBINITIALCONTEXT = "DBInitialContext";
 /** Document Root */
 
 	public static String DOCROOT = "DocRoot";
+	public static String USEDOCROOT = "UseDocRoot";
+	
 /** JNDI information */
 	public static String INITIALCONTEXT = "InitialContext";
-	public static String JDBCLEVEL     = "JDBCLevel";
-	public static String JMSACKMODE = "JMSAckMode";
+	public static String JNDI     = "JNDI";
+	
 /** JMS Info */	
-
+/*
 	public static String JMSCONTEXT = "JMSContext";
 	public static String JMSMESSAGE = "JMSMessage";
 	public static String JMSPASSWORD = "JMSPassword";
@@ -202,17 +209,13 @@ public class XMLDBMSProps
 	public static String JMSTESTNUM = "JMSTestNum";
 	public static String JMSTOPIC = "JMSTopic";
 	public static String JMSUSER = "JMSUser";
-	public static String JNDI     = "JNDI";
-	public static String KEYGENCAT = "KeyGenCat";
-	public static String KEYGENSCHEMA = "KeyGenSchema";
-	public static String KEYGENSEP = "KeyGenSep";
-/** Key Gen Info */	
+	public static String JMSACKMODE = "JMSAckMode";	
+*/
 
-	public static String KEYGENTABLE = "KeyGenTable";
-	public static String USEDOCROOT = "UseDocRoot";
-	public static String XSLTCLASS = "XSLTClass";
-	public static String XSLTOUTPUT = "XSLTOutput";
-/** XSLT info */
 
-	public static String XSLTSCRIPT = "XSLTScript";
+
+
+
+	
+	
 }

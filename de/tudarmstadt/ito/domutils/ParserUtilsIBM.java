@@ -71,7 +71,7 @@ public class ParserUtilsIBM implements ParserUtils
    // Public methods
    // ********************************************************************
 
-   public Document createDocument() throws DocumentFactoryException
+   public Document createDocument() throws ParserUtilsException
    {
 	  try
 	  {
@@ -79,9 +79,9 @@ public class ParserUtilsIBM implements ParserUtils
 	  }
 	  catch (Exception e)
 	  {
-		 throw new DocumentFactoryException(e.getMessage());
+		 throw new ParserUtilsException(e.getMessage());
 	  }
-   }      
+   }         
 
 /**
  * Insert the method's description here.

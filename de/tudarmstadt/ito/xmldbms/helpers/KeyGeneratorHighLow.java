@@ -61,7 +61,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
 
    private int        highKeyValue = -1, lowKeyValue = 0xFF;
    private Connection conn = null;
-   private String     url, user, password,table,schema,cat,sep,fulltable;
+   private String     url, user, password,table,schema,cat,sep,fulltable,catsep;
 
    //**************************************************************************
    // Constructors
@@ -73,7 +73,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
 
    public KeyGeneratorHighLow()
    {
-   }   
+   }      
 
    //**************************************************************************
    // Public methods
@@ -111,7 +111,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
 	 {
  
 	   setDatabaseProperties(props);
-	   setName(props);
+	   
 	   this.conn = dbConn.getConn();
 //         conn.setAutoCommit(false);
 	   dbm = conn.getMetaData();
@@ -139,13 +139,17 @@ public class KeyGeneratorHighLow implements KeyGenerator
 		 conn.setTransactionIsolation(
 						   Connection.TRANSACTION_READ_UNCOMMITTED);
 	   }
+
+	   
+		setName(props,dbm);
+	   
 	   getHighKey();
 	 }
 	 catch (Exception e)
 	 {
 	   throw new KeyException(e.getMessage());
 	 }
-   }            
+   }                     
 
    /**
 	* Generates a key.
@@ -179,7 +183,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
 
 	 pk[0] = new Integer(highKeyValue + lowKeyValue++);
 	 return pk;
-   }   
+   }      
 
    /**
 	* Closes the database connection used by KeyGeneratorHighLow.
@@ -200,7 +204,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
 	  {
 		 throw new KeyException(e.getMessage());
 	  }
-   }   
+   }      
 
    //**************************************************************************
    // Private methods
@@ -247,7 +251,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
 	 rs.close();
 	 select.close();
 	 conn.commit();
-   }            
+   }               
 
    // ************************************************************************
    // Public methods
@@ -278,8 +282,35 @@ public class KeyGeneratorHighLow implements KeyGenerator
 	 throws ClassNotFoundException, IllegalAccessException, InstantiationException, java.lang.Exception
 
    {
+
+	Properties props1 = new Properties();
+	props1 = props;
+
+		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWDRIVER) != null) {
+		props1.put(DBProps.DRIVER, props.getProperty(KeyGeneratorProps.HIGHLOWDRIVER));
+		}
+		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWURL) != null) {
+		props1.put(DBProps.URL, props.getProperty(KeyGeneratorProps.HIGHLOWURL));
+		}
+		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWUSER) != null) {
+		props1.put(DBProps.USER, props.getProperty(KeyGeneratorProps.HIGHLOWUSER));
+		}		
+		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWPASSWORD) != null) {
+		props1.put(DBProps.PASSWORD, props.getProperty(KeyGeneratorProps.HIGHLOWPASSWORD));
+		}
+		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWJDBCLEVEL) != null) {
+		props1.put(DBProps.JDBCLEVEL, props.getProperty(KeyGeneratorProps.HIGHLOWJDBCLEVEL));
+		}
+		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWDATASOURCE) != null) {
+		props1.put(DBProps.DATASOURCE, props.getProperty(KeyGeneratorProps.HIGHLOWDATASOURCE));
+		}		
+		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWDBINITIALCONTEXT) != null) {
+		props1.put(DBProps.DBINITIALCONTEXT, props.getProperty(KeyGeneratorProps.HIGHLOWDBINITIALCONTEXT));
+		}		
+		
+		 
 	   int i = 0;
-	String JDBC = props.getProperty(XMLDBMSProps.JDBCLEVEL);
+	String JDBC = props1.getProperty(DBProps.JDBCLEVEL);
 	if (JDBC == null) {i = 1; }
 
 	else {
@@ -297,9 +328,11 @@ public class KeyGeneratorHighLow implements KeyGenerator
 		case 1: dbConn = (DbConn)instantiateClass("de.tudarmstadt.ito.xmldbms.db.DbConn1"); break;
 		case 2: dbConn = (DbConn)instantiateClass("de.tudarmstadt.ito.xmldbms.db.DbConn2"); break;
 	}
-	dbConn.setDB(props);
+
 	
-   }                                                   
+	dbConn.setDB(props1);
+	
+   }                                                                                                   
 
    private DbConn			dbConn;
 
@@ -308,7 +341,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
    {
 	 if (className == null) return null;
 	 return Class.forName(className).newInstance();
-   }         
+   }            
 
 /**
  * Insert the method's description here.
@@ -323,18 +356,19 @@ public void setName(Properties props) {
 
 	
 	// Set the Table/Schema/Catalog names if different
-	if ((String)props.getProperty(XMLDBMSProps.KEYGENTABLE) != null)
-	{table = (String)props.getProperty(XMLDBMSProps.KEYGENTABLE);}
+	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWTABLE) != null)
+	{table = (String)props.getProperty(KeyGeneratorProps.HIGHLOWTABLE);}
 	
-	if ((String)props.getProperty(XMLDBMSProps.KEYGENSCHEMA) != null)
-	{schema = (String)props.getProperty(XMLDBMSProps.KEYGENSCHEMA);}
+	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMA) != null)
+	{schema = (String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMA);}
 	
-	if ((String)props.getProperty(XMLDBMSProps.KEYGENCAT) != null)
-	{cat = (String)props.getProperty(XMLDBMSProps.KEYGENCAT);}
+	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWCATALOG) != null)
+	{cat = (String)props.getProperty(KeyGeneratorProps.HIGHLOWCATALOG);}
 
-	if ((String)props.getProperty(XMLDBMSProps.KEYGENSEP) != null)
-	{sep = (String)props.getProperty(XMLDBMSProps.KEYGENSEP);}	
+	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMASEPARATOR) != null)
+	{sep = (String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMASEPARATOR);}	
 
+	
 
 	fulltable = table; 
 		
@@ -343,6 +377,51 @@ public void setName(Properties props) {
 
 	if (cat != null)
 	{fulltable = cat + sep +fulltable;}	
+
+	
+	
+	}
+
+/**
+ * Insert the method's description here.
+ * Creation date: (19/04/01 13:56:08)
+ */
+public void setName(Properties props, DatabaseMetaData dbm) throws java.sql.SQLException {
+
+	table = "XMLDBMSKey";
+	sep = ".";
+	schema = null;
+	cat = null;
+
+	
+	// Set the Table/Schema/Catalog names if different
+	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWTABLE) != null)
+	{table = (String)props.getProperty(KeyGeneratorProps.HIGHLOWTABLE);}
+	
+	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMA) != null)
+	{schema = (String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMA);}
+	
+	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWCATALOG) != null)
+	{cat = (String)props.getProperty(KeyGeneratorProps.HIGHLOWCATALOG);}
+
+	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMASEPARATOR) != null)
+	{sep = (String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMASEPARATOR);}	
+	
+
+	fulltable = table; 
+		
+	if (schema != null)
+	{fulltable = schema + sep +fulltable;}
+
+	if (cat != null)
+	{	if (dbm.isCatalogAtStart() == true)
+		{fulltable = cat + dbm.getCatalogSeparator() +fulltable;
+		}
+		else
+		{ fulltable = fulltable + dbm.getCatalogSeparator() + cat;}
+		
+		
+	}	
 
 	
 	

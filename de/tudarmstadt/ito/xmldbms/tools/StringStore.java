@@ -48,7 +48,7 @@ public static void store(String sfilepath,String sfileContent) {
 	  }
 	  catch(Exception e)
 	  {
-	 	System.out.println("Error Occured"+e); 
+	 	System.out.println("String Writing Error Occured Filepath = "+spath +"Error = " +e); 
 	  } 
 	}
 

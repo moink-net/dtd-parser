@@ -9,6 +9,7 @@ import java.beans.*;
 
 import de.tudarmstadt.ito.xmldbms.tools.ProcessProperties;
 import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
+import de.tudarmstadt.ito.xmldbms.db.*;
 
 import java.util.StringTokenizer;
 
@@ -158,7 +159,7 @@ public String getPropFileOut() {
  */   
 public String getURL() {
 	
-	return XMLDBMSProps.URL;
+	return DBProps.URL;
 }
 
 /**
@@ -168,7 +169,7 @@ public String getURL() {
  */
 public String getDriver() {
 	
-	return XMLDBMSProps.DRIVER;
+	return DBProps.DRIVER;
 }
 
 
@@ -179,7 +180,7 @@ public String getDriver() {
  */
 public String getUser() {
 	
-	return XMLDBMSProps.USER;
+	return DBProps.USER;
 }
 
 /**
@@ -189,7 +190,7 @@ public String getUser() {
  */
 public String getPassword() {
 	
-	return XMLDBMSProps.PASSWORD;
+	return DBProps.PASSWORD;
 }
 
 /**
@@ -457,7 +458,7 @@ public String getPropVal(String key) {
 }/**
  * Insert the method's description here.
  * Creation date: (08/11/00 19:21:35)
- */ 
+ */    
 public void addKeys(String str) {
 try{
 	String z1 = "";
@@ -480,7 +481,7 @@ try{
 		}/**
  * Insert the method's description here.
  * Creation date: (08/11/00 19:21:35)
- */ 
+ */    
 public void addMultipleVal(String Key,String Val)   {
 try{
 	String z1 = "";
@@ -506,7 +507,7 @@ try{
  * @param str java.lang.String
  * @param sep java.lang.String
  * @param b1 boolean
- */ 
+ */    
 public void addMultipleVal(String Key,String Val, String Sep)   {
 try{
 	String z1 = "";
@@ -528,7 +529,7 @@ try{
 		}
 		}/**
  * This method was created in VisualAge.
- */ 
+ */    
 public String bool2String(boolean b) {
 	if (b) { return getYes();}
 	else { return getNo();}
@@ -536,7 +537,7 @@ public String bool2String(boolean b) {
 }/**
  * Insert the method's description here.
  * Creation date: (18/02/01 19:49:54)
- */ 
+ */    
 public void emptyProp() {
 
 	prop.remove(getPropFileOut());
@@ -570,7 +571,7 @@ public void emptyProp() {
  * @return int
  * @param field java.lang.String
  * @param sep java.lang.String
- */ 
+ */    
 public int getNumTokens(String field, String sep) {
 	StringTokenizer sta = new StringTokenizer(field,sep);
 	int i = sta.countTokens();

@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
+import de.tudarmstadt.ito.xmldbms.db.*;
 import java.sql.DriverManager;
 
 /**
@@ -242,16 +243,16 @@ public void close() throws java.lang.Exception {
 	  String driver;
 
 	  // Get the database properties;
-	  driver = (String)props.getProperty(XMLDBMSProps.DRIVER);
+	  driver = props.getProperty(DBProps.DRIVER);
 	  if (driver == null)
 		 throw new IllegalArgumentException("No Driver property set.");
-	  url = (String)props.getProperty(XMLDBMSProps.URL);
+	  url = props.getProperty(DBProps.URL);
 	  if (url == null)
 		 throw new IllegalArgumentException("No URL property set.");
-	  user = (String)props.getProperty(XMLDBMSProps.USER);
-	  password = (String)props.getProperty(XMLDBMSProps.PASSWORD);
+	  user = props.getProperty(DBProps.USER);
+	  password = props.getProperty(DBProps.PASSWORD);
 
 	  // Load the driver.
 	  Class.forName(driver);
-   }               
+   }                     
 }

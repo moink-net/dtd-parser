@@ -195,7 +195,7 @@ public class MapFactory_DTD
    /** Construct a new MapFactory_DTD. */
    public MapFactory_DTD()
    {
-   }   
+   }      
 
    //**************************************************************************
    // Public methods
@@ -239,7 +239,7 @@ public class MapFactory_DTD
 	  }
 
 	  return createMap(dtd, storeOrder);
-   }   
+   }      
 
 
    /**
@@ -275,7 +275,7 @@ public class MapFactory_DTD
 			throw new IllegalArgumentException("Invalid or unsupported type: " + type);
 	  }
 	  return createMap(dtd, storeOrder);
-   }   
+   }      
 
    /**
 	* Create a map from a DTD object.
@@ -303,7 +303,7 @@ public class MapFactory_DTD
 
 	  map.createTableMapsFromClassMaps();
 	  return map.createMapFromTemp();
-   }   
+   }      
 
    //**************************************************************************
    // Private methods -- process element type definitions
@@ -322,7 +322,7 @@ public class MapFactory_DTD
 	  }	  
 
 	  
-   }                  
+   }                     
 
    private void processElementType(ElementType elementType)
 	  throws InvalidMapException
@@ -333,11 +333,6 @@ public class MapFactory_DTD
 	  // Check if the element is treated as a class. If not, return and don't
 	  // process it now. Instead, we will process it when we encounter it in
 	  // each of its parents.
-		System.out.println("Element = " +elementType.name);
-		System.out.println("Element = " +elementType.name.qualified);
-		System.out.println("Element = " +elementType.name.local);
-
-
 
 	  if (!isClass(elementType)) return;
 
@@ -387,7 +382,7 @@ public class MapFactory_DTD
 			// No content to process.
 			break;
 	  }
-   }            
+   }               
 
    private boolean isClass(ElementType elementType)
    {
@@ -406,7 +401,7 @@ public class MapFactory_DTD
 
 	  return (!elementType.children.isEmpty() ||
 			  !elementType.attributes.isEmpty());
-   }   
+   }      
 
    //**************************************************************************
    // Private methods - process attribute definitions
@@ -425,7 +420,7 @@ public class MapFactory_DTD
 		 attribute = (Attribute)e.nextElement();
 		 addAttrPropertyMap(classMap, attribute);
 	  }
-   }   
+   }      
 
    //**************************************************************************
    // Private methods - process content
@@ -458,7 +453,7 @@ public class MapFactory_DTD
 			addElementTypePropertyMap(classMap, child, true);
 		 }
 	  }
-   }   
+   }      
 
    private void processPCDATAContent(TempClassMap classMap)
 	  throws InvalidMapException
@@ -469,7 +464,7 @@ public class MapFactory_DTD
 	  // that the PCDATA is single-valued.)
 
 	  addPCDATAPropertyMap(classMap, false);
-   }   
+   }      
 
    private void processElementContent(TempClassMap classMap, Group content, Hashtable children)
 	  throws InvalidMapException
@@ -505,7 +500,7 @@ public class MapFactory_DTD
 			addElementTypePropertyMap(classMap, child, repeatable);
 		 }
 	  }
-   }   
+   }      
 
    private void setRepeatInfo(Hashtable repeatInfo, Group content, boolean parentRepeatable)
    {
@@ -553,7 +548,7 @@ public class MapFactory_DTD
 			setRepeatInfo(repeatInfo, (Group)particle, repeatable);
 		 }
 	  }
-   }   
+   }      
 
    //**************************************************************************
    // Private methods -- property maps
@@ -636,7 +631,7 @@ public class MapFactory_DTD
 		 propMap.orderInfo.orderColumn = table.getColumn(name.local + ORDER);
 		 propMap.orderInfo.orderColumn.type = Types.INTEGER;
 	  }
-   }   
+   }      
 
    private void addAttrPropertyMap(TempClassMap classMap, Attribute attribute)
 	  throws InvalidMapException
@@ -648,7 +643,7 @@ public class MapFactory_DTD
 					 (attribute.type == Attribute.TYPE_NMTOKENS));
 
 	  addPropertyMap(classMap, attribute.name, multiValued, PROPERTY_ATTRIBUTE);
-   }   
+   }      
 
    private void addPCDATAPropertyMap(TempClassMap classMap, boolean multiValued)
 	  throws InvalidMapException
@@ -658,13 +653,13 @@ public class MapFactory_DTD
 	  name = new NSName(classMap.name.local + PCDATA, null, null);
 
 	  addPropertyMap(classMap, name, multiValued, PROPERTY_PCDATA);
-   }   
+   }      
 
    private void addElementTypePropertyMap(TempClassMap classMap, ElementType elementType, boolean multiValued)
 	  throws InvalidMapException
    {
 	  addPropertyMap(classMap, elementType.name, multiValued, PROPERTY_ELEMENTTYPE);
-   }   
+   }      
 
    //**************************************************************************
    // Private methods -- related classes
@@ -715,7 +710,7 @@ public class MapFactory_DTD
 	  // Add the related class map to the class map.
 
 	  classMap.addRelatedClassMap(relatedClassMap);
-   }   
+   }      
 
    //**************************************************************************
    // Private methods -- process element type definitions
@@ -758,7 +753,7 @@ public class MapFactory_DTD
 			}
 		 }
 	  }
-   }   
+   }      
 
    private void addRootClassMap(ElementType elementType)
    {
@@ -796,5 +791,5 @@ public class MapFactory_DTD
 		 rootClassMap.orderInfo.orderColumn = classMap.table.getColumn(classMap.name.local + ORDER);
 		 rootClassMap.orderInfo.orderColumn.type = Types.INTEGER;
 	  }
-   }   
+   }      
 }

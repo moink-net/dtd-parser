@@ -290,7 +290,7 @@ public Parser getSAXParser()
 
 }
 
-public Document createDocument() throws DocumentFactoryException
+public Document createDocument() throws ParserUtilsException
 {
   try
 	  {
@@ -307,7 +307,7 @@ public Document createDocument() throws DocumentFactoryException
 	  }
 	  catch (Exception e)
 	  {
-		 throw new DocumentFactoryException(e.getMessage());
+		 throw new ParserUtilsException(e.getMessage());
 	  }
-   }            
+   }               
 }

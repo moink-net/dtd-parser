@@ -7,10 +7,13 @@
 // * Changed error messages in addColumnMetadata and checkColumnTypesSet
 // * Fixed bug in addResultSetMetadata where column number not set
 // * Quote table names in buildInsert/Select/CreateTableString
-// Changes from version 1.01: None
+// Changes from version 1.01:
+// * Set quote character to space if it is null.
+// * Fixed bug in getRootTableMap that threw NullPointerException.
+// * Check that catalog separator length is 0 in addColumnMetaData.
+// * Parse and correctly quote qualified table names when building SQL.
 
 package de.tudarmstadt.ito.xmldbms;
-
 
 import de.tudarmstadt.ito.xmldbms.mapfactories.XMLDBMSConst;
 import de.tudarmstadt.ito.utils.NSName;
@@ -31,8 +34,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Random;
 import java.util.Stack;
-
-import java.util.StringTokenizer;
 
 /**
  * Describes how an XML document is mapped to a database and vice versa;
@@ -85,7 +86,6 @@ public class Map extends XMLOutputStream
    private static String DESC        = " DESC";
    private static String AND         = " AND ";
    private static String EQUALSPARAM = " = ?";
-   private static String PERIOD = ".";
    private static String RESULTSET = "Result Set";
 
 
@@ -115,6 +115,9 @@ public class Map extends XMLOutputStream
 		  varcharName;
 
    // Database variables
+   // We assume that the schema separator is always a period. Neither the
+   // JDBC nor ODBC manuals are clear on this point.
+
    Connection conn = null;
    ResultSet  mappedResultSet = null;
    String[]   insertStrings, createStrings;
@@ -123,6 +126,11 @@ public class Map extends XMLOutputStream
    Stack[][]  selectStacks;
    int        activeStmts = 0, maxActiveStmts;
    String     quote = null;
+   String     catalogSeparator = null;
+   String     schemaSeparator = ".";
+   boolean    catalogsSupported = false,
+              catalogAtStart = false,
+              schemasSupported = false;
    Random     rnd = new Random();
    boolean    emptyStringIsNull = false,    // Are empty strings treated as
 											// NULLs? Idea from Richard Sullivan
@@ -426,10 +434,14 @@ public class Map extends XMLOutputStream
    RootTableMap getRootTableMap(String rootTable) throws InvalidMapException
    {
 	  RootTableMap rootTableMap;
-	  //System.out.println("RootTable = " + rootTable);
 
 	  rootTableMap = (RootTableMap)rootTableMaps.get(rootTable);
-	  if (rootTableMap.tableMap.elementType == null)
+
+        // 8/13/01, Ronald Bourret
+        // rootTableMap is null if the root table map is not found. Previously, this
+        // checked for rootTableMap.tableMap.elementType, which threw a NullPointerException.
+
+	  if (rootTableMap == null)
 		 throw new InvalidMapException("Table not mapped as a root table: " + rootTable);
 	  return rootTableMap;
    }               
@@ -668,7 +680,6 @@ public class Map extends XMLOutputStream
 
    private void buildInsertStrings() throws SQLException
    {
-	  setQuote();
 	  insertStrings = new String[tables.length];
 	  insertStacks = new Stack[tables.length];
 	  for (int i = 0; i < tables.length; i++)
@@ -688,11 +699,13 @@ public class Map extends XMLOutputStream
 	  // Create the INSERT statement.
 	  // 6/9/00, Ruben Lainez, Ronald Bourret
 	  // Use the identifier quote character for the table name.
-	  
+
+        // 8/13/01, Ronald Bourret
+        // Parse the table name before quoting it. This is needed for table
+        // names that contain catalogs and/or schemas.
+
 	  istr.append(INSERT);
-	//  istr.append(quote);
-	  istr.append(t.name);
-	//  istr.append(quote);
+        appendQuotedTableName(istr, t.name);
 
 	  istr.append(OPENPAREN);
 	  for (i = 0; i < t.columns.length; i++)
@@ -731,15 +744,16 @@ public class Map extends XMLOutputStream
 	  throws InvalidMapException, SQLException
    {
 	  StringBuffer cstr = new StringBuffer(1000);
-	  setQuote();
 	  
 	  // 6/9/00, Ruben Lainez, Ronald Bourret
 	  // Use the identifier quote character for the table name.
 	  
+        // 8/13/01, Ronald Bourret
+        // Parse the table name before quoting it. This is needed for table
+        // names that contain catalogs and/or schemas.
+
 	  cstr.append(CREATETABLE);
-	  cstr.append(quote);
-	  cstr.append(t.name);
-	  cstr.append(quote);
+        appendQuotedTableName(cstr, t.name);
 	  cstr.append(OPENPAREN);
 	  
 	  // Add column definitions.
@@ -928,7 +942,6 @@ public class Map extends XMLOutputStream
 	  StringBuffer     sstr;
 
 	  sstr = new StringBuffer(1000);
-	  setQuote();
 
 	  sstr.append(SELECT);
 	  
@@ -943,10 +956,12 @@ public class Map extends XMLOutputStream
 	  // 6/9/00, Ruben Lainez, Ronald Bourret
 	  // Use the identifier quote character for the table name.
 	  
+        // 8/13/01, Ronald Bourret
+        // Parse the table name before quoting it. This is needed for table
+        // names that contain catalogs and/or schemas.
+
 	  sstr.append(FROM);
-	 // sstr.append(quote);
-	  sstr.append(t.name);
-	 // sstr.append(quote);
+        appendQuotedTableName(sstr, t.name);
 	  
 	  // Add WHERE clause.
 
@@ -981,9 +996,11 @@ public class Map extends XMLOutputStream
 	  {
 		 str.append(COMMA);
 	  }
-	  str.append(quote);
-	  str.append(column.name);
-	  str.append(quote);
+
+        // 8/13/01, Ronald Bourret
+        // Move calls to add quoted name to separate method.
+
+        appendQuotedName(str, column.name);
    }   
 
    private void addColumnRestriction(StringBuffer sstr, Column column, boolean and)
@@ -994,14 +1011,6 @@ public class Map extends XMLOutputStream
 	  }
 	  addColumnName(sstr, column, false);
 	  sstr.append(EQUALSPARAM);
-   }   
-
-   void setQuote() throws SQLException
-   {
-	  if (quote == null)
-	  {
-		 quote = conn.getMetaData().getIdentifierQuoteString();
-	  }
    }   
 
    //**************************************************************************
@@ -1572,13 +1581,14 @@ public class Map extends XMLOutputStream
    }   
 
    //**************************************************************************
-   // Private methods - initialization
+   // Private methods - database initialization
    //**************************************************************************
 
    private void getDatabaseMetadata()
 	  throws SQLException
    {
 	  DatabaseMetaData meta;
+        String           term;
 
 	  meta = conn.getMetaData();
 
@@ -1593,6 +1603,53 @@ public class Map extends XMLOutputStream
 	  }
 
 	  preparedSurviveCommit = meta.supportsOpenStatementsAcrossCommit();
+
+      // 8/13/01, Ronald Bourret
+      // Moved metadata stuff into global variables for efficiency. Added
+      // check that the catalog separator length is 0. This is needed as
+      // a workaround for the Postgres driver, which returns a catalog term
+      // even though it doesn't support catalogs. Also added try/catch for
+      // the call to getCatalogSeparator, since some Postgres drivers return
+      // "not implemented" exceptions.
+
+      term = meta.getCatalogTerm();
+      try
+      {
+         catalogSeparator = meta.getCatalogSeparator();
+      }
+      catch (Exception e)
+      {
+         catalogSeparator = null;
+      }
+      if ((term == null) || (catalogSeparator == null))
+      {
+         catalogsSupported = false;
+      }
+      else
+      {
+         catalogsSupported = ((term.length() != 0) && (catalogSeparator.length() != 0));
+      }
+      catalogAtStart = meta.isCatalogAtStart();
+
+      term = meta.getSchemaTerm();
+      if (term == null)
+      {
+         schemasSupported = false;
+      }
+      else
+      {
+         schemasSupported = (term.length() != 0);
+      }
+
+      // 8/13/01, Ronald Bourret
+      // Moved contents of setQuote() to this method for efficiency. Also
+      // set the quote character to a space if it was null.
+
+      quote = conn.getMetaData().getIdentifierQuoteString();
+      if (quote == null)
+      {
+         quote = " ";
+      }
    }   
 
    private void getTableMetadata()
@@ -1617,7 +1674,6 @@ public class Map extends XMLOutputStream
 			addColumnMetadata(meta, tables[i]);
 		 }
 	  }
-
    }   
 
    private void addResultSetMetadata(Table table)
@@ -1676,133 +1732,153 @@ public class Map extends XMLOutputStream
    private void addColumnMetadata(DatabaseMetaData meta, Table table)
 	  throws SQLException, InvalidMapException
    {
-	  String     catalog = null,
-				 schema = null,
-				 tableName = table.name;
-				 //System.out.println("TABLE= "+table.name);
-	  
-	  ResultSet  rs;
-	  Column     column;
-	  boolean    tableFound = false;
-	  String     columnName,catsep;
+      DBName     dbName;
+      ResultSet  rs;
+      Column     column;
+      boolean    tableFound = false;
+      String     columnName;
 
-	  // Get the catalog, schema, and table names. Note that we check first to
-	  // see if catalogs and schemas are even supported.
+      // Get the catalog, schema, and table names.
 
+      dbName = parseQualifiedName(table.name);
 
-	  catsep = meta.getCatalogSeparator();
-	  
-		if (catsep == null)
-		{catsep = ".";}
-		
-		if (catsep.equals(""))
-		{catsep = ".";}
-		
-	  
-		  StringTokenizer st = new StringTokenizer(table.name,catsep);
-		  int i;
-		  i = st.countTokens();
-		  //System.out.println("Number of tokens = " +i);
-		  if (i==2 && meta.getSchemaTerm().length() != 0)
-		  //if 2 assume schema & table but check to see if db supports schema's
-		  { schema = st.nextToken();
-			  tableName = st.nextToken();
-		  }
-		  if (i==3 && meta.getSchemaTerm().length() != 0 && meta.getCatalogTerm().length() != 0)
-		  //if 3 assume catalog & schema & table but check to see if db supports schema's & catalogs
-		  // & wether the catalog is @ the front or the back
-		  { if (meta.isCatalogAtStart())
-			  {
-			  catalog = st.nextToken();
-			  schema = st.nextToken();
-			  tableName = st.nextToken();
-			  }
-			  else
-			  {
-			  schema = st.nextToken();
-			  tableName = st.nextToken();
-			  catalog = st.nextToken();
-			  }
-		  }
+      // Get the column metadata result set and process it. Column 4 is column
+      // name, column 5 is data type, and column 7 is length in characters.
 
-//		  	   System.out.println("Catalog = "+catalog);	
-//			   System.out.println("Schema = "+schema);
-//			   System.out.println("tableName = "+tableName);			
-		 
-	  
+      rs = meta.getColumns(dbName.catalog, dbName.schema, dbName.table, null);
 
-	  // Get the column metadata result set and process it. Column 4 is column
-	  // name, column 5 is data type, and column 7 is length in characters.
+      while (rs.next())
+      {
+         tableFound = true;
 
+         // Get the next row of metadata and get the column name. If the column
+         // isn't mapped, continue to the following row.
 
-	  rs = meta.getColumns(catalog, schema, tableName, null);
+         try
+         {
+            column = table.getColumn(rs.getString(4));
+         }
+         catch (InvalidMapException ime)
+         {
+            continue;
+         }
 
+         // Set the type and length.
 
-	  while (rs.next())
-	  {
-		 tableFound = true;
+         column.type = (int)rs.getShort(5);
+         fixDateTimeType(column);
+         column.length = rs.getInt(7);
+      }
 
-		 // Get the next row of metadata and get the column name. If the column
-		 // isn't mapped, continue to the following row.
+      // Close the result set.
+      rs.close();
 
-		 try
-		 {
-			column = table.getColumn(rs.getString(4));
+      // If the table was not found, throw an error.
 
+      // 5/19/00, Ronald Bourret
+      // Added comments about checking case to error message.
+      //
+      // A common problem is that users use a different case in the map document
+      // than is used to store an identifier in the database. This is because
+      // databases commonly case-fold unquoted identifiers in CREATE TABLE
+      // statements before storing them. For example, the identifier Foo in
+      // "CREATE TABLE Foo ..." might be stored as FOO. If the user uses Foo in
+      // the map document, it is not found because the database uses FOO.
+      //
+      // Unfortunately, there is no easy technical solution to this problem, in
+      // spite of the fact that JDBC provides information about how identifiers
+      // are stored in the database. The problem is that the map document does
+      // not support quoted identifiers. Thus, Foo could refer to the unquoted
+      // identifier Foo (which might need to be case-folded to FOO before
+      // comparison) or the quoted identifier "Foo" (which might not need to be
+      // case-folded).
+      //
+      // Although we could support quoted identifiers in the map document,
+      // (a) this is not backwards compatible, and (b) this is more complex than
+      // simply requiring users to use the exact case.
 
-		 }
-		 catch (InvalidMapException ime)
-		 {
-			continue;
-		 }
+      if (!tableFound)
+         throw new InvalidMapException("Table not found: " + table.name +
+            ". Check that the table exists, that its name is spelled correctly, " +
+            "and that the case used in the map document exactly matches the " +
+            "case used in the database. This might be different from the case " +
+            "you used when creating the table.");
 
-		 // Set the type and length.
+      // Check that the type variable was set for all columns.
 
-
-
-		 column.type = (int)rs.getShort(5);
-		 fixDateTimeType(column);
-		 column.length = rs.getInt(7);
-	  }
-
-	  // Close the result set.
-	  rs.close();
-
-	  // If the table was not found, throw an error.
-
-	  // 5/19/00, Ronald Bourret
-	  // Added comments about checking case to error message.
-	  //
-	  // A common problem is that users use a different case in the map document
-	  // than is used to store an identifier in the database. This is because
-	  // databases commonly case-fold unquoted identifiers in CREATE TABLE
-	  // statements before storing them. For example, the identifier Foo in
-	  // "CREATE TABLE Foo ..." might be stored as FOO. If the user uses Foo in
-	  // the map document, it is not found because the database uses FOO.
-	  //
-	  // Unfortunately, there is no easy technical solution to this problem, in
-	  // spite of the fact that JDBC provides information about how identifiers
-	  // are stored in the database. The problem is that the map document does
-	  // not support quoted identifiers. Thus, Foo could refer to the unquoted
-	  // identifier Foo (which might need to be case-folded to FOO before
-	  // comparison) or the quoted identifier "Foo" (which might not need to be
-	  // case-folded).
-	  //
-	  // Although we could support quoted identifiers in the map document,
-	  // (a) this is not backwards compatible, and (b) this is more complex than
-	  // simply requiring users to use the exact case.
-
-	  if (!tableFound)
-		 throw new InvalidMapException("Table not found: " + table.name +
-			". Check that the table exists, that its name is spelled correctly, " +
-			"and that the case used in the map document exactly matches the " +
-			"case used in the database. This might be different from the case " +
-			"you used when creating the table.");
-
-	  // Check that the type variable was set for all columns.
-
-	  checkColumnTypesSet(table);
+      checkColumnTypesSet(table);
    }                                                                           
+
+   private DBName parseQualifiedName(String qualifiedName)
+   {
+      // 8/13/01, Ronald Bourret
+      // Moved name parsing to separate method (this one).
+
+      int    separatorIndex;
+      DBName dbName = new DBName();
+
+      if (catalogsSupported)
+      {
+         separatorIndex = qualifiedName.indexOf(catalogSeparator);
+         if (separatorIndex != -1)
+         {
+            if (catalogAtStart)
+            {
+               dbName.catalog = qualifiedName.substring(0, separatorIndex);
+               qualifiedName = qualifiedName.substring(separatorIndex + 1);
+            }
+            else
+            {
+               dbName.catalog = qualifiedName.substring(separatorIndex + 1);
+               qualifiedName = qualifiedName.substring(0, separatorIndex);
+            }
+         }
+      }
+
+      if (schemasSupported)
+      {
+         separatorIndex = qualifiedName.indexOf(schemaSeparator);
+         if (separatorIndex != -1)
+         {
+            dbName.schema = qualifiedName.substring(0, separatorIndex);
+            qualifiedName = qualifiedName.substring(separatorIndex + 1);
+         }
+      }
+
+      dbName.table = qualifiedName;
+
+      return dbName;
+   }
+
+   private void appendQuotedTableName(StringBuffer sb, String qualifiedName)
+   {
+      DBName       dbName;
+
+      dbName = parseQualifiedName(qualifiedName);
+      if ((dbName.catalog != null) && (catalogAtStart))
+      {
+         appendQuotedName(sb, dbName.catalog);
+         sb.append(catalogSeparator);
+      }
+      if (dbName.schema != null)
+      {
+         appendQuotedName(sb, dbName.schema);
+         sb.append(schemaSeparator);
+      }
+      appendQuotedName(sb, dbName.table);
+      if ((dbName.catalog != null) && (!catalogAtStart))
+      {
+         sb.append(catalogSeparator);
+         appendQuotedName(sb, dbName.catalog);
+      }
+   }
+
+   private void appendQuotedName(StringBuffer sb, String name)
+   {
+      sb.append(quote);
+      sb.append(name);
+      sb.append(quote);
+   }
 
    private void fixDateTimeType(Column column)
    {
@@ -1848,4 +1924,17 @@ public class Map extends XMLOutputStream
 			   "creating the column.");
 	  }
    }   
+
+   //**************************************************************************
+   // Inner classes -- database name
+   //**************************************************************************
+
+   private class DBName
+   {
+      String catalog = null;
+      String schema = null;
+      String table = null;
+
+      DBName(){}
+   }
 }

@@ -6,7 +6,6 @@ package de.tudarmstadt.ito.xmldbms.db;
  * @author: Adam Flinton
  */
 import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
-import DBConn;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -34,10 +33,10 @@ public java.sql.Connection getConn() throws java.sql.SQLException {
  */
 public void setDB(java.util.Properties props) throws java.lang.ClassNotFoundException {
 
-	 Driver = (String)props.getProperty(XMLDBMSProps.DRIVER);
-	 url = (String)props.getProperty(XMLDBMSProps.URL);
-	 user = (String)props.getProperty(XMLDBMSProps.USER);
-	 password = (String)props.getProperty(XMLDBMSProps.PASSWORD);
+	 Driver = props.getProperty(DBProps.DRIVER);
+	 url = props.getProperty(DBProps.URL);
+	 user = props.getProperty(DBProps.USER);
+	 password = props.getProperty(DBProps.PASSWORD);
 		 
 	if (Driver == null) {System.out.println("Driver Not Set");}
 	else {

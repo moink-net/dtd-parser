@@ -14,9 +14,10 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Vector;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
-import java.util.HashMap;
 import de.tudarmstadt.ito.xmldbms.objectcache.ObjectCache;
+import de.tudarmstadt.ito.xmldbms.xslt.XSLTProps;
+import java.util.Hashtable;
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
 
 /**
  * Base class for Transfer, GenerateMap, etc.
@@ -44,7 +45,7 @@ public class ProcessProperties
 	*/
    public ProcessProperties()
    {
-   }   
+   }      
 
    // ************************************************************************
    // Public methods
@@ -112,7 +113,7 @@ public class ProcessProperties
 	} 
 	 return props;
 
-   }                                                                                                
+   }                                                                                                   
 
    /**
 	* Adds properties from a Java properties file.
@@ -141,7 +142,7 @@ public class ProcessProperties
 	}
 	 
 //	System.out.println("PFN = " +propFilename);
-	 HashMap h = oc.getMap();
+	 Hashtable h = oc.getMap();
 		fp = (Properties)h.get(propFilename);
 		if (fp != null)
 		{
@@ -218,7 +219,7 @@ public class ProcessProperties
 	 array = new String[vector.size()];
 	 vector.copyInto(array);
 	 return array;
-   }               
+   }                  
 
    /**
 	* Returns a two-dimensional array of values corresponding to
@@ -247,7 +248,7 @@ public class ProcessProperties
 	 Vector     innerVector = new Vector();
 
 	 // Look for properties named <base>1_1, <base>1_2, ... <base>2_1, <base>2_2, etc.
-	 for (i = 1; i < outerLimit; i++ )
+	 for (i = 1; i <= outerLimit; i++ )
 	 {
 	   for (j = 1; ; j++ )
 	   {
@@ -261,13 +262,14 @@ public class ProcessProperties
 		 {
 			break;
 		 }
-		 innerArray = new String[innerVector.size()];
-		 innerVector.copyInto(innerArray);
-		 outerArray[i] = innerArray;
 	   }
+	   innerArray = new String[innerVector.size()];
+	   innerVector.copyInto(innerArray);
+		 innerVector.removeAllElements();
+	   outerArray[i - 1] = innerArray;
 	 }
 	 return outerArray;
-   }               
+   }                  
 
    /**
 	* Concatenates the values of numbered properties.
@@ -313,7 +315,7 @@ public class ProcessProperties
 	  }
 
 	  return concatValue;
-   }   
+   }      
 
    /**
 	* Whether a String is the value "Yes" or "No". Case sensitive.
@@ -330,7 +332,7 @@ public class ProcessProperties
 		 return false;
 	  else
 		 throw new IllegalArgumentException("Invalid Yes/No value: " + s);
-   }   
+   }      
 
    /**
 	* Writes the properties to an output file.
@@ -363,7 +365,7 @@ public class ProcessProperties
 	  {
 		 throw new IllegalArgumentException("You must specify a value for the OutputFile property.");
 	  }
-   }   
+   }      
 
    private static ObjectCache oc = new ObjectCache();
 
@@ -380,10 +382,19 @@ public void addDocRoot(Properties props) {
 
 	String Root = props.getProperty(XMLDBMSProps.DOCROOT);
 
-	if (props.getProperty(XMLDBMSProps.XSLTSCRIPT) != null)
+	if (props.getProperty(XSLTProps.XSLTSCRIPT) != null)
 	{
-	String xsl = Root + props.getProperty(XMLDBMSProps.XSLTSCRIPT);
-	props.put(XMLDBMSProps.XSLTSCRIPT,xsl);
+	String Basename = XSLTProps.XSLTSCRIPT;	
+	String xsl = Root + props.getProperty(XSLTProps.XSLTSCRIPT);
+	props.put(XSLTProps.XSLTSCRIPT,xsl);
+	int i=1;
+	while (props.getProperty(Basename+i) != null)
+	{xsl = null;
+		String value = Basename +i;
+		xsl = Root + props.getProperty(Basename+i) ;
+		props.put(value,xsl);
+		i++;
+	}
 	}
 
 	if (props.getProperty(XMLDBMSProps.MAPFILE) != null)

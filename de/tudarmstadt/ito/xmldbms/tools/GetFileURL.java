@@ -70,7 +70,8 @@ public InputStream getFile(String[] args) throws GetFileException {
 					try {
 						fins = new FileInputStream(fname);
 					} catch (IOException e) {
-						System.err.println(e);
+						throw new GetFileException("FileName = " +fname + " IOException " +e.toString());
+						
 
 					} // end of checking for exception
 
@@ -78,13 +79,13 @@ public InputStream getFile(String[] args) throws GetFileException {
 
 				else {
 
-					throw new GetFileException("the file is not readable");
+					throw new GetFileException("the file is not readable " +fname);
 
 				} // end of else for canread 
 			} // end of if for canWrite 
 
 			else {
-				throw new GetFileException("the file is not writable");
+				throw new GetFileException("the file is not writable " +fname);
 
 			} // end of if for canWrite 
 
@@ -100,14 +101,16 @@ public InputStream getFile(String[] args) throws GetFileException {
 				fins = f1s;
 
 			} else
-				throw new GetFileException("the file DOES NOT EXIST");
+				throw new GetFileException("the file DOES NOT EXIST" +fname);
 		} catch (MalformedURLException e) {
-			throw new GetFileException(" url is invalid");
+			throw new GetFileException("FileName = " +fname + " url is invalid" +e.toString());
+			
 			//System.err.println(e);
 
 		} // end of checking for exception
 		catch (IOException e) {
-			System.err.println(e);
+			throw new GetFileException("FileName = " +fname + " IOException " +e.toString());
+			
 
 		} // end of checking for exception
 

@@ -203,14 +203,14 @@ public class GenerateMap extends ProcessProperties
 	 String  schemaFilename, catalog, schema, sqlSeparator;
 	 boolean orderColumns;
 
-	 schemaFilename = (String)props.getProperty(XMLDBMSProps.SCHEMAFILE);
-	 catalog = (String)props.getProperty(XMLDBMSProps.CATALOG);
-	 schema = (String)props.getProperty(XMLDBMSProps.SCHEMA);
+	 schemaFilename = props.getProperty(XMLDBMSProps.SCHEMAFILE);
+	 catalog = props.getProperty(XMLDBMSProps.CATALOG);
+	 schema = props.getProperty(XMLDBMSProps.SCHEMA);
 	 sqlSeparator = getSQLSeparator(props);
 	 orderColumns = getYesNo((String)props.getProperty(XMLDBMSProps.ORDERCOLUMNS));
 
 	 engine.createMap(schemaFilename, catalog, schema, sqlSeparator, orderColumns);
-   }                           
+   }                              
 
    private  void dispatchCreateMapFromDTD(MapEngine engine, Properties props)
 	  throws Exception
@@ -219,9 +219,9 @@ public class GenerateMap extends ProcessProperties
 	 String[] prefixes, namespaceURIs;
 	 boolean  orderColumns;
 
-	 dtdFilename = (String)props.getProperty(XMLDBMSProps.SCHEMAFILE);
-	 catalog = (String)props.getProperty(XMLDBMSProps.CATALOG);
-	 schema = (String)props.getProperty(XMLDBMSProps.SCHEMA);
+	 dtdFilename = props.getProperty(XMLDBMSProps.SCHEMAFILE);
+	 catalog = props.getProperty(XMLDBMSProps.CATALOG);
+	 schema = props.getProperty(XMLDBMSProps.SCHEMA);
 	 sqlSeparator = getSQLSeparator(props);
 	 orderColumns = getYesNo((String)props.getProperty(XMLDBMSProps.ORDERCOLUMNS));
 
@@ -230,7 +230,7 @@ public class GenerateMap extends ProcessProperties
 
 	 //System.out.println("DispatchCreateMap from DTD "+dtdFilename);
 	 engine.createMap(dtdFilename, catalog, schema, sqlSeparator, orderColumns, prefixes, namespaceURIs);
-   }                              
+   }                                 
 
    private void dispatchCreateMapFromTables(MapEngine engine, Properties props)
 	  throws Exception
@@ -239,23 +239,23 @@ public class GenerateMap extends ProcessProperties
 	 String[] tables;
 
 	 tables = getNumberedProps (XMLDBMSProps.TABLE, props);
-	 basename = (String)props.getProperty(XMLDBMSProps.BASENAME);
+	 basename = props.getProperty(XMLDBMSProps.BASENAME);
 	 sqlSeparator = getSQLSeparator(props);
 
 	 engine.createMap(tables, basename, sqlSeparator);
-   }                  
+   }                     
 
    private  void dispatchCreateMapFromSelect(MapEngine engine, Properties props)
 	  throws Exception
    {
 	 String select, basename, sqlSeparator;
 
-	 select = (String)props.getProperty(XMLDBMSProps.SELECT);
-	 basename = (String)props.getProperty(XMLDBMSProps.BASENAME);
+	 select = props.getProperty(XMLDBMSProps.SELECT);
+	 basename = props.getProperty(XMLDBMSProps.BASENAME);
 	 sqlSeparator = getSQLSeparator(props);
 
 	 engine.createMap(select, basename, sqlSeparator);
-   }                  
+   }                     
 
    private void dispatchCreateMapFromTable(MapEngine engine, Properties props)
 	  throws Exception
@@ -263,12 +263,12 @@ public class GenerateMap extends ProcessProperties
 	 String   basename, sqlSeparator;
 	 String[] tables = new String[1];
 
-	 tables[0] = (String)props.getProperty(XMLDBMSProps.TABLE);
-	 basename = (String)props.getProperty(XMLDBMSProps.BASENAME);
+	 tables[0] = props.getProperty(XMLDBMSProps.TABLE);
+	 basename = props.getProperty(XMLDBMSProps.BASENAME);
 	 sqlSeparator = getSQLSeparator(props);
 
 	 engine.createMap(tables, basename, sqlSeparator);
-   }   
+   }      
 
    private String getSQLSeparator(Properties props)
    {

@@ -56,7 +56,7 @@ public interface ParserUtils
  * Creation date: (29/06/01 15:45:11)
  * @return org.w3c.dom.Document
  */
-public Document createDocument() throws DocumentFactoryException;   
+public Document createDocument() throws ParserUtilsException;   
 
 /**
  * Insert the method's description here.

@@ -4,12 +4,13 @@
 // Version 1.1
 // Changes from version 1.0:
 // * Changed populateRow to fix bug when retrieving data from result sets.
-// Changes from version 1.01: None
+// Changes from version 1.01:
+// * Replaced DocumentFactory with ParserUtils.
 
 package de.tudarmstadt.ito.xmldbms;
 
 
-import de.tudarmstadt.ito.domutils.DocumentFactoryException;
+import de.tudarmstadt.ito.domutils.ParserUtils;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.DOMException;
@@ -27,13 +28,13 @@ import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
 
-import de.tudarmstadt.ito.domutils.ParserUtils;
+import de.tudarmstadt.ito.domutils.ParserUtilsException;
 
 /**
  * Transfers data from the database to a DOM tree.
  *
  * <P>DBMSToDOM transfers data from the database to a DOM tree according
- * to a particular Map. The caller must provide a DocumentFactory for the
+ * to a particular Map. The caller must provide a ParserUtils object for the
  * DOM implementation they are using (many are available in
  * de.tudarmstadt.ito.domutils), a Map object, and information about how
  * to retrieve the data. The latter can be one or more table names and key
@@ -47,7 +48,7 @@ import de.tudarmstadt.ito.domutils.ParserUtils;
  *    Map map = createMap("sales.map", conn);<BR />
  *
  *    // Create a new DBMSToDOM object.
- *    DBMSToDOM dbmsToDOM = new DBMSToDOM(map, new DF_Oracle());<BR />
+ *    DBMSToDOM dbmsToDOM = new DBMSToDOM(map, new ParserUtilsXerces());<BR />
  *
  *    // Create a key and retrieve the data.
  *    Object[] key = {new Integer(123)};
@@ -76,7 +77,11 @@ public class DBMSToDOM
 
    private Map             map = null;
    private Document        doc;
-   private ParserUtils factory = null;
+
+   // 8/01 Adam Flinton
+   // Replaced DocumentFactory with ParserUtils.
+
+   private ParserUtils utils = null;
    private boolean         usePrefixes = false;
    private Parameters      parameters;
 
@@ -99,9 +104,19 @@ public class DBMSToDOM
    /** Construct a new DBMSToDOM object. */
    public DBMSToDOM()
    {
-   }   
+   }      
 
-
+   /**
+	* Construct a new DBMSToDOM object and set the Map and
+	* ParserUtils objects.
+	*/
+   // 8/01 Adam Flinton
+   // Replaced DocumentFactory with ParserUtils.
+   public DBMSToDOM(Map map, ParserUtils utils)
+   {
+	  this.map = map;
+	  this.utils = utils;
+   }         
 
    // ************************************************************************
    // Public methods
@@ -115,7 +130,7 @@ public class DBMSToDOM
    public Map getMap()
    {
 	  return map;
-   }   
+   }      
 
    /**
 	* Set the current Map.
@@ -125,11 +140,31 @@ public class DBMSToDOM
    public void setMap(Map map)
    {
 	  this.map = map;
-   }   
+   }      
 
+   /**
+	* Get the current ParserUtils.
+	*
+	* @return The current ParserUtils.
+	*/
+   // 8/01 Adam Flinton
+   // Replaced DocumentFactory with ParserUtils.
+   public ParserUtils getParserUtils()
+   {
+	  return utils;
+   }         
 
-
-
+   /**
+	* Set the current ParserUtils.
+	*
+	* @param utils The current ParserUtils.
+	*/
+   // 8/01 Adam Flinton
+   // Replaced DocumentFactory with ParserUtils.
+   public void setParserUtils(ParserUtils utils)
+   {
+	  this.utils = utils;
+   }         
 
    /**
 	* State whether element and attribute names should be prefixed according
@@ -140,7 +175,7 @@ public class DBMSToDOM
    public void usePrefixes(boolean usePrefixes)
    {
 	  this.usePrefixes = usePrefixes;
-   }   
+   }      
 
    /**
 	* Construct a DOM Document from a result set.
@@ -156,7 +191,7 @@ public class DBMSToDOM
 	* <P>This method closes the result set.</P>
 	*
 	* @param rs The result set.
-	* @exception DocumentFactoryException Thrown if an error occurs creating an
+	* @exception ParserUtilsException Thrown if an error occurs creating an
 	*  empty Document.
 	* @exception DOMException Thrown if a DOM error occurs. One possible cause
 	*  of this is that the result set contains more than one row and there was
@@ -167,7 +202,7 @@ public class DBMSToDOM
 	*  database.
 	*/
    public Document retrieveDocument(ResultSet rs)
-	  throws InvalidMapException, SQLException, DocumentFactoryException
+	  throws InvalidMapException, SQLException, ParserUtilsException
    {
 	  RootTableMap rootTableMap;
 
@@ -178,7 +213,7 @@ public class DBMSToDOM
 
 	  addXMLNSAttrs();
 	  return doc;
-   }   
+   }         
 
    /**
 	* Construct a DOM Document from the specified tables.
@@ -194,7 +229,7 @@ public class DBMSToDOM
 	* @param tableNames The names of the tables from which to retrieve data.
 	* @param keys The keys used to retrieve data. There must be the same
 	*  number of keys as tables.
-	* @exception DocumentFactoryException Thrown if an error occurs creating an
+	* @exception ParserUtilsException Thrown if an error occurs creating an
 	*  empty Document.
 	* @exception DOMException Thrown if a DOM error occurs. One possible cause
 	*  of this is that more than one row was retrieved from the specified tables
@@ -205,7 +240,7 @@ public class DBMSToDOM
 	*  database.
 	*/
    public Document retrieveDocument(String[] tableNames, Object[][] keys)
-	  throws InvalidMapException, SQLException, DocumentFactoryException
+	  throws InvalidMapException, SQLException, ParserUtilsException
    {
 	  Order order = new Order();
 
@@ -218,7 +253,7 @@ public class DBMSToDOM
 
 	  addXMLNSAttrs();
 	  return doc;
-   }   
+   }         
 
    /**
 	* Construct a DOM Document from the specified table.
@@ -233,7 +268,7 @@ public class DBMSToDOM
 	*
 	* @param tableName The name of the table from which to retrieve data.
 	* @param key The key used to retrieve data.
-	* @exception DocumentFactoryException Thrown if an error occurs creating an
+	* @exception ParserUtilsException Thrown if an error occurs creating an
 	*  empty Document.
 	* @exception DOMException Thrown if a DOM error occurs. One possible cause
 	*  of this is that more than one row retrieved from the specified table
@@ -244,13 +279,13 @@ public class DBMSToDOM
 	*  database.
 	*/
    public Document retrieveDocument(String tableName, Object[] key)
-	  throws DOMException, InvalidMapException, SQLException, DocumentFactoryException
+	  throws DOMException, InvalidMapException, SQLException, ParserUtilsException
    {
 	  initialize();
 	  retrieveTableData(tableName, key, new Order());
 	  addXMLNSAttrs();
 	  return doc;
-   }   
+   }         
 
    /**
 	* Construct a DOM Document according to the information in a DocumentInfo
@@ -265,7 +300,7 @@ public class DBMSToDOM
 	* otherwise, a DOMException is thrown.</P>
 	*
 	* @param docInfo The DocumentInfo specifying which rows to retrieve.
-	* @exception DocumentFactoryException Thrown if an error occurs creating an
+	* @exception ParserUtilsException Thrown if an error occurs creating an
 	*  empty Document.
 	* @exception DOMException Thrown if a DOM error occurs. One possible cause
 	*  of this is that more than one row retrieved from the specified tables
@@ -276,7 +311,7 @@ public class DBMSToDOM
 	*  database.
 	*/
    public Document retrieveDocument(DocumentInfo docInfo)
-	  throws DOMException, InvalidMapException, SQLException, DocumentFactoryException
+	  throws DOMException, InvalidMapException, SQLException, ParserUtilsException
    {
 	  RootTableMap      rootTableMap;
 	  TableMap          tableMap = null;
@@ -320,14 +355,14 @@ public class DBMSToDOM
 	  // Add xmlns attributes to the root element and return the DOM Document.
 	  addXMLNSAttrs();
 	  return doc;
-   }   
+   }         
 
    // ************************************************************************
    // Result set processing methods
    // ************************************************************************
 
    void retrieveTableData(String tableName, Object[] key, Order order)
-	  throws DOMException, InvalidMapException, SQLException, DocumentFactoryException
+	  throws DOMException, InvalidMapException, SQLException, ParserUtilsException
    {
 	  RootTableMap      rootTableMap;
 	  PreparedStatement select;
@@ -347,7 +382,7 @@ public class DBMSToDOM
 	  rs = select.executeQuery();
 	  processRootResultSet(rootTableMap, rs, rootTableMap.orderColumn, order);
 	  map.checkInSelectStmt(select);
-   }            
+   }                  
 
    void processRootResultSet(RootTableMap rootTableMap, ResultSet rs, Column orderColumn, Order parentOrder)
 	  throws DOMException, InvalidMapException, SQLException
@@ -361,7 +396,7 @@ public class DBMSToDOM
 
 	  // Process the root result set.
 	  processClassResultSet(parent, rootTableMap.tableMap, rs, orderColumn, parentOrder);
-   }   
+   }      
 
    void processClassResultSet(Node parent, TableMap rsMap, ResultSet rs, Column orderColumn, Order parentOrder)
 	  throws DOMException, SQLException, InvalidMapException
@@ -401,7 +436,7 @@ public class DBMSToDOM
 		 processRelatedTables(row, rsMap, child, childOrder);
 	  }
 	  rs.close();
-   }   
+   }      
 
    void processColumns(Row row, ColumnMap[] columnMaps, Node parent, Order parentOrder)
    {
@@ -409,7 +444,7 @@ public class DBMSToDOM
 	  {
 		 processColumn(row, columnMaps[i], parent, parentOrder);
 	  }
-   }   
+   }      
 
    void processColumn(Row row, ColumnMap columnMap, Node parent, Order parentOrder)
    {
@@ -465,7 +500,7 @@ public class DBMSToDOM
 			parentOrder.insertChild(parent, pcdata, orderValue);
 			break;
 	  }
-   }   
+   }      
 
    void processRelatedTables(Row row, TableMap rsMap, Node parent, Order parentOrder)
 	  throws SQLException, InvalidMapException
@@ -494,7 +529,7 @@ public class DBMSToDOM
 		 rs.close();
 		 map.checkInSelectStmt(select, rsMap.table.number, i);
 	  }
-   }   
+   }      
 
    void processPropResultSet(Node parent, TableMap rsMap, ResultSet rs, Order parentOrder)
 	  throws SQLException
@@ -511,19 +546,21 @@ public class DBMSToDOM
 		 processColumns(row, rsMap.columnMaps, parent, parentOrder);
 	  }
 	  rs.close();
-   }   
+   }      
 
    // ************************************************************************
    // Helper methods
    // ************************************************************************
 
-   void initialize() throws InvalidMapException, DocumentFactoryException
+   void initialize() throws InvalidMapException, ParserUtilsException
    {
+	  // 8/01 Adam Flinton
+	  // Replaced DocumentFactory with ParserUtils.
 	  if (map == null) throw new InvalidMapException("Map not set.");
-	  if (factory == null) throw new DocumentFactoryException("Document factory not set.");
-	  doc = factory.createDocument();
+	  if (utils == null) throw new IllegalStateException("Parser utilities object not set.");
+	  doc = utils.createDocument();
 	  parameters = new Parameters(map.dateFormatter, map.timeFormatter, map.timestampFormatter);
-   }   
+   }         
 
    Node addIgnoredRoot(RootTableMap rootMap)
 	  throws InvalidMapException
@@ -552,7 +589,7 @@ public class DBMSToDOM
 	  }
 
 	  return ignoredRoot;
-   }   
+   }      
 
    void addXMLNSAttrs() throws DOMException
    {
@@ -565,7 +602,7 @@ public class DBMSToDOM
 	  {
 		 root.setAttribute(XMLNS + map.prefixes[i], map.uris[i]);
 	  }
-   }   
+   }      
 
    String getDataValue(Row row, Column column)
    {
@@ -591,7 +628,7 @@ public class DBMSToDOM
 		 return getFormattedDate(map.timestampFormatter, (java.util.Date)value);
 	  else
 		 return value.toString();
-   }   
+   }      
 
    int getOrderValue(Row row, Column orderColumn)
    {
@@ -600,8 +637,14 @@ public class DBMSToDOM
 
 	  if (orderColumn == null) return -1;
 	  if (row.isNull(orderColumn)) return -1;
-	  return ((Integer)row.getColumnValue(orderColumn)).intValue();
-   }   
+
+		// 8/13/01, from Bryan Pendleton
+		// Cast the returned value as Number, not Integer. This is necessary
+		// because Oracle doesn't directly support the INTEGER SQL type and
+		// returns integers as BigDecimals.
+
+	  return ((Number)row.getColumnValue(orderColumn)).intValue();
+   }      
 
    void populateRow(Table table, Row row, ResultSet rs)
 	  throws SQLException
@@ -639,7 +682,7 @@ public class DBMSToDOM
 			}
 		 }
 	  }
-   }   
+   }      
 
    // ************************************************************************
    // Utility functions
@@ -658,7 +701,7 @@ public class DBMSToDOM
 	  {
 		 return formatter.format(date);
 	  }
-   }   
+   }      
 
    // ************************************************************************
    // Inner class
@@ -772,34 +815,4 @@ public class DBMSToDOM
 		 }
 	  }
    }
-
-   /**
-	* Construct a new DBMSToDOM object and set the Map and
-	* DocumentFactory objects.
-	*/
-   public DBMSToDOM(Map map, ParserUtils factory)
-   {
-	  this.map = map;
-	  this.factory = factory;
-   }      
-
-   /**
-	* Get the current DocumentFactory.
-	*
-	* @return The current DocumentFactory.
-	*/
-   public ParserUtils getDocumentFactory()
-   {
-	  return factory;
-   }      
-
-   /**
-	* Set the current DocumentFactory.
-	*
-	* @param factory The current DocumentFactory.
-	*/
-   public void setDocumentFactory(ParserUtils factory)
-   {
-	  this.factory = factory;
-   }      
 }
