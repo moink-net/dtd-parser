@@ -56,7 +56,7 @@ public class ClassTableMap extends ClassTableMapBase
 
    private Table     table = null;
    private Table     baseTable = null;
-   private boolean   useBaseTable = false;
+   private LinkInfo  baseLinkInfo = null;
 
    // ********************************************************************
    // Constructor
@@ -149,37 +149,39 @@ public class ClassTableMap extends ClassTableMapBase
       this.baseTable = baseTable;
       if (baseTable == null)
       {
-         this.useBaseTable = false;
+         this.baseLinkInfo = null;
       }      
    }
 
    /**
-    * Whether the base Table is used.
+    * Get the LinkInfo used to link the class table to the base class table.
     *
-    * @return Whether base Table is used.
+    * @return The LinkInfo. The "parent" table is the base class table. Null if
+    *    the base class table is not used. 
     */
-   public final boolean useBaseTable()
+   public final LinkInfo getBaseLinkInfo()
    {
-      return useBaseTable;
+      return baseLinkInfo;
    }
 
    /**
-    * Set whether the base Table is used.
+    * Set the LinkInfo used to link the table to the base table.
     *
     * <p>This method may not be called if the base table is null.</p>
     *
-    * <p>Setting the useBaseTable argument to false when the base table is non-null
+    * <p>Setting the baseLinkInfo argument to null when the base table is non-null
     * is useful if you want the map objects to preserve inheritance information
     * but want to store the data for the class in a single table, rather than in a
     * base table and a class table. Inheritance information can then be used elsewhere,
     * such as when an XML Schema is generated from a Map.</p>
     *
-    * @param useBaseTable Whether base Table is used.
+    * @param baseLinkInfo The LinkInfo. The "parent" table is the base table.
+    *    Null if the base table is not used.
     */
-   public void setUseBaseTable(boolean useBaseTable)
+   public void setBaseLinkInfo(LinkInfo baseLinkInfo)
    {
       if (baseTable == null)
          throw new IllegalStateException("Cannot call ClassTableMap.setUseBaseTable() if the base table is null.");
-      this.useBaseTable = useBaseTable;
+      this.baseLinkInfo = baseLinkInfo;
    }
 }

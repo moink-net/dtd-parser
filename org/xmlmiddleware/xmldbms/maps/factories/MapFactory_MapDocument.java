@@ -93,6 +93,7 @@ public class MapFactory_MapDocument
    //    STATE_NONE
    //       STATE_KEY
    //       STATE_CLASSMAP
+   //          STATE_USEBASETABLE
    //          STATE_PROPERTYMAP
    //             STATE_TOPROPERTYTABLE
    //             STATE_ORDER
@@ -110,6 +111,7 @@ public class MapFactory_MapDocument
    // --------------         -----------------------------------------------------
    // STATE_KEY              UseColumn
    // STATE_CLASSMAP         ElementType, PropertyMap, InlineMap, RelatedClass, UseClassMap
+   // STATE_USEBASETABLE     UseUniqueKey, UseForeignKey
    // STATE_PROPERTYMAP      ElementType, Order
    // STATE_RELATEDCLASS     ElementType, Order, UseUniqueKey, UseForeignKey, UseClassMap
    // STATE_INLINECLASS      ElementType, PropertyMap, InlineMap, RelatedClass, Order
@@ -121,16 +123,18 @@ public class MapFactory_MapDocument
    private static final int iSTATE_NONE            = 0;
    private static final int iSTATE_KEY             = 1;
    private static final int iSTATE_CLASSMAP        = 2;
-   private static final int iSTATE_PROPERTYMAP     = 3;
-   private static final int iSTATE_RELATEDCLASS    = 4;
-   private static final int iSTATE_INLINECLASS     = 5;
-   private static final int iSTATE_TOPROPERTYTABLE = 6;
-   private static final int iSTATE_ORDER           = 7;
+   private static final int iSTATE_USEBASETABLE    = 3;
+   private static final int iSTATE_PROPERTYMAP     = 4;
+   private static final int iSTATE_RELATEDCLASS    = 5;
+   private static final int iSTATE_INLINECLASS     = 6;
+   private static final int iSTATE_TOPROPERTYTABLE = 7;
+   private static final int iSTATE_ORDER           = 8;
 
    // State objects (for state variable and stateStack)
    private static final Integer STATE_NONE            = new Integer(iSTATE_NONE);
    private static final Integer STATE_KEY             = new Integer(iSTATE_KEY);
    private static final Integer STATE_CLASSMAP        = new Integer(iSTATE_CLASSMAP);
+   private static final Integer STATE_USEBASETABLE    = new Integer(iSTATE_USEBASETABLE);
    private static final Integer STATE_PROPERTYMAP     = new Integer(iSTATE_PROPERTYMAP);
    private static final Integer STATE_RELATEDCLASS    = new Integer(iSTATE_RELATEDCLASS);
    private static final Integer STATE_INLINECLASS     = new Integer(iSTATE_INLINECLASS);
@@ -151,6 +155,7 @@ public class MapFactory_MapDocument
    private TokenList       elementTokens, enumTokens;
    private Integer         state;
    private Stack           stateStack = new Stack();
+   private Stack           baseTableWrapperStack = new Stack();
    private Stack           rcmWrapperStack = new Stack();
    private Stack           inlineClassMapStack = new Stack();
    private Vector          keyColumns = new Vector();
@@ -159,37 +164,40 @@ public class MapFactory_MapDocument
    private Map             map;
 
    // State variables -- databases
-   private String          databaseName, catalogName, schemaName;
-   private boolean         quoteIdentifiers;
-   private Table           table;
-   private Key             key;
+   private String           databaseName, catalogName, schemaName;
+   private boolean          quoteIdentifiers;
+   private Table            table;
+   private Key              key;
 
    // State variables -- options
-   private Locale          locale;
-   private String          pattern, formatName;
+   private Locale           locale;
+   private String           pattern, formatName;
 
    // State variables -- class maps
-   private XMLName         elementTypeName;
-   private ClassMap        classMap;
+   private XMLName          elementTypeName;
+   private ClassMap         classMap;
 
    // State variables -- property maps
-   private PropertyMap     propMap;
-   private Table           propertyTable;
-   private boolean         parentKeyIsUnique;
-   private Key             uniqueKey;
+   private PropertyMap      propMap;
+   private Table            propertyTable;
+   private boolean          parentKeyIsUnique;
+   private Key              uniqueKey;
+
+   // State variables -- base class tables
+   private BaseTableWrapper baseTableWrapper;
 
    // State variables -- related class maps
-   private RCMWrapper      rcmWrapper;
+   private RCMWrapper       rcmWrapper;
 
    // State variables -- inline class maps
-   private InlineClassMap  inlineClassMap;
+   private InlineClassMap   inlineClassMap;
 
    // State variables -- property, related class, and inline class maps
-   private OrderInfo       orderInfo;
+   private OrderInfo        orderInfo;
 
    // Debugging variables
-   private int                 indent;
-   private boolean             debug = false;
+   private int              indent;
+   private boolean          debug = false;
 
    //**************************************************************************
    // Constructors
@@ -334,6 +342,7 @@ public class MapFactory_MapDocument
       try
       {
         resolveRCMWrappers();
+        resolveBaseTableWrappers();
         // MapInverter.createDBView(map);
       }
       catch (MapException m)
@@ -515,6 +524,12 @@ public class MapFactory_MapDocument
                processUniqueKey(attrs);
                break;
 
+            case XMLDBMSConst.ELEM_TOKEN_USEBASETABLE:
+               processUseBaseTable(attrs);
+               stateStack.push(state);
+               state = STATE_USEBASETABLE;
+               break;
+
             case XMLDBMSConst.ELEM_TOKEN_USECLASSMAP:
                processUseClassMap(attrs);
                break;
@@ -612,6 +627,7 @@ public class MapFactory_MapDocument
             case XMLDBMSConst.ELEM_TOKEN_PROPERTYMAP:
             case XMLDBMSConst.ELEM_TOKEN_RELATEDCLASS:
             case XMLDBMSConst.ELEM_TOKEN_TOPROPERTYTABLE:
+            case XMLDBMSConst.ELEM_TOKEN_USEBASETABLE:
                // Only need to pop the state.
                state = (Integer)stateStack.pop();
                break;
@@ -941,7 +957,6 @@ One solution is to store the format names in each column, then later have Map.re
    {
       String   qualifiedName;
       ClassMap baseClassMap;
-      boolean  useBaseTable;
 
       // Get the qualified name of the base class map's element type, get/create
       // the class map for that element type, and set the base class map on the
@@ -950,11 +965,6 @@ One solution is to store the format names in each column, then later have Map.re
       qualifiedName = getAttrValue(attrs, XMLDBMSConst.ATTR_ELEMENTTYPE);
       baseClassMap = map.createClassMap(XMLName.create(qualifiedName, map.getNamespaceURIs()));
       classMap.setBaseClassMap(baseClassMap);
-
-      // Get whether to use the base table and set it accordingly.
-
-      useBaseTable = isYes(getAttrValue(attrs, XMLDBMSConst.ATTR_USEBASETABLE));
-      classMap.setUseBaseTable(useBaseTable);
    }
 
    private void processFixedOrder(AttributeList attrs)
@@ -1264,7 +1274,7 @@ One solution is to store the format names in each column, then later have Map.re
       rcmWrapper = new RCMWrapper();
       rcmWrapperStack.push(rcmWrapper);
       rcmWrapper.parentClassMap = classMap;
-      rcmWrapper.parentKeyIsUnique = getParentKeyIsUnique(attrs);
+      rcmWrapper.parentKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINPARENTTABLE);
    }
 
    private void processSchema(AttributeList attrs)
@@ -1335,7 +1345,7 @@ One solution is to store the format names in each column, then later have Map.re
       // have all the necessary information.
 
       propertyTable = getTable(attrs);
-      parentKeyIsUnique = getParentKeyIsUnique(attrs);
+      parentKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINPARENTTABLE);
    }
 
    private void processUniqueKey(AttributeList attrs)
@@ -1353,6 +1363,21 @@ One solution is to store the format names in each column, then later have Map.re
       name = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
       key = Key.createUniqueKey(name);
       table.addUniqueKey(key);
+   }
+
+   private void processUseBaseTable(AttributeList attrs)
+   {
+      // We can't process <UseBaseTable> elements immediately because it is possible
+      // that the <ClassMap> element of the base class might not have been processed yet.
+      // In this case, we don't know the name of the base class table and therefore
+      // can't get the necessary keys. Therefore, we create a wrapper object to store
+      // the information and add it to the stack of wrapper objects. These will all
+      // be processed with resolveBaseTableWrappers() at the end of the document.
+
+      baseTableWrapper = new BaseTableWrapper();
+      baseTableWrapperStack.push(baseTableWrapper);
+      baseTableWrapper.extendedClassMap = classMap;
+      baseTableWrapper.baseKeyIsUnique = getParentKeyIsUnique(attrs, XMLDBMSConst.ATTR_KEYINBASETABLE);
    }
 
    private void processUseClassMap(AttributeList attrs)
@@ -1443,6 +1468,14 @@ One solution is to store the format names in each column, then later have Map.re
 
             rcmWrapper.foreignKeyName = name;
             break;
+
+         case iSTATE_USEBASETABLE:
+            // We might not know the table of the base class yet, so all we can
+            // do is save the name of the foreign key. This will be processed later
+            // in resolveBaseTableWrappers().
+
+            baseTableWrapper.foreignKeyName = name;
+            break;
       }
    }
 
@@ -1484,6 +1517,14 @@ One solution is to store the format names in each column, then later have Map.re
             {
                rcmWrapper.relatedClassMap.setClassMap(map.createClassMap(elementTypeName));
             }
+            break;
+
+         case iSTATE_USEBASETABLE:
+            // We might not know the table of the base class yet, so all we can
+            // do is save the name of the unique key. This will be processed later
+            // in resolveBaseTableWrappers().
+
+            baseTableWrapper.uniqueKeyName = name;
             break;
       }
    }
@@ -1589,6 +1630,51 @@ One solution is to store the format names in each column, then later have Map.re
       }
    }
 
+   private void resolveBaseTableWrappers()
+      throws MapException
+   {
+      while (!baseTableWrapperStack.empty())
+      {
+         resolveBaseTableWrapper((BaseTableWrapper)baseTableWrapperStack.pop());
+      }
+   }
+
+   private void resolveBaseTableWrapper(BaseTableWrapper baseTableWrapper)
+      throws MapException
+   {
+      Table     extendedTable, baseTable, uniqueKeyTable, foreignKeyTable;
+      Key       uniqueKey, foreignKey;
+      LinkInfo  baseLinkInfo;
+
+      // Get the tables of the extended class and the base class. The extended class table
+      // can't be null in a valid document. This is because it comes from the <ClassMap>
+      // element, which is required to have a <ToClassTable> child. However, the base class
+      // table can be null. This occurs if the child is mapped as a base class
+      // but never mapped as a class.
+
+      extendedTable = baseTableWrapper.extendedClassMap.getTable();
+      baseTable = baseTableWrapper.extendedClassMap.getBaseClassMap().getTable();
+      if (baseTable == null)
+         throw new MapException("Element type " + baseTableWrapper.extendedClassMap.getBaseClassMap().getElementTypeName().getUniversalName() + " mapped as a base class but never mapped as a class.");
+
+      // Get the extended and base keys. This is the usual confusing stuff about, "Um,
+      // the extended class table key is unique so we use the unique key name with
+      // the extended class table and the foreign key name with the base class table."
+
+      uniqueKeyTable = (baseTableWrapper.baseKeyIsUnique) ? baseTable : extendedTable;
+      uniqueKey = getUniqueKey(uniqueKeyTable, baseTableWrapper.uniqueKeyName);
+
+      foreignKeyTable = (baseTableWrapper.baseKeyIsUnique) ? extendedTable : baseTable;
+      foreignKey = getForeignKey(foreignKeyTable, baseTableWrapper.foreignKeyName);
+
+      // Create a new LinkInfo object and add it to the ClassMap.
+
+      baseLinkInfo = (baseTableWrapper.baseKeyIsUnique) ?
+                                                  LinkInfo.create(uniqueKey, foreignKey) :
+                                                  LinkInfo.create(foreignKey, uniqueKey);
+      baseTableWrapper.extendedClassMap.setBaseLinkInfo(baseLinkInfo);
+   }
+
    //**************************************************************************
    // Private methods -- attribute processing
    //**************************************************************************
@@ -1632,11 +1718,11 @@ One solution is to store the format names in each column, then later have Map.re
       return (attrValue == null) ? defaultValue : attrValue;
    }
 
-   private boolean getParentKeyIsUnique(AttributeList attrs)
+   private boolean getParentKeyIsUnique(AttributeList attrs, String attrName)
    {
       String attrValue;
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_KEYINPARENTTABLE);
+      attrValue = getAttrValue(attrs, attrName);
       return attrValue.equals(XMLDBMSConst.ENUM_UNIQUE);
    }
 
@@ -1771,6 +1857,26 @@ One solution is to store the format names in each column, then later have Map.re
       boolean         generateOrder = false;
 
       RCMWrapper()
+      {
+      }
+   }
+
+   //**************************************************************************
+   // Inner class: BaseTableWrapper
+   //**************************************************************************
+
+   class BaseTableWrapper
+   {
+      // Stores information about a base table. We process these at the end
+      // of the document, since that is the only time we are sure that all the
+      // corresponding ClassMaps have been processed.
+
+      ClassMap extendedClassMap = null;
+      boolean  baseKeyIsUnique = false;
+      String   uniqueKeyName = null;
+      String   foreignKeyName = null;
+
+      BaseTableWrapper()
       {
       }
    }

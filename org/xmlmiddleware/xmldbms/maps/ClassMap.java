@@ -59,11 +59,11 @@ public class ClassMap extends ClassMapBase
 //   private PropertyMap pcdataMap = null;
 //   private Hashtable   childMaps = new Hashtable(); // For child element types
 
-   // The following variables are new to InlineClassMap
+   // The following variables are new to ClassMap
 
    private Table       table = null;
    private ClassMap    baseClassMap = null;
-   private boolean     useBaseTable = false;
+   private LinkInfo    baseLinkInfo = null;
    private ClassMap    useClassMap = null;
 
    // ********************************************************************
@@ -154,47 +154,48 @@ public class ClassMap extends ClassMapBase
     * Set the base ClassMap.
     *
     * @param baseClassMap The base ClassMap. If there is no base ClassMap,
-    *    set this to null, in which case whether to use the base table will
-    *    be set to false.
+    *    set this to null, in which case the information used to link the
+    *    class table to the base table is set to null.
     */
    public void setBaseClassMap(ClassMap baseClassMap)
    {
       this.baseClassMap = baseClassMap;
       if (baseClassMap == null)
       {
-         this.useBaseTable = false;
+         this.baseLinkInfo = null;
       }      
    }
 
    /**
-    * Whether to use the base table.
+    * Get the LinkInfo used to link the class table to the base class table.
     *
-    * @return Whether to use the base table. If this is false, the base
-    *    ClassMap is ignored.
+    * @return The LinkInfo. The "parent" table is the base class table. Null if
+    *    the base class table is not used. 
     */
-   public final boolean useBaseTable()
+   public final LinkInfo getBaseLinkInfo()
    {
-      return useBaseTable;
+      return baseLinkInfo;
    }
 
    /**
-    * Set the base ClassMap.
+    * Set the LinkInfo used to link the class table to the base class table.
     *
     * <p>This method may not be called if the base ClassMap is null.</p>
     *
-    * <p>Setting the useBaseTable argument to false when the base ClassMap is non-null
+    * <p>Setting the baseLinkInfo argument to null when the base ClassMap is non-null
     * is useful if you want the map objects to preserve inheritance information
     * but want to store the data for the class in a single table, rather than in a
     * base table and a class table. Inheritance information can then be used elsewhere,
     * such as when an XML Schema is generated from a Map.</p>
     *
-    * @param useBaseTable Whether to use the base ClassMap.
+    * @param baseLinkInfo The LinkInfo. The "parent" table is the base class table.
+    *    Null if the base class table is not used.
     */
-   public void setUseBaseTable(boolean useBaseTable)
+   public void setBaseLinkInfo(LinkInfo baseLinkInfo)
    {
       if (baseClassMap == null)
          throw new IllegalStateException("Cannot call ClassMap.setUseBaseTable() if the base ClassMap is null.");
-      this.useBaseTable = useBaseTable;
+      this.baseLinkInfo = baseLinkInfo;
    }
 
    // ********************************************************************
@@ -237,6 +238,12 @@ public class ClassMap extends ClassMapBase
 
       checkArgNull(useClassMap, ARG_USECLASSMAP);
 
+      // Check that there are no circularities in how the ClassMaps are used.
+      // For example, suppose the ClassMap for element type A uses the ClassMap
+      // for element type B, and the ClassMap for element type B uses the
+      // ClassMap for element type C. It would be illegal if the ClassMap for
+      // element type C used the ClassMap for element type A.
+
       classMap = useClassMap;
       elementTypeName = getElementTypeName();
       while (classMap != null)
@@ -246,7 +253,9 @@ public class ClassMap extends ClassMapBase
          classMap = classMap.getUsedClassMap();
       }
 
-      this.useClassMap = useClassMap;
+      // Remove all the existing attribute maps, PCDATA map, and child element
+      // maps. Also remove the class table and base class information. These do
+      // not apply when the ClassMap uses another ClassMap.
 
       removeAllAttributeMaps();
       try
@@ -259,7 +268,11 @@ public class ClassMap extends ClassMapBase
       removeAllChildMaps();
       this.table = null;
       this.baseClassMap = null;
-      this.useBaseTable = false;
+      this.baseLinkInfo = null;
+
+      // Set the used ClassMap.
+
+      this.useClassMap = useClassMap;
    }
 
    // ********************************************************************

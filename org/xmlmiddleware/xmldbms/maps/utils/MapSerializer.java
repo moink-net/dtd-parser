@@ -104,7 +104,7 @@ public class MapSerializer extends XMLWriter
    // Constants
    //**************************************************************************
 
-   private static String XMLDBMSDTD = "xmldbms.dtd";
+   private static String XMLDBMS2DTD = "xmldbms2.dtd";
 
    //**************************************************************************
    // Variables
@@ -172,7 +172,7 @@ public class MapSerializer extends XMLWriter
    /**
     * Serialize a Map using the XML-DBMS mapping language.
     *
-    * <p>Sets the system ID of the XML-DBMS DTD to "xmldbms.dtd".
+    * <p>No system or public ID is written in the DOCTYPE statement.</p>
     *
 ??    * <p>Note that serialize cannot currently create the Locale element
     * or the values FULL, LONG, MEDIUM, or SHORT in the Date, Time, and
@@ -184,7 +184,8 @@ public class MapSerializer extends XMLWriter
    public void serialize(Map map)
       throws IOException, MapException
    {
-      serialize(map, XMLDBMSDTD, null);
+      this.map = map;
+      serialize(null, null);
    }
 
    /**
@@ -195,7 +196,7 @@ public class MapSerializer extends XMLWriter
     * Timestamp attributes of the Patterns element.</p>
     *
     * @param map The Map.
-    * @param systemID System ID of the DTD. May be null.
+    * @param systemID System ID of the DTD. If this is null, "xmldbms2.dtd" is used.
     * @param publicID Public ID of the DTD. May be null.
     * @exception IOException Thrown if an I/O exception occurs.
     * @exception MapException Thrown if a prefix was not found for a URI.
@@ -204,6 +205,20 @@ public class MapSerializer extends XMLWriter
       throws IOException, MapException
    {
       this.map = map;
+      if (systemID == null)
+      {
+         systemID = XMLDBMS2DTD;
+      }
+      serialize(systemID, publicID);
+   }
+
+   //**************************************************************************
+   // Private methods - serialize()
+   //**************************************************************************
+
+   private void serialize(String systemID, String publicID)
+      throws IOException, MapException
+   {
       writeMapStart(systemID, publicID);
       writeOptions();
       writeDatabases();
@@ -252,15 +267,7 @@ public class MapSerializer extends XMLWriter
       {
          // Write the <Extends> element if a base class map exists.
 
-         baseClassMap = classMap.getBaseClassMap();
-         if (baseClassMap != null)
-         {
-            attrs[0] = XMLDBMSConst.ATTR_ELEMENTTYPE;
-            values[0] = getQualifiedName(baseClassMap.getElementTypeName());
-            attrs[1] = XMLDBMSConst.ATTR_USEBASETABLE;
-            values[1] = (classMap.useBaseTable()) ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
-            writeElementStart(XMLDBMSConst.ELEM_EXTENDS, 2, true);
-         }
+         writeExtends(classMap);
 
          // Write the <ToClassTable> element.
 
@@ -470,7 +477,7 @@ public class MapSerializer extends XMLWriter
          if (schemaChange)
          {
             count = 0;
-            if (newCatalogName != null)
+            if (newSchemaName != null)
             {
                attrs[count] = XMLDBMSConst.ATTR_NAME;
                values[count++] = newSchemaName;
@@ -532,6 +539,32 @@ public class MapSerializer extends XMLWriter
       {
          writeElementStart(XMLDBMSConst.ELEM_EMPTYSTRINGISNULL, 0, true);
       }
+   }
+
+   private void writeExtends(ClassMap classMap)
+      throws IOException, MapException
+   {
+      ClassMap baseClassMap;
+      LinkInfo baseLinkInfo;
+
+      baseClassMap = classMap.getBaseClassMap();
+      if (baseClassMap == null) return;
+
+      attrs[0] = XMLDBMSConst.ATTR_ELEMENTTYPE;
+      values[0] = getQualifiedName(baseClassMap.getElementTypeName());
+      writeElementStart(XMLDBMSConst.ELEM_EXTENDS, 1, false);
+
+      baseLinkInfo = classMap.getBaseLinkInfo();
+      if (baseLinkInfo == null) return;
+
+      attrs[0] = XMLDBMSConst.ATTR_KEYINBASETABLE;
+      values[0] = (baseLinkInfo.parentKeyIsUnique()) ? XMLDBMSConst.ENUM_UNIQUE : XMLDBMSConst.ENUM_FOREIGN;
+      writeElementStart(XMLDBMSConst.ELEM_USEBASETABLE, 1, false);
+
+      writeLinkInfo(baseLinkInfo);
+
+      writeElementEnd(XMLDBMSConst.ELEM_USEBASETABLE);
+      writeElementEnd(XMLDBMSConst.ELEM_EXTENDS);
    }
 
    private void writeFormatElement(String elementName, String formatName, SimpleDateFormat format)

@@ -69,6 +69,7 @@ public class XMLDBMSConst
    public static String ELEM_TOCOLUMN          = "ToColumn";
    public static String ELEM_TOPROPERTYTABLE   = "ToPropertyTable";
    public static String ELEM_UNIQUEKEY         = "UniqueKey";
+   public static String ELEM_USEBASETABLE      = "UseBaseTable";
    public static String ELEM_USECLASSMAP       = "UseClassMap";
    public static String ELEM_USECOLUMN         = "UseColumn";
    public static String ELEM_USEFOREIGNKEY     = "UseForeignKey";
@@ -109,6 +110,7 @@ public class XMLDBMSConst
                                          ELEM_TOCOLUMN,
                                          ELEM_TOPROPERTYTABLE,
                                          ELEM_UNIQUEKEY,
+                                         ELEM_USEBASETABLE,
                                          ELEM_USECLASSMAP,
                                          ELEM_USECOLUMN,
                                          ELEM_USEFOREIGNKEY,
@@ -152,11 +154,12 @@ public class XMLDBMSConst
    public static final int ELEM_TOKEN_TOCOLUMN          = 30;
    public static final int ELEM_TOKEN_TOPROPERTYTABLE   = 31;
    public static final int ELEM_TOKEN_UNIQUEKEY         = 32;
-   public static final int ELEM_TOKEN_USECLASSMAP       = 33;
-   public static final int ELEM_TOKEN_USECOLUMN         = 34;
-   public static final int ELEM_TOKEN_USEFOREIGNKEY     = 35;
-   public static final int ELEM_TOKEN_USEUNIQUEKEY      = 36;
-   public static final int ELEM_TOKEN_XMLTODBMS         = 37;
+   public static final int ELEM_TOKEN_USEBASETABLE      = 33;
+   public static final int ELEM_TOKEN_USECLASSMAP       = 34;
+   public static final int ELEM_TOKEN_USECOLUMN         = 35;
+   public static final int ELEM_TOKEN_USEFOREIGNKEY     = 36;
+   public static final int ELEM_TOKEN_USEUNIQUEKEY      = 37;
+   public static final int ELEM_TOKEN_XMLTODBMS         = 38;
    
    public static final int[] ELEM_TOKENS = {
                                             ELEM_TOKEN_ATTRIBUTE,
@@ -192,6 +195,7 @@ public class XMLDBMSConst
                                             ELEM_TOKEN_TOCOLUMN,
                                             ELEM_TOKEN_TOPROPERTYTABLE,
                                             ELEM_TOKEN_UNIQUEKEY,
+                                            ELEM_TOKEN_USEBASETABLE,
                                             ELEM_TOKEN_USECLASSMAP,
                                             ELEM_TOKEN_USECOLUMN,
                                             ELEM_TOKEN_USEFOREIGNKEY,
@@ -295,6 +299,7 @@ public class XMLDBMSConst
    public static String ATTR_ELEMENTTYPE      = "ElementType";
    public static String ATTR_FORMAT           = "Format";
    public static String ATTR_KEYGENERATOR     = "KeyGenerator";
+   public static String ATTR_KEYINBASETABLE   = "KeyInBaseTable";
    public static String ATTR_KEYINPARENTTABLE = "KeyInParentTable";
    public static String ATTR_LANGUAGE         = "Language";
    public static String ATTR_LENGTH           = "Length";
@@ -318,6 +323,7 @@ public class XMLDBMSConst
                                          ATTR_ELEMENTTYPE,
                                          ATTR_FORMAT,
                                          ATTR_KEYGENERATOR,
+                                         ATTR_KEYINBASETABLE,
                                          ATTR_KEYINPARENTTABLE,
                                          ATTR_LANGUAGE,
                                          ATTR_LENGTH,
@@ -344,15 +350,16 @@ public class XMLDBMSConst
    public static final int ATTR_TOKEN_ELEMENTTYPE      = 5;
    public static final int ATTR_TOKEN_FORMAT           = 6;
    public static final int ATTR_TOKEN_KEYGENERATOR     = 7;
-   public static final int ATTR_TOKEN_KEYINPARENTTABLE = 8;
-   public static final int ATTR_TOKEN_LANGUAGE         = 9;
-   public static final int ATTR_TOKEN_LENGTH           = 10;
-   public static final int ATTR_TOKEN_MULTIVALUED      = 11;
-   public static final int ATTR_TOKEN_NAME             = 12;
-   public static final int ATTR_TOKEN_NULLABLE         = 13;
-   public static final int ATTR_TOKEN_PREFIX           = 14;
-   public static final int ATTR_TOKEN_QUOTEIDENTIFIERS = 15;
-   public static final int ATTR_TOKEN_SCHEMA           = 16;
+   public static final int ATTR_TOKEN_KEYINBASETABLE   = 8;
+   public static final int ATTR_TOKEN_KEYINPARENTTABLE = 9;
+   public static final int ATTR_TOKEN_LANGUAGE         = 10;
+   public static final int ATTR_TOKEN_LENGTH           = 11;
+   public static final int ATTR_TOKEN_MULTIVALUED      = 12;
+   public static final int ATTR_TOKEN_NAME             = 13;
+   public static final int ATTR_TOKEN_NULLABLE         = 14;
+   public static final int ATTR_TOKEN_PREFIX           = 15;
+   public static final int ATTR_TOKEN_QUOTEIDENTIFIERS = 16;
+   public static final int ATTR_TOKEN_SCHEMA           = 17;
    public static final int ATTR_TOKEN_URI              = 18;
    public static final int ATTR_TOKEN_USEBASETABLE     = 19;
    public static final int ATTR_TOKEN_VALUE            = 20;
@@ -367,6 +374,7 @@ public class XMLDBMSConst
                                             ATTR_TOKEN_ELEMENTTYPE,
                                             ATTR_TOKEN_FORMAT,
                                             ATTR_TOKEN_KEYGENERATOR,
+                                            ATTR_TOKEN_KEYINBASETABLE,
                                             ATTR_TOKEN_KEYINPARENTTABLE,
                                             ATTR_TOKEN_LANGUAGE,
                                             ATTR_TOKEN_LENGTH,
