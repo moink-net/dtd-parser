@@ -77,6 +77,8 @@ public class XMLDBMSProps
    public static String SELECTDBNAME = "SelectDBName";
    public static String SELECTRESULTSETNAME = "SelectResultSetName";
 
+   public static String INPARAMETERS = "INParameters";
+
    public static String ROOTDATABASE = "RootDatabase";
    public static String ROOTCATALOG = "RootCatalog";
    public static String ROOTSCHEMA = "RootSchema";

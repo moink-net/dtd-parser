@@ -71,15 +71,15 @@ import javax.sql.*;
  *
  * <ul>
  * <li><p>Property-processing properties are used to process other properties.
- *     This is File.</p></li>
+ *     The only property-processing property is File.</p></li>
  *
  * <li><p>Parser properties provide information about the XML parser / DOM
- *     implementation. They are ParserUtilsClass.</p></li>
+ *     implementation. The only parser property is ParserUtilsClass.</p></li>
  *
- * <li><p>Database properties are used to connect to the database(s). They are
- *     DBName, DataHandlerClass, DataSourceClass, User, and Password. If there
- *     is more than one database, use sequentially numbered versions of these
- *     properties -- DBName1, DBName2, etc.</p>
+ * <li><p>Database properties are used to connect to the database(s). The
+ *     database properties are DBName, DataHandlerClass, DataSourceClass,
+ *     User, and Password. If there is more than one database, use
+ *     sequentially numbered versions of these properties -- DBName1, DBName2, etc.</p>
  *
  *     <p>When the value of DataSourceClass is "JDBC1DataSource", the Driver and
  *     URL properties are used to configure the data source. When the value
@@ -94,16 +94,17 @@ import javax.sql.*;
  *     org.xmlmiddleware.xmldbms.datahandlers.GenericHandler is used.</p></li>
  *
  * <li><p>Transfer properties specify what is to be done (store, retrieve, or
- *     delete a document) and the document locations to use. They are Method, MapLocation,
- *     XMLLocation, ActionLocation, FilterLocation, MapResolverClass, XMLResolverClass,
- *     ActionResolverClass, and FilterResolverClass. See below for details.</p></li>
+ *     delete a document) and the document locations to use. The transfer properties
+ *     are Method, MapLocation, XMLLocation, ActionLocation, FilterLocation,
+ *     MapResolverClass, XMLResolverClass, ActionResolverClass, and
+ *     FilterResolverClass. See below for details.</p></li>
  *
  * <li><p>Select properties specify result sets to use when retrieving data.
- *     They are Select, SelectDBName, and SelectResultSetName.</p></li>
+ *     The select properties are Select, SelectDBName, and SelectResultSetName.</p></li>
  *
  * <li><p>Configuration properties specify how the underlying data transfer
- *     classes are to function. They are Encoding, SystemID, PublicID,
- *     CommitMode, StopOnError, ReturnFilter, KeyGeneratorName, and
+ *     classes are to function. The configuration properties are Encoding, SystemID,
+ *     PublicID, CommitMode, StopOnError, ReturnFilter, KeyGeneratorName, and
  *     KeyGeneratorClass. See below for details.</p></li>
  * </ul>
  *
@@ -115,16 +116,16 @@ import javax.sql.*;
  * Method property:</p>
  *
  * <table border="1" cellpadding="3">
- * <tr><th>Method</th><th>Transfer properties</th></tr>
+ * <tr><th>Value of Method property</th><th>Transfer properties</th></tr>
  * <tr valign="top"><td>StoreDocument</td><td>MapLocation<br />XMLLocation[1]<br />
  * ActionLocation[1]<br />FilterLocation[1] (when ReturnFilter is "Yes")</td></tr>
  * <tr valign="top"><td>RetrieveDocumentByFilter</td><td>MapLocation[1]<br />
- * XMLLocation[1]<br />FilterLocation[1][2]</td></tr>
+ * XMLLocation[1]<br />FilterLocation[1][2]<br />INParameters[3]</td></tr>
  * <tr valign="top"><td>RetrieveDocumentBySQL</td><td>MapLocation<br />XMLLocation[1]
- * <br />FilterLocation[1][2]<br />Select[3]<br />SelectDBName[3][4]
- * <br />SelectResultSetName[3][5]</td></tr>
+ * <br />FilterLocation[1][2]<br />INParameters[3]<br />Select[4]<br />SelectDBName[4][5]
+ * <br />SelectResultSetName[4][6]</td></tr>
  * <tr valign="top"><td>DeleteDocument</td><td>MapLocation[1]<br />ActionLocation[1]
- * <br />FilterLocation[1]</td></tr>
+ * <br />FilterLocation[1]<br />INParameters[3]</td></tr>
  * </table>
  *
  * <p>NOTES:<br />
@@ -133,53 +134,79 @@ import javax.sql.*;
  * the LocationResolver interface; this is specified with the XxxxResolverClass property
  * (see below). If no XxxxResolverClass is specified, then the
  * org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver class is used. That is,
- * the location name is assumed to be a filename.
+ * the location name is assumed to be a filename.<br /><br />
  * [2] If the filter document uses parameters, these should be passed in as well.
  * Because parameter names begin with a dollar sign ($), there should be no conflict
- * between parameter names and the names of other properties.<br />
- * [3] If there is more than one result set, use Select1, Select2, ...,
- * SelectDBName1, SelectDBName2, etc.<br />
- * [4] Optional. If no database name is specified, "Default" is used.<br />
- * [5] Optional if there is only one result set, in which case "Default" is used.
+ * between parameter names and the names of other properties.<br /><br />
+ * [3] Space-separated list of names of parameters that are used in IN clauses in
+ * filters. For example, if the $SONumber and $PartNumber parameters are used in
+ * IN clauses, INParameters would be declared as follows:
+ * <br /><br />
+ * <pre>   INParameter=$SONumber $PartNumber</pre>
+ * <br />
+ * The value of a parameter used in a IN clause must be a space-separated list of values.
+ * For example, if the value of $SONumber is the sales order numbers 123 and 456, $SONumber
+ * would be declared as follows:
+ * <br /><br />
+ * <pre>   $SONumber=123 456</pre>
+ * <br />
+ * If a value has a space in it, escape this with a backslash (all other backslashes
+ * are treated as literals). For example, to use the three sales order numbers 123, 456,
+ * and 789&nbsp;012, declare $SONumber as follows:
+ * <br /><br />
+ * <pre>   $SONumber=123 456 789\ 012</pre>
+ * <br />
+ * Note that backslashes in property files are treated as escape characters, so the
+ * backslash in the above property/value pair in a property file would need to be:
+ * <br /><br />
+ * <pre>   $SONumber=123 456 789\\ 012</pre>
+ * <br />
+ * [4] If there is more than one result set, use Select1, Select2, ...,
+ * SelectDBName1, SelectDBName2, etc.<br /><br />
+ * [5] Optional. If no database name is specified, "Default" is used.<br /><br />
+ * [6] Optional if there is only one result set, in which case "Default" is used.
  * Required if there is more than one result set. Result set names correspond to
  * result set names in the filter document.</p>
  *
- * <p>The following table shows which configuration properties apply to each method.
- * Configuration properties are used by all three interfaces.</p>
+ * <p>The following table shows which configuration properties apply to each value
+ * of the Method property. These properties are also used by the methods in the
+ * traditional API.</p>
  *
  * <table border="1" cellpadding="3">
- * <tr valign="top"><th>Method</th><th>Configuration properties</th></tr>
- * <tr valign="top"><td>StoreDocument</td><td>CommitMode[1]<br />StopOnError
- * <br />ReturnFilter<br />KeyGeneratorName[2]<br />KeyGeneratorClass[2][3]
+ * <tr valign="top"><th>Value of Method property<br />(Method)</th>
+ * <th>Configuration properties</th></tr>
+ * <tr valign="top"><td>StoreDocument<br />(storeXMLXxxxx)</td><td>CommitMode[1]
+ * <br />StopOnError<br />ReturnFilter<br />KeyGeneratorName[2]<br />KeyGeneratorClass[2][3]
  * <br />Encoding[4]<br />SystemID[4]<br />PublicID[4]<br />Validate[5]<br />
  * MapResolverClass[6]<br />XMLResolverClass[6]<br />ActionResolverClass[6]
  * <br />FilterResolverClass[6]</td></tr>
- * <tr valign="top"><td>RetrieveDocumentByFilter<br />RetrieveDocumentBySQL</td>
+ * <tr valign="top"><td>RetrieveDocumentByFilter<br />RetrieveDocumentBySQL<br />
+ * (retrieveXMLXxxx)</td>
  * <td>Encoding<br />SystemID<br />PublicID<br />Validate[7]<br />
  * MapResolverClass[6]<br />XMLResolverClass[6]<br />FilterResolverClass[6]</td></tr>
- * <tr valign="top"><td>DeleteDocument</td><td>CommitMode[1]<br />Validate[8]<br />
- * MapResolverClass[6]<br />XMLResolverClass[6]<br />ActionResolverClass[6]
- * <br />FilterResolverClass[6]</td></tr>
+ * <tr valign="top"><td>DeleteDocument<br />(deleteXMLDocument)</td>
+ * <td>CommitMode[1]<br />Validate[8]<br />MapResolverClass[6]<br />XMLResolverClass[6]
+ * <br />ActionResolverClass[6]<br />FilterResolverClass[6]</td></tr>
  * </table>
  *
  * <p>NOTES:<br />
  * [1] Legal values of CommitMode are AfterStatement, AfterDocument, None, and
- * NoTransactions.<br />
+ * NoTransactions.<br /><br />
  * [2] If there is more than one key generator, use KeyGeneratorName1,
- * KeyGeneratorName2, ... KeyGeneratorClass1, KeyGeneratorClass2, etc.<br />
+ * KeyGeneratorName2, ... KeyGeneratorClass1, KeyGeneratorClass2, etc.<br /><br />
  * [3] If the key generator requires initialization properties, these should be
  * passed in as well. If there is more than one key generator, the initialization
  * properties should have the same numerical suffix as KeyGeneratorName and
  * KeyGeneratorClass. See the documentation for your key generator for information
- * about the initialization properties.<br />
- * [4] Applies to the output filter document, if any.
- * [5] Value is a space-separated list containing Map, XML, and/or Action.<br />
+ * about the initialization properties.<br /><br />
+ * [4] Applies to the output filter document, if any.<br /><br />
+ * [5] Value is a space-separated list containing Map, XML, and/or Action.<br /><br />
  * [6] Optional. XxxxResolverClass properties specify the class used to resolve XxxxLocations.
  * For example, if a location is a URL, then the resolver class should be
  * org.xmlmiddleware.xmldbms.tools.resolvers.URLResolver. The XxxxResolverClass
  * properties are optional; org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver
- * is used by default. That is, locations are assumed to be filenames by default.
- * [7] Value is a space-separated list containing Map and/or Filter.<br />
+ * is used by default. That is, locations are assumed to be filenames by default.<br /><br />
+ * [7] Value is a space-separated list containing Map and/or Filter.<br /><br />
  * [8] Value is a space-separated list containing Map, Action, and/or Filter.</p>
  *
  * <p>For a complete description of the properties used by Transfer,
@@ -308,6 +335,9 @@ public class Transfer extends PropertyProcessor
    private static String FILENAMERESOLVER = "org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver";
    private static String DEFAULT = "Default";
    private static String YES = "YES";
+
+   private static int NORMAL = 0;
+   private static int BACKSLASH = 1;
 
    // ************************************************************************
    // Constructor
@@ -874,6 +904,10 @@ public class Transfer extends PropertyProcessor
       filterLocation = getProperty(props, XMLDBMSProps.FILTERLOCATION);
       xmlLocation = getProperty(props, XMLDBMSProps.XMLLOCATION);
 
+      // Process parameters used in IN clauses in filters, if any.
+
+      processINParameters(params);
+
       // Retrieve the document.
 
       retrieveXMLDocument(configProps, mapLocation, filterLocation, params, xmlLocation);
@@ -892,6 +926,10 @@ public class Transfer extends PropertyProcessor
       filterLocation = getProperty(props, XMLDBMSProps.FILTERLOCATION);
       xmlLocation = getProperty(props, XMLDBMSProps.XMLLOCATION);
 
+      // Process parameters used in IN clauses in filters, if any.
+
+      processINParameters(params);
+
       // Retrieve the document.
 
       retrieveXMLDocument(configProps, mapLocation, selects, filterLocation, params, xmlLocation);
@@ -909,6 +947,10 @@ public class Transfer extends PropertyProcessor
       mapLocation = getProperty(props, XMLDBMSProps.MAPLOCATION);
       actionLocation = getProperty(props, XMLDBMSProps.ACTIONLOCATION);
       filterLocation = getProperty(props, XMLDBMSProps.FILTERLOCATION);
+
+      // Process parameters used in IN clauses in filters, if any.
+
+      processINParameters(params);
 
       // Delete the document
 
@@ -1793,6 +1835,153 @@ public class Transfer extends PropertyProcessor
    private boolean isYes(String yesNo)
    {
       return (yesNo.toUpperCase().equals(YES));
+   }
+
+   private void processINParameters(Hashtable params)
+   {
+      String inParamsString, valueString;
+      Vector inParamsVector, valueVector;
+      Object paramName;
+
+      // Get the value of the INParameters property. If the property isn't found,
+      // just return.
+
+      inParamsString = (String)params.get(XMLDBMSProps.INPARAMETERS);
+      if (inParamsString == null) return;
+
+      // Parse the list of parameters used in IN clauses and construct a Vector.
+
+      inParamsVector = parseINParameters(inParamsString);
+
+      // Process the parameters used in IN clauses. For each such parameter, we
+      // parse the list of values and construct a Vector of these values, then
+      // replace the value of the property with that Vector.
+
+      for (int i = 0; i < inParamsVector.size(); i++)
+      {
+         paramName = inParamsVector.elementAt(i);
+         valueString = (String)params.get(paramName);
+         valueVector = parseValueString(valueString);
+         params.put(paramName, valueVector);
+      }
+   }
+
+   private Vector parseINParameters(String inParamsString)
+   {
+      StringTokenizer tokenizer;
+      Vector          paramNames;
+
+      // Construct a StringTokenizer to parse the string. This separates tokens with
+      // spaces, tabs, newlines, and carriage returns.
+
+      tokenizer = new StringTokenizer(inParamsString);
+
+      // Parse the string and build a Vector of the tokens, which are the names of
+      // parameters used in IN clauses.
+
+      paramNames = new Vector();
+      while (tokenizer.hasMoreTokens())
+      {
+         paramNames.addElement(tokenizer.nextToken());
+      }
+
+      // Return the Vector of parameter names.
+
+      return paramNames;
+   }
+
+   private Vector parseValueString(String valueString)
+   {
+      int     state = NORMAL, save = 0;
+      char[]  valueChars;
+      Vector  values = new Vector();
+      boolean charEscaped = false;
+      String  newValue, value = null;
+
+      // Copy the string to a character array. Append a final space to simplify
+      // the parsing code.
+
+      valueChars = new char[valueString.length() + 1];
+      valueString.getChars(0, valueString.length(), valueChars, 0);
+      valueChars[valueChars.length - 1] = ' ';
+
+      // Parse the string of space-separated values and build a Vector of String values.
+
+      for (int i = 0; i < valueChars.length; i++)
+      {
+         switch (valueChars[i])
+         {
+            case ' ':
+               if (state == NORMAL)
+               {
+                  // Spaces separate individual values. When we hit one, build a new
+                  // string from the characters we have read since the last save point.
+
+                  newValue = new String(valueChars, save, i - save);
+
+                  // If the characters since the last "real" space contained an
+                  // escaped space, then append the newly read characters to those
+                  // before the slash that followed the previous escape character
+                  // (backslash). Otherwise, just use the newly read characters.
+
+                  value = (charEscaped) ? value + newValue : newValue;
+
+                  // Save the new value.
+
+                  values.addElement(value);
+
+                  // Reset the escaped-character flag and set the save point to the
+                  // character after the space.
+
+                  charEscaped = false;
+                  save = i + 1;
+               }
+               else // if (state == BACKSLASH)
+               {
+                  // If the character before the space was a backslash, save the
+                  // characters before the backslash. We will ignore the backslash
+                  // by setting the save point to the space, which is the
+                  // character after the backslash.
+
+                  newValue = new String(valueChars, save, i - save - 1);
+
+                  // If the characters since the last "real" space contained an
+                  // escaped space, then append the newly read characters to those
+                  // before the slash that followed the previous escape character
+                  // (backslash). Otherwise, just use the newly read characters.
+
+                  value = (charEscaped) ? value + newValue : newValue;
+
+                  // Set the escaped-character flag, set the save point to the
+                  // space (which we want to include in the next set of characters),
+                  // and reset the state to NORMAL (no backslash).
+
+                  charEscaped = true;
+                  save = i;
+                  state = NORMAL;
+               }
+               break;
+
+            case '\\':
+               // If we find a slash, then we need a different state to check if it
+               // is being used to escape a space.
+
+               state = BACKSLASH;
+               break;
+
+            default:
+               // If the current character is not a space and not a backslash, then
+               // any backslash we might have found was simply a literal and we can
+               // treat it as a normal character.
+
+               state = NORMAL;
+               break;
+         }
+      }
+
+      // Return the Vector of parameter values.
+
+      return values;
    }
 
    // ************************************************************************
