@@ -24,8 +24,9 @@ package org.xmlmiddleware.xmldbms;
  *
  * <p>Classes that are used with the FormatClass element in the XML-DBMS
  * mapping language must implement this interface and provide a no-argument
- * constructor. Such classes usually support formatting for only a single
- * type of object, such as an Integer or a Date.</p>
+ * constructor. Such classes sometimes support formatting for only a single
+ * type of object, such as Boolean. Other times, they support formatting for
+ * a number of object types, such as all numeric types or all date/time types.</p>
  *
  * <p><b>NOTE:</b> One possible use of custom formatting classes is a
  * to convert binary data to/from Base64. This could easily be done by
@@ -44,15 +45,30 @@ public interface XMLFormatter
    /**
     * Parse a string and create an object.
     *
-    * <p>The actual type of the object, such as an Integer or Date, depends
-    * on the implementing class.</p>
+    * <p>The calling application specifies the type of object it wants using
+    * a JDBC Types value. JDBC types map to Java types as follows:</p>
+    *
+    * <pre>
+    * CHAR, VARCHAR, LONGVARCHAR:        String<br />
+    * DATE, TIME, TIMESTAMP:             java.sql.Date<br />
+    * BIGINT:                            Long<br />
+    * INTEGER:                           Integer<br />
+    * SMALLINT:                          Short<br />
+    * TINYINT:                           Byte<br />
+    * DECIMAL, NUMERIC:                  BigDecimal<br />
+    * DOUBLE, FLOAT:                     Double<br />
+    * REAL:                              Float<br />
+    * BINARY, VARBINARY, LONGVARBINARY:  byte[]??????????<br />
+    * BIT:                               Boolean<br />
+    * </pre>
     *
     * @param The string to parse.
+    * @param A JDBC Types value indicating the type of object to return.
     * @return The object
     * @exception XMLFormatterException Thrown if the string can't be parsed by
     *     the implementing class.
     */
-   public Object parse(String s) throws XMLFormatterException;
+   public Object parse(String s, int jdbcType) throws XMLFormatterException;
 
    /**
     * Serialize an object as a string.
