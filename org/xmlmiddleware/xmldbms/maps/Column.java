@@ -338,7 +338,8 @@ public class Column extends MapBase
     * <p>This method returns an object that implements the
     * org.xmlmiddleware.conversions.StringFormatter interface.</p>
     *
-    * @return The formatting object. This should never be null.
+    * @return The formatting object. For a correctly initialized Column object, this
+    *    will never be null.
     */
    public final StringFormatter getFormatter()
    {
