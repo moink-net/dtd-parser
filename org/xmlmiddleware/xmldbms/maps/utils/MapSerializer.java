@@ -674,8 +674,8 @@ public class MapSerializer extends XMLWriter
    {
       writeElementStart(XMLDBMSConst.ELEM_INLINEMAP, 0, false);
       writeElementType(inlineClassMap.getElementTypeName());
-      writePropertyInlineRelatedMaps(inlineClassMap);
       writeOrderInfo(inlineClassMap.getOrderInfo(), false);
+      writePropertyInlineRelatedMaps(inlineClassMap);
       writeElementEnd(XMLDBMSConst.ELEM_INLINEMAP);
    }
 
