@@ -57,7 +57,6 @@ public class XMLDBMSConst
    public static String ELEM_INLINEMAP         = "InlineMap";
    public static String ELEM_LOCALE            = "Locale";
    public static String ELEM_MAPS              = "Maps";
-   public static String ELEM_MVORDERCOLUMN     = "MVOrderColumn";
    public static String ELEM_NAMESPACE         = "Namespace";
    public static String ELEM_NUMBERFORMAT      = "NumberFormat";
    public static String ELEM_OPTIONS           = "Options";
@@ -70,6 +69,7 @@ public class XMLDBMSConst
    public static String ELEM_SIMPLEDATEFORMAT  = "SimpleDateFormat";
    public static String ELEM_TABLE             = "Table";
    public static String ELEM_TIMEFORMAT        = "TimeFormat";
+   public static String ELEM_TLORDERCOLUMN     = "TLOrderColumn";
    public static String ELEM_TOCLASSTABLE      = "ToClassTable";
    public static String ELEM_TOCOLUMN          = "ToColumn";
    public static String ELEM_TOPROPERTYTABLE   = "ToPropertyTable";
@@ -101,7 +101,6 @@ public class XMLDBMSConst
                                          ELEM_INLINEMAP,
                                          ELEM_LOCALE,
                                          ELEM_MAPS,
-                                         ELEM_MVORDERCOLUMN,
                                          ELEM_NAMESPACE,
                                          ELEM_NUMBERFORMAT,
                                          ELEM_OPTIONS,
@@ -114,6 +113,7 @@ public class XMLDBMSConst
                                          ELEM_SIMPLEDATEFORMAT,
                                          ELEM_TABLE,
                                          ELEM_TIMEFORMAT,
+                                         ELEM_TLORDERCOLUMN,
                                          ELEM_TOCLASSTABLE,
                                          ELEM_TOCOLUMN,
                                          ELEM_TOPROPERTYTABLE,
@@ -148,19 +148,19 @@ public class XMLDBMSConst
    public static final int ELEM_TOKEN_INLINEMAP         = 15;
    public static final int ELEM_TOKEN_LOCALE            = 16;
    public static final int ELEM_TOKEN_MAPS              = 17;
-   public static final int ELEM_TOKEN_MVORDERCOLUMN     = 18;
-   public static final int ELEM_TOKEN_NAMESPACE         = 19;
-   public static final int ELEM_TOKEN_NUMBERFORMAT      = 20;
-   public static final int ELEM_TOKEN_OPTIONS           = 21;
-   public static final int ELEM_TOKEN_ORDERCOLUMN       = 22;
-   public static final int ELEM_TOKEN_PCDATA            = 23;
-   public static final int ELEM_TOKEN_PRIMARYKEY        = 24;
-   public static final int ELEM_TOKEN_PROPERTYMAP       = 25;
-   public static final int ELEM_TOKEN_RELATEDCLASS      = 26;
-   public static final int ELEM_TOKEN_SCHEMA            = 27;
-   public static final int ELEM_TOKEN_SIMPLEDATEFORMAT  = 28;
-   public static final int ELEM_TOKEN_TABLE             = 29;
-   public static final int ELEM_TOKEN_TIMEFORMAT        = 30;
+   public static final int ELEM_TOKEN_NAMESPACE         = 18;
+   public static final int ELEM_TOKEN_NUMBERFORMAT      = 19;
+   public static final int ELEM_TOKEN_OPTIONS           = 20;
+   public static final int ELEM_TOKEN_ORDERCOLUMN       = 21;
+   public static final int ELEM_TOKEN_PCDATA            = 22;
+   public static final int ELEM_TOKEN_PRIMARYKEY        = 23;
+   public static final int ELEM_TOKEN_PROPERTYMAP       = 24;
+   public static final int ELEM_TOKEN_RELATEDCLASS      = 25;
+   public static final int ELEM_TOKEN_SCHEMA            = 26;
+   public static final int ELEM_TOKEN_SIMPLEDATEFORMAT  = 27;
+   public static final int ELEM_TOKEN_TABLE             = 28;
+   public static final int ELEM_TOKEN_TIMEFORMAT        = 29;
+   public static final int ELEM_TOKEN_TLORDERCOLUMN     = 30;
    public static final int ELEM_TOKEN_TOCLASSTABLE      = 31;
    public static final int ELEM_TOKEN_TOCOLUMN          = 32;
    public static final int ELEM_TOKEN_TOPROPERTYTABLE   = 33;
@@ -192,7 +192,6 @@ public class XMLDBMSConst
                                             ELEM_TOKEN_INLINEMAP,
                                             ELEM_TOKEN_LOCALE,
                                             ELEM_TOKEN_MAPS,
-                                            ELEM_TOKEN_MVORDERCOLUMN,
                                             ELEM_TOKEN_NAMESPACE,
                                             ELEM_TOKEN_NUMBERFORMAT,
                                             ELEM_TOKEN_OPTIONS,
@@ -205,6 +204,7 @@ public class XMLDBMSConst
                                             ELEM_TOKEN_SIMPLEDATEFORMAT,
                                             ELEM_TOKEN_TABLE,
                                             ELEM_TOKEN_TIMEFORMAT,
+                                            ELEM_TOKEN_TLORDERCOLUMN,
                                             ELEM_TOKEN_TOCLASSTABLE,
                                             ELEM_TOKEN_TOCOLUMN,
                                             ELEM_TOKEN_TOPROPERTYTABLE,
@@ -224,7 +224,7 @@ public class XMLDBMSConst
 
    // Enumeration value strings
 
-   // ATTR_MULTIVALUED, ATTR_USEBASETABLE, ATTR_GENERATE, ATTR_NULLABLE
+   // ATTR_TOKENLIST, ATTR_USEBASETABLE, ATTR_GENERATE, ATTR_NULLABLE
    public static String ENUM_NO      = "No";
    public static String ENUM_YES     = "Yes";
    public static String ENUM_UNKNOWN = "Unknown"; // ATTR_NULLABLE only
@@ -264,7 +264,7 @@ public class XMLDBMSConst
    
    public static final int ENUM_TOKEN_INVALID = -999;
 
-   // ATTR_MULTIVALUED, ATTR_USEBASETABLE, ATTR_NULLABLE
+   // ATTR_TOKENLIST, ATTR_USEBASETABLE, ATTR_NULLABLE
    public static final int ENUM_TOKEN_NO  = 0;
    public static final int ENUM_TOKEN_YES = 1;
    public static final int ENUM_TOKEN_UNKNOWN = 2; // ATTR_NULLABLE only
@@ -322,7 +322,7 @@ public class XMLDBMSConst
    public static String ATTR_KEYINPARENTTABLE = "KeyInParentTable";
    public static String ATTR_LANGUAGE         = "Language";
    public static String ATTR_LENGTH           = "Length";
-   public static String ATTR_MULTIVALUED      = "MultiValued";
+   public static String ATTR_TOKENLIST        = "TokenList";
    public static String ATTR_NAME             = "Name";
    public static String ATTR_NULLABLE         = "Nullable";
    public static String ATTR_PATTERN          = "Pattern";
@@ -353,7 +353,7 @@ public class XMLDBMSConst
                                          ATTR_KEYINPARENTTABLE,
                                          ATTR_LANGUAGE,
                                          ATTR_LENGTH,
-                                         ATTR_MULTIVALUED,
+                                         ATTR_TOKENLIST,
                                          ATTR_NAME,
                                          ATTR_NULLABLE,
                                          ATTR_PATTERN,
@@ -387,7 +387,7 @@ public class XMLDBMSConst
    public static final int ATTR_TOKEN_KEYINPARENTTABLE = 13;
    public static final int ATTR_TOKEN_LANGUAGE         = 14;
    public static final int ATTR_TOKEN_LENGTH           = 15;
-   public static final int ATTR_TOKEN_MULTIVALUED      = 16;
+   public static final int ATTR_TOKEN_TOKENLIST        = 16;
    public static final int ATTR_TOKEN_NAME             = 17;
    public static final int ATTR_TOKEN_NULLABLE         = 18;
    public static final int ATTR_TOKEN_PATTERN          = 19;
@@ -418,7 +418,7 @@ public class XMLDBMSConst
                                             ATTR_TOKEN_KEYINPARENTTABLE,
                                             ATTR_TOKEN_LANGUAGE,
                                             ATTR_TOKEN_LENGTH,
-                                            ATTR_TOKEN_MULTIVALUED,
+                                            ATTR_TOKEN_TOKENLIST,
                                             ATTR_TOKEN_NAME,
                                             ATTR_TOKEN_NULLABLE,
                                             ATTR_TOKEN_PATTERN,
@@ -435,7 +435,7 @@ public class XMLDBMSConst
 
    // Attribute defaults
 
-   public static String DEF_MULTIVALUED      = ENUM_NO;
+   public static String DEF_TOKENLIST        = ENUM_NO;
    public static String DEF_GENERATE         = ENUM_NO;
    public static String DEF_DATABASENAME     = "Default";
    public static String DEF_VERSION          = "2.0";

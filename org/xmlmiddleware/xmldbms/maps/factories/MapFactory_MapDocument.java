@@ -186,7 +186,7 @@ public class MapFactory_MapDocument
    // State variables -- property maps
    private PropertyMap      propMap;
    private Table            propertyTable;
-   private boolean          parentKeyIsUnique, multiValued;
+   private boolean          parentKeyIsUnique, isTokenList;
    private Key              uniqueKey;
 
    // State variables -- base class tables
@@ -462,10 +462,6 @@ public class MapFactory_MapDocument
                processLocale(attrs);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_MVORDERCOLUMN:
-               processOrderColumn(attrs, true);
-               break;
-
             case XMLDBMSConst.ELEM_TOKEN_NAMESPACE:
                processNamespace(attrs);
                break;
@@ -516,6 +512,10 @@ public class MapFactory_MapDocument
 
             case XMLDBMSConst.ELEM_TOKEN_TIMEFORMAT:
                processDateFormatStart(attrs, false, true);
+               break;
+
+            case XMLDBMSConst.ELEM_TOKEN_TLORDERCOLUMN:
+               processOrderColumn(attrs, true);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_TOCLASSTABLE:
@@ -675,13 +675,13 @@ public class MapFactory_MapDocument
             case XMLDBMSConst.ELEM_TOKEN_FORMATCLASS:
             case XMLDBMSConst.ELEM_TOKEN_LOCALE:
             case XMLDBMSConst.ELEM_TOKEN_MAPS:
-            case XMLDBMSConst.ELEM_TOKEN_MVORDERCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_NAMESPACE:
             case XMLDBMSConst.ELEM_TOKEN_OPTIONS:
             case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_PCDATA:
             case XMLDBMSConst.ELEM_TOKEN_SCHEMA:
             case XMLDBMSConst.ELEM_TOKEN_TABLE:
+            case XMLDBMSConst.ELEM_TOKEN_TLORDERCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_TOCLASSTABLE:
             case XMLDBMSConst.ELEM_TOKEN_TOCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_USECLASSMAP:
@@ -807,9 +807,9 @@ public class MapFactory_MapDocument
             break;
       }
 
-      // Set whether the attribute is multi-valued.
+      // Set whether the attribute value is a token list.
 
-      propMap.setIsMultiValued(multiValued);
+      propMap.setIsTokenList(isTokenList);
    }
 
    private void processCatalog(Attributes attrs)
@@ -1021,10 +1021,10 @@ public class MapFactory_MapDocument
             break;
 
          case iSTATE_PROPERTYMAP:
-            // Create a new PropertyMap and set whether it is multi-valued.
+            // Create a new PropertyMap and set whether it is a token list.
 
             propMap = PropertyMap.create(elementTypeName, PropertyMap.ELEMENTTYPE);
-            propMap.setIsMultiValued(multiValued);
+            propMap.setIsTokenList(isTokenList);
 
             // Check whether the <PropertyMap> element is inside a <ClassMap> or an
             // <InlineMap> element and add it accordingly. This throws an error if
@@ -1131,7 +1131,7 @@ public class MapFactory_MapDocument
       if (state.intValue() == iSTATE_PROPERTYMAP)
       {
          if (propMap.getType() == PropertyMap.ATTRIBUTE)
-            throw new MapException("A PropertyMap for an attribute may not contain a FixedOrder element. (If the attribute is multi-valued, it may contain an MVOrderColumn element.)");
+            throw new MapException("A PropertyMap for an attribute may not contain a FixedOrder element. (If the attribute value is a token list, it may contain an TLOrderColumn element.)");
       }
 
       // Create an OrderInfo object.
@@ -1274,12 +1274,12 @@ public class MapFactory_MapDocument
       addDefaultFormatter(defaultForTypes, formatter);
    }
 
-   private void processOrderColumn(Attributes attrs, boolean multiValued)
+   private void processOrderColumn(Attributes attrs, boolean isTokenList)
       throws MapException
    {
-      // This method processes both OrderColumn and MVOrderColumn. In the latter
-      // case, multiValued is true. This is passed to processOrder, which then
-      // calls setMVOrderInfo instead of setOrderInfo.
+      // This method processes both OrderColumn and TLOrderColumn. In the latter
+      // case, isTokenList is true. This is passed to processOrder, which then
+      // calls setTokenListOrderInfo instead of setOrderInfo.
 
       OrderInfo orderInfo;
       String    name;
@@ -1290,7 +1290,7 @@ public class MapFactory_MapDocument
 
       // Create an OrderInfo object
 
-      orderInfo = createOrderInfo(attrs, multiValued);
+      orderInfo = createOrderInfo(attrs, isTokenList);
 
       // Get the name of the order column and whether to generate it
 
@@ -1302,13 +1302,13 @@ public class MapFactory_MapDocument
       switch (state.intValue())
       {
          case iSTATE_PROPERTYMAP:
-            if (multiValued)
+            if (isTokenList)
             {
-               if (!propMap.isMultiValued())
-                  throw new MapException("A PropertyMap cannot contain an MVOrderColumn element unless the MultiValued attribute is set to 'Yes'.");
+               if (!propMap.isTokenList())
+                  throw new MapException("A PropertyMap cannot contain a TLOrderColumn element unless the TokenList attribute is set to 'Yes'.");
             }
             else if (propMap.getType() == PropertyMap.ATTRIBUTE)
-               throw new MapException("A PropertyMap for an attribute may not contain an OrderColumn element. (If the attribute is multi-valued, it may contain an MVOrderColumn element.)");
+               throw new MapException("A PropertyMap for an attribute may not contain an OrderColumn element. (If the attribute value is a token list, it may contain a TLOrderColumn element.)");
 
             // If the LinkInfo is null, the order column is in the class table.
             // If the LinkInfo is not null, the order column is in the table
@@ -1364,10 +1364,10 @@ public class MapFactory_MapDocument
    private void processPCDATA()
       throws MapException
    {
-      // Create a new PropertyMap and set whether it is multi-valued.
+      // Create a new PropertyMap and set whether it contains a token list.
 
       propMap = PropertyMap.create(null, PropertyMap.PCDATA);
-      propMap.setIsMultiValued(multiValued);
+      propMap.setIsTokenList(isTokenList);
 
       // Check whether the <PropertyMap> element is inside a <ClassMap> or an
       // <InlineMap> element and add it accordingly. This throws an error if the
@@ -1425,12 +1425,12 @@ public class MapFactory_MapDocument
    {
       String attrValue;
 
-      // All we do here is save whether the property is multi-valued.
+      // All we do here is save whether the property contains a token list.
       // We actually create the propMap when we encounter the
       // <ElementType>, <Attribute>, or <PCDATA> element.
 
-      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_MULTIVALUED, XMLDBMSConst.DEF_MULTIVALUED);
-      multiValued = isYes(attrValue);
+      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_TOKENLIST, XMLDBMSConst.DEF_TOKENLIST);
+      isTokenList = isYes(attrValue);
    }
 
    private void processRelatedClass(Attributes attrs)
@@ -1830,7 +1830,7 @@ public class MapFactory_MapDocument
       enumTokens = new TokenList(XMLDBMSConst.ENUMS, XMLDBMSConst.ENUM_TOKENS, XMLDBMSConst.ENUM_TOKEN_INVALID);
    }
 
-   private OrderInfo createOrderInfo(Attributes attrs, boolean multiValued)
+   private OrderInfo createOrderInfo(Attributes attrs, boolean isTokenList)
    {
       OrderInfo orderInfo;
       String    ascending;
@@ -1841,9 +1841,9 @@ public class MapFactory_MapDocument
       switch (state.intValue())
       {
          case iSTATE_PROPERTYMAP:
-            if (multiValued)
+            if (isTokenList)
             {
-               propMap.setMVOrderInfo(orderInfo);
+               propMap.setTokenListOrderInfo(orderInfo);
             }
             else
             {

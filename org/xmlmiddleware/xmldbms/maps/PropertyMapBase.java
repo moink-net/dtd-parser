@@ -65,8 +65,8 @@ public class PropertyMapBase extends MapBase
    private Column    column = null;
    private int       type = UNKNOWN;
    private OrderInfo orderInfo = null;
-   private OrderInfo mvOrderInfo = null;
-   private boolean   multiValued = false;
+   private OrderInfo tokenListOrderInfo = null;
+   private boolean   isTokenList = false;
 
    // ********************************************************************
    // Constructors
@@ -192,61 +192,62 @@ public class PropertyMapBase extends MapBase
    }
 
    // ********************************************************************
-   // Multi-valued order information
+   // Token list order information
    // ********************************************************************
 
    /**
-    * Get the information used to order a multi-valued property.
+    * Get the information used to order a token list property.
     *
-    * <p>Applies only when isMultiValued() returns true.</p>
+    * <p>Applies only when isTokenList() returns true.</p>
     *
     * @return The order information. Null if the values are not ordered.
     */
-   public final OrderInfo getMVOrderInfo()
+   public final OrderInfo getTokenListOrderInfo()
    {
-      return mvOrderInfo;
+      return tokenListOrderInfo;
    }
 
    /**
-    * Set the information used to order a multi-valued property.
+    * Set the information used to order a token list property.
     *
-    * <p>This method may be called only when isMultiValued() returns true.</p>
+    * <p>This method may be called only when isTokenList() returns true.</p>
     *
-    * @param mvOrderInfo The order information. Null if the property is not ordered.
+    * @param tokenListOrderInfo The order information. Null if the property is not ordered.
     */
-   public void setMVOrderInfo(OrderInfo mvOrderInfo)
+   public void setTokenListOrderInfo(OrderInfo tokenListOrderInfo)
    {
-      if (!multiValued)
-         throw new IllegalStateException("Cannot call setMVOrderInfo(OrderInfo) when the property being mapped is not multi-valued.");
-      this.mvOrderInfo = mvOrderInfo;
+      if (!isTokenList)
+         throw new IllegalStateException("Cannot call setTokenListOrderInfo(OrderInfo) when the property being mapped is not a token list.");
+      this.tokenListOrderInfo = tokenListOrderInfo;
    }
 
    // ********************************************************************
-   // Property multi-valuedness
+   // Token list stuff
    // ********************************************************************
 
    /**
-    * Is an element type, attribute, or PCDATA multi-valued?
+    * Is the value of an element type, attribute, or PCDATA a token list?
     *
-    * <p>This is used to support multi-valued attributes (as declared in DTDs)
-    * and multi-valued element types and attributes (as declared in XML Schemas
+    * <p>This is used to support token-list-valued attributes (as declared in DTDs)
+    * and token-list-valued element types and attributes (as declared in XML Schemas
     * with the list data type).</p>
     *
-    * @return Whether an element type, attribute, or PCDATA is multi-valued.
+    * @return Whether the value of an element type, attribute, or PCDATA is a token list.
     */
-   public final boolean isMultiValued()
+   public final boolean isTokenList()
    {
-      return multiValued;
+      return isTokenList;
    }
 
    /**
-    * Sets whether an element type, attribute, or PCDATA is multi-valued.
+    * Sets whether the value of an element type, attribute, or PCDATA is a token list.
     *
-    * @param multiValued Whether an element type, attribute, or PCDATA is multi-valued.
+    * @param isTokenList Whether the value of an element type, attribute, or PCDATA
+    * is a token list
     */
-   public void setIsMultiValued(boolean multiValued)
+   public void setIsTokenList(boolean isTokenList)
    {
-      this.multiValued = multiValued;
-      this.mvOrderInfo = null;
+      this.isTokenList = isTokenList;
+      this.tokenListOrderInfo = null;
    }
 }
