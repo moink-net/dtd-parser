@@ -25,6 +25,8 @@ package org.xmlmiddleware.xmlutils.external;
 import org.xmlmiddleware.utils.XMLMiddlewareException;
 import org.xmlmiddleware.xmlutils.*;
 
+import java.io.*;
+
 import org.xml.sax.*;
 import org.w3c.dom.*;
 
@@ -123,7 +125,7 @@ public class ParserUtilsXerces implements ParserUtils
    }
 
    /**
-    * Open an InputSource and create a DOM Document
+    * Read an InputSource and create a DOM Document
     *
     * @param src SAX InputSource to be parsed into a Document
     * @param validate Whether the InputSource is validated.
@@ -132,7 +134,7 @@ public class ParserUtilsXerces implements ParserUtils
     * @exception XMLMiddlewareException Thrown if there is a problem parsing the
     *          InputSource
     */
-   public Document openDocument(InputSource src, boolean validate)
+   public Document readDocument(InputSource src, boolean validate)
       throws XMLMiddlewareException
    {
       // Instantiate a DocumentBuilder parser using the DocumentBuilderFactory.
@@ -154,35 +156,60 @@ public class ParserUtilsXerces implements ParserUtils
    }
 
    /**
-    * Write a DOM Document to a file.
+    * Write a DOM Document to a Writer.
     *
     * @param doc The DOM Document.
-    * @param xmlFilename The name of the XML file.
-    * @param encoding The output encoding to use. If this is null, the default
-    *    encoding is used.
-    * @exception XMLMiddlewareException Thrown if an error occurs writing the
-    *    DOM Document.
+    * @param writer The Writer.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
     */
-   public void writeDocument(Document doc, String xmlFilename, String encoding)
+   public void writeDocument(Document doc, Writer writer)
       throws XMLMiddlewareException
    {
-      FileOutputStream stream;
       OutputFormat     outputFormat;
       XMLSerializer    serializer;
 
-      // Write the DOM tree to a file.
+      // Write the DOM tree to an OutputStream.
+
       try
       {
          outputFormat = new OutputFormat(doc);
-         if (encoding != null) outputFormat.setEncoding(encoding);
          outputFormat.setIndenting(true);
 
-         stream = new FileOutputStream(xmlFilename);
-
-         serializer = new XMLSerializer(stream, outputFormat);
+         serializer = new XMLSerializer(writer, outputFormat);
          serializer.asDOMSerializer().serialize(doc);
 
-         stream.close();
+         writer.flush();
+      }
+      catch (Exception e)
+      {
+         throw new XMLMiddlewareException(e);
+      }
+   }
+
+   /**
+    * Write a DOM Document to an OutputStream.
+    *
+    * @param doc The DOM Document.
+    * @param out The OutputStream.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
+    */
+   public void writeDocument(Document doc, OutputStream out)
+      throws XMLMiddlewareException
+   {
+      OutputFormat     outputFormat;
+      XMLSerializer    serializer;
+
+      // Write the DOM tree to an OutputStream.
+
+      try
+      {
+         outputFormat = new OutputFormat(doc);
+         outputFormat.setIndenting(true);
+
+         serializer = new XMLSerializer(out, outputFormat);
+         serializer.asDOMSerializer().serialize(doc);
+
+         out.flush();
       }
       catch (Exception e)
       {

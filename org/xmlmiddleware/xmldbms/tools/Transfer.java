@@ -29,6 +29,7 @@ import org.xmlmiddleware.xmldbms.filters.*;
 import org.xmlmiddleware.xmldbms.keygenerators.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.factories.*;
+import org.xmlmiddleware.xmldbms.tools.resolvers.*;
 import org.xmlmiddleware.xmlutils.*;
 
 import org.xml.sax.*;
@@ -52,10 +53,11 @@ import javax.sql.*;
  * and deleteDocument) belong to the traditional API.</p>
  *
  * <p>The traditional API can transfer data between the database and a
- * file or a string. Strings are a useful way to represent an XML
- * document, since they can easily be passed to/from an XSLT processor,
- * HTTP, etc. The dispatch-style API and the command line interface can
- * only transfer data between a database and a file.</p>
+ * document location (file, URL, etc.), a string, or an input or output stream.
+ * Strings are a useful way to represent an XML document, since they can
+ * easily be passed to/from an XSLT processor, HTTP, etc. The dispatch-style API
+ * interface can transfer data between the database and a document location.
+ * The command line interface can only transfer data between a database and a file.</p>
  *
  * <p><b>Properties</b></p>
  *
@@ -68,7 +70,7 @@ import javax.sql.*;
  *
  * <ul>
  * <li><p>Property-processing properties are used to process other properties.
- *     This are File.</p></li>
+ *     This is File.</p></li>
  *
  * <li><p>Parser properties provide information about the XML parser / DOM
  *     implementation. They are ParserUtilsClass.</p></li>
@@ -91,8 +93,9 @@ import javax.sql.*;
  *     org.xmlmiddleware.xmldbms.datahandlers.GenericHandler is used.</p></li>
  *
  * <li><p>Transfer properties specify what is to be done (store, retrieve, or
- *     delete a document) and the files to use. They are Method, MapFile,
- *     XMLFile, ActionFile, and FilterFile. See below for details.</p></li>
+ *     delete a document) and the document locations to use. They are Method, MapLocation,
+ *     XMLLocation, ActionLocation, FilterLocation, MapResolverClass, XMLResolverClass,
+ *     ActionResolverClass, and FilterResolverClass. See below for details.</p></li>
  *
  * <li><p>Select properties specify result sets to use when retrieving data.
  *     They are Select, SelectDBName, and SelectResultSetName.</p></li>
@@ -112,23 +115,31 @@ import javax.sql.*;
  *
  * <table border="1" cellpadding="3">
  * <tr><th>Method</th><th>Transfer properties</th></tr>
- * <tr valign="top"><td>StoreDocument</td><td>MapFile<br />XMLFile<br />ActionFile
- * <br />FilterFile (when ReturnFilter is "Yes")</td></tr>
- * <tr valign="top"><td>RetrieveDocumentByFilter</td><td>MapFile<br />XMLFile
- * <br />FilterFile[1]</td></tr>
- * <tr valign="top"><td>RetrieveDocumentBySQL</td><td>MapFile<br />XMLFile<br />
- * FilterFile[1]<br />Select[2]<br />SelectDBName[2][3]<br />SelectResultSetName[2][4]</td></tr>
- * <tr valign="top"><td>DeleteDocument</td><td>MapFile<br />ActionFile<br />FilterFile</td></tr>
+ * <tr valign="top"><td>StoreDocument</td><td>MapLocation<br />XMLLocation[1]<br />
+ * ActionLocation[1]<br />FilterLocation[1] (when ReturnFilter is "Yes")</td></tr>
+ * <tr valign="top"><td>RetrieveDocumentByFilter</td><td>MapLocation[1]<br />
+ * XMLLocation[1]<br />FilterLocation[1][2]</td></tr>
+ * <tr valign="top"><td>RetrieveDocumentBySQL</td><td>MapLocation<br />XMLLocation[1]
+ * <br />FilterLocation[1][2]<br />Select[3]<br />SelectDBName[3][4]
+ * <br />SelectResultSetName[3][5]</td></tr>
+ * <tr valign="top"><td>DeleteDocument</td><td>MapLocation[1]<br />ActionLocation[1]
+ * <br />FilterLocation[1]</td></tr>
  * </table>
  *
  * <p>NOTES:<br />
- * [1] If the filter document uses parameters, these should be passed in as well.
+ * [1] XxxxLocation properties provide the location of named resources, such as
+ * a filename or URL. A location name is resolved by a class that implements
+ * the LocationResolver interface; this is specified with the XxxxResolverClass property
+ * (see below). If no XxxxResolverClass is specified, then the
+ * org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver class is used. That is,
+ * the location name is assumed to be a filename.
+ * [2] If the filter document uses parameters, these should be passed in as well.
  * Because parameter names begin with a dollar sign ($), there should be no conflict
  * between parameter names and the names of other properties.<br />
- * [2] If there is more than one result set, use Select1, Select2, ...,
+ * [3] If there is more than one result set, use Select1, Select2, ...,
  * SelectDBName1, SelectDBName2, etc.<br />
- * [3] Optional. If no database name is specified, "Default" is used.<br />
- * [4] Optional if there is only one result set, in which case "Default" is used.
+ * [4] Optional. If no database name is specified, "Default" is used.<br />
+ * [5] Optional if there is only one result set, in which case "Default" is used.
  * Required if there is more than one result set. Result set names correspond to
  * result set names in the filter document.</p>
  *
@@ -139,10 +150,15 @@ import javax.sql.*;
  * <tr valign="top"><th>Method</th><th>Configuration properties</th></tr>
  * <tr valign="top"><td>StoreDocument</td><td>CommitMode[1]<br />StopOnError
  * <br />ReturnFilter<br />KeyGeneratorName[2]<br />KeyGeneratorClass[2][3]
- * <br />Encoding[4]<br />SystemID[4]<br />PublicID[4]<br />Validate[5]</td></tr>
+ * <br />Encoding[4]<br />SystemID[4]<br />PublicID[4]<br />Validate[5]<br />
+ * MapResolverClass[6]<br />XMLResolverClass[6]<br />ActionResolverClass[6]
+ * <br />FilterResolverClass[6]</td></tr>
  * <tr valign="top"><td>RetrieveDocumentByFilter<br />RetrieveDocumentBySQL</td>
- * <td>Encoding<br />SystemID<br />PublicID<br />Validate[6]</td></tr>
- * <tr valign="top"><td>DeleteDocument</td><td>CommitMode[1]<br />Validate[7]</td></tr>
+ * <td>Encoding<br />SystemID<br />PublicID<br />Validate[7]<br />
+ * MapResolverClass[6]<br />XMLResolverClass[6]<br />FilterResolverClass[6]</td></tr>
+ * <tr valign="top"><td>DeleteDocument</td><td>CommitMode[1]<br />Validate[8]<br />
+ * MapResolverClass[6]<br />XMLResolverClass[6]<br />ActionResolverClass[6]
+ * <br />FilterResolverClass[6]</td></tr>
  * </table>
  *
  * <p>NOTES:<br />
@@ -155,10 +171,15 @@ import javax.sql.*;
  * properties should have the same numerical suffix as KeyGeneratorName and
  * KeyGeneratorClass. See the documentation for your key generator for information
  * about the initialization properties.<br />
- * [4] Applies to the output filter file, if any.
+ * [4] Applies to the output filter document, if any.
  * [5] Value is a space-separated list containing Map, XML, and/or Action.<br />
- * [6] Value is a space-separated list containing Map and/or Filter.<br />
- * [7] Value is a space-separated list containing Map, Action, and/or Filter.</p>
+ * [6] Optional. XxxxResolverClass properties specify the class used to resolve XxxxLocations.
+ * For example, if a location is a URL, then the resolver class should be
+ * org.xmlmiddleware.xmldbms.tools.resolvers.URLResolver. The XxxxResolverClass
+ * properties are optional; org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver
+ * is used by default. That is, locations are assumed to be filenames by default.
+ * [7] Value is a space-separated list containing Map and/or Filter.<br />
+ * [8] Value is a space-separated list containing Map, Action, and/or Filter.</p>
  *
  * <p>For a complete description of the properties used by Transfer,
  * see ?????.</p>
@@ -176,7 +197,7 @@ import javax.sql.*;
  * spaces, the entire pair must be enclosed in quotes.</p>
  *
  * <p>For example, the following is used to store data from the
- * sales.xml file to the database:</p>
+ * sales.xml file in the database:</p>
  *
  * <pre>
  *   java org.xmlmiddleware.xmldbms.tools.Transfer 
@@ -184,8 +205,8 @@ import javax.sql.*;
  *                  DataSourceClass=JDBC1DataSource
  *                  Driver=sun.jdbc.odbc.JdbcOdbcDriver URL=jdbc:odbc:xmldbms
  *                  User=ron Password=ronpwd
- *                  Method=StoreDocument
- *                  MapFile=sales.map XMLFile=sales.xml ActionFile=sales.act
+ *                  Method=StoreDocument MapLocation=sales.map
+ *                  XMLLocation=sales.xml ActionLocation=sales.act
  * </pre>
  *
  * <p>A special property, File, can be used to designate a file containing
@@ -195,7 +216,8 @@ import javax.sql.*;
  *
  * <pre>
  *   java org.xmlmiddleware.xmldbms.tools.Transfer File1=xerces.props File2=db.props
- *           Method=StoreDocument MapFile=sales.map XMLFile=sales.xml ActionFile=sales.act
+ *                  Method=StoreDocument MapLocation=sales.map
+ *                  XMLLocation=sales.xml ActionLocation=sales.act
  * </pre>
  *
  * <p>Notice that when more than one File property is used, the File properties
@@ -220,9 +242,9 @@ import javax.sql.*;
  *
  * <p>The traditional API consists of a number of methods: setDatabaseProperties() and a
  * number of variations of storeDocument(), retrieveDocument(), and deleteDocument(). These
- * methods allow you to transfer data between the database and an XML file, a string, or
- * (in the case of storeDocument()) an InputStream. Applications using this interface must
- * call setDatabaseProperties() before calling any of the other methods.</p>
+ * methods allow you to transfer data between the database and an XML document, a string, or
+ * an input or output stream. Applications using this interface must call
+ * setDatabaseProperties() before calling any of the other methods.</p>
  *
  * <p>storeDocument(), retrieveDocument(), and deleteDocument() accept configuration parameters
  * in the form of properties. All of these have defaults except for the key generator
@@ -234,22 +256,24 @@ import javax.sql.*;
  * <p>When Transfer is called through the dispatch(), storeDocument(), retrieveDocument(),
  * and deleteDocument() methods, it caches various objects for reuse in subsequent
  * calls. The following objects are cached, with the key (property) shown in parentheses. If
- * the item to which the key points (such as a map file) changes between calls to
+ * the item to which the key points (such as a map document) changes between calls to
  * these methods, the new object will not be used. To use the new object, applications must
  * instantiate and use a new Transfer object. Note that database objects (DataSource,
  * DataHandler, etc.) are cached between calls to setDatabaseProperties().</p>
  *
  * <pre>
- * XMLDBMSMap (MapFile)
- * Actions (ActionFile)
- * FilterSet (FilterFile)
+ * XMLDBMSMap (MapLocation)
+ * Actions (ActionLocation)
+ * FilterSet (FilterLocation)
  * KeyGenerator (KeyGeneratorName)
+ * LocationResolver (MapResolverClass, XMLResolverClass, ActionResolverClass, FilterResolverClass)
  * </pre>
  *
  * @author Adam Flinton
  * @author Ronald Bourret
  * @version 2.0
  * @see org.xmlmiddleware.xmldbms.tools.XMLDBMSProps
+ * @see org.xmlmiddleware.xmldbms.tools.resolvers.LocationResolver
  */
 
 public class Transfer extends PropertyProcessor
@@ -259,11 +283,12 @@ public class Transfer extends PropertyProcessor
    // ************************************************************************
 
    ParserUtils utils;
-   Hashtable   fileObjects = new Hashtable(),
+   Hashtable   locationObjects = new Hashtable(),
                keyGenerators = new Hashtable(),
                dbMaps = new Hashtable(),
                dbInfos = new Hashtable(),
-               dataHandlers = new Hashtable();
+               dataHandlers = new Hashtable(),
+               resolvers = new Hashtable();
    Vector      conns = new Vector();
    DOMToDBMS   domToDBMS = null;
    DBMSToDOM   dbmsToDOM = null;
@@ -276,6 +301,7 @@ public class Transfer extends PropertyProcessor
    private static String GENERICHANDLER = "org.xmlmiddleware.xmldbms.datahandlers.GenericHandler";
    private static String JDBC1DATASOURCE = "org.xmlmiddleware.db.JDBC1DataSource";
    private static String JDBC2DATASOURCE = "org.xmlmiddleware.db.JDBC2DataSource";
+   private static String FILENAMERESOLVER = "org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver";
    private static String DEFAULT = "Default";
    private static String YES = "YES";
 
@@ -452,207 +478,273 @@ public class Transfer extends PropertyProcessor
    }
 
    /**
-    * Store (insert or update) data from an XML file in the database
+    * Store (insert or update) data from an XML document.
     *
-    * @param configProps Configuration properties. May be null. See the introduction
-    *    for details.
-    * @param xmlFilename Name of the XML file.
-    * @param mapFilename Name of the map file.
-    * @param actionFilename Name of the action file.
-    * @return A FilterSet describing the stored document. This is returned only if
-    *    the ReturnFilter property is set to "Yes".
+    * <p>See the introduction for details about the configProps, mapLocation,
+    * actionLocation, and xmlLocation parameters.</p>
+    *
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param actionLocation Location of the action document.
+    * @param xmlLocation Location of the XML document
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
-    *    invalid map document, class not found, etc.
+    * invalid map document, class not found, etc.
+    * @return A FilterSet describing the stored document. This is returned only if
+    *    the ReturnFilter property is set to "Yes".
     */
-   public FilterSet storeDocument(Properties configProps, String xmlFilename, String mapFilename, String actionFilename)
-      throws XMLMiddlewareException, SQLException
+   public FilterSet storeXMLDocument(Properties configProps, String mapLocation, String actionLocation, String xmlLocation)
+   throws SQLException, XMLMiddlewareException
    {
       InputSource src;
+      LocationResolver resolver;
 
-      try
-      {
-         src = new InputSource(new FileReader(xmlFilename));
-      }
-      catch (FileNotFoundException e)
-      {
-         throw new XMLMiddlewareException(e);
-      }
-      return storeDocumentInternal(configProps, mapFilename, actionFilename, src);
+      resolver = getLocationResolver(configProps, XMLDBMSProps.XMLRESOLVERCLASS);
+      src = getInputSource(resolver, xmlLocation);
+      return storeDocumentInternal(configProps, mapLocation, actionLocation, src);
    }
 
    /**
-    * Store (insert or update) data from an XML string in the database
+    * Store (insert or update) data from an XML string.
     *
-    * @param xmlString A string containing the XML to store.
-    * @param configProps Configuration properties. May be null. See the introduction
-    *    for details.
-    * @param mapFilename Name of the map file.
-    * @param actionFilename Name of the action file.
+    * <p>See the introduction for details about the configProps, mapLocation,
+    * and actionLocation parameters.</p>
+    *
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param actionLocation Location of the action document.
+    * @param xmlString The XML document
     * @return A FilterSet describing the stored document. This is returned only if
     *    the ReturnFilter property is set to "Yes".
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
     */
-   public FilterSet storeDocument(String xmlString, Properties configProps, String mapFilename, String actionFilename)
-      throws XMLMiddlewareException, SQLException
+   public FilterSet storeXMLString(Properties configProps, String mapLocation, String actionLocation, String xmlString)
+      throws SQLException, XMLMiddlewareException
    {
       InputSource src;
 
       src = new InputSource(new StringReader(xmlString));
-      return storeDocumentInternal(configProps, mapFilename, actionFilename, src);
+      return storeDocumentInternal(configProps, mapLocation, actionLocation, src);
    }
 
    /**
-    * Store (insert or update) data from an XML InputStream in the database
+    * Store (insert or update) data from an InputStream containing XML.
     *
-    * @param configProps Configuration properties. May be null. See the introduction
-    *    for details.
-    * @param mapFilename Name of the map file.
-    * @param actionFilename Name of the action file.
-    * @param xmlStream An InputStream containing the XML to store.
+    * <p>See the introduction for details about the configProps, mapLocation,
+    * and actionLocation parameters.</p>
+    *
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param actionLocation Location of the action document.
+    * @param stream The InputStream containing XML.
     * @return A FilterSet describing the stored document. This is returned only if
     *    the ReturnFilter property is set to "Yes".
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
     */
-   public FilterSet storeDocument(Properties configProps, String mapFilename, String actionFilename, InputStream xmlStream)
-      throws XMLMiddlewareException, SQLException
+   public FilterSet storeXMLInputStream(Properties configProps, String mapLocation, String actionLocation, InputStream stream)
+      throws SQLException, XMLMiddlewareException
    {
       InputSource src;
 
-      src = new InputSource(xmlStream);
-      return storeDocumentInternal(configProps, mapFilename, actionFilename, src);
+      src = new InputSource(stream);
+      return storeDocumentInternal(configProps, mapLocation, actionLocation, src);
    }
 
    /**
-    * Retrieve data from the database as an XML string
+    * Retrieve data as an XML document.
     *
-    * @param configProps Configuration properties. May be null. See the introduction
-    *    for details.
-    * @param mapFilename Name of the map file.
-    * @param filterFilename Name of the filter file.
-    * @param params A Hashtable of filter parameters. May be null. Note that this may
-    *    be a Properties object, since Properties inherit from Hashtable.
-    * @return A string containing the retrieved XML
+    * <p>See the introduction for details about the configProps, mapLocation,
+    * filterLocation, and xmlLocation parameters.</p>
+    *
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param filterLocation Location of the filter document.
+    * @param params A Hashtable of filter parameters. May be null. Note that
+    *    this may be a Properties object, since Properties inherits from Hashtable.
+    * @param xmlLocation Location of the XML document.
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
     */
-   public String retrieveDocument(Properties configProps, String mapFilename, String filterFilename, Hashtable params)
-      throws XMLMiddlewareException, SQLException
+   public void retrieveXMLDocument(Properties configProps, String mapLocation, String filterLocation, Hashtable params, String xmlLocation)
+      throws SQLException, XMLMiddlewareException
+   {
+      String           encoding = null;
+      Document         doc;
+      LocationResolver resolver;
+
+      if (configProps != null) encoding = configProps.getProperty(XMLDBMSProps.ENCODING);
+
+      doc = retrieveDocumentInternal(configProps, mapLocation, filterLocation, params);
+      resolver = getLocationResolver(configProps, XMLDBMSProps.XMLRESOLVERCLASS);
+      writeDocument(resolver, doc, xmlLocation, encoding);
+   }
+
+   /**
+    * Retrieve data as an XML string.
+    *
+    * <p>See the introduction for details about the configProps, mapLocation,
+    * and filterLocation parameters.</p>
+    *
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param filterLocation Location of the filter document.
+    * @param params A Hashtable of filter parameters. May be null. Note that
+    *    this may be a Properties object, since Properties inherit from Hashtable.
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    *    invalid map document, class not found, etc.
+    * @return A String containing the XML document
+    */
+   public String retrieveXMLString(Properties configProps, String mapLocation, String filterLocation, Hashtable params)
+      throws SQLException, XMLMiddlewareException
    {
       Document doc;
 
-      doc = retrieveDocumentInternal(configProps, mapFilename, filterFilename, params);
+      doc = retrieveDocumentInternal(configProps, mapLocation, filterLocation, params);
       return utils.writeDocument(doc);
    }
 
    /**
-    * Retrieve data from the database as an XML file
+    * Retrieve data as XML written to an OutputStream.
     *
-    * @param configProps Configuration properties. May be null. See the introduction
-    *    for details.
-    * @param mapFilename Name of the map file.
-    * @param filterFilename Name of the filter file.
-    * @param params A Hashtable of filter parameters. May be null. Note that this may
-    *    be a Properties object, since Properties inherit from Hashtable.
-    * @param xmlFilename Name of the XML file.
+    * <p>See the introduction for details about the configProps, mapLocation,
+    * and filterLocation parameters.</p>
+    *
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param filterLocation Location of the filter document.
+    * @param params A Hashtable of filter parameters. May be null. Note that this
+    *    may be a Properties object, since Properties inherit from Hashtable.
+    * @param stream The OutputStream in which to return the XML.
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
     */
-   public void retrieveDocument(Properties configProps, String mapFilename, String filterFilename, Hashtable params, String xmlFilename)
-      throws XMLMiddlewareException, SQLException
+   public void retrieveXMLOutputStream(Properties configProps, String mapLocation, String filterLocation, Hashtable params, OutputStream stream)
+      throws SQLException, XMLMiddlewareException
    {
       Document doc;
-      String   encoding = null;
 
-      if (configProps != null) encoding = configProps.getProperty(XMLDBMSProps.ENCODING);
-
-      doc = retrieveDocumentInternal(configProps, mapFilename, filterFilename, params);
-      utils.writeDocument(doc, xmlFilename, encoding);
+      doc = retrieveDocumentInternal(configProps, mapLocation, filterLocation, params);
+      utils.writeDocument(doc, stream);
    }
 
    /**
-    * Retrieve data from a result set as an XML string
+    * Retrieve a result set as an XML document.
     *
-    * <p>If the class map for the element type corresponding to the result set contains
-    * related classes, this method retrieves additional data from the database.</p>
+    * <p>If the class map for the element type corresponding to the result
+    * set contains related classes, this method retrieves additional data
+    * from the database. See the introduction for details about the configProps,
+    * mapLocation, filterLocation, selects, and xmlLocation parameters.</p>
     *
-    * @param configProps Configuration properties. May be null. See the introduction
-    *    for details.
-    * @param mapFilename Name of the map file.
-    * @param selects A Properties object describing the result set. See the introduction
-    *    for details.
-    * @param filterFilename Name of the filter file.
-    * @param params A Hashtable of filter parameters. May be null. Note that this may
-    *    be a Properties object, since Properties inherit from Hashtable.
-    * @return A string containing the retrieved XML
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param selects A Properties object describing the result set.
+    * @param filterLocation Location of the filter document.
+    * @param params A Hashtable of filter parameters. May be null. Note that
+    *    this may be a Properties object, since Properties inherit from Hashtable.
+    * @param xmlLocation Location of the XML document.
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
     */
-   public String retrieveDocument(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params)
-      throws XMLMiddlewareException, SQLException
+   public void retrieveXMLDocument(Properties configProps, String mapLocation, Properties selects, String filterLocation, Hashtable params, String xmlLocation)
+      throws SQLException, XMLMiddlewareException
+   {
+      String           encoding = null;
+      Document         doc;
+      LocationResolver resolver;
+
+      if (configProps != null) encoding = configProps.getProperty(XMLDBMSProps.ENCODING);
+
+      doc = retrieveDocumentInternal(configProps, mapLocation, selects, filterLocation, params);
+      resolver = getLocationResolver(configProps, XMLDBMSProps.XMLRESOLVERCLASS);
+      writeDocument(resolver, doc, xmlLocation, encoding);
+   }
+
+   /**
+    * Retrieve a result set as an XML string.
+    *
+    * <p>If the class map for the element type corresponding to the result
+    * set contains related classes, this method retrieves additional data
+    * from the database. See the introduction for details about the configProps,
+    * mapLocation, filterLocation, and selects parameters.</p>
+    *
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param selects A Properties object describing the result set.
+    * @param filterLocation Location of the filter document.
+    * @param params A Hashtable of filter parameters. May be null. Note that
+    *    this may be a Properties object, since Properties inherit from Hashtable.
+    * @exception SQLException Thrown if a database error occurs.
+    * @exception XMLMiddlewareException Thrown for all other errors: file not found,
+    * invalid map document, class not found, etc.
+    * @return A String containing the XML document
+    */
+   public String retrieveXMLString(Properties configProps, String mapLocation, Properties selects, String filterLocation, Hashtable params)
+      throws SQLException, XMLMiddlewareException
    {
       Document doc;
 
-      doc = retrieveDocumentInternal(configProps, mapFilename, selects, filterFilename, params);
+      doc = retrieveDocumentInternal(configProps, mapLocation, selects, filterLocation, params);
       return utils.writeDocument(doc);
    }
 
    /**
-    * Retrieve data from a result set as an XML file
+    * Retrieve a result set as XML written to an OutputStream.
     *
-    * <p>If the class map for the element type corresponding to the result set contains
-    * related classes, this method retrieves additional data from the database.</p>
+    * <p>If the class map for the element type corresponding to the result
+    * set contains related classes, this method retrieves additional data
+    * from the database. See the introduction for details about the configProps,
+    * mapLocation, filterLocation, and selects parameters.</p>
     *
-    * @param configProps Configuration properties. May be null. See the introduction
-    *    for details.
-    * @param mapFilename Name of the map file.
-    * @param selects A Properties object describing the result set. See the introduction
-    *    for details.
-    * @param filterFilename Name of the filter file.
-    * @param params A Hashtable of filter parameters. May be null. Note that this may
-    *    be a Properties object, since Properties inherit from Hashtable.
-    * @param xmlFilename Name of the XML file.
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param selects A Properties object describing the result set.
+    * @param filterLocation Location of the filter document.
+    * @param params A Hashtable of filter parameters. May be null. Note that
+    *    this may be a Properties object, since Properties inherit from Hashtable.
+    * @param stream The OutputStream to which to return the XML
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
     */
-   public void retrieveDocument(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params, String xmlFilename)
-      throws XMLMiddlewareException, SQLException
+   public void retrieveXMLOutputStream(Properties configProps, String mapLocation, Properties selects, String filterLocation, Hashtable params, OutputStream stream)
+      throws SQLException, XMLMiddlewareException
    {
       Document doc;
-      String   encoding = null;
 
-      if (configProps != null) encoding = configProps.getProperty(XMLDBMSProps.ENCODING);
-
-      doc = retrieveDocumentInternal(configProps, mapFilename, selects, filterFilename, params);
-      utils.writeDocument(doc, xmlFilename, encoding);
+      doc = retrieveDocumentInternal(configProps, mapLocation, selects, filterLocation, params);
+      utils.writeDocument(doc, stream);
    }
 
    /**
-    * Delete data from the database
+    * Delete data from the database.
     *
-    * @param configProps Configuration properties. May be null. See the introduction
-    *    for details.
-    * @param mapFilename Name of the map file.
-    * @param actionFilename Name of the action file.
-    * @param filterFilename Name of the filter file.
-    * @param params A Hashtable of filter parameters. May be null. Note that this may
-    *    be a Properties object, since Properties inherit from Hashtable.
+    * <p>See the introduction for details about the configProps, mapLocation,
+    * and actionLocation parameters.</p>
+    *
+    * @param configProps Configuration properties. May be null.
+    * @param mapLocation Location of the map document.
+    * @param actionLocation Location of the action document.
+    * @param filterLocation Location of the filter document.
+    * @param params A Hashtable of filter parameters. May be null. Note that
+    *    this may be a Properties object, since Properties inherit from Hashtable.
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors: file not found,
     *    invalid map document, class not found, etc.
+    * @return A String containing the XML document
     */
-   public void deleteDocument(Properties configProps, String mapFilename, String actionFilename, String filterFilename, Hashtable params)
-      throws XMLMiddlewareException, SQLException
+   public void deleteXMLDocument(Properties configProps, String mapLocation, String actionLocation, String filterLocation, Hashtable params)
+      throws SQLException, XMLMiddlewareException
    {
-      String       validate;
+      String       validateStr;
+      boolean      validate;
       XMLDBMSMap   map;
       DBEnabledMap dbMap;
       Actions      actions;
@@ -660,11 +752,14 @@ public class Transfer extends PropertyProcessor
 
       // Create the various objects needed by DBMSDelete.
 
-      validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
-      map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
+      validateStr = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
+      validate = (validateStr.indexOf(XMLDBMSProps.MAPTOKEN) != -1);
+      map = createMap(configProps, mapLocation, validate);
       dbMap = createDBEnabledMap(map);
-      actions = createActions(map, actionFilename, (validate.indexOf(XMLDBMSProps.ACTIONTOKEN) != -1));
-      filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
+      validate = (validateStr.indexOf(XMLDBMSProps.ACTIONTOKEN) != -1);
+      actions = createActions(configProps, map, actionLocation, validate);
+      validate = (validateStr.indexOf(XMLDBMSProps.FILTERTOKEN) != -1);
+      filterSet = createFilterSet(configProps, map, filterLocation, validate);
 
       // Configure the DBMSDelete object
 
@@ -682,20 +777,20 @@ public class Transfer extends PropertyProcessor
    private void dispatchStoreDocument(Properties props)
       throws XMLMiddlewareException, SQLException
    {
-      String    mapFile, actionFile, xmlFile;
+      String    mapLocation, actionLocation, xmlLocation;
       FilterSet filterSet;
 
-      // Get the names of the map, action, and XML files
+      // Get the names of the map, action, and XML locations
 
-      mapFile = getProperty(props, XMLDBMSProps.MAPFILE);
-      actionFile = getProperty(props, XMLDBMSProps.ACTIONFILE);
-      xmlFile = getProperty(props, XMLDBMSProps.XMLFILE);
+      mapLocation = getProperty(props, XMLDBMSProps.MAPLOCATION);
+      actionLocation = getProperty(props, XMLDBMSProps.ACTIONLOCATION);
+      xmlLocation = getProperty(props, XMLDBMSProps.XMLLOCATION);
 
       // Store the document. If the user requested a FilterSet, write it out
       // now. Note that filterSet is null unless the ReturnFilter property was
       // set to "Yes".
 
-      filterSet = storeDocument(props, xmlFile, mapFile, actionFile);
+      filterSet = storeXMLDocument(props, mapLocation, actionLocation, xmlLocation);
       if (filterSet != null)
       {
          writeFilterSet(props, filterSet);
@@ -705,33 +800,35 @@ public class Transfer extends PropertyProcessor
    private void writeFilterSet(Properties props, FilterSet filterSet)
       throws XMLMiddlewareException
    {
-      String           filterFile, encoding, systemID, publicID;
-      OutputStream     outputStream;
+      String           filterLocation, encoding, systemID, publicID;
+      LocationResolver resolver;
       Writer           writer;
       FilterSerializer serializer;
 
       try
       {
 
-         // Get the name of the filter file. Do nothing if there is no filter file.
+         // Get the name of the filter location. Do nothing if there is no filter location.
 
-         filterFile = props.getProperty(XMLDBMSProps.FILTERFILE);
-         if (filterFile == null) return;
+         filterLocation = props.getProperty(XMLDBMSProps.FILTERLOCATION);
+         if (filterLocation == null) return;
 
-         // Get the encoding (if any) and create an OutputStreamWriter accordingly.
+         // Get the encoding (if any) and the LocationResolver, then get a Writer.
 
          encoding = props.getProperty(XMLDBMSProps.ENCODING);
-         if (encoding == null)
+         resolver = getLocationResolver(props, XMLDBMSProps.FILTERRESOLVERCLASS);
+         if (resolver.supportsWriter())
          {
-            writer = new FileWriter(filterFile);
+            writer = resolver.getWriter(filterLocation, encoding);
          }
          else
          {
-            outputStream = new FileOutputStream(filterFile);
-            writer = new OutputStreamWriter(outputStream, encoding);
+            if (encoding != null)
+               throw new XMLMiddlewareException("Encodings not supported by LocationResolver: " + resolver.getClass().getName());
+            writer = new OutputStreamWriter(resolver.getOutputStream(filterLocation));
          }
 
-         // Get the system ID and public ID of the filter file DTD.
+         // Get the system ID and public ID of the filter document DTD.
 
          systemID = props.getProperty(XMLDBMSProps.SYSTEMID);
          publicID = props.getProperty(XMLDBMSProps.PUBLICID);
@@ -763,63 +860,66 @@ public class Transfer extends PropertyProcessor
    private void dispatchRetrieveDocumentByFilter(Properties props)
       throws XMLMiddlewareException, SQLException
    {
-      String     mapFile, filterFile, xmlFile;
+      String     mapLocation, filterLocation, xmlLocation;
       Properties configProps = props;
       Hashtable  params      = props;
 
-      // Get the names of the map, filter, and XML files
+      // Get the names of the map, filter, and XML document locations
 
-      mapFile = getProperty(props, XMLDBMSProps.MAPFILE);
-      filterFile = getProperty(props, XMLDBMSProps.FILTERFILE);
-      xmlFile = getProperty(props, XMLDBMSProps.XMLFILE);
+      mapLocation = getProperty(props, XMLDBMSProps.MAPLOCATION);
+      filterLocation = getProperty(props, XMLDBMSProps.FILTERLOCATION);
+      xmlLocation = getProperty(props, XMLDBMSProps.XMLLOCATION);
 
       // Retrieve the document.
 
-      retrieveDocument(configProps, mapFile, filterFile, params, xmlFile);
+      retrieveXMLDocument(configProps, mapLocation, filterLocation, params, xmlLocation);
    }
 
    private void dispatchRetrieveDocumentBySQL(Properties props)
       throws XMLMiddlewareException, SQLException
    {
-      String     mapFile, filterFile, xmlFile;
+      String     mapLocation, filterLocation, xmlLocation;
       Properties configProps = props, selects = props;
       Hashtable  params      = props;
 
-      // Get the names of the map, filter, and XML files
+      // Get the names of the map, filter, and XML document locations
 
-      mapFile = getProperty(props, XMLDBMSProps.MAPFILE);
-      filterFile = getProperty(props, XMLDBMSProps.FILTERFILE);
-      xmlFile = getProperty(props, XMLDBMSProps.XMLFILE);
+      mapLocation = getProperty(props, XMLDBMSProps.MAPLOCATION);
+      filterLocation = getProperty(props, XMLDBMSProps.FILTERLOCATION);
+      xmlLocation = getProperty(props, XMLDBMSProps.XMLLOCATION);
 
       // Retrieve the document.
 
-      retrieveDocument(configProps, mapFile, selects, filterFile, params, xmlFile);
+      retrieveXMLDocument(configProps, mapLocation, selects, filterLocation, params, xmlLocation);
    }
 
    private void dispatchDeleteDocument(Properties props)
       throws XMLMiddlewareException, SQLException
    {
-      String mapFile, actionFile, filterFile;
+      String mapLocation, actionLocation, filterLocation;
+      Properties configProps = props;
+      Hashtable  params      = props;
 
-      // Get the names of the map, action, and filter files
+      // Get the names of the map, action, and filter document locations
 
-      mapFile = getProperty(props, XMLDBMSProps.MAPFILE);
-      actionFile = getProperty(props, XMLDBMSProps.ACTIONFILE);
-      filterFile = getProperty(props, XMLDBMSProps.FILTERFILE);
+      mapLocation = getProperty(props, XMLDBMSProps.MAPLOCATION);
+      actionLocation = getProperty(props, XMLDBMSProps.ACTIONLOCATION);
+      filterLocation = getProperty(props, XMLDBMSProps.FILTERLOCATION);
 
       // Delete the document
 
-      deleteDocument(props, mapFile, actionFile, filterFile, props);
+      deleteXMLDocument(configProps, mapLocation, actionLocation, filterLocation, params);
    }
 
    // ************************************************************************
    // Private methods -- store, retrieve, and delete documents
    // ************************************************************************
 
-   private FilterSet storeDocumentInternal(Properties configProps, String mapFilename, String actionFilename, InputSource src)
+   private FilterSet storeDocumentInternal(Properties configProps, String mapLocation, String actionLocation, InputSource src)
       throws XMLMiddlewareException, SQLException
    {
-      String       validate;
+      String       validateStr;
+      boolean      validate;
       XMLDBMSMap   map;
       DBEnabledMap dbMap;
       Actions      actions;
@@ -827,10 +927,12 @@ public class Transfer extends PropertyProcessor
 
       // Create the various objects needed by DOMToDBMS.storeDocument.
 
-      validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
-      map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
+      validateStr = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
+      validate = (validateStr.indexOf(XMLDBMSProps.MAPTOKEN) != -1);
+      map = createMap(configProps, mapLocation, validate);
       dbMap = createDBEnabledMap(map);
-      actions = createActions(map, actionFilename, (validate.indexOf(XMLDBMSProps.ACTIONTOKEN) != -1));
+      validate = (validateStr.indexOf(XMLDBMSProps.ACTIONTOKEN) != -1);
+      actions = createActions(configProps, map, actionLocation, validate);
 
       // Configure the DOMToDBMS object
 
@@ -838,24 +940,28 @@ public class Transfer extends PropertyProcessor
 
       // Open a DOM tree over the InputSource and store it in the database
 
-      doc = utils.openDocument(src, (validate.indexOf(XMLDBMSProps.XMLTOKEN) != -1));
+      validate = (validateStr.indexOf(XMLDBMSProps.XMLTOKEN) != -1);
+      doc = utils.readDocument(src, validate);
       return domToDBMS.storeDocument(dbMap, doc, actions);
    }
 
-   private Document retrieveDocumentInternal(Properties configProps, String mapFilename, String filterFilename, Hashtable params)
+   private Document retrieveDocumentInternal(Properties configProps, String mapLocation, String filterLocation, Hashtable params)
       throws XMLMiddlewareException, SQLException
    {
-      String       validate;
+      String       validateStr;
+      boolean      validate;
       XMLDBMSMap   map;
       DBEnabledMap dbMap;
       FilterSet    filterSet;
 
       // Create the various objects needed by DBMSToDOM.retrieveDocument.
 
-      validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
-      map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
+      validateStr = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
+      validate = (validateStr.indexOf(XMLDBMSProps.MAPTOKEN) != -1);
+      map = createMap(configProps, mapLocation, validate);
       dbMap = createDBEnabledMap(map);
-      filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
+      validate = (validateStr.indexOf(XMLDBMSProps.FILTERTOKEN) != -1);
+      filterSet = createFilterSet(configProps, map, filterLocation, validate);
 
       // Configure the DBMSToDOM object
 
@@ -866,10 +972,11 @@ public class Transfer extends PropertyProcessor
       return dbmsToDOM.retrieveDocument(dbMap, filterSet, params, null);
    }
 
-   private Document retrieveDocumentInternal(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params)
+   private Document retrieveDocumentInternal(Properties configProps, String mapLocation, Properties selects, String filterLocation, Hashtable params)
       throws XMLMiddlewareException, SQLException
    {
-      String       validate;
+      String       validateStr;
+      boolean      validate;
       XMLDBMSMap   map;
       Hashtable    resultSets;
       DBEnabledMap dbMap;
@@ -878,11 +985,13 @@ public class Transfer extends PropertyProcessor
 
       // Create the various objects needed by DBMSToDOM.retrieveDocument.
 
-      validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
-      map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
+      validateStr = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
+      validate = (validateStr.indexOf(XMLDBMSProps.MAPTOKEN) != -1);
+      map = createMap(configProps, mapLocation, validate);
       resultSets = createResultSets(selects);
       dbMap = createDBEnabledMap(map);
-      filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
+      validate = (validateStr.indexOf(XMLDBMSProps.FILTERTOKEN) != -1);
+      filterSet = createFilterSet(configProps, map, filterLocation, validate);
 
       // Configure the DBMSToDOM object
 
@@ -1492,92 +1601,86 @@ public class Transfer extends PropertyProcessor
       return keyGen;
    }
 
-   private XMLDBMSMap createMap(String mapFilename, boolean validate)
+   private XMLDBMSMap createMap(Properties configProps, String mapLocation, boolean validate)
       throws XMLMiddlewareException
    {
-      MapCompiler compiler = null;
-      XMLDBMSMap  map;
+      MapCompiler      compiler = null;
+      LocationResolver resolver;
+      XMLDBMSMap       map;
 
-      // Check if we have already compiled the map file. If so, use the cached
-      // XMLDBMSMap object. If not create a new map compiler and compile the map file.
+      // Check if we have already compiled the map document. If so, use the cached
+      // XMLDBMSMap object. If not create a new map compiler and compile the map document.
 
-      map = (XMLDBMSMap)fileObjects.get(mapFilename);
+      map = (XMLDBMSMap)locationObjects.get(mapLocation);
       if (map == null)
       {
          try
          {
             compiler = new MapCompiler(utils.getXMLReader(validate));
-            map = compiler.compile(new InputSource(new FileReader(mapFilename)));
+            resolver = getLocationResolver(configProps, XMLDBMSProps.MAPRESOLVERCLASS);
+            map = compiler.compile(getInputSource(resolver, mapLocation));
          }
-         catch (SAXException s)
+         catch (SAXException e)
          {
-            processSAXException(s);
+            processSAXException(e);
          }
-         catch (FileNotFoundException f)
-         {
-            throw new XMLMiddlewareException(f);
-         }
-         fileObjects.put(mapFilename, map);
+         locationObjects.put(mapLocation, map);
       }
       return map;
    }
 
-   private Actions createActions(XMLDBMSMap map, String actionFilename, boolean validate)
+   private Actions createActions(Properties configProps, XMLDBMSMap map, String actionLocation, boolean validate)
       throws XMLMiddlewareException
    {
-      ActionCompiler compiler = null;
-      Actions        actions;
+      ActionCompiler   compiler = null;
+      LocationResolver resolver;
+      Actions          actions;
 
-      // Check if we have already compiled the action file. If so, use the cached
-      // Actions object. If not create a new action compiler and compile the action file.
+      // Check if we have already compiled the action document. If so, use the cached
+      // Actions object. If not create a new action compiler and compile the action document.
 
-      actions = (Actions)fileObjects.get(actionFilename);
+      actions = (Actions)locationObjects.get(actionLocation);
       if (actions == null)
       {
          try
          {
             compiler = new ActionCompiler(utils.getXMLReader(validate));
-            actions = compiler.compile(map, new InputSource(new FileReader(actionFilename)));
+            resolver = getLocationResolver(configProps, XMLDBMSProps.ACTIONRESOLVERCLASS);
+            actions = compiler.compile(map, getInputSource(resolver, actionLocation));
          }
-         catch (SAXException s)
+         catch (SAXException e)
          {
-            processSAXException(s);
+            processSAXException(e);
          }
-         catch (FileNotFoundException f)
-         {
-            throw new XMLMiddlewareException(f);
-         }
-         fileObjects.put(actionFilename, actions);
+         locationObjects.put(actionLocation, actions);
       }
       return actions;
    }
 
-   private FilterSet createFilterSet(XMLDBMSMap map, String filterFilename, boolean validate)
+   private FilterSet createFilterSet(Properties configProps, XMLDBMSMap map, String filterLocation, boolean validate)
       throws XMLMiddlewareException
    {
-      FilterCompiler compiler = null;
-      FilterSet      filterSet;
+      FilterCompiler   compiler = null;
+      LocationResolver resolver;
+      FilterSet        filterSet;
 
-      // Check if we have already compiled the filter file. If so, use the cached
-      // FilterSet object. If not create a new filter compiler and compile the filter file.
+      // Check if we have already compiled the filter document. If so, use the cached
+      // FilterSet object. If not create a new filter compiler and compile the filter document.
 
-      filterSet = (FilterSet)fileObjects.get(filterFilename);
+      filterSet = (FilterSet)locationObjects.get(filterLocation);
       if (filterSet == null)
       {
          try
          {
             compiler = new FilterCompiler(utils.getXMLReader(validate));
-            filterSet = compiler.compile(map, new InputSource(new FileReader(filterFilename)));
+            resolver = getLocationResolver(configProps, XMLDBMSProps.FILTERRESOLVERCLASS);
+            filterSet = compiler.compile(map, getInputSource(resolver, filterLocation));
          }
-         catch (SAXException s)
+         catch (SAXException e)
          {
-            processSAXException(s);
+            processSAXException(e);
          }
-         catch (FileNotFoundException f)
-         {
-            throw new XMLMiddlewareException(f);
-         }
-         fileObjects.put(filterFilename, filterSet);
+         locationObjects.put(filterLocation, filterSet);
       }
       return filterSet;
    }
@@ -1646,6 +1749,79 @@ public class Transfer extends PropertyProcessor
       catch (Exception e)
       {
          throw new XMLMiddlewareException(e.getClass().getName() + ": " + e.getMessage());
+      }
+   }
+
+   private LocationResolver getLocationResolver(Properties props, String propName)
+      throws XMLMiddlewareException
+   {
+      String           resolverClass;
+      LocationResolver resolver;
+
+      // Get the name of the LocationResolver class. If the name isn't passed in,
+      // use org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver.
+
+      if (props == null)
+      {
+         resolverClass = FILENAMERESOLVER;
+      }
+      else
+      {
+         resolverClass = props.getProperty(propName, FILENAMERESOLVER);
+      }
+
+      // Get the LocationResolver from the hashtable. If it doesn't exist,
+      // instantiate it.
+
+      resolver = (LocationResolver)resolvers.get(resolverClass);
+      if (resolver == null)
+      {
+         resolver = (LocationResolver)instantiateObject(resolverClass);
+         resolvers.put(resolverClass, resolver);
+      }
+      return resolver;
+   }
+
+   private InputSource getInputSource(LocationResolver resolver, String location)
+      throws XMLMiddlewareException
+   {
+      if (resolver.supportsReader())
+      {
+         return new InputSource(resolver.getReader(location));
+      }
+      else
+      {
+         return new InputSource(resolver.getInputStream(location));
+      }
+   }
+
+   private void writeDocument(LocationResolver resolver, Document doc, String location, String encoding)
+      throws XMLMiddlewareException
+   {
+      try
+      {
+         if (resolver.supportsWriter())
+         {
+            Writer writer;
+
+            writer = resolver.getWriter(location, encoding);
+            utils.writeDocument(doc, writer);
+            writer.close();
+         }
+         else
+         {
+            OutputStream stream;
+
+            if (encoding != null)
+               throw new XMLMiddlewareException("Encodings not supported by LocationResolver: " + resolver.getClass().getName());
+            stream = resolver.getOutputStream(location);
+            utils.writeDocument(doc, stream);
+            stream.close();
+         }
+      }
+      catch (IOException e)
+      {
+         throw new XMLMiddlewareException(e);
       }
    }
 

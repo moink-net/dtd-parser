@@ -24,6 +24,8 @@ package org.xmlmiddleware.xmlutils;
 
 import org.xmlmiddleware.utils.XMLMiddlewareException;
 
+import java.io.*;
+
 import org.xml.sax.*;
 import org.w3c.dom.*;
 
@@ -63,7 +65,7 @@ public interface ParserUtils
       throws XMLMiddlewareException;
 
    /**
-    * Open an InputSource and create a DOM Document.
+    * Read an InputSource and create a DOM Document.
     *
     * @param src A SAX InputSource
     * @param validate Whether the InputSource is validated.
@@ -71,19 +73,27 @@ public interface ParserUtils
     * @return An object that implements Document.
     * @exception XMLMiddlewareException Thrown if an error occurs creating the DOM Document.
     */
-   public Document openDocument(InputSource src, boolean validate)
+   public Document readDocument(InputSource src, boolean validate)
       throws XMLMiddlewareException;
 
    /**
-    * Write a DOM Document to a file.
+    * Write a DOM Document to a Writer.
     *
     * @param doc The DOM Document.
-    * @param xmlFilename The name of the XML file.
-    * @param encoding The output encoding to use. If this is null, the default
-    *    encoding is used.
+    * @param writer The Writer.
     * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
     */
-   public void writeDocument(Document doc, String xmlFilename, String encoding)
+   public void writeDocument(Document doc, Writer writer)
+      throws XMLMiddlewareException;
+
+   /**
+    * Write a DOM Document to an OutputStream.
+    *
+    * @param doc The DOM Document.
+    * @param out The OutputStream.
+    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
+    */
+   public void writeDocument(Document doc, OutputStream out)
       throws XMLMiddlewareException;
 
    /**

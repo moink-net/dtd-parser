@@ -60,10 +60,16 @@ public class XMLDBMSProps
    public static String INPUT = "Input";
    public static String OUTPUT = "Output";
 
+   public static String MAPLOCATION = "MapLocation";
+   public static String XMLLOCATION = "XMLLocation";
+   public static String ACTIONLOCATION = "ActionLocation";
+   public static String FILTERLOCATION = "FilterLocation";
+   public static String MAPRESOLVERCLASS = "MapResolverClass";
+   public static String XMLRESOLVERCLASS = "XMLResolverClass";
+   public static String ACTIONRESOLVERCLASS = "ActionResolverClass";
+   public static String FILTERRESOLVERCLASS = "FilterResolverClass";
+
    public static String MAPFILE = "MapFile";
-   public static String XMLFILE = "XMLFile";
-   public static String ACTIONFILE = "ActionFile";
-   public static String FILTERFILE = "FilterFile";
    public static String DTDFILE = "DTDFile";
    public static String SQLFILE = "SQLFile";
 
