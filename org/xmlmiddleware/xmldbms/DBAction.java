@@ -10,7 +10,13 @@ import org.xmlmiddleware.xmldbms.maps.*;
  */
 public interface DBAction  
 {
-	public void insert(Table table, Row row, boolean soft)
+    public void startDocument(int commitMode)
+        throws SQLException;
+
+    public void endDocument()
+        throws SQLException;
+
+    public void insert(Table table, Row row)
         throws SQLException;
 
     public void update(Table table, Row row)
@@ -19,8 +25,9 @@ public interface DBAction
     public void updateOrInsert(Table table, Row row)
         throws SQLException;
 
-    public void delete(Table table, Row row, boolean soft)
+    public void delete(Table table, Row row)
         throws SQLException;
 
-    public ResultSet select(Table table, Object[] key, OrderInfo orderInfo);
+    public ResultSet select(Table table, Object[] key, OrderInfo orderInfo)
+        throws SQLException;
 }

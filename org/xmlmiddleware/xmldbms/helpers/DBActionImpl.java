@@ -8,9 +8,18 @@ import javax.sql.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
 
+// TODO: 2) Implementations of update must check to see that the list of
+// updateColumns does not include any primary key or unique key columns.
+// (State this in the comments.)
+
 abstract class DBActionImpl
     implements DBAction
 {
+    public static final int COMMIT_AFTERINSERT = 1;
+    public static final int COMMIT_AFTERDOCUMENT = 2;
+    public static final int COMMIT_NONE = 3;
+    public static final int COMMIT_NOTRANSACTIONS = 4;
+
     DBActionImpl(DataSource dataSource, String user, String password)
         throws SQLException
     {
