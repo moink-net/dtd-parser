@@ -30,36 +30,10 @@ import org.xmlmiddleware.domutils.FragmentBuilder;
 import org.xmlmiddleware.domutils.ParserUtils;
 import org.xmlmiddleware.domutils.ParserUtilsException;
 import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.xmldbms.filters.FilterBase;
-import org.xmlmiddleware.xmldbms.filters.FilterConditions;
-import org.xmlmiddleware.xmldbms.filters.FilterSet;
-import org.xmlmiddleware.xmldbms.filters.RootFilter;
-import org.xmlmiddleware.xmldbms.filters.ResultSetFilter;
-import org.xmlmiddleware.xmldbms.filters.TableFilter;
-import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.Column;
-import org.xmlmiddleware.xmldbms.maps.ColumnMap;
-import org.xmlmiddleware.xmldbms.maps.ElementInsertionList;
-import org.xmlmiddleware.xmldbms.maps.ElementInsertionMap;
-import org.xmlmiddleware.xmldbms.maps.Key;
-import org.xmlmiddleware.xmldbms.maps.LinkInfo;
-import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.MapException;
-import org.xmlmiddleware.xmldbms.maps.OrderInfo;
-import org.xmlmiddleware.xmldbms.maps.PropertyMapBase;
-import org.xmlmiddleware.xmldbms.maps.PropertyTableMap;
-import org.xmlmiddleware.xmldbms.maps.RelatedClassTableMap;
-import org.xmlmiddleware.xmldbms.maps.Table;
+import org.xmlmiddleware.xmldbms.filters.*;
+import org.xmlmiddleware.xmldbms.maps.*;
 
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.DocumentFragment;
-import org.w3c.dom.DocumentType;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
+import org.w3c.dom.*;
 
 import org.xml.sax.SAXException;
 
@@ -74,36 +48,39 @@ import java.util.Vector;
  * Transfers data from the database to a DOM tree.
  *
  * <P>DBMSToDOM transfers data from the database to a DOM tree according
- * to a particular Map. The caller must provide a ParserUtils object for the
- * DOM implementation they are using (many are available in
- * de.tudarmstadt.ito.domutils), a Map object, and information about how
- * to retrieve the data. The latter can be one or more table names and key
- * values, a DocumentInfo object, or a result set.</P>
+ * to a particular Map and FilterSet. The map provides the general structural
+ * mapping from the database to XML; the filters specify exactly which data
+ * are to be transferred. In addition, DBMSToDOM can transfer data from
+ * application-constructed result sets to XML.</p>
  *
+ * <p>For example, the following code transfers data 
+
  * <P>For example, the following code transfers data for sales order number 123
  * from the Sales table to a DOM tree using Oracle's DOM implementation:</P>
  *
- * <PRE>
- *    // Use a user-defined function to create a map.
- *    Map map = createMap("sales.map", conn);<BR />
- *
- *    // Create a new DBMSToDOM object.
- *    DBMSToDOM dbmsToDOM = new DBMSToDOM(map, new ParserUtilsXerces());<BR />
- *
- *    // Create a key and retrieve the data.
- *    Object[] key = {new Integer(123)};
- *    Document doc = dbmsToDOM.retrieveDocument("Sales", key);
- * </PRE>
- *
- * <P>Currently, no DOM implementations allow the namespace of an element or
- * attribute to be set. Therefore, the caller can choose whether element and
- * attribute names are prefixed according to the namespace prefixes in the
- * Map. This is useful if the DOM tree will be serialized as an XML document.
- * It might cause problems if the DOM tree is to be used directly, as the DOM
- * implementation will not correctly return the base name, the namespace URI,
- * or the qualified name. That is, it will return the prefixed name as the
- * base name and qualified name and null as the namespace URI. By default,
- * namespace prefixes are not used.</P>
+ * <pre>
+ *    // Create the Map object with a user-defined function.
+ *    map = createMap("orders.map");
+ *    <br />
+ *    // Create the FilterSet object with a user-defined function.
+ *    filterSet = createFilterSet(map, "ordersbynumber.ftr");
+ *    <br />
+ *    // Create a new DBMSToDOM object that uses the Xerces parser.
+ *    dbmsToDOM = new DBMSToDOM(new ParserUtilsXerces());
+ *    <br />
+ *    // Create a data source and data handler for our database, then
+ *    // bundle these into a TransferInfo object.
+ *    ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
+ *    handler = new GenericHandler(ds, null, null);
+ *    ti = new TransferInfo(map, null, handler);
+ *    <br />
+ *    // Build the parameters hashtable.
+ *    params = new Hashtable();
+ *    params.put("$Number", "123");
+ *    <br />
+ *    // Call retrieveDocument to transfer the data.
+ *    doc = dbmsToDOM.retrieveDocument(ti, filterSet, params, null);
+ * </pre>
  *
  * @author Ronald Bourret
  * @version 2.0
@@ -195,45 +172,9 @@ public class DBMSToDOM
    public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable params, Node rootNode)
       throws ParserUtilsException, SQLException, MapException
    {
-      OrderedNode   orderedRootNode;
-      Vector        filters;
+      Hashtable resultSets = new Hashtable();
 
-      // Set things up.
-
-      initGlobals(transferInfo);
-
-      // Do some ugly checking on the filters. (In the future, this probably won't be
-      // necessary as we will accept a mixture of root filters and result set filters.)
-
-      filters = filterSet.getFilters();
-      if (filters.size() < 1)
-         throw new IllegalArgumentException("You must specify at least one root filter.");
-      if (filters.elementAt(0) instanceof ResultSetFilter)
-         throw new IllegalArgumentException("The filter set contains a result set filter, but you did not pass a result set.");
-
-      // Set the filter parameters. We do this here because the filters are optimized
-      // for the parameters only being set once.
-
-      setFilterParameters(filters, params);
-
-      // Get an OrderedNode over the Node to which elements will be added.
-
-      orderedRootNode = getOrderedRootNode(rootNode, filterSet);
-
-      // Retrieve the data.
-
-      retrieveRootTableData(orderedRootNode, filters);
-
-      // Add namespace declarations to the children of the real root node. We add these
-      // to the children instead of the root for two reasons. First, the root might be
-      // a Document node. Second, if the root is a wrapper element, we don't want to
-      // collide with the wrapper element namespaces.
-
-      addNamespaceDeclsToChildren(orderedRootNode.realNode, map.getNamespaceURIs());
-
-      // Return the document.
-
-      return doc;
+      return retrieveDocument(transferInfo, filterSet, resultSets, params, rootNode);
    }
 
    /**
@@ -243,7 +184,7 @@ public class DBMSToDOM
     *
     * @param transferInfo Map and connection information.
     * @param filterSet The filter set specifying the data to retrieve.
-    * @param rs The result set.
+    * @param rs The result set. The filter for the result set must use the name "Default".
     * @param params A Hashtable containing the names (keys) and values (elements) of
     *    any parameters used in the filters. Null if there are no parameters.
     * @rootNode The Node to which the retrieved document is to be added. If this is
@@ -254,21 +195,46 @@ public class DBMSToDOM
    public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, ResultSet rs, Hashtable params, Node rootNode)
       throws ParserUtilsException, SQLException, MapException
    {
+      Hashtable resultSets = new Hashtable();
+
+      resultSets.put("Default", rs);
+      return retrieveDocument(transferInfo, filterSet, resultSets, params, rootNode);
+   }
+
+   /**
+    * Retrieve a document based on the specified filters.
+    *
+    * <p>The filter set must contain at least one root filter.</p>
+    *
+    * @param transferInfo Map and connection information.
+    * @param filterSet The filter set specifying the data to retrieve.
+    * @param resultSets An array of result sets whose number match those in the filter document.
+    * @param params A Hashtable containing the names (keys) and values (elements) of
+    *    any parameters used in the filters. Null if there are no parameters.
+    * @rootNode The Node to which the retrieved document is to be added. If this is
+    *    null, retrieveDocument will create a new Document.
+    * @return The document. If rootNode is not null, this is the owner Document.
+    *    Otherwise, it is a new Document.
+    */
+   public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable resultSets, Hashtable params, Node rootNode)
+      throws ParserUtilsException, SQLException, MapException
+   {
       OrderedNode     orderedRootNode;
       Vector          filters;
+      Object          filter;
       ResultSetFilter rsFilter;
-      ClassTableMap   rootTableMap;
+      String          rsName;
+      ResultSet       rs;
 
       // Set things up.
 
       initGlobals(transferInfo);
 
-      // Do some ugly checking on the filters. (In the future, this probably won't be
-      // necessary as we will accept a mixture of root filters and result set filters.)
+      // Check that we have at least one filter
 
       filters = filterSet.getFilters();
-      if ((filters.size() != 1) || (filters.elementAt(0) instanceof RootFilter))
-         throw new IllegalArgumentException("When you pass a result set, you must pass exactly one result set filter.");
+      if (filters.size() < 1)
+         throw new IllegalArgumentException("You must specify at least one filter.");
 
       // Set the filter parameters. We do this here because the filters are optimized
       // for the parameters only being set once.
@@ -281,10 +247,27 @@ public class DBMSToDOM
 
       // Retrieve the data.
 
-      rsFilter = (ResultSetFilter)filters.elementAt(0);
-      filterBase = rsFilter;
-      rootTableMap = map.getClassTableMap(rsFilter.getDatabaseName(), rsFilter.getCatalogName(), rsFilter.getSchemaName(), rsFilter.getTableName());
-      processClassResultSet(orderedRootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
+      for (int i = 0; i < filters.size(); i++)
+      {
+         // Get the next filter and set the filterBase global. filterBase
+         // parallels map in that it contains filters for all class tables.
+
+         filter = filters.elementAt(i);
+         filterBase = (FilterBase)filter;
+         if (filter instanceof RootFilter)
+         {
+            retrieveRootTableData(orderedRootNode, (RootFilter)filter);
+         }
+         else // if (filter instanceof ResultSetFilter)
+         {
+            rsFilter = (ResultSetFilter)filter;
+            rsName = rsFilter.getResultSetName();
+            rs = (ResultSet)resultSets.get(rsName);
+            if (rs == null)
+               throw new IllegalArgumentException("No result set found for the result set name: " + rsName);
+            retrieveResultSetData(orderedRootNode, rsFilter, rs);
+         }
+      }
 
       // Add namespace declarations to the children of the real root node. We add these
       // to the children instead of the root for two reasons. First, the root might be
@@ -307,25 +290,6 @@ public class DBMSToDOM
    // Helper methods for getting started
    // ************************************************************************
 
-   private void retrieveRootTableData(OrderedNode rootNode, Vector filters)
-      throws ParserUtilsException, SQLException, MapException
-   {
-      RootFilter rootFilter;
-
-      for (int i = 0; i < filters.size(); i++)
-      {
-         // Get the next RootFilter and set the filterBase global. filterBase
-         // parallels map in that it contains filters for all class tables.
-
-         rootFilter = (RootFilter)filters.elementAt(i);
-         filterBase = rootFilter;
-
-         // Get the data according to the filter.
-
-         retrieveRootTableData(rootNode, rootFilter);
-      }
-   }
-
    private void retrieveRootTableData(OrderedNode rootNode, RootFilter rootFilter)
       throws ParserUtilsException, SQLException, MapException
    {
@@ -344,16 +308,27 @@ public class DBMSToDOM
       rootTable = rootConditions.getTable();
       rootTableMap = map.getClassTableMap(rootTable.getDatabaseName(), rootTable.getCatalogName(), rootTable.getSchemaName(), rootTable.getTableName());
 
-      // Get a DataHandler and construct a result set based on the filter conditions.
+      // Get a DataHandler
 
       dataHandler = transferInfo.getDataHandler(rootTable.getDatabaseName());
       where = rootConditions.getWhereCondition();
       columns = rootConditions.getColumns();
       params = rootConditions.getParameterValues();
 
+      // Construct a result set based on the filter conditions and process it.
+
       rs = dataHandler.select(rootTable, null, null, where, columns, params, null);
       processClassResultSet(rootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
       rs.close();
+   }
+
+   private void retrieveResultSetData(OrderedNode rootNode, ResultSetFilter rsFilter, ResultSet rs)
+      throws ParserUtilsException, SQLException, MapException
+   {
+      ClassTableMap rootTableMap;
+
+      rootTableMap = map.getClassTableMap(rsFilter.getDatabaseName(), rsFilter.getCatalogName(), rsFilter.getSchemaName(), rsFilter.getTableName());
+      processClassResultSet(rootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
    }
 
    // ************************************************************************
@@ -521,7 +496,7 @@ public class DBMSToDOM
       Enumeration          relatedClassTableMaps, propTableMaps;
       RelatedClassTableMap relatedClassTableMap;
       PropertyTableMap     propTableMap;
-      FilterConditions     relatedTableFilter;
+      RelatedTableFilter   relatedTableFilter;
 
       // Process the related class tables.
 
@@ -548,7 +523,7 @@ public class DBMSToDOM
       }
    }
 
-   private void processRelatedClassTable(OrderedNode classNode, Row classRow, RelatedClassTableMap relatedClassTableMap, FilterConditions relatedTableFilter)
+   private void processRelatedClassTable(OrderedNode classNode, Row classRow, RelatedClassTableMap relatedClassTableMap, RelatedTableFilter relatedTableFilter)
       throws SQLException, MapException
    {
       OrderedNode   parentNode;
@@ -600,7 +575,7 @@ public class DBMSToDOM
       rs.close();
    }
 
-   private void processPropertyTable(OrderedNode classNode, Row classRow, PropertyTableMap propTableMap, FilterConditions relatedTableFilter)
+   private void processPropertyTable(OrderedNode classNode, Row classRow, PropertyTableMap propTableMap, RelatedTableFilter relatedTableFilter)
       throws SQLException, MapException
    {
       OrderedNode parentNode;
@@ -851,10 +826,10 @@ public class DBMSToDOM
       // Set the filter parameters. We do this here because the filters
       // are optimized for the parameters only being set once.
 
-      FilterBase       filter;
-      Enumeration      tableFilters, relatedTableFilters;
-      TableFilter      tableFilter;
-      FilterConditions relatedTableFilter;
+      FilterBase         filter;
+      Enumeration        tableFilters, relatedTableFilters;
+      TableFilter        tableFilter;
+      RelatedTableFilter relatedTableFilter;
 
       for (int i = 0; i < filters.size(); i++)
       {
@@ -871,7 +846,7 @@ public class DBMSToDOM
             relatedTableFilters = tableFilter.getRelatedTableFilters();
             while (relatedTableFilters.hasMoreElements())
             {
-               relatedTableFilter = (FilterConditions)relatedTableFilters.nextElement();
+               relatedTableFilter = (RelatedTableFilter)relatedTableFilters.nextElement();
                relatedTableFilter.setParameters(params);
             }
          }
