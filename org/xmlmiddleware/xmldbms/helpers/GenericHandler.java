@@ -25,6 +25,8 @@ import org.xmlmiddleware.xmldbms.maps.*;
 public class GenericHandler
     extends DataHandlerBase
 {
+    private static String FAKE = "fake"; // Fake name for key.
+
     /** 
      * Creates a GenericHandler.
      *
@@ -74,7 +76,7 @@ public class GenericHandler
 
 
             // SELECT using those columns as a WHERE clause
-            Key key = Key.createUniqueKey(null);
+            Key key = Key.createUniqueKey(FAKE);
             key.setColumns(selCols);
 
             String sql = m_dml.getSelect(table, key, refreshCols);

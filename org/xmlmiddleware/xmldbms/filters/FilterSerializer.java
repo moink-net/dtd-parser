@@ -144,6 +144,8 @@ public class FilterSerializer extends XMLWriter
    public void serialize(FilterSet filterSet, String systemID, String publicID)
       throws IOException
    {
+      if (filterSet == null) return;
+
       this.filterSet = filterSet;
       if (systemID == null)
       {

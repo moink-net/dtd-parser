@@ -36,7 +36,7 @@ import java.util.Vector;
  *    // Compile a filter document.
  *    compiler = new FilterCompiler(parserUtils);
  *    filterSet = compiler.compile(map, new InputSource(new FileReader("SalesFilter.ftr")));
- *
+ *    <br />
  *    // Retrieve the document according to the filter.
  *    doc = dbmsToDOM.retrieveDocument(transferInfo, filterSet, null, null);
  * </pre>

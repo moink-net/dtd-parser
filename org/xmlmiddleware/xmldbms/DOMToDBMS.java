@@ -30,9 +30,10 @@ import javax.sql.*;
 
 import org.w3c.dom.*;
 
+import org.xmlmiddleware.conversions.*;
 import org.xmlmiddleware.domutils.*;
 import org.xmlmiddleware.utils.*;
-import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.xmldbms.filters.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.actions.*;
 /**
@@ -67,6 +68,9 @@ public class DOMToDBMS
     // The commit mode (see processRoot)
     private int m_commitMode;
 
+    // Whether to build/return a FilterSet identifying the stored document
+    private boolean m_returnFilterSet;
+
     // Stop on Database errors (see processClassRow)
     private boolean m_stopDBError;
 
@@ -96,6 +100,7 @@ public class DOMToDBMS
     {
         m_keyGenerators = new Hashtable();
         m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
+        m_returnFilterSet = false;
         m_stopDBError = true;
 
         m_classAllProperties = new Hashtable();
@@ -127,6 +132,41 @@ public class DOMToDBMS
         return m_commitMode;
     }
 
+
+
+    /** 
+     * Sets whether processDocument returns a FilterSet or a null.
+     *
+     * <p>processDocument can return a FilterSet describing the document it
+     * processes. This can be used at a later point in time to retrieve the
+     * document. Whether such a FilterSet is useful depends on the application.
+     * As a general rule, it is not useful for data-centric applications, for
+     * which XML is a data transport and documents have no persisten identity.
+     * It is useful for document-centric applications, for which documents do
+     * have a persistent identity.</p>
+     *
+     * <p>By default, processDocument returns a null. This saves some processing
+     * time, although the amount saved is likely to be noticeable only for very
+     * large documents.</p>
+     *
+     * @param value Whether processDocument returns a FilterSet
+     */
+    public void setFilterSetReturned(boolean value)
+    {
+        m_returnFilterSet = value;
+    }
+
+    /** 
+     * Whether processDocument returns a FilterSet or a null.
+     *
+     * <p>For more information, see setFilterSetReturned.</p>
+     *
+     * @return Whether processDocument returns a FilterSet
+     */
+    public boolean isFilterSetReturned()
+    {
+       return m_returnFilterSet;
+    }
 
 
     /**
@@ -201,8 +241,9 @@ public class DOMToDBMS
      * @param transInfo TransferInfo object containing map and DataHandler's.
      * @param doc The DOM document to process.
      * @param action Action to take on the document.
+     * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
-    public DocumentInfo processDocument(TransferInfo transInfo, Document doc, int action)
+    public FilterSet processDocument(TransferInfo transInfo, Document doc, int action)
         throws SQLException, MapException, KeyException, ConversionException
     {
         return processDocument(transInfo, doc.getDocumentElement(), action);
@@ -215,8 +256,9 @@ public class DOMToDBMS
      * @param transInfo TransferInfo object containing map and DataHandler's.
      * @param doc The DOM document to process.
      * @param action Actions to take on various elements of the document.
+     * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
-    public DocumentInfo processDocument(TransferInfo transInfo, Document doc, Actions actions)
+    public FilterSet processDocument(TransferInfo transInfo, Document doc, Actions actions)
         throws SQLException, MapException, KeyException, ConversionException
     {
         return processDocument(transInfo, doc.getDocumentElement(), actions);
@@ -229,8 +271,9 @@ public class DOMToDBMS
      * @param transInfo TransferInfo object containing map and DataHandler's.
      * @param el Root of DOM tree to process.
      * @param action Action to take on the tree.
+     * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
-    public DocumentInfo processDocument(TransferInfo transInfo, Element el, int action)
+    public FilterSet processDocument(TransferInfo transInfo, Element el, int action)
         throws SQLException, MapException, KeyException, ConversionException
     {
         Action act = new Action();
@@ -249,11 +292,12 @@ public class DOMToDBMS
      * @param transInfo TransferInfo object containing map and DataHandler's.
      * @param el Root of DOM tree to process.
      * @param action Actions to take on various elements of the tree.
+     * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
-    public DocumentInfo processDocument(TransferInfo transInfo, Element el, Actions actions)
+    public FilterSet processDocument(TransferInfo transInfo, Element el, Actions actions)
         throws SQLException, MapException, KeyException, ConversionException
     {
-        DocumentInfo docInfo = new DocumentInfo();
+        FilterSet filterSet = (m_returnFilterSet) ? new FilterSet(transInfo.getMap()) : null;
    
         // TODO: Make this reentrant
         m_transInfo = transInfo;
@@ -269,7 +313,7 @@ public class DOMToDBMS
             ((DataHandler)e.nextElement()).startDocument(m_commitMode);
 
         
-        processRoot(docInfo, el, 1);
+        processRoot(filterSet, el, 1);
 
 
         // Call endDocument here
@@ -281,7 +325,7 @@ public class DOMToDBMS
         // TODO: Do we have to do this?
         m_transInfo = null;
 
-        return docInfo;
+        return filterSet;
     }
 
 
@@ -294,11 +338,11 @@ public class DOMToDBMS
      * Processes the nodes from the root of the DOM Document that are not mapped.
      * The tree is searched until a node is found that is mapped.
      *
-     * @param docInfo DocumentInfo to add root elements to.
+     * @param filterSet FilterSet to add root elements to.
      * @param el The node to recusively process.
      * @param orderInParent Position of this element in parent
      */
-    private void processRoot(DocumentInfo docInfo, Element el, long orderInParent)
+    private void processRoot(FilterSet filterSet, Element el, long orderInParent)
         throws SQLException, MapException, KeyException, ConversionException
     {
         // Check if the node is mapped
@@ -309,14 +353,21 @@ public class DOMToDBMS
             // Process the node
             Row row = processClassRow(null, classMap, null, el, orderInParent);
 
-            if(row != null)
+            if ((m_returnFilterSet) && (row != null))
             {
-                // Add this row to the DocumentInfo
+                // Add this row to the FilterSet
+
                 Table table = classMap.getTable();
                 Key priKey = table.getPrimaryKey();
-    
-                // TODO: What is the ordercolumn?
-                docInfo.addInfo(table, priKey.getColumns(), row.getColumnValues(priKey.getColumns())/*, null*/);
+                RootFilter rootFilter = filterSet.createRootFilter();
+                FilterConditions rootConditions =
+                   rootFilter.createRootFilterConditions(table.getDatabaseName(),
+                                                         table.getCatalogName(),
+                                                         table.getSchemaName(),
+                                                         table.getTableName());
+                String where = buildCondition(priKey.getColumns(),
+                                              row.getColumnValues(priKey.getColumns()));
+                rootConditions.addCondition(where);
             }
         }
 
@@ -332,7 +383,7 @@ public class DOMToDBMS
                 // this point.
                 if(children.item(i).getNodeType() == Node.ELEMENT_NODE)
                 {
-                    processRoot(docInfo, (Element)children.item(i), childOrder);
+                    processRoot(filterSet, (Element)children.item(i), childOrder);
                     childOrder++;
                 }
             }
@@ -1187,6 +1238,24 @@ public class DOMToDBMS
     }
 
 
+    /** 
+     * Builds a set of expressions of the form "Column=value AND ..."
+     */
+    private String buildCondition(Column[] columns, Object[] values)
+       throws ConversionException
+    {
+        StringBuffer sb = new StringBuffer();
+
+        for (int i = 0; i < columns.length; i++)
+        {
+            if (i != 0) sb.append("AND ");
+            sb.append(columns[i].getName());
+            sb.append('=');
+            sb.append(SQLLiterals.buildLiteral(columns[i].getType(), values[i], columns[i].getFormatter()));
+            sb.append(' ');
+        }
+        return sb.toString();
+    }
 
     // ************************************************************************
     // Inner classes

@@ -52,9 +52,9 @@ import org.xml.sax.XMLReader;
  * <pre>
  *    // Instantiate a new action compiler and set the XMLReader.
  *    compiler = new ActionCompiler(xmlReader);<br />
- *
+ *    <br />
  *    // Compile sales.act into an Actions object.
- *    actions = compiler.compile(new InputSource(new FileReader("sales.act")));<br />
+ *    actions = compiler.compile(map, new InputSource(new FileReader("sales.act")));<br />
  * </pre>
  *
  * @author Ronald Bourret, 2001

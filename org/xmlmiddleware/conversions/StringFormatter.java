@@ -63,8 +63,8 @@ public interface StringFormatter
    /**
     * Parse a string and create an object.
     *
-    * @param The string to parse.
-    * @param A JDBC Types value indicating the type of object to return.
+    * @param s The string to parse.
+    * @param jdbcType A JDBC Types value indicating the type of object to return.
     * @return The object
     * @exception ConversionException Thrown if the string can't be parsed by
     *     the implementing class.
@@ -77,7 +77,7 @@ public interface StringFormatter
     * <p>The implementing class will generally support only a specific type
     * of object, such as an Integer or a Date.</p>
     *
-    * @param The object to serialize.
+    * @param o The object to serialize.
     * @return The string
     * @exception ConversionException Thrown if the object can't be serialized. This
     *    usually occurs when the object is of a type not recognized by the implementing
