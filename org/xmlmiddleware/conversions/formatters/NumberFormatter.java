@@ -190,11 +190,11 @@ public class NumberFormatter implements StringFormatter
     * Format an object according to the format used by the
     * underlying NumberFormat object.
     *
-    * @param The object to serialize. Must be a Long, Integer,
-    *        Short, Byte, Double, or Float.
+    * @param The object to serialize. Must be a BigDecimal, Long, Integer,
+    *        Short, Byte, BigDecimal, Double, or Float.
     * @return The string
     * @exception XMLMiddlewareException Thrown if the object is not a Long,
-    *            Integer, Short, Byte, Double, or Float.
+    *            Integer, Short, Byte, BigDecimal, Double, or Float.
     */
    public String format(Object o) throws XMLMiddlewareException
    {
