@@ -28,9 +28,6 @@ import java.sql.Types;
 /**
  * Converts from Objects to other data types.
  *
- * <p>To convert to/from String, use an implementation of the
- * StringFormatter interface.</p>
- *
  * @author Ronald Bourret, 2001
  * @version 2.0
  */
@@ -41,7 +38,18 @@ public class ConvertObject
    // Public methods
    //**************************************************************************
 
-   public static double toDouble(Object o)
+   public static ByteArray toByteArray(Object o, StringFormatter formatter)
+      throws ConversionException
+   {
+      if (o instanceof ByteArray)
+         return (ByteArray)o;
+      else if (o instanceof String)
+         return (ByteArray)formatter.parse((String)o, Types.BINARY);
+      else
+         throw new ConversionException("Conversion to ByteArray not supported: " + o.getClass().getName());
+   }
+
+   public static double toDouble(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -60,11 +68,13 @@ public class ConvertObject
          return ConvertByte.toDouble((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toDouble((Boolean)o);
+      else if (o instanceof String)
+         return ((Double)formatter.parse((String)o, Types.DOUBLE)).doubleValue();
       else
          throw new ConversionException("Conversion to double not supported: " + o.getClass().getName());
    }
 
-   public static Double toDoubleObject(Object o)
+   public static Double toDoubleObject(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -83,11 +93,13 @@ public class ConvertObject
          return ConvertByte.toDoubleObject((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toDoubleObject((Boolean)o);
+      else if (o instanceof String)
+         return (Double)formatter.parse((String)o, Types.DOUBLE);
       else
          throw new ConversionException("Conversion to Double not supported: " + o.getClass().getName());
    }
 
-   public static float toFloat(Object o)
+   public static float toFloat(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -106,11 +118,13 @@ public class ConvertObject
          return ConvertByte.toFloat((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toFloat((Boolean)o);
+      else if (o instanceof String)
+         return ((Float)formatter.parse((String)o, Types.REAL)).floatValue();
       else
          throw new ConversionException("Conversion to float not supported: " + o.getClass().getName());
    }
 
-   public static Float toFloatObject(Object o)
+   public static Float toFloatObject(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -129,11 +143,13 @@ public class ConvertObject
          return ConvertByte.toFloatObject((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toFloatObject((Boolean)o);
+      else if (o instanceof String)
+         return (Float)formatter.parse((String)o, Types.REAL);
       else
          throw new ConversionException("Conversion to Float not supported: " + o.getClass().getName());
    }
 
-   public static BigDecimal toBigDecimal(Object o)
+   public static BigDecimal toBigDecimal(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -152,11 +168,13 @@ public class ConvertObject
          return ConvertByte.toBigDecimal((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toBigDecimal((Boolean)o);
+      else if (o instanceof String)
+         return (BigDecimal)formatter.parse((String)o, Types.NUMERIC);
       else
          throw new ConversionException("Conversion to BigDecimal not supported: " + o.getClass().getName());
    }
 
-   public static long toLong(Object o)
+   public static long toLong(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -175,11 +193,13 @@ public class ConvertObject
          return ConvertByte.toLong((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toLong((Boolean)o);
+      else if (o instanceof String)
+         return ((Long)formatter.parse((String)o, Types.BIGINT)).longValue();
       else
          throw new ConversionException("Conversion to long not supported: " + o.getClass().getName());
    }
 
-   public static Long toLongObject(Object o)
+   public static Long toLongObject(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -198,11 +218,13 @@ public class ConvertObject
          return ConvertByte.toLongObject((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toLongObject((Boolean)o);
+      else if (o instanceof String)
+         return (Long)formatter.parse((String)o, Types.BIGINT);
       else
          throw new ConversionException("Conversion to Long not supported: " + o.getClass().getName());
    }
 
-   public static int toInteger(Object o)
+   public static int toInteger(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -221,11 +243,13 @@ public class ConvertObject
          return ConvertByte.toInteger((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toInteger((Boolean)o);
+      else if (o instanceof String)
+         return ((Integer)formatter.parse((String)o, Types.INTEGER)).intValue();
       else
          throw new ConversionException("Conversion to int not supported: " + o.getClass().getName());
    }
 
-   public static Integer toIntegerObject(Object o)
+   public static Integer toIntegerObject(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -244,11 +268,13 @@ public class ConvertObject
          return ConvertByte.toIntegerObject((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toIntegerObject((Boolean)o);
+      else if (o instanceof String)
+         return (Integer)formatter.parse((String)o, Types.INTEGER);
       else
          throw new ConversionException("Conversion to Integer not supported: " + o.getClass().getName());
    }
 
-   public static short toShort(Object o)
+   public static short toShort(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -267,11 +293,13 @@ public class ConvertObject
          return ConvertByte.toShort((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toShort((Boolean)o);
+      else if (o instanceof String)
+         return ((Short)formatter.parse((String)o, Types.SMALLINT)).shortValue();
       else
          throw new ConversionException("Conversion to short not supported: " + o.getClass().getName());
    }
 
-   public static Short toShortObject(Object o)
+   public static Short toShortObject(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -290,11 +318,13 @@ public class ConvertObject
          return ConvertByte.toShortObject((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toShortObject((Boolean)o);
+      else if (o instanceof String)
+         return (Short)formatter.parse((String)o, Types.SMALLINT);
       else
          throw new ConversionException("Conversion to Short not supported: " + o.getClass().getName());
    }
 
-   public static byte toByte(Object o)
+   public static byte toByte(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -313,11 +343,13 @@ public class ConvertObject
          return ConvertByte.toByte((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toByte((Boolean)o);
+      else if (o instanceof String)
+         return ((Byte)formatter.parse((String)o, Types.TINYINT)).byteValue();
       else
          throw new ConversionException("Conversion to byte not supported: " + o.getClass().getName());
    }
 
-   public static Byte toByteObject(Object o)
+   public static Byte toByteObject(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -336,11 +368,13 @@ public class ConvertObject
          return ConvertByte.toByteObject((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toByteObject((Boolean)o);
+      else if (o instanceof String)
+         return (Byte)formatter.parse((String)o, Types.TINYINT);
       else
          throw new ConversionException("Conversion to Byte not supported: " + o.getClass().getName());
    }
 
-   public static boolean toBoolean(Object o)
+   public static boolean toBoolean(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -359,11 +393,13 @@ public class ConvertObject
          return ConvertByte.toBoolean((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toBoolean((Boolean)o);
+      else if (o instanceof String)
+         return ((Boolean)formatter.parse((String)o, Types.BIT)).booleanValue();
       else
          throw new ConversionException("Conversion to boolean not supported: " + o.getClass().getName());
    }
 
-   public static Boolean toBooleanObject(Object o)
+   public static Boolean toBooleanObject(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Double)
@@ -382,39 +418,47 @@ public class ConvertObject
          return ConvertByte.toBooleanObject((Byte)o);
       else if (o instanceof Boolean)
          return ConvertBoolean.toBooleanObject((Boolean)o);
+      else if (o instanceof String)
+         return (Boolean)formatter.parse((String)o, Types.BIT);
       else
          throw new ConversionException("Conversion to Boolean not supported: " + o.getClass().getName());
    }
 
-   public static Date toDate(Object o)
+   public static Date toDate(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Timestamp)
          return ConvertTimestamp.toDate((Timestamp)o);
       else if (o instanceof Date)
          return ConvertDate.toDate((Date)o);
+      else if (o instanceof String)
+         return (Date)formatter.parse((String)o, Types.DATE);
       else
          throw new ConversionException("Conversion to Date not supported: " + o.getClass().getName());
    }
 
-   public static Time toTime(Object o)
+   public static Time toTime(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Timestamp)
          return ConvertTimestamp.toTime((Timestamp)o);
       else if (o instanceof Time)
          return ConvertTime.toTime((Time)o);
+      else if (o instanceof String)
+         return (Time)formatter.parse((String)o, Types.TIME);
       else
          throw new ConversionException("Conversion to Time not supported: " + o.getClass().getName());
    }
 
-   public static Timestamp toTimestamp(Object o)
+   public static Timestamp toTimestamp(Object o, StringFormatter formatter)
       throws ConversionException
    {
       if (o instanceof Date)
          return ConvertDate.toTimestamp((Date)o);
       else if (o instanceof Timestamp)
          return ConvertTimestamp.toTimestamp((Timestamp)o);
+      else if (o instanceof String)
+         return (Timestamp)formatter.parse((String)o, Types.TIMESTAMP);
       else
          throw new ConversionException("Conversion to Timestamp not supported: " + o.getClass().getName());
    }
@@ -425,9 +469,11 @@ public class ConvertObject
     * @param o The object to convert.
     * @param destType A JDBC Types value. The Object is converted to the default
     *    object type for the specified type.
+    * @param formatter An object that implements StringFormatter. If o is a String or
+    *    destType is CHAR, VARCHAR, or LONGVARCHAR, this must be non-null.
     * @return The converted object
     */
-   public static Object convertObject(Object o, int destType)
+   public static Object convertObject(Object o, int destType, StringFormatter formatter)
       throws ConversionException
    {
       switch(destType)
@@ -435,47 +481,47 @@ public class ConvertObject
          case Types.BINARY:
          case Types.VARBINARY:
          case Types.LONGVARBINARY:
-            throw new ConversionException("Conversion to binary types not supported.");
+            return toByteArray(o, formatter);
 
          case Types.CHAR:
          case Types.VARCHAR:
          case Types.LONGVARCHAR:
-            throw new ConversionException("Use an implementation of StringFormatter to convert to strings.");
+            return formatter.format(o);
 
          case Types.DOUBLE:
          case Types.FLOAT:
-            return toDoubleObject(o);
+            return toDoubleObject(o, formatter);
 
          case Types.REAL:
-            return toFloatObject(o);
+            return toFloatObject(o, formatter);
 
          case Types.DECIMAL:
          case Types.NUMERIC:
-            return toBigDecimal(o);
+            return toBigDecimal(o, formatter);
 
          case Types.BIGINT:
-            return toLongObject(o);
+            return toLongObject(o, formatter);
 
          case Types.INTEGER:
-            return toIntegerObject(o);
+            return toIntegerObject(o, formatter);
 
          case Types.SMALLINT:
-            return toShortObject(o);
+            return toShortObject(o, formatter);
 
          case Types.TINYINT:
-            return toByteObject(o);
+            return toByteObject(o, formatter);
 
          case Types.BIT:
-            return toBooleanObject(o);
+            return toBooleanObject(o, formatter);
 
          case Types.DATE:
-            return toDate(o);
+            return toDate(o, formatter);
 
          case Types.TIME:
-            return toTime(o);
+            return toTime(o, formatter);
 
          case Types.TIMESTAMP:
-            return toTimestamp(o);
+            return toTimestamp(o, formatter);
 
          default:
             throw new ConversionException("Conversion to specified JDBC type not supported.");

@@ -288,14 +288,14 @@ public class Parameters
       }
       try
       {
+         formatter = column.getFormatter();
          if (value instanceof String)
          {
-            formatter = column.getFormatter();
             o = formatter.parse((String)value, type);
          }
          else
          {
-            o = ConvertObject.convertObject(value, type);
+            o = ConvertObject.convertObject(value, type, formatter);
          }
       }
       catch (ConversionException c)
