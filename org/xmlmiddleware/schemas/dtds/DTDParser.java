@@ -21,6 +21,7 @@
 // Changes from version 1.01:
 // * Change package name, class name
 // * Update for 2.0 code
+// * Changed getChar to check for 0-length buffer. Occurs with 0-length parameter entities.
 
 package org.xmlmiddleware.schemas.dtds;
 
@@ -114,7 +115,7 @@ public class DTDParser
     * reference to an external subset, or both.
     *
     * @param src A SAX InputSource for the XML document.
-    * @param namespaceURIs A Hashtable of keyed by prefixes used in the DTD,
+    * @param namespaceURIs A Hashtable keyed by prefixes used in the DTD,
     *    mapping these to namespace URIs. May be null.
     * @return The DTD object.
     * @exception XMLMiddlewareException Thrown if a DTD error is found.
@@ -137,7 +138,7 @@ public class DTDParser
     * Parse the DTD in an external subset.
     *
     * @param src A SAX InputSource for DTD (external subset).
-    * @param namespaceURIs A Hashtable of keyed by prefixes used in the DTD,
+    * @param namespaceURIs A Hashtable keyed by prefixes used in the DTD,
     *    mapping these to namespace URIs. May be null.
     * @return The DTD object.
     * @exception XMLMiddlewareException Thrown if a DTD error is found.
@@ -2754,19 +2755,32 @@ public class DTDParser
 
       char c;
 
+      // If we've read past the end of the buffer on previous calls, or if
+      // we're dealing with a new Reader from which we haven't yet read anything,
+      // fill the buffer from the Reader.
+
       if (bufferPos >= bufferLen)
       {
          bufferLen = reader.read(buffer, 0, buffer.length);
-         if (bufferLen == -1)
+
+         // 10/28/02 Ronald Bourret
+         // Change (bufferLen == -1) to (bufferLen <= 0). From Premila Paradkar.
+
+         if (bufferLen <= 0)
          {
-            // If we've hit the end of the Reader, pop the Reader off the
-            // stack and get the first character in the next Reader.
+            // If we've hit the end of the Reader, pop the Reader off
+            // the stack and get the first character in the next Reader.
+            // bufferLen is 0 when we read from a 0-length StringBuffer on
+            // JDK 1.2 or greater. (It's -1 on JDK 1.1.x.)
 
             popReader();
             return getChar();
          }
          else
          {
+            // Otherwise, set the buffer position to the start of the
+            // newly filled buffer.
+
             bufferPos = 0;
          }
       }
@@ -2778,7 +2792,7 @@ public class DTDParser
 
       // System.out.print(buffer[bufferPos]);
 
-      // Return the character.
+      // Return the next character in the buffer.
 
       return buffer[bufferPos++];
    }
