@@ -79,7 +79,7 @@ public class PostgresHandler
 
             // Set them in the row
             for(int i = 0; i < refreshCols.length; i++)
-                row.setColumnValue(refreshCols[i], rs.getObject(refreshCols[i].getName()));
+                setColumnValue(row, refreshCols[i], rs.getObject(refreshCols[i].getName()));
         }
 
     }

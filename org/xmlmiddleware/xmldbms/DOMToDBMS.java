@@ -30,11 +30,11 @@ import javax.sql.*;
 
 import org.w3c.dom.*;
 
-import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.domutils.*;
 import org.xmlmiddleware.utils.*;
 import org.xmlmiddleware.conversions.*;
-
+import org.xmlmiddleware.xmldbms.maps.*;
+import org.xmlmiddleware.xmldbms.actions.*;
 /**
  * Transfers data from the database to a DOM tree.
  *
@@ -233,8 +233,7 @@ public class DOMToDBMS
     public DocumentInfo processDocument(TransferInfo transInfo, Element el, int action)
         throws SQLException, MapException, KeyException, ConversionException
     {
-        XMLName name = XMLName.create(DUMMY, DUMMY);
-        Action act = new Action(name, ClassMap.create(name));
+        Action act = new Action();
         act.setAction(action);
 
         Actions actions = new Actions(transInfo.map);
@@ -299,7 +298,7 @@ public class DOMToDBMS
      * @param el The node to recusively process.
      * @param orderInParent Position of this element in parent
      */
-    private void processRoot(DocumentInfo docInfo, Element el, int orderInParent)
+    private void processRoot(DocumentInfo docInfo, Element el, long orderInParent)
         throws SQLException, MapException, KeyException, ConversionException
     {
         // Check if the node is mapped
@@ -325,7 +324,7 @@ public class DOMToDBMS
         else
         {
             NodeList children = el.getChildNodes();
-            int childOrder = 1;
+            long childOrder = 1;
 
             for(int i = 0; i < children.getLength(); i++)
             {
@@ -354,7 +353,7 @@ public class DOMToDBMS
      * @param parentAction Action to inherit if this node does not specify own action.
      */
     private Row processClassRow(Row parentRow, ClassMap classMap, RelatedClassMap relMap, 
-                                Element classNode, int orderInParent)
+                                Element classNode, long orderInParent)
         throws SQLException, KeyException, MapException, ConversionException
     {
         // NOTE: This method is called from processRoot (relMap and parentRow 
@@ -434,7 +433,7 @@ public class DOMToDBMS
      * This method creates and inserts a row in a property table. 
      */
     private Row processPropRow(Row parentRow, PropertyMap propMap, Node propNode, 
-                               int orderInParent, Action action)
+                               long orderInParent, Action action)
         throws SQLException, MapException, KeyException, ConversionException
     {
         // NOTE: This method is called from processRow
@@ -613,7 +612,7 @@ public class DOMToDBMS
         // inline/wrapper classmaps
 
         Node child = DOMNormalizer.getFirstChild(parentNode);
-        int childOrder = 1;
+        long childOrder = 1;
 
         while(child != null)
         {
@@ -669,7 +668,7 @@ public class DOMToDBMS
      * This is the other half of processChildren. Called for every node that was mapped.
      */
     private void processChild(Row parentRow, ClassMap parentMap, Object childMap, Node childNode,
-                              int childOrder, Stack fkChildren, Action action, Vector useProps)
+                              long childOrder, Stack fkChildren, Action action, Vector useProps)
         throws KeyException, SQLException, MapException, ConversionException
     {
         // NOTE: Called from processChildren
@@ -712,7 +711,7 @@ public class DOMToDBMS
      * Adds a property to the class, or if in it's own row sends it for 
      * processing in processChildRow.
      */
-    private void processProperty(Row parentRow, PropertyMap propMap, Node propNode, int order, Stack fkNodes, Action action)
+    private void processProperty(Row parentRow, PropertyMap propMap, Node propNode, long order, Stack fkNodes, Action action)
         throws KeyException, SQLException, MapException, ConversionException
     {
         // NOTE: Called from processChildren
@@ -731,7 +730,7 @@ public class DOMToDBMS
 
             StringTokenizer s = new StringTokenizer(getNodeValue(propNode, propMap.containsXML()), " ", false);
 
-            int tokenOrder = 1;
+            long tokenOrder = 1;
             Document doc = propNode.getOwnerDocument();
 
             // Create a new property map and copy all needed attributes
@@ -803,7 +802,7 @@ public class DOMToDBMS
      * General function for processing child rows. 
      */
     private void processChildRow(Row parentRow, Object map, LinkInfo linkInfo, Node node, 
-                                 int orderInParent, Stack fkNodes, Action action)
+                                 long orderInParent, Stack fkNodes, Action action)
         throws KeyException, SQLException, MapException, ConversionException
     {
         // NOTE: This method is called before parentRow has been inserted into the
@@ -846,7 +845,7 @@ public class DOMToDBMS
      * When it's actually time for a row to get inserted this sends it to the 
      * appropriate location.
      */
-    private Row processRow(Row parentRow, Object map, Node node, int orderInParent, 
+    private Row processRow(Row parentRow, Object map, Node node, long orderInParent, 
                            Action action)
         throws SQLException, MapException, KeyException, ConversionException
     {
@@ -995,7 +994,7 @@ public class DOMToDBMS
         Object val = formatter.parse(getNodeValue(node, propMap.containsXML()), column.getType());
 
         // Set in in the column
-        row.setColumnValue(column, ConvertObject.convertObject(val, column.getType()));
+        row.setColumnValue(column, val);
     }
     
 
@@ -1055,20 +1054,20 @@ public class DOMToDBMS
         for(int i = 0; i < columns.length; i++)
         {
             // loop for each generated key column value
-            row.setColumnValue(columns[i], ConvertObject.convertObject(values[i], columns[i].getType()));
+            row.setColumnValue(columns[i], ConvertObject.convertObject(values[i], columns[i].getType(), columns[i].getFormatter()));
         }
     }
 
     /** 
      * Put the order value in a row.
      */
-    private void generateOrder(Row row, OrderInfo o, int orderValue)
+    private void generateOrder(Row row, OrderInfo o, long orderValue)
         throws ConversionException
     {
 	    if(o != null && !o.orderValueIsFixed() && o.generateOrder())
         {
             Column col = o.getOrderColumn();
-            row.setColumnValue(col, ConvertObject.convertObject(new Integer(orderValue), col.getType()));
+            row.setColumnValue(col, ConvertObject.convertObject(new Long(orderValue), col.getType(), col.getFormatter()));
         }
     }   
 
@@ -1208,9 +1207,9 @@ public class DOMToDBMS
     {
 	    Node   node;
 	    Object map;
-	    int    orderInParent;
+	    long    orderInParent;
 
-	    FKNode (Node node, Object map, int orderInParent)
+	    FKNode (Node node, Object map, long orderInParent)
 	    {
 		    this.node = node;
 		    this.map = map;

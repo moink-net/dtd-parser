@@ -78,7 +78,7 @@ public class MySQLHandler
                refreshCols[0].getName().equalsIgnoreCase(key.getColumns()[0].getName()))
             {
                 // ... then just set that column
-                row.setColumnValue(refreshCols[0], lastInsert);
+                setColumnValue(row, refreshCols[0], lastInsert);
             }
             else
             {
@@ -97,7 +97,7 @@ public class MySQLHandler
 
                 // Set them in the row
                 for(int i = 0; i < refreshCols.length; i++)
-                    row.setColumnValue(refreshCols[i], rs.getObject(refreshCols[i].getName()));
+                    setColumnValue(row, refreshCols[i], rs.getObject(refreshCols[i].getName()));
             }
 
         }

@@ -8,6 +8,7 @@ import javax.sql.*;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
+import org.xmlmiddleware.conversions.*;
 
 import org.xmlmiddleware.db.*;
 
@@ -447,5 +448,10 @@ abstract class DataHandlerBase
             return ((SPPreparedStatement)stmt).getUnderlyingStatement();
         else
             return stmt;
+    }
+
+    protected void setColumnValue(Row row, Column column, Object val)
+    {
+        row.setColumnValue(column, ConvertObject.convertObject(val, column.getType(), column.getFormatter()));
     }
 }   

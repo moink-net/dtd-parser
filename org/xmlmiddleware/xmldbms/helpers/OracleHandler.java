@@ -66,7 +66,7 @@ public class OracleHandler
             // IMPL: Set columns on 'row' like so:
             // ('col' is the column you're setting, 'obj' is the value as an Object)
             //
-            //      row.setColumnValue(col, obj);
+            //      setColumnValue(row, col, obj);
 
             throw new SQLException("[xmldbms] Oracle support not implemented. Looking for implementor.");
         }
