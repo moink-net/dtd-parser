@@ -40,9 +40,9 @@ public class FilterConditions
 
    private Table     table;
    private Vector    conditions = new Vector();
-   private Vector    expandedConditions = new Vector();
+   private String[]  parsedConditions = null;
    private Vector    paramNames = new Vector();
-   private Hashtable vectorConditions = new Hashtable(), params = null;
+   private Hashtable vectorConditions = new Hashtable(), params = new Hashtable();
    private String    whereCondition;
    private boolean   parseConditions = true, parseVectorConditions = true;
 
@@ -50,7 +50,7 @@ public class FilterConditions
    // Constants
    //*********************************************************************
 
-   private static final int FINDDOLLAR = 0;
+   private static final int FINDDOLLAR  = 0;
    private static final int DOLLARFOUND = 1;
 
    private static final int WHITESPACEAFTERPAREN  = 0;
@@ -60,7 +60,6 @@ public class FilterConditions
    private static final int I                     = 4;
    private static final int WHITESPACEBEFOREIN    = 5;
 
-   private static String EMPTYSTRING = new String();
    private static Object O = new Object();
 
    //*********************************************************************
@@ -169,11 +168,13 @@ public class FilterConditions
    /**
     * Set the parameters to be used with the conditions.
     *
-    * <p>If the conditions have any parameter arguments, this must be
+    * <p>If the conditions have any named parameters, this must be
     * called before calling getWhereCondition() or getParameterValues().</p>
     *
     * @param params A Hashtable containing parameter names and values. Parameter
-    *    names must start with a dollar sign ($). Null if there are no parameters.
+    *    names must start with a dollar sign ($). If a parameter value is null,
+    *    do not included it in the Hashtable. If there are no parameters or
+    *    all parameters are null, pass a null value.
     */
    public void setParameters(Hashtable params)
    {
@@ -247,11 +248,7 @@ public class FilterConditions
       {
          // Initialize global arrays.
 
-         expandedConditions.removeAllElements();
-         for (int i = 0; i < conditions.size(); i++)
-         {
-            expandedConditions.addElement(EMPTYSTRING);
-         }
+         parsedConditions = new String[conditions.size()];
 
          paramNames.removeAllElements();
          vectorConditions.clear();
@@ -278,6 +275,10 @@ public class FilterConditions
 
    private void parseVectorConditions()
    {
+      // Reparse those conditions that have IN operators / use Vectors. This is
+      // necessary because the number of parameters in the IN operator must
+      // correspond to the number of values in the Vector.
+
       Enumeration e;
 
       e = vectorConditions.keys();
@@ -301,7 +302,7 @@ public class FilterConditions
       StringBuffer dest = new StringBuffer();
       int          save = 0, dollar = 0, state = FINDDOLLAR, numParams;
       Object       paramValue;
-      boolean      inClause = false;
+      boolean      inOperator = false;
 
       condition = (String)conditions.elementAt(index);
       src = condition.toCharArray();
@@ -320,17 +321,17 @@ public class FilterConditions
                   {
                      if (src[i - 1] == '\\')
                      {
-                        dest.append(src, save, i - save);
+                        dest.append(src, save, i - save - 1);
                         save = i;
                         break;
                      }
                   }
 
-                  // Check if the parameter occurs in an IN clause.
+                  // Check if the parameter is the target of an IN operator.
 
-                  inClause = checkINClause(src, dollar);
+                  inOperator = checkINOperator(src, dollar);
 
-                  // Otherwise, start parsing the parameter name.
+                  // Start parsing the parameter name.
 
                   state = DOLLARFOUND;
                   dollar = i;
@@ -348,6 +349,8 @@ public class FilterConditions
                case 0x20:   // Space
                case 0x0d:   // Tab
 
+                  // Parse until we hit whitespace.
+
                   // If the parameter name is zero-length -- that is, we
                   // have a standalone dollar sign, ignore it.
 
@@ -363,16 +366,16 @@ public class FilterConditions
                   paramName = new String(src, dollar, i - dollar);
                   paramValue = params.get(paramName);
 
-                  // Otherwise, append the text up to (but not including) the dollar
+                  // Append the text up to (but not including) the dollar
                   // sign to the destination string.
 
                   dest.append(src, save, dollar - save);
 
-                  // If the parameter is in an IN clause and is not null, it must be
-                  // a Vector. In this case, replace it with Vector.size() parameter
+                  // If the parameter is the target of the IN operator and is not null,
+                  // it must be a Vector. In this case, replace it with Vector.size() parameter
                   // markers (?). Otherwise, replace it with a single parameter marker.
 
-                  numParams = (inClause && (paramValue != null)) ? ((Vector)paramValue).size() : 1;
+                  numParams = (inOperator && (paramValue != null)) ? ((Vector)paramValue).size() : 1;
                   for (int j = 0; j < numParams; j++)
                   {
                      if (j != 0) dest.append(',');
@@ -385,7 +388,7 @@ public class FilterConditions
 
                   if (parseConditions)
                   {
-                     if (inClause)
+                     if (inOperator)
                      {
                         // Save a list of the numbers of conditions that have Vector
                         // parameters. We use a Hashtable so that conditions with more
@@ -416,14 +419,14 @@ public class FilterConditions
       // Append the rest of the source string to the destination string.
 
       dest.append(src, save, src.length - save);
-      expandedConditions.setElementAt(dest.toString(), index);
+      parsedConditions[index] = dest.toString();
    }
 
-   private boolean checkINClause(char[] src, int pos)
+   private boolean checkINOperator(char[] src, int pos)
    {
       int state;
 
-      // Parse backwards and see if we are in an IN clause.
+      // Parse backwards and see if we are using an IN operator.
 
       state = WHITESPACEAFTERPAREN;
       for (int i = pos - 1; i >= 0; i--)
@@ -431,8 +434,12 @@ public class FilterConditions
          switch (state)
          {
             case WHITESPACEAFTERPAREN:
-               if ((src[i] != 0x20) && (src[i] != 0x0d)) state = PAREN;
-               break;
+               // If the current character is whitespace, continue parsing.
+               // Otherwise, fall through to check if we have an opening parenthesis.
+
+               if ((src[i] == 0x20) || (src[i] == 0x0d)) break;
+               state = PAREN;
+               // WARNING! This falls through to the next case.
 
             case PAREN:
                if (src[i] != '(') return false;
@@ -440,8 +447,12 @@ public class FilterConditions
                break;
 
             case WHITESPACEBEFOREPAREN:
-               if ((src[i] != 0x20) && (src[i] != 0x0d)) state = N;
-               break;
+               // If the current character is whitespace, continue parsing.
+               // Otherwise, fall through to check if we have an 'N'.
+
+               if ((src[i] == 0x20) || (src[i] == 0x0d)) break;
+               state = N;
+               // WARNING! This falls through to the next case.
 
             case N:
                if ((src[i] != 'n') && (src[i] != 'N')) return false;
@@ -464,10 +475,13 @@ public class FilterConditions
    {
       StringBuffer sb = new StringBuffer('(');
 
-      for (int i = 0; i < expandedConditions.size(); i++)
+      for (int i = 0; i < parsedConditions.length; i++)
       {
-         sb.append((String)expandedConditions.elementAt(i));
-         sb.append(' ');
+         if (parsedConditions[i] != null)
+         {
+            sb.append(parsedConditions[i]);
+            sb.append(' ');
+         }
       }
       sb.append(')');
       whereCondition = sb.toString();

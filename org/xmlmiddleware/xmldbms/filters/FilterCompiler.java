@@ -79,10 +79,10 @@ public class FilterCompiler implements ContentHandler
    private XMLReader        xmlReader;
    private TokenList        elementTokens;
    private FilterSet        filterSet;
-   private Filter           filter;
+   private RootFilter       rootFilter;
    private FilterBase       filterBase;
    private TableFilter      tableFilter;
-   private FilterConditions relatedTableFilter, rootFilter;
+   private FilterConditions relatedTableFilter, rootFilterConditions;
    private String           parentKeyName, childKeyName;
    private int              state;
 
@@ -421,8 +421,8 @@ public class FilterCompiler implements ContentHandler
    {
       try
       {
-         filter = filterSet.createFilter();
-         filterBase = filter;
+         rootFilter = filterSet.createRootFilter();
+         filterBase = rootFilter;
       }
       catch (IllegalArgumentException e)
       {
@@ -449,7 +449,7 @@ public class FilterCompiler implements ContentHandler
                break;
 
             case STATE_ROOTFILTER:
-               rootFilter = filter.createRootFilter(databaseName, catalogName, schemaName, tableName);
+               rootFilterConditions = rootFilter.createRootFilterConditions(databaseName, catalogName, schemaName, tableName);
                break;
 
             case STATE_TABLEFILTER:
@@ -480,7 +480,7 @@ public class FilterCompiler implements ContentHandler
             break;
 
          case STATE_ROOTFILTER:
-            rootFilter.addCondition(condition);
+            rootFilterConditions.addCondition(condition);
             break;
 
          default:

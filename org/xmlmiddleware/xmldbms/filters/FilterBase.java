@@ -27,7 +27,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 /**
- * Base class for Filter and RSFilter; contains TableFilters. <b>For internal use.</b>
+ * Base class for RootFilter and ResultSetFilter; contains TableFilters.
+ * <b>For internal use.</b>
  *
  * @author Ronald Bourret, 2001
  * @version 2.0

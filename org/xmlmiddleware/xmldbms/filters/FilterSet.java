@@ -30,7 +30,7 @@ import java.util.Vector;
  *
  * <p>The normal way to construct a FilterSet object is to write an XML
  * document using the filter language (filters.dtd), then compile it into
- * an FilterSet object. This is then passed to DBMSToDOM. For example:</p>
+ * a FilterSet object. This is then passed to DBMSToDOM. For example:</p>
  *
  * <pre>
  *    // Compile a filter document.
@@ -300,7 +300,7 @@ public class FilterSet
    /**
     * Get the filters.
     *
-    * @return A Vector containing Filter and ResultSetFilter objects
+    * @return A Vector containing RootFilter and ResultSetFilter objects
     */
    public final Vector getFilters()
    {
@@ -308,23 +308,23 @@ public class FilterSet
    }
 
    /**
-    * Create a filter.
+    * Create a root filter.
     *
-    * @return The filter.
+    * @return The root filter.
     * @exception IllegalArgumentException Thrown if the filter set contains
     *    a ResultSetFilter.
     */
-   public Filter createFilter()
+   public RootFilter createRootFilter()
    {
-      Filter filter;
+      RootFilter filter;
 
       if (filters.size() == 1)
       {
          if (filters.elementAt(0) instanceof ResultSetFilter)
-            throw new IllegalArgumentException("Cannot mix result sets and root filters.");
+            throw new IllegalArgumentException("Cannot mix result set filters and root filters.");
       }
 
-      filter = new Filter(map);
+      filter = new RootFilter(map);
       filters.addElement(filter);
       return filter;
    }
