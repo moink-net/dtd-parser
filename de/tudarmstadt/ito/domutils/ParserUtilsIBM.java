@@ -6,7 +6,10 @@
 
 package de.tudarmstadt.ito.domutils;
 
-import org.w3c.dom.Document;import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;/**
+import org.w3c.dom.Document;
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+
+/**
  * Implements ParserUtils for the IBM parser.
  *
  * @author Adam Flinton
@@ -63,6 +66,7 @@ public class ParserUtilsIBM implements ParserUtils
    public void writeDocument(Document doc, String xmlFilename) throws Exception
    {
    }   
+
    // ********************************************************************
    // Public methods
    // ********************************************************************
@@ -77,7 +81,9 @@ public class ParserUtilsIBM implements ParserUtils
 	  {
 		 throw new DocumentFactoryException(e.getMessage());
 	  }
-   }      /**
+   }      
+
+/**
  * Insert the method's description here.
  * Creation date: (10/04/01 12:30:01)
  * @return org.w3c.dom.Document
@@ -85,4 +91,5 @@ public class ParserUtilsIBM implements ParserUtils
  */
 public Document openDocument(java.io.InputStream InputStream) {
 	return null;
-}}
+}
+}

@@ -13,7 +13,10 @@ import javax.xml.parsers.SAXParser;
 
 import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
 import de.tudarmstadt.ito.xmldbms.tools.StringStore;
-import javax.xml.parsers.DocumentBuilderFactory;import javax.xml.parsers.DocumentBuilder;public class ParserUtilsJAXP implements ParserUtils {
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+public class ParserUtilsJAXP implements ParserUtils {
 /**
  * ParserUtilsJAXP constructor comment.
  */
@@ -306,4 +309,5 @@ public Document createDocument() throws DocumentFactoryException
 	  {
 		 throw new DocumentFactoryException(e.getMessage());
 	  }
-   }            }
+   }            
+}

@@ -17,7 +17,9 @@ import java.io.OutputStream;
 import com.sun.xml.tree.XmlDocument;
 import com.sun.xml.tree.XmlDocumentBuilder;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;/**
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+
+/**
  * Implements ParserUtils for the Sun parser.
  *
  * @author Adam Flinton
@@ -95,6 +97,7 @@ public class ParserUtilsSun implements ParserUtils
    }                     
 
    
+
    // ********************************************************************
    // Public methods
    // ********************************************************************
@@ -109,7 +112,9 @@ public class ParserUtilsSun implements ParserUtils
 	  {
 		 throw new DocumentFactoryException(e.getMessage());
 	  }
-   }      /**
+   }      
+
+/**
  * Insert the method's description here.
  * Creation date: (10/04/01 12:30:01)
  * @return org.w3c.dom.Document
@@ -128,4 +133,5 @@ public Document openDocument(java.io.InputStream InputStream) {
 
 	 // Return the DOM tree
 	 return docBuilder.getDocument();
-}}
+}
+}

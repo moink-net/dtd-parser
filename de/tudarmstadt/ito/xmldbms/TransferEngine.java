@@ -38,7 +38,9 @@ import de.tudarmstadt.ito.xmldbms.objectcache.ObjectCache;
 import de.tudarmstadt.ito.xmldbms.db.DbConn;
 
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileException;/**
+import de.tudarmstadt.ito.xmldbms.tools.GetFileException;
+
+/**
  * High level interface to XML-DBMS.
  *
  * <p>TransferEngine provides a high-level interface to XML-DBMS.
@@ -750,4 +752,5 @@ public void init(Properties props) throws ClassNotFoundException, IllegalAccessE
 	setDatabaseProperties(props);
 	setParserProperties(props);
 	
-	}}
+	}
+}

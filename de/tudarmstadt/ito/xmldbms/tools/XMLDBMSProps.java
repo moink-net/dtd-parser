@@ -180,14 +180,39 @@ public class XMLDBMSProps
    {
 	  super();
    }   
-	public static String DATASOURCE = "DataSource";/** JDBC Level & JDBC 2.0 */	
-	public static String DBINITIALCONTEXT = "DBInitialContext";/** Document Root */
 
-	public static String DOCROOT = "DocRoot";/** JNDI information */
-	public static String INITIALCONTEXT = "InitialContext";	public static String JDBCLEVEL     = "JDBCLevel";	public static String JMSACKMODE = "JMSAckMode";/** JMS Info */	
+	public static String DATASOURCE = "DataSource";
+/** JDBC Level & JDBC 2.0 */	
+	public static String DBINITIALCONTEXT = "DBInitialContext";
+/** Document Root */
 
-	public static String JMSCONTEXT = "JMSContext";	public static String JMSMESSAGE = "JMSMessage";	public static String JMSPASSWORD = "JMSPassword";	public static String JMSPROVIDERURL = "JMSProviderURL";	public static String JMSTCF = "JMSTCF";	public static String JMSTOPIC = "JMSTopic";	public static String JMSUSER = "JMSUser";	public static String JNDI     = "JNDI";	public static String KEYGENCAT = "KeyGenCat";	public static String KEYGENSCHEMA = "KeyGenSchema";	public static String KEYGENSEP = "KeyGenSep";/** Key Gen Info */	
+	public static String DOCROOT = "DocRoot";
+/** JNDI information */
+	public static String INITIALCONTEXT = "InitialContext";
+	public static String JDBCLEVEL     = "JDBCLevel";
+	public static String JMSACKMODE = "JMSAckMode";
+/** JMS Info */	
 
-	public static String KEYGENTABLE = "KeyGenTable";	public static String USEDOCROOT = "UseDocRoot";	public static String XSLTCLASS = "XSLTClass";	public static String XSLTOUTPUT = "XSLTOutput";/** XSLT info */
+	public static String JMSCONTEXT = "JMSContext";
+	public static String JMSMESSAGE = "JMSMessage";
+	public static String JMSPASSWORD = "JMSPassword";
+	public static String JMSPROVIDERURL = "JMSProviderURL";
+	public static String JMSSILENT = "JMSSilent";
+	public static String JMSTCF = "JMSTCF";
+	public static String JMSTESTNUM = "JMSTestNum";
+	public static String JMSTOPIC = "JMSTopic";
+	public static String JMSUSER = "JMSUser";
+	public static String JNDI     = "JNDI";
+	public static String KEYGENCAT = "KeyGenCat";
+	public static String KEYGENSCHEMA = "KeyGenSchema";
+	public static String KEYGENSEP = "KeyGenSep";
+/** Key Gen Info */	
 
-	public static String XSLTSCRIPT = "XSLTScript";}
+	public static String KEYGENTABLE = "KeyGenTable";
+	public static String USEDOCROOT = "UseDocRoot";
+	public static String XSLTCLASS = "XSLTClass";
+	public static String XSLTOUTPUT = "XSLTOutput";
+/** XSLT info */
+
+	public static String XSLTSCRIPT = "XSLTScript";
+}

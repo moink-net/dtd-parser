@@ -17,7 +17,10 @@ import java.sql.SQLException;
 import java.util.Properties;
 import org.w3c.dom.DOMException;
 
-import java.io.InputStream;import java.io.ByteArrayInputStream;/**
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+
+/**
  * Properties-driven and command line interface to XML-DBMS.
  *
  * <p>Transfer provides a properties-driven interface to XML-DBMS.
@@ -264,6 +267,7 @@ public class Transfer extends ProcessProperties
 	 else
 	   throw new IllegalArgumentException("Invalid commit mode value: " + modeName);
    }   
+
    public String dispatchRetrieveDocumentByKey_s (TransferEngine engine, Properties props)
 	  throws Exception
    {
@@ -279,7 +283,9 @@ public class Transfer extends ProcessProperties
 	 String s = null;
 	 s = engine.retrieveDocument_s(mapFilename, xmlFilename, table, key);
 	 return s;
-   }                              public String dispatchRetrieveDocumentByKeys_s (TransferEngine engine, Properties props)
+   }                           
+
+   public String dispatchRetrieveDocumentByKeys_s (TransferEngine engine, Properties props)
 	  throws Exception
    {
 	 String     mapFilename, xmlFilename;
@@ -294,7 +300,9 @@ public class Transfer extends ProcessProperties
 	 String s = null;
 	 s = engine.retrieveDocument_s(mapFilename, xmlFilename, tables, keys);
 	 return s;
-   }                              public String dispatchRetrieveDocumentBySQL_s (TransferEngine engine, Properties props) 
+   }                           
+
+   public String dispatchRetrieveDocumentBySQL_s (TransferEngine engine, Properties props) 
 	  throws Exception
    {
 	 String mapFilename, xmlFilename, select;
@@ -306,7 +314,9 @@ public class Transfer extends ProcessProperties
 	 String s = null;
 	 s = engine.retrieveDocument_s(mapFilename, xmlFilename, select);
 	 return s;
-   }                              // ************************************************************************
+   }                           
+
+   // ************************************************************************
    // Private methods
    // ************************************************************************
 
@@ -324,7 +334,9 @@ public class Transfer extends ProcessProperties
 
 	 keyGeneratorClass = (String)props.getProperty(XMLDBMSProps.KEYGENERATORCLASS);
 	 engine.storeDocument(mapFilename, xmlFile, commitMode, keyGeneratorClass, props);
-   }                           // ************************************************************************
+   }                        
+
+   // ************************************************************************
    // Private methods
    // ************************************************************************
 
@@ -349,4 +361,5 @@ public class Transfer extends ProcessProperties
 
 	 
 	 engine.storeDocument(mapFilename, is, commitMode, keyGeneratorClass, props);
-   }                                       }
+   }                                       
+}

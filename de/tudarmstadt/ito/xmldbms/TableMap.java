@@ -199,37 +199,4 @@ public class TableMap
 //                       </B>
 //                    </A>
 
-//   String[][]     passThroughTypes = null;
-//
-// passThroughTypes allows us to reconstruct empty passthrough elements.
-// The double array is needed because there can be an arbitrary number of
-// pass-through elements directly beneath the parent (first array), each of
-// which is a linear array of pass-through elements. That is, the following
-// structure could be flattened to a single table A with one column E:
-//
-// <A>
-//    <B>
-//       <C>
-//          <D>
-//             <E>foo</E>
-//          </D>
-//       </C>
-//    </B>
-// </A>
-//
-// The only limitation is that there be one element of each pass-through type
-// per parent. We need this limitation to be able to reconstruct the chain of
-// ancestors. Otherwise, we couldn't tell the difference between the following
-// two structures, in which <B> is passed through. Note that we need to check
-// this condition both at map compile time and at run time.
-//
-// <A>                <A>
-//    <B>                <B>
-//       <C>foo</C>         <C>foo</C>
-//       <D>bar</D>      </B>
-//    </B>               <B>
-// </A>                     <D>bar</D>
-//                       </B>
-//                    </A>
-
 }

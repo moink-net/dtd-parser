@@ -119,5 +119,4 @@ public class DTDConst
 												 KEYWD_TOKEN_REQUIRED,
 												 KEYWD_TOKEN_SYSTEM
 												};
-
 }

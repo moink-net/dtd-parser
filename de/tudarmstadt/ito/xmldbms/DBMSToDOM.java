@@ -27,7 +27,9 @@ import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
 
-import de.tudarmstadt.ito.domutils.ParserUtils;/**
+import de.tudarmstadt.ito.domutils.ParserUtils;
+
+/**
  * Transfers data from the database to a DOM tree.
  *
  * <P>DBMSToDOM transfers data from the database to a DOM tree according
@@ -770,6 +772,7 @@ public class DBMSToDOM
 		 }
 	  }
    }
+
    /**
 	* Construct a new DBMSToDOM object and set the Map and
 	* DocumentFactory objects.
@@ -778,7 +781,9 @@ public class DBMSToDOM
    {
 	  this.map = map;
 	  this.factory = factory;
-   }         /**
+   }      
+
+   /**
 	* Get the current DocumentFactory.
 	*
 	* @return The current DocumentFactory.
@@ -786,7 +791,9 @@ public class DBMSToDOM
    public ParserUtils getDocumentFactory()
    {
 	  return factory;
-   }         /**
+   }      
+
+   /**
 	* Set the current DocumentFactory.
 	*
 	* @param factory The current DocumentFactory.
@@ -794,4 +801,5 @@ public class DBMSToDOM
    public void setDocumentFactory(ParserUtils factory)
    {
 	  this.factory = factory;
-   }      }
+   }      
+}

@@ -1017,10 +1017,11 @@ class Parameters
 		 }
 	  }
 	  catch (NumberFormatException n)
-	  {
+	  {	
 		 throw new SQLException("Invalid numeric value: " + value);
+		 
 	  }
-   }   
+   }         
 
    /**
 	* Set a parameter using a Time value. This method assumes that the
@@ -1426,49 +1427,6 @@ class Parameters
    }   
 
 
-/* -------------------------- NOT CURRENTLY USED -----------------------------
- * Constants
-   private static String START_DATE_ESCAPE = "{d '",
-						 START_TIME_ESCAPE = "{t '",
-						 START_TIMESTAMP_ESCAPE = "{ts '",
-						 END_ESCAPE = "'}";
-
-   Object escapeDateTime(Object value, int type)
-   {
-	  // If a date, time, or timestamp is in string form, place it in an
-	  // ODBC escape sequence. This assumes that the date, time, or timestamp
-	  // is already in an acceptable form; this is not a valid assumption
-	  // in many cases. The forms are:
-	  //
-	  // date:      yyyy-mm-dd
-	  // time:      hh:mm:ss
-	  // timestamp: yyyy-mm-dd hh:mm:ss[.f...]
-
-	  try
-	  {
-		 switch (type)
-		 {
-			case Types.DATE:
-			   return START_DATE_ESCAPE + (String)value + END_ESCAPE;
-
-			case Types.TIME:
-			   return START_TIME_ESCAPE + (String)value + END_ESCAPE;
-
-			case Types.TIMESTAMP:
-			   return START_TIMESTAMP_ESCAPE + (String)value + END_ESCAPE;
-
-			default:
-			   return value;
-		 }
-	  }
-	  catch (ClassCastException c)
-	  {
-		 // This code is useful only if value is a String. Although that is
-		 // generally the case, we need to ignore any cast exceptions.
-		 return value;
-	  }
-   }
--------------------------- NOT CURRENTLY USED ----------------------------- */
 /* -------------------------- NOT CURRENTLY USED -----------------------------
  * Constants
    private static String START_DATE_ESCAPE = "{d '",

@@ -20,7 +20,10 @@ import org.apache.xerces.parsers.SAXParser;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;import java.io.ByteArrayOutputStream;/**
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+import java.io.ByteArrayOutputStream;
+
+/**
  * Implements ParserUtils for the Xerces parser.
  *
  * @author Adam Flinton
@@ -105,6 +108,7 @@ public class ParserUtilsXerces implements ParserUtils
    }                        
 
    
+
    // ********************************************************************
    // Public methods
    // ********************************************************************
@@ -119,7 +123,9 @@ public class ParserUtilsXerces implements ParserUtils
 	  {
 		 throw new DocumentFactoryException(e.getMessage());
 	  }
-   }      /**
+   }      
+
+/**
  * Insert the method's description here.
  * Creation date: (10/04/01 12:30:01)
  * @return org.w3c.dom.Document
@@ -138,7 +144,9 @@ public Document openDocument(java.io.InputStream InputStream) throws Exception {
 	 //System.out.println("gfu = " +gfu.getFileURL(xmlFilename));
 	 // Return the DOM tree
 	 return parser.getDocument();
-}/**
+}
+
+/**
  * Insert the method's description here.
  * Creation date: (19/04/01 15:22:10)
  * @return java.lang.String
@@ -155,4 +163,5 @@ public String returnString(Document toConvert)throws Exception {
 	serializer.serialize(toConvert); 
 	return new String(os.toByteArray());
 
-}}
+}
+}

@@ -33,10 +33,9 @@ public static void main(String[] args) throws Exception {
 		JMSTest jt = new JMSTest();
 		//get the properties file
 		props = jt.getProperties(args,0);
-		String Message = "";
 		JMSWrapper sm = new JMSWrapper();
-	
-		sm.receiveTest(props);
+		sm.init(props);
+		sm.receiveTest();
 		
 	}
 }

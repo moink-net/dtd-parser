@@ -13,7 +13,9 @@ import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
 import java.util.Properties;
 import de.tudarmstadt.ito.xmldbms.tools.ProcessProperties;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;public class XSLTLoader extends ProcessProperties {
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+
+public class XSLTLoader extends ProcessProperties {
 
 /**
  * XSLTest constructor comment.
@@ -62,4 +64,5 @@ public ProcessXslt init(Properties props) throws ClassNotFoundException, Illegal
 	checkState(PROCESSXSLT, processxslt);
 	
 	return processxslt;
-}}
+}
+}

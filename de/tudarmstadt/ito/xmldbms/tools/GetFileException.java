@@ -15,4 +15,4 @@ public class GetFileException extends Exception
 
   }// end of toString method          
 
-} // end of class MyException
+}

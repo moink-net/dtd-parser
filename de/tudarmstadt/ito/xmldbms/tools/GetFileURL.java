@@ -124,11 +124,13 @@ public String fullqual(String filename) throws GetFileException
 
    File f1;
    f1 = new File(fname);
-
+	System.out.println("Filename passed in  = " + filename);
+	System.out.println("fname now  = " + fname);
 
    if(f1.exists())
   {
 	   fname = fpath + f1.getAbsolutePath();
+	   System.out.println("File found thus fname now  = " + fname);
 		return fname;
 
 	   }// end checking if local file or URL
@@ -141,9 +143,9 @@ public String fullqual(String filename) throws GetFileException
 	}
   	 	
    else
-   { 
+   { System.out.println("File not in a jar nor a local file thus fname now  = " + fname);
 	   return fname;
    }
-  }                                                  
+  }                                                    
 
-}// end of class url
+}

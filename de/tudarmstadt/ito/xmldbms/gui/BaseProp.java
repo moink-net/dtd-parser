@@ -10,7 +10,9 @@ import java.beans.*;
 import de.tudarmstadt.ito.xmldbms.tools.ProcessProperties;
 import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
 
-import java.util.StringTokenizer;public class BaseProp extends de.tudarmstadt.ito.xmldbms.tools.ProcessProperties {
+import java.util.StringTokenizer;
+
+public class BaseProp extends de.tudarmstadt.ito.xmldbms.tools.ProcessProperties {
 	public static java.util.Properties prop = new java.util.Properties();
 	
 	public static int Change = 0;
@@ -574,4 +576,5 @@ public int getNumTokens(String field, String sep) {
 	int i = sta.countTokens();
 	//System.out.println("Number of tokens ="+i);
 	return i;
-}}
+}
+}

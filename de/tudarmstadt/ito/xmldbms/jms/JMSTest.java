@@ -46,8 +46,8 @@ public static void main(String[] args) throws Exception {
 
 		int i = 10000000;
 
-		if (props.getProperty("JMSTestNum") != null)
-			{i = Integer.parseInt(props.getProperty("JMSTestNum"));}
+		if (props.getProperty(XMLDBMSProps.JMSTESTNUM) != null)
+			{i = Integer.parseInt(props.getProperty(XMLDBMSProps.JMSTESTNUM));}
 
 			String[] S = new String[1];
 			S[0] = s;
@@ -70,8 +70,9 @@ public static void main(String[] args) throws Exception {
 		 //System.out.println("the content is"+sb.toString());
 		String Message = sb.toString();
 		JMSWrapper sm = new JMSWrapper();
+		sm.init(props);
 	//	sm.send(props, Message);
-		System.out.println("Int i = " + i);
+		System.out.println("Sending " + i +" Messages");
 		int pushCounter = 0;
 
 		// That's it, the TopicPublisher is now ready for use
@@ -79,7 +80,7 @@ public static void main(String[] args) throws Exception {
 		while(pushCounter < i)
 		{
 			//String Message2 = Message + ++pushCounter;
-			sm.send(props, Message);
+			sm.send(Message);
 			pushCounter++;
 			
 		}

@@ -46,5 +46,4 @@ public class RelatedClassMap
 	* its orderColumn member set to null.
 	*/
    public OrderInfo orderInfo = new OrderInfo();
-
 }

@@ -82,4 +82,5 @@ public class GeneratePropFile extends ProcessProperties
 	  }
 
 	  gpf.writeProps(gpf.getProperties(args, 0));
-   }                                                                                    }
+   }                                                                                    
+}

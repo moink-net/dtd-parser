@@ -13,7 +13,9 @@ import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
 import java.util.Properties;
 import de.tudarmstadt.ito.xmldbms.tools.ProcessProperties;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;public class XSLTest extends ProcessProperties {
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+
+public class XSLTest extends ProcessProperties {
 
 /**
  * XSLTest constructor comment.

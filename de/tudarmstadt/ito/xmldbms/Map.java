@@ -32,7 +32,9 @@ import java.util.Hashtable;
 import java.util.Random;
 import java.util.Stack;
 
-import java.util.StringTokenizer;/**
+import java.util.StringTokenizer;
+
+/**
  * Describes how an XML document is mapped to a database and vice versa;
  * <A HREF="../readme.html#NotForUse">for limited use</A>.
  *

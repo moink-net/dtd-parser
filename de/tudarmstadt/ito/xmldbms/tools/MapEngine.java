@@ -32,7 +32,10 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.Parser;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;import de.tudarmstadt.ito.xmldbms.tools.GetFileException;/**
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+import de.tudarmstadt.ito.xmldbms.tools.GetFileException;
+
+/**
  * High level map factory interface.
  *
  * <p>MapEngine provides a high-level interface to XML-DBMS map factories.

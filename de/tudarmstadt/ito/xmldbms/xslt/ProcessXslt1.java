@@ -9,7 +9,12 @@ import org.apache.xalan.xslt.*;
 import de.tudarmstadt.ito.xmldbms.objectcache.ObjectCache;
 
 
-import java.util.HashMap;import java.io.*;import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;import org.xml.sax.InputSource;public class ProcessXslt1 implements ProcessXslt {
+import java.util.HashMap;
+import java.io.*;
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+import org.xml.sax.InputSource;
+
+public class ProcessXslt1 implements ProcessXslt {
 
 private static ObjectCache oc = new ObjectCache();
 
@@ -131,4 +136,5 @@ public ProcessXslt1() {
 		XSLTResultTarget t = new XSLTResultTarget(sw);
 		s.process(i, t);
 		return sw.toString();
-	}}
+	}
+}

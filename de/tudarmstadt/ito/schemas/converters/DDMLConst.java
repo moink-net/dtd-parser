@@ -325,5 +325,4 @@ public class DDMLConst
 											ENUM_TOKEN_NMTOKENS,
 											ENUM_TOKEN_NOTATION
 										   };
-
 }

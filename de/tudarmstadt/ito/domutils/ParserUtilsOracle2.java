@@ -18,7 +18,9 @@ import oracle.xml.parser.v2.DOMParser;
 import oracle.xml.parser.v2.SAXParser;
 import oracle.xml.parser.v2.XMLDocument;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;/**
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+
+/**
  * Implements ParserUtils for the Oracle parser, version 2.
  *
  * @author Adam Flinton
@@ -101,6 +103,7 @@ public class ParserUtilsOracle2 implements ParserUtils
    }                     
 
    
+
    // ********************************************************************
    // Public methods
    // ********************************************************************
@@ -115,7 +118,9 @@ public class ParserUtilsOracle2 implements ParserUtils
 	  {
 		 throw new DocumentFactoryException(e.getMessage());
 	  }
-   }      /**
+   }      
+
+/**
  * Insert the method's description here.
  * Creation date: (10/04/01 12:30:01)
  * @return org.w3c.dom.Document
@@ -135,4 +140,5 @@ public Document openDocument(java.io.InputStream InputStream) {
 
 	 // Return the DOM tree
 	 return parser.getDocument();
-}}
+}
+}

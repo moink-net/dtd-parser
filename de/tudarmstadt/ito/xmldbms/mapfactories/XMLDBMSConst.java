@@ -253,5 +253,4 @@ public class XMLDBMSConst
 											ENUM_TOKEN_CANDIDATE,
 											ENUM_TOKEN_FOREIGN
 										   };
-
 }

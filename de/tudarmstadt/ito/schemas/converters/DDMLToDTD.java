@@ -909,16 +909,4 @@ public class DDMLToDTD extends HandlerBase
 //         System.out.print(SPACE);
 //      }
 //   }
-// Debugging tools
-//   private boolean       debug = false;
-//   private int           indent;
-//   private static String SPACE = " ";
-//   
-//   private void indent()
-//   {
-//      for (int i = 0; i < indent; i++)
-//      {
-//         System.out.print(SPACE);
-//      }
-//   }
 }

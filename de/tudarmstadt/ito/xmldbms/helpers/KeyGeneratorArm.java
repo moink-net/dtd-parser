@@ -23,7 +23,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import de.tudarmstadt.ito.xmldbms.db.*;/**
+import de.tudarmstadt.ito.xmldbms.db.*;
+
+/**
  * Implementation of KeyGenerator using a high-low scheme.
  *
  * <P>This key generator assumes that there is a table named XMLDBMSKey
@@ -304,12 +306,17 @@ public class KeyGeneratorArm implements KeyGenerator
 	dbConn.setDB(props);
 	
    }                                                      
-   private DbConn			dbConn;   private Object instantiateClass(String className)
+
+   private DbConn			dbConn;
+
+   private Object instantiateClass(String className)
 	  throws ClassNotFoundException, IllegalAccessException, InstantiationException
    {
 	 if (className == null) return null;
 	 return Class.forName(className).newInstance();
-   }            /**
+   }            
+
+/**
  * Insert the method's description here.
  * Creation date: (19/04/01 13:56:08)
  */
@@ -346,4 +353,5 @@ public void setName(Properties props) {
 
 	//System.out.println("Table2 = " +fulltable);
 	
-	}}
+	}
+}

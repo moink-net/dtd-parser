@@ -116,12 +116,4 @@ public class ColumnMap
 //   1) Should this be an array?
 //   2) Is the above really correct? If the column has no value, should we
 //      reconstruct the chain?
-//   String  passThroughType;
-//   This tells us which pass-through type to use. Note that this is different
-//   from the pass-through type in TableMap. The pass-through type in TableMap
-//   reconstructs the chains of pass-through elements. This pass-through type
-//   allows us to choose from those chains. Questions:
-//   1) Should this be an array?
-//   2) Is the above really correct? If the column has no value, should we
-//      reconstruct the chain?
 }

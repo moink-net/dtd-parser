@@ -14,7 +14,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import java.sql.DriverManager;import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;/**
+import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
+import java.sql.DriverManager;
+
+/**
  * Default KeyGenerator implementation.
  *
  * <P>This key generator assumes that there is a table named XMLDBMSKey
@@ -124,7 +127,12 @@ public class KeyGeneratorImpl implements KeyGenerator
 	  select.close();
 	  conn.commit();
    }   
-   private String          url, user, password;   private String          url, user, password;   private String          url, user, password;   //**************************************************************************
+
+   private String          url, user, password;
+   private String          url, user, password;
+   private String          url, user, password;
+
+   //**************************************************************************
    // Constructors
    //**************************************************************************
 
@@ -140,13 +148,17 @@ public class KeyGeneratorImpl implements KeyGenerator
    public KeyGeneratorImpl()
    {
 
-   }      /**
+   }      
+
+/**
  * Insert the method's description here.
  * Creation date: (01/04/01 16:18:05)
  */
 public void close() throws java.lang.Exception {
 	
-	conn.close();}   //**************************************************************************
+	conn.close();}
+
+   //**************************************************************************
    // Public methods
    //**************************************************************************
 
@@ -203,7 +215,9 @@ public void close() throws java.lang.Exception {
 	  {
 		 throw new KeyException(e.getMessage());
 	  }
-   }                           //**************************************************************************
+   }                        
+
+   //**************************************************************************
    // Public methods
    //**************************************************************************
 
@@ -217,7 +231,9 @@ public void close() throws java.lang.Exception {
    public void initialize(java.util.Properties props) throws java.lang.Exception,KeyException
    {	   
 	  init(props);
-   }                                 // ************************************************************************
+   }                              
+
+   // ************************************************************************
    // Public methods
    // ************************************************************************
 
@@ -237,4 +253,5 @@ public void close() throws java.lang.Exception {
 
 	  // Load the driver.
 	  Class.forName(driver);
-   }               }
+   }               
+}

@@ -14,7 +14,11 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Vector;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;import de.tudarmstadt.ito.xmldbms.objectcache.ObjectCache;import java.util.HashMap;/**
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+import java.util.HashMap;
+import de.tudarmstadt.ito.xmldbms.objectcache.ObjectCache;
+
+/**
  * Base class for Transfer, GenerateMap, etc.
  *
  * <p>ProcessProperties provides various methods for handling
@@ -360,7 +364,10 @@ public class ProcessProperties
 		 throw new IllegalArgumentException("You must specify a value for the OutputFile property.");
 	  }
    }   
-   private static ObjectCache oc = new ObjectCache();/**
+
+   private static ObjectCache oc = new ObjectCache();
+
+/**
  * Insert the method's description here.
  * Creation date: (18/06/01 15:54:16)
  * @return java.util.Properties
@@ -386,4 +393,5 @@ public void addDocRoot(Properties props) {
 	}
 	
 //	return props;
-}}
+}
+}

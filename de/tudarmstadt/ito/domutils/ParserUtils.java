@@ -50,22 +50,28 @@ public interface ParserUtils
 	*            the possible errors are different for each implementation.
 	*/
    public void writeDocument(Document doc, String xmlFilename) throws Exception;            
+
 /**
  * Insert the method's description here.
  * Creation date: (29/06/01 15:45:11)
  * @return org.w3c.dom.Document
  */
-public Document createDocument() throws DocumentFactoryException;   /**
+public Document createDocument() throws DocumentFactoryException;   
+
+/**
  * Insert the method's description here.
  * Creation date: (10/04/01 12:28:22)
  * @return org.w3c.dom.Document
  * @param InputStream java.io.InputStream
  */
-public Document openDocument(java.io.InputStream InputStream) throws Exception;/**
+public Document openDocument(java.io.InputStream InputStream) throws Exception;
+
+/**
  * Insert the method's description here.
  * Creation date: (19/04/01 14:24:36)
  * @return java.lang.String
  * @param Doc org.w3c.dom.Document
  * @param xmlfile java.lang.String
  */
-String returnString(Document toConvert) throws Exception;}
+String returnString(Document toConvert) throws Exception;
+}

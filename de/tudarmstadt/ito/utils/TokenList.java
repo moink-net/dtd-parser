@@ -111,16 +111,4 @@ public class TokenList
    }
 */
    
-/*
-   private void initTokens(String uri, String[] names, int[] tokens)
-   {
-	  Hashtable hash = new Hashtable(names.length);
-	  
-	  for (int i = 0; i < names.length; i++)
-	  {
-		 hash.put(uri + NameQualifier.SEPARATOR + names[i], new Integer(tokens[i]));
-	  }
-   }
-*/
-   
 }

@@ -16,7 +16,9 @@ import javax.swing.filechooser.*;
 import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
  
  
-import java.util.StringTokenizer;public class ActionPanel extends JPanel {
+import java.util.StringTokenizer;
+
+public class ActionPanel extends JPanel {
 	private JLabel ivjJLabel1 = null;
 	private JLabel ivjJLabel11 = null;
 	private JLabel ivjJLabel12 = null;
