@@ -32,20 +32,23 @@ public class MySQLHandler
 {
     /** 
      * Creates a MySQLHandler
-     *
-     * @param dataSource The Datasource to retrive connections from.
-     * @param user Login name for dataSource.
-     * @param password Password for dataSource.
      */
-    public MySQLHandler(DataSource dataSource, String user, String password)
+    public MySQLHandler()
+    {
+        super();
+    }
+
+    /**
+     * Overrides DataHandlerBase.initialize().
+     */
+    public void initialize(DataSource dataSource, String user, String password)
         throws SQLException
     {
-        super(dataSource, user, password);
+       super.initialize(dataSource, user, password);
 
         // Hashtable of keys used
         m_usedKeys = new Hashtable();
     }
-
   
     /**
      * Inserts a row into the table. Refreshes any key columns needed. Does this
@@ -57,6 +60,8 @@ public class MySQLHandler
 	public void insert(Table table, Row row)
         throws SQLException
     {   
+        checkState();
+
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();
 
@@ -168,5 +173,5 @@ public class MySQLHandler
 
 
     // Cache of AUTO_INCREMENT columns found in different tables
-    private Hashtable m_usedKeys;
+    private Hashtable m_usedKeys = null;
 }

@@ -864,6 +864,18 @@ public class Map extends MapBase
    }
 
    /**
+    * Gets a ClassTableMap for a table.
+    *
+    * @param table The Table
+    *
+    * @return The ClassTableMap. Null if the table is not mapped as a class table.
+    */
+   public final ClassTableMap getClassTableMap(Table table)
+   {
+      return (ClassTableMap)classTableMaps.get(table.getHashName());
+   }
+
+   /**
     * Gets an Enumeration of all class table maps.
     *
     * @return The Enumeration. May be empty.
@@ -937,6 +949,23 @@ public class Map extends MapBase
       o = classTableMaps.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
       if (o == null)
          throw new MapException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+   }
+
+   /**
+    * Remove the ClassTableMap for a table.
+    *
+    * @param table The Table
+    *
+    * @exception MapException Thrown if the table has not been mapped as a class table.
+    */
+   public void removeClassTableMap(Table table)
+      throws MapException
+   {
+      Object o;
+
+      o = classTableMaps.remove(table.getHashName());
+      if (o == null)
+         throw new MapException("Table not mapped as a class table: " + table.getUniversalName());
    }
 
    /**
@@ -1045,6 +1074,26 @@ public class Map extends MapBase
       o = tables.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
       if (o == null)
          throw new MapException("Table does not exist: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+   }
+
+   /**
+    * Remove a Table.
+    *
+    * <p>This method should be used carefully, as numerous other map objects
+    * point to Tables. Those objects should be deleted before this method is called.</p>
+    *
+    * @param table The Table
+    *
+    * @exception MapException Thrown if the table does not exist.
+    */
+   public void removeTable(Table table)
+      throws MapException
+   {
+      Object o;
+
+      o = tables.remove(table.getHashName());
+      if (o == null)
+         throw new MapException("Table does not exist: " + table.getUniversalName());
    }
 
    /**

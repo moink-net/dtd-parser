@@ -27,12 +27,13 @@ abstract class DataHandlerBase
     // ************************************************************************
 
     // The connection used 
-    protected Connection m_connection;
+    protected Connection m_connection = null;
 
     // Used to generate SQL statements
-    protected DMLGenerator m_dml;
+    protected DMLGenerator m_dml = null;
+
     // TODO: Is SQLStrings really necessary?
-    protected SQLStrings m_strings;
+    protected SQLStrings m_strings = null;
 
 
 
@@ -42,13 +43,13 @@ abstract class DataHandlerBase
     // ************************************************************************
 
     // Does the connection need a commit?
-    private boolean m_dirtyConnection;
+    private boolean m_dirtyConnection = false;
 
     // The current Commit mode
-    private int m_commitMode;
+    private int m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
 
     // Cache of refreshCols by table
-    private Hashtable m_refreshCols;
+    private Hashtable m_refreshCols = null;
 
 
     // ************************************************************************
@@ -57,14 +58,29 @@ abstract class DataHandlerBase
 
     /**
      * Creates a DataHandlerBase
+     */
+    protected DataHandlerBase()
+    {
+    }
+
+
+    // ************************************************************************
+    // Public Methods
+    // ************************************************************************
+
+    /**
+     * Initialize a DataHandler object
      *
      * @param dataSource The DataSource to get Connection's from.
      * @param user User to connect to the database as.
      * @param password Password to connect to the database with.
      */
-    protected DataHandlerBase(DataSource dataSource, String user, String password)
+    public void initialize(DataSource dataSource, String user, String password)
         throws SQLException
     {
+        if (m_dirtyConnection)
+           throw new IllegalStateException("Cannot initialize the DataHandler. A connection has uncommitted results.");
+
         // Get the connection
         m_connection = dataSource.getConnection(user, password);
 
@@ -77,11 +93,6 @@ abstract class DataHandlerBase
         m_refreshCols = new Hashtable();
     }
 
-
-    // ************************************************************************
-    // Public Methods
-    // ************************************************************************
-
     /**
      * Is called when a document begins processing using this
      * DataHandler
@@ -91,6 +102,8 @@ abstract class DataHandlerBase
     public void startDocument(int commitMode)
         throws SQLException
     {
+        checkState();
+
         m_commitMode = commitMode;
 
         if(m_commitMode == COMMIT_AFTERSTATEMENT)
@@ -113,6 +126,8 @@ abstract class DataHandlerBase
     public void endDocument()
         throws SQLException
     {
+        checkState();
+
         if(m_dirtyConnection && m_commitMode == COMMIT_AFTERDOCUMENT)
         {
             m_connection.commit();
@@ -143,6 +158,8 @@ abstract class DataHandlerBase
     public void update(Table table, Row row, Column[] cols)
         throws SQLException
     {
+        checkState();
+
         PreparedStatement stmt = makeUpdate(table, row, cols);
         int numRows = stmt.executeUpdate();
 
@@ -168,6 +185,8 @@ abstract class DataHandlerBase
     public void updateOrInsert(Table table, Row row)
         throws SQLException
     {
+        checkState();
+
         PreparedStatement stmt = makeUpdate(table, row, null);  
         int numRows = stmt.executeUpdate();
 
@@ -189,6 +208,8 @@ abstract class DataHandlerBase
     public void delete(Table table, Row row, Key key)
         throws SQLException
     {
+        checkState();
+
         PreparedStatement stmt = makeDelete(table, row, key);
         int numRows = stmt.executeUpdate();
 
@@ -198,6 +219,46 @@ abstract class DataHandlerBase
                 throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
             else if(numRows > 1)
                 throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
+        }
+
+        executedStatement();
+    }
+
+    /**
+     * Delete rows from a given table.
+     *
+     * <p>The DELETE statement has the form:</p>
+     *
+     * <pre>
+     *    SELECT FROM Table WHERE Key = ? AND &lt;where>
+     * </pre>
+     *
+     * @param t The table to select from. Must not be null.
+     * @param key The key to restrict with. May be null.
+     * @param keyValue The value of the key.
+     * @param where An additional where constraint. May be null.
+     * @param paramColumns The columns corresponding to parameters in the where constraint.
+     *    Null if there are no parameters.
+     * @param paramValues The values of parameters in the where constraint. Null if there
+     *    are no parameters.
+     */
+    public void delete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
+        throws SQLException
+    {
+        checkState();
+
+        PreparedStatement stmt = makeDelete(table, key, keyValue, where, paramColumns, paramValues);
+        int numRows = stmt.executeUpdate();
+
+        if (key != null)
+        {
+           if(key.getType() == Key.PRIMARY_KEY)
+           {
+               if(numRows == 0)
+                   throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
+               else if(numRows > 1)
+                   throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
+           }
         }
 
         executedStatement();
@@ -224,6 +285,8 @@ abstract class DataHandlerBase
     public ResultSet select(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
        throws SQLException
     {
+        checkState();
+
         PreparedStatement stmt = makeSelect(table, key, keyValue, where, paramColumns, paramValues, orderInfo);
         return stmt.executeQuery();
     }
@@ -232,6 +295,11 @@ abstract class DataHandlerBase
     // Helper methods. Also used by base classes
     // ************************************************************************
 
+    protected void checkState()
+    {
+        if (m_connection == null)
+            throw new IllegalStateException("Invalid state. DataHandler has not been initialized.");
+    }
 
     /** 
      * To be called after a statement that modifies the database
@@ -395,6 +463,33 @@ abstract class DataHandlerBase
         return stmt;
     }
 
+    /**
+     * Makes a DELETE statement
+     */
+    protected PreparedStatement makeDelete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
+        throws SQLException
+    {
+        // These can be cached. Use SQLStrings
+        String sql = m_strings.getDeleteWhere(table, key, where);
+
+        // Make the DELETE statement
+        PreparedStatement stmt = m_connection.prepareStatement(sql);
+
+        // Set the parameters
+        int start = 0;
+        if (key != null)
+        {
+           Column[] keyColumns = key.getColumns();
+           Parameters.setParameters(stmt, 0, keyColumns, keyValue);
+           start = keyColumns.length;
+        }
+        if (paramColumns != null)
+        {
+           Parameters.setParameters(stmt, start, paramColumns, paramValues);
+        }
+
+        return stmt;
+    }
 
     /**
      * Get the columns in a table that need refreshing

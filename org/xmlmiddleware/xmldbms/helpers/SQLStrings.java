@@ -204,6 +204,36 @@ public class SQLStrings
       return (String)m_strings.get(id);
    }
 
+   /**
+    * Returns a "DELETE FROM Table WHERE key = ? AND &lt;where>" SQL string for a 
+    * given table. 
+    * 
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with. May be null.
+    * @param where An additional where clause. May be null.
+    * @return The DELETE string.
+    */
+   public String getDeleteWhere(Table t, Key key, String where)
+      throws SQLException
+   {
+      String id;
+
+      id = "DELETEWHERE_" + t.getUniversalName();
+      if (key != null)
+      {
+         id += key.getName();
+      }
+      if (where != null)
+      {
+         id += ";" + String.valueOf(where.hashCode());
+      }
+
+      if(!m_strings.containsKey(id))
+         m_strings.put(id, m_dml.getDeleteWhere(t, key, where));
+
+      return (String)m_strings.get(id);
+   }
+
    //**************************************************************************
    // Member variables
    //**************************************************************************

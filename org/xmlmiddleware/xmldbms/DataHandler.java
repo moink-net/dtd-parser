@@ -1,12 +1,15 @@
 package org.xmlmiddleware.xmldbms;
 
-import java.lang.*;
-import java.sql.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
+import java.lang.*;
+import java.sql.*;
+import javax.sql.*;
+
 /**
- * Interface for abstracting database access. 
+ * Interface for abstracting database access.
  *
+ * <p>Objects that implement DataHandler should provide a no-argument constructor.</p>
  */
 public interface DataHandler  
 {
@@ -32,7 +35,15 @@ public interface DataHandler
     public static final int COMMIT_NOTRANSACTIONS = 4;
 
 
-
+    /**
+     * Initialize a DataHandler object
+     *
+     * @param dataSource The DataSource to get Connection's from.
+     * @param user User to connect to the database as.
+     * @param password Password to connect to the database with.
+     */
+    public void initialize(DataSource dataSource, String user, String password)
+        throws SQLException;
 
     public void startDocument(int commitMode)
         throws SQLException;
@@ -50,6 +61,27 @@ public interface DataHandler
         throws SQLException;
 
     public void delete(Table table, Row row, Key key)
+        throws SQLException;
+
+    /**
+     * Delete rows from a given table.
+     *
+     * <p>The DELETE statement has the form:</p>
+     *
+     * <pre>
+     *    SELECT FROM Table WHERE Key = ? AND &lt;where>
+     * </pre>
+     *
+     * @param t The table to select from. Must not be null.
+     * @param key The key to restrict with. May be null.
+     * @param keyValue The value of the key.
+     * @param where An additional where constraint. May be null.
+     * @param paramColumns The columns corresponding to parameters in the where constraint.
+     *    Null if there are no parameters.
+     * @param paramValues The values of parameters in the where constraint. Null if there
+     *    are no parameters.
+     */
+    public void delete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
         throws SQLException;
 
     /**

@@ -25,17 +25,10 @@ public class OracleHandler
 
     /** 
      * Creates a OracleHandler. 
-     *
-     * @param dataSource The Datasource to retrive connections from.
-     * @param user Login name for dataSource.
-     * @param password Password for dataSource.
      */
-    public OracleHandler(DataSource dataSource, String user, String password)
-        throws SQLException
+    public OracleHandler()
     {
-        super(dataSource, user, password);
-
-        // IMPL: Other initialization
+        super();
     }
 
 
@@ -48,6 +41,8 @@ public class OracleHandler
 	public void insert(Table table, Row row)
         throws SQLException
     {     
+        checkState();
+
         // Make and execute the statement...
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();

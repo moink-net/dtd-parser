@@ -23,15 +23,19 @@ public class PostgresHandler
 
     /** 
      * Creates a PostgresHandler. 
-     *
-     * @param dataSource The Datasource to retrive connections from.
-     * @param user Login name for dataSource.
-     * @param password Password for dataSource.
      */
-    public PostgresHandler(DataSource dataSource, String user, String password)
+    public PostgresHandler()
+    {
+        super();
+    }
+
+    /**
+     * Overrides DataHandlerBase.initialize().
+     */
+    public void initialize(DataSource dataSource, String user, String password)
         throws SQLException
     {
-        super(dataSource, user, password);
+        super.initialize(dataSource, user, password);
 
         // Create the key
         m_oidKey = createColumnKey(OIDNAME, Types.INTEGER); 
@@ -48,6 +52,8 @@ public class PostgresHandler
 	public void insert(Table table, Row row)
         throws SQLException
     {     
+        checkState();
+
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();
 
@@ -85,5 +91,5 @@ public class PostgresHandler
     }
 
     // The key for the 'oid' column
-    private Key m_oidKey;
+    private Key m_oidKey = null;
 }

@@ -81,6 +81,18 @@ public class FilterBase
    }
 
    /**
+    * Get a table filter.
+    *
+    * @param table The Table
+    *
+    * @return The TableFilter. Null if no filter exists for the table.
+    */
+   public final TableFilter getTableFilter(Table table)
+   {
+      return (TableFilter)tableFilters.get(table.getHashName());
+   }
+
+   /**
     * Gets an Enumeration of all the table filters.
     *
     * @return The Enumeration. May be empty.

@@ -438,10 +438,7 @@ public class MapInverter
       baseTable = classTableMap.getBaseTable();
       if (baseTable != null)
       {
-         baseClassTableMap = map.getClassTableMap(baseTable.getDatabaseName(),
-                                                  baseTable.getCatalogName(),
-                                                  baseTable.getSchemaName(),
-                                                  baseTable.getTableName());
+         baseClassTableMap = map.getClassTableMap(baseTable);
          baseClassMap = map.createClassMap(baseClassTableMap.getElementTypeName());
          newClassMap.setBaseClassMap(baseClassMap);
          newClassMap.setBaseLinkInfo(classTableMap.getBaseLinkInfo());

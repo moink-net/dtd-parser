@@ -53,7 +53,7 @@ public interface KeyGenerator
 	* @exception KeyException An error occured while initializing the key.
 	*/
 
-   public void initialize(Properties props) throws java.lang.Exception, KeyException;      
+   public void initialize(Properties props) throws KeyException;      
 
    /**
 	* Generates a key.
@@ -78,5 +78,5 @@ public interface KeyGenerator
 	* @exception KeyException An error occured while closing the key.
 	*/
 
-   public void close() throws java.lang.Exception, KeyException;      
+   public void close() throws KeyException;      
 }

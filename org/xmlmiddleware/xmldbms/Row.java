@@ -2,7 +2,9 @@
 package org.xmlmiddleware.xmldbms;
 
 import java.lang.*;
+import java.sql.*;
 import java.util.*;
+
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.conversions.*;
 
@@ -17,6 +19,11 @@ public class Row
     // ********************************************************************
     private Hashtable m_columnValues;
 
+    // ********************************************************************
+    // Constants
+    // ********************************************************************
+
+    private static final String EMPTYSTRING = "";
 
     // ********************************************************************
     // Constructors
@@ -105,6 +112,43 @@ public class Row
 	    // Typically, this is used to set a multi-column key value.
         for(int i = 0; i < columns.length; i++)
 		    setColumnValue(columns[i], values[i]);
+    }   
+
+    /**
+	 * Set column values from a result set
+	 *
+	 * @param rs The result set.
+	 * @param table The Table object describing the rows in the result set
+	 */
+    public void setColumnValues(ResultSet rs, Table table, boolean emptyStringIsNull)
+        throws SQLException
+    {
+      Column[] rsColumns;
+      Object   o;
+
+      // Loop through the columns in the result set and set the corresponding
+      // values in the Row. We use Table.getResultSetColumns() since this:
+      // (a) Retrieves only the necessary columns (the result set might have more), and
+      // (b) Retrieves the columns in ascending order, which is needed for interoperability.
+
+      rsColumns = table.getResultSetColumns();
+      for (int i = 0; i < rsColumns.length; i++)
+      {
+         // Get the next column value.
+
+         o = rs.getObject(rsColumns[i].getResultSetIndex());
+
+         // If the column value is NULL, set it to an EMPTYSTRING or null.
+
+         if (rs.wasNull())
+         {
+            o = (emptyStringIsNull) ? EMPTYSTRING : null;
+         }
+
+         // Set the column value.
+
+         setColumnValue(rsColumns[i], o);
+      }
     }   
 
 

@@ -46,26 +46,7 @@ public class JDBC1DataSource
     * Create a new JDBC1DataSource.
     */
    public JDBC1DataSource(String driver, String url)
-      throws SQLException
    {
-      init(driver, url);
-   }
-
-   /**
-    * Create a new JDBC1DataSource.
-    */
-   public JDBC1DataSource(Properties props)
-      throws SQLException
-   {   
-      String driver = props.getProperty(DBProps.DRIVER);
-      String url = props.getProperty(DBProps.URL);
-
-      if(driver == null)
-         throw new SQLException("JDBC1DataSource: Driver property not set");
-        
-      if(url == null)
-         throw new SQLException("JDBC1DataSource: URL property not set");
-
       init(driver, url);
    }
 
@@ -74,15 +55,19 @@ public class JDBC1DataSource
    //**************************************************************************
 
    private void init(String driver, String url)
-      throws SQLException
    {
+      if (driver == null)
+         throw new IllegalArgumentException("Driver class must not be null.");
+      if (url == null)
+         throw new IllegalArgumentException("URL must not be null.");
+
       try
       {
          Class.forName(driver);
       }
       catch(ClassNotFoundException e)
       {
-         throw new SQLException("xmldbms: Couldn't load JDBC driver: " + driver);
+         throw new IllegalArgumentException("ClassNotFoundException: " + e.getMessage());
       }
 
       m_url = url;

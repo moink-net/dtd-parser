@@ -21,11 +21,8 @@
 
 package org.xmlmiddleware.domutils;
 
-import org.xml.sax.XMLReader;
-import org.w3c.dom.Document;
-import org.w3c.dom.DOMImplementation;
-
-import java.io.InputStream;
+import org.xml.sax.*;
+import org.w3c.dom.*;
 
 /**
  * Interface for a class that generates implements parser-specific methods.
@@ -60,23 +57,13 @@ public interface ParserUtils
       throws ParserUtilsException;
 
    /**
-    * Open an XML file and create a DOM Document.
+    * Open an InputSource and create a DOM Document.
     *
-    * @param xmlFilename The name of the XML file.
-    *
-    * @return An object that implements Document.
-    */
-   public Document openDocument(String xmlFilename)
-      throws ParserUtilsException;
-
-   /**
-    * Open an InputStream and create a DOM Document.
-    *
-    * @param inputStream The InputStream.
+    * @param src A SAX InputSource
     *
     * @return An object that implements Document.
     */
-   public Document openDocument(InputStream inputStream)
+   public Document openDocument(InputSource src)
       throws ParserUtilsException;
 
    /**

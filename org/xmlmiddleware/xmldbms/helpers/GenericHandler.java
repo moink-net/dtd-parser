@@ -29,15 +29,10 @@ public class GenericHandler
 
     /** 
      * Creates a GenericHandler.
-     *
-     * @param dataSource The Datasource to retrive connections from.
-     * @param user Login name for dataSource.
-     * @param password Password for dataSource.
      */
-    public GenericHandler(DataSource dataSource, String user, String password)
-        throws SQLException
+    public GenericHandler()
     {
-        super(dataSource, user, password);
+        super();
     }
 
     /**
@@ -50,6 +45,8 @@ public class GenericHandler
 	public void insert(Table table, Row row)
         throws SQLException
     {     
+        checkState();
+
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();
 

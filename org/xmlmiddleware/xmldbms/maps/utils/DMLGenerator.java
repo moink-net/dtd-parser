@@ -283,7 +283,6 @@ public class DMLGenerator
    public String getDelete(Table t, Key key)
    {
       StringBuffer delete = new StringBuffer(1000);
-      boolean         first = true;
 
       delete.append(DELETE);
       delete.append(FROM);
@@ -292,6 +291,40 @@ public class DMLGenerator
       delete.append(getTableName(t));
 
       delete.append(makeWhereLink(key.getColumns()));
+      
+      return delete.toString();
+   }
+
+   /** 
+    * Returns a "DELETE FROM Table WHERE Key = ? AND &lt;where>"
+    * SQL string for a given table
+    * 
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with. May be null.
+    * @param where An additional where constraint. May be null.
+    * @return The DELETE string.
+    */
+   public String getDeleteWhere(Table t, Key key, String where)
+   {
+      StringBuffer delete = new StringBuffer(1000);
+      String       whereClause = null;
+
+      delete.append(DELETE);
+      delete.append(FROM);
+
+      // Add table name.
+      delete.append(getTableName(t));
+
+      if (key != null)
+      {
+         whereClause = makeWhereLink(key.getColumns());
+      }
+      if (where != null)
+      {
+         whereClause = (whereClause == null) ? WHERE + where : whereClause + AND + where;
+      }
+
+      delete.append(whereClause);
       
       return delete.toString();
    }

@@ -20,8 +20,8 @@
 
 package org.xmlmiddleware.xmldbms;
 
-import org.xmlmiddleware.xmldbms.maps.Map;
-import java.util.Hashtable;
+import org.xmlmiddleware.xmldbms.maps.*;
+import java.util.*;
 
 /**
  * Contains information needed to transfer data between an XML document and
@@ -60,8 +60,8 @@ public class TransferInfo
    // Class variables
    //**************************************************************************
 
-   Map       map;
-   Hashtable dataHandlers = new Hashtable();
+   private Map       map;
+   private Hashtable dataHandlers = new Hashtable();
 
    //**************************************************************************
    // Public methods
@@ -148,4 +148,15 @@ public class TransferInfo
    {
       return (DataHandler)dataHandlers.get(dbName);
    }
+
+   /**
+    * Get all DataHandlers.
+    *
+    * @return An Enumeration containing DataHandler implementations. May be empty.
+    */
+   public final Enumeration getDataHandlers()
+   {
+      return dataHandlers.elements();
+   }
+
 }

@@ -20,18 +20,12 @@
 
 package org.xmlmiddleware.domutils.helpers;
 
-import org.xmlmiddleware.domutils.ParserUtils;
-import org.xmlmiddleware.domutils.ParserUtilsException;
+import org.xmlmiddleware.domutils.*;
 
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-import org.w3c.dom.Document;
-import org.w3c.dom.DOMImplementation;
+import org.xml.sax.*;
+import org.w3c.dom.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 
 // Imports for the Xerces parser
 
@@ -95,33 +89,13 @@ public class ParserUtilsXerces implements ParserUtils
    }
 
    /**
-    * Open an XML file and create a DOM Document.
+    * Open an InputSource and create a DOM Document.
     *
-    * @param xmlFilename The name of the XML file.
-    *
-    * @return An object that implements Document.
-    */
-   public Document openDocument(String xmlFilename)
-      throws ParserUtilsException
-   {
-      try
-      {
-         return openDocument(new FileInputStream(xmlFilename));
-      }
-      catch (Exception e)
-      {
-         throw new ParserUtilsException(e);
-      }
-   }
-
-   /**
-    * Open an InputStream and create a DOM Document.
-    *
-    * @param inputStream The InputStream.
+    * @param src A SAX InputSource
     *
     * @return An object that implements Document.
     */
-   public Document openDocument(InputStream stream)
+   public Document openDocument(InputSource src)
       throws ParserUtilsException
    {
       DOMParser parser;
@@ -133,7 +107,7 @@ public class ParserUtilsXerces implements ParserUtils
          parser.setFeature("http://xml.org/sax/features/namespaces", true);
 
          // Parse the input file
-         parser.parse(new InputSource(stream));
+         parser.parse(src);
       }
       catch (Exception e)
       {

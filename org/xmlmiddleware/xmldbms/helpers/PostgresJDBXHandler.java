@@ -26,18 +26,22 @@ public class PostgresJDBXHandler
 
     /** 
      * Creates a PostgresJDBXHandler
-     *
-     * @param dataSource The Datasource to retrive connections from.
-     * @param user Login name for dataSource.
-     * @param password Password for dataSource.
      */
-    public PostgresJDBXHandler(DataSource dataSource, String user, String password)
+    public PostgresJDBXHandler()
+    {
+        super();
+    }
+
+    /**
+     * Overrides DataHandlerBase.initialize().
+     */
+    public void initialize(DataSource dataSource, String user, String password)
         throws SQLException
     {
-        super(dataSource, user, password);
+        super.initialize(dataSource, user, password);
 
-        // Create the oid column
-        m_oidKey = createColumnKey(OIDNAME, Types.INTEGER);
+        // Create the key
+        m_oidKey = createColumnKey(OIDNAME, Types.INTEGER); 
     }
 
     /**
@@ -50,6 +54,8 @@ public class PostgresJDBXHandler
 	public void insert(Table table, Row row)
         throws SQLException
     {     
+        checkState();
+
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();
 
@@ -86,5 +92,5 @@ public class PostgresJDBXHandler
     }
 
     // The key for the 'oid' column
-    private Key m_oidKey;
+    private Key m_oidKey = null;
 }

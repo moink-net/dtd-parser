@@ -22,15 +22,10 @@ public class JDBC3Handler
 {
     /** 
      * Creates a JDBC3Handler.
-     *
-     * @param dataSource The Datasource to retrive connections from.
-     * @param user Login name for dataSource.
-     * @param password Password for dataSource.
      */
-    JDBC3Handler(DataSource dataSource, String user, String password)
-        throws SQLException
+    JDBC3Handler()
     {
-        super(dataSource, user, password);    
+        super();    
     }
 
 
@@ -44,6 +39,8 @@ public class JDBC3Handler
 	public void insert(Table table, Row row)
         throws SQLException
     {   
+        checkState();
+
         PreparedStatement stmt = makeInsert(table, row);
 
         // IMPL: Statement.executeUpdate has an argument which tells it

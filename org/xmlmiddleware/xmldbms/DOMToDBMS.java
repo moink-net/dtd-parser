@@ -62,7 +62,7 @@ public class DOMToDBMS
     // Private variables
     // ************************************************************************
 
-    // The transfer info used for a session of processDocument
+    // The transfer info used for a session of storeDocument
     private TransferInfo m_transInfo;
 
     // The commit mode (see processRoot)
@@ -135,9 +135,9 @@ public class DOMToDBMS
 
 
     /** 
-     * Sets whether processDocument returns a FilterSet or a null.
+     * Sets whether storeDocument returns a FilterSet or a null.
      *
-     * <p>processDocument can return a FilterSet describing the document it
+     * <p>storeDocument can return a FilterSet describing the document it
      * processes. This can be used at a later point in time to retrieve the
      * document. Whether such a FilterSet is useful depends on the application.
      * As a general rule, it is not useful for data-centric applications, for
@@ -145,11 +145,11 @@ public class DOMToDBMS
      * It is useful for document-centric applications, for which documents do
      * have a persistent identity.</p>
      *
-     * <p>By default, processDocument returns a null. This saves some processing
+     * <p>By default, storeDocument returns a null. This saves some processing
      * time, although the amount saved is likely to be noticeable only for very
      * large documents.</p>
      *
-     * @param value Whether processDocument returns a FilterSet
+     * @param value Whether storeDocument returns a FilterSet
      */
     public void setFilterSetReturned(boolean value)
     {
@@ -157,11 +157,11 @@ public class DOMToDBMS
     }
 
     /** 
-     * Whether processDocument returns a FilterSet or a null.
+     * Whether storeDocument returns a FilterSet or a null.
      *
      * <p>For more information, see setFilterSetReturned.</p>
      *
-     * @return Whether processDocument returns a FilterSet
+     * @return Whether storeDocument returns a FilterSet
      */
     public boolean isFilterSetReturned()
     {
@@ -239,14 +239,14 @@ public class DOMToDBMS
      * in the map.
      *
      * @param transInfo TransferInfo object containing map and DataHandler's.
-     * @param doc The DOM document to process.
+     * @param doc The DOM document to store.
      * @param action Action to take on the document.
      * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
-    public FilterSet processDocument(TransferInfo transInfo, Document doc, int action)
+    public FilterSet storeDocument(TransferInfo transInfo, Document doc, int action)
         throws SQLException, MapException, KeyException, ConversionException
     {
-        return processDocument(transInfo, doc.getDocumentElement(), action);
+        return storeDocument(transInfo, doc.getDocumentElement(), action);
     }
 
     /**
@@ -254,14 +254,14 @@ public class DOMToDBMS
      * in the map.
      *
      * @param transInfo TransferInfo object containing map and DataHandler's.
-     * @param doc The DOM document to process.
+     * @param doc The DOM document to store.
      * @param action Actions to take on various elements of the document.
      * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
-    public FilterSet processDocument(TransferInfo transInfo, Document doc, Actions actions)
+    public FilterSet storeDocument(TransferInfo transInfo, Document doc, Actions actions)
         throws SQLException, MapException, KeyException, ConversionException
     {
-        return processDocument(transInfo, doc.getDocumentElement(), actions);
+        return storeDocument(transInfo, doc.getDocumentElement(), actions);
     }
 
     /**
@@ -269,20 +269,20 @@ public class DOMToDBMS
      * in the map.
      *
      * @param transInfo TransferInfo object containing map and DataHandler's.
-     * @param el Root of DOM tree to process.
+     * @param el Root of DOM tree to store.
      * @param action Action to take on the tree.
      * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
-    public FilterSet processDocument(TransferInfo transInfo, Element el, int action)
+    public FilterSet storeDocument(TransferInfo transInfo, Element el, int action)
         throws SQLException, MapException, KeyException, ConversionException
     {
         Action act = new Action();
         act.setAction(action);
 
-        Actions actions = new Actions(transInfo.map);
+        Actions actions = new Actions(transInfo.getMap());
         actions.setDefaultAction(act); 
 
-        return processDocument(transInfo, el, actions);
+        return storeDocument(transInfo, el, actions);
     }
 
     /**
@@ -290,11 +290,11 @@ public class DOMToDBMS
      * in the map.
      *
      * @param transInfo TransferInfo object containing map and DataHandler's.
-     * @param el Root of DOM tree to process.
+     * @param el Root of DOM tree to store.
      * @param action Actions to take on various elements of the tree.
      * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
      */
-    public FilterSet processDocument(TransferInfo transInfo, Element el, Actions actions)
+    public FilterSet storeDocument(TransferInfo transInfo, Element el, Actions actions)
         throws SQLException, MapException, KeyException, ConversionException
     {
         FilterSet filterSet = (m_returnFilterSet) ? new FilterSet(transInfo.getMap()) : null;
@@ -308,7 +308,7 @@ public class DOMToDBMS
 
 
         // Call startDocument here
-        Enumeration e = transInfo.dataHandlers.elements(); 
+        Enumeration e = transInfo.getDataHandlers(); 
         while(e.hasMoreElements())
             ((DataHandler)e.nextElement()).startDocument(m_commitMode);
 
@@ -317,7 +317,7 @@ public class DOMToDBMS
 
 
         // Call endDocument here
-        e = transInfo.dataHandlers.elements(); 
+        e = transInfo.getDataHandlers(); 
         while(e.hasMoreElements())
             ((DataHandler)e.nextElement()).endDocument();
    
@@ -346,7 +346,7 @@ public class DOMToDBMS
         throws SQLException, MapException, KeyException, ConversionException
     {
         // Check if the node is mapped
-        ClassMap classMap = m_transInfo.map.getClassMap(el.getNamespaceURI(), el.getLocalName());
+        ClassMap classMap = m_transInfo.getMap().getClassMap(el.getNamespaceURI(), el.getLocalName());
 
         if(classMap != null)
         {
@@ -409,7 +409,6 @@ public class DOMToDBMS
     {
         // NOTE: This method is called from processRoot (relMap and parentRow 
         // will be null in this case) and processRow
-
 
         // Get the action for the node
         Action action = getActionFor(classNode);
@@ -615,7 +614,7 @@ public class DOMToDBMS
                 Table table = propMap.getTable();
                 if(table != null)
                 {
-                    // NOTE: We assume here than the parent key in the link is unique. 
+                    // NOTE: We assume here that the parent key in the link is unique. 
                     // This should be correct.
 
                     LinkInfo li = propMap.getLinkInfo();
@@ -656,7 +655,7 @@ public class DOMToDBMS
     /** 
      * Process children of a class.
      */
-    private void processChildren(Row parentRow, ClassMap parentMap, Node parentNode, 
+    private void processChildren(Row parentRow, ClassMapBase parentMap, Node parentNode, 
                                  Stack fkChildren, Action action, Vector useProps)
         throws KeyException, SQLException, MapException, ConversionException
     {
@@ -719,7 +718,7 @@ public class DOMToDBMS
     /** 
      * This is the other half of processChildren. Called for every node that was mapped.
      */
-    private void processChild(Row parentRow, ClassMap parentMap, Object childMap, Node childNode,
+    private void processChild(Row parentRow, ClassMapBase parentMap, Object childMap, Node childNode,
                               long childOrder, Stack fkChildren, Action action, Vector useProps)
         throws KeyException, SQLException, MapException, ConversionException
     {
@@ -738,7 +737,7 @@ public class DOMToDBMS
             // For inline just recursively call this function with a 
             // new parentNode, so as to process the grand-children just 
             // like children
-            processChildren(parentRow, parentMap, childNode, fkChildren, action, useProps);
+            processChildren(parentRow, (InlineClassMap)childMap, childNode, fkChildren, action, useProps);
         }
         else if(childMap instanceof PropertyMap)
         {
@@ -1026,7 +1025,7 @@ public class DOMToDBMS
 	    // the property value and, if it is 0, set the value to null, which
 	    // is later interpreted as NULL.
 
-	    if(m_transInfo.map.emptyStringIsNull() && s.length() == 0)
+	    if(m_transInfo.getMap().emptyStringIsNull() && s.length() == 0)
 			s = null;
         
         return s;

@@ -59,28 +59,24 @@ public class JDBC2DataSource
       m_dataSource = ds;
    }
    
-   public JDBC2DataSource(Properties props)
-      throws SQLException
+   public JDBC2DataSource(String jndiContext, String dataSource)
    {
-      String initContext = props.getProperty(DBProps.DBINITIALCONTEXT);
-      String dataSource = props.getProperty(DBProps.DATASOURCE);
-
-      if(initContext == null)
-         throw new SQLException("JDBC2DataSource: DBInitialContext property not set");
+      if(jndiContext == null)
+         throw new IllegalArgumentException("JDBC2DataSource: JNDIContext must not be null.");
         
       if(dataSource == null)
-         throw new SQLException("JDBC2DataSource: DataSource property not set");
+         throw new IllegalArgumentException("JDBC2DataSource: DataSource must not be null.");
 
       try
       {
          Hashtable env = new Hashtable();
-         env.put(Context.INITIAL_CONTEXT_FACTORY, initContext.trim());
+         env.put(Context.INITIAL_CONTEXT_FACTORY, jndiContext);
          Context ctx = new InitialContext(env);
          m_dataSource = (DataSource)ctx.lookup(dataSource);
       }
       catch(NamingException e)
       {
-         throw new SQLException(e.getMessage());
+         throw new IllegalArgumentException("NamingException: " + e.getMessage());
       }
    }
 

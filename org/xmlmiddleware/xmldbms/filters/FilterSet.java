@@ -19,11 +19,10 @@
 
 package org.xmlmiddleware.xmldbms.filters;
 
-import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.xmldbms.maps.Map;
+import org.xmlmiddleware.utils.*;
+import org.xmlmiddleware.xmldbms.maps.*;
 
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * A set of filters to be applied to the database to retrieve data.
@@ -377,6 +376,52 @@ public class FilterSet
    {
       filters.removeAllElements();
       rsNames.clear();
+   }
+
+   //*********************************************************************
+   // Filter parameters
+   //*********************************************************************
+
+   /**
+    * Set the parameters to use with the filters.
+    *
+    * <p>This method should be called before the filters are used to construct
+    * WHERE clauses, since the filters are optimized for the parameters only
+    * being set once.</p>
+    *
+    * @param params A Hashtable containing the names (keys) and values (elements) of
+    *    any parameters used in the filters. Null if there are no parameters.
+    */
+
+   public void setFilterParameters(Hashtable params)
+   {
+      // Set the filter parameters.
+
+      FilterBase         filter;
+      Enumeration        tableFilters, relatedTableFilters;
+      TableFilter        tableFilter;
+      RelatedTableFilter relatedTableFilter;
+
+      for (int i = 0; i < filters.size(); i++)
+      {
+         filter = (FilterBase)filters.elementAt(i);
+         if (filter instanceof RootFilter)
+         {
+            ((RootFilter)filter).getRootFilterConditions().setParameters(params);
+         }
+
+         tableFilters = filter.getTableFilters();
+         while (tableFilters.hasMoreElements())
+         {
+            tableFilter = (TableFilter)tableFilters.nextElement();
+            relatedTableFilters = tableFilter.getRelatedTableFilters();
+            while (relatedTableFilters.hasMoreElements())
+            {
+               relatedTableFilter = (RelatedTableFilter)relatedTableFilters.nextElement();
+               relatedTableFilter.setParameters(params);
+            }
+         }
+      }
    }
 
    //*********************************************************************

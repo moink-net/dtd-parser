@@ -164,7 +164,7 @@ public class DBMSToDOM
     * @param filterSet The filter set specifying the data to retrieve.
     * @param params A Hashtable containing the names (keys) and values (elements) of
     *    any parameters used in the filters. Null if there are no parameters.
-    * @rootNode The Node to which the retrieved document is to be added. If this is
+    * @param rootNode The Node to which the retrieved document is to be added. If this is
     *    null, retrieveDocument will create a new Document.
     * @return The document. If rootNode is not null, this is the owner Document.
     *    Otherwise, it is a new Document.
@@ -174,7 +174,7 @@ public class DBMSToDOM
    {
       Hashtable resultSets = new Hashtable();
 
-      return retrieveDocument(transferInfo, filterSet, resultSets, params, rootNode);
+      return retrieveDocument(transferInfo, resultSets, filterSet, params, rootNode);
    }
 
    /**
@@ -183,40 +183,41 @@ public class DBMSToDOM
     * <p>The filter set must contain exactly one result set filter.</p>
     *
     * @param transferInfo Map and connection information.
-    * @param filterSet The filter set specifying the data to retrieve.
     * @param rs The result set. The filter for the result set must use the name "Default".
+    * @param filterSet The filter set specifying the data to retrieve.
     * @param params A Hashtable containing the names (keys) and values (elements) of
     *    any parameters used in the filters. Null if there are no parameters.
-    * @rootNode The Node to which the retrieved document is to be added. If this is
+    * @param rootNode The Node to which the retrieved document is to be added. If this is
     *    null, retrieveDocument will create a new Document.
     * @return The document. If rootNode is not null, this is the owner Document.
     *    Otherwise, it is a new Document.
     */
-   public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, ResultSet rs, Hashtable params, Node rootNode)
+   public Document retrieveDocument(TransferInfo transferInfo, ResultSet rs, FilterSet filterSet, Hashtable params, Node rootNode)
       throws ParserUtilsException, SQLException, MapException
    {
       Hashtable resultSets = new Hashtable();
 
       resultSets.put("Default", rs);
-      return retrieveDocument(transferInfo, filterSet, resultSets, params, rootNode);
+      return retrieveDocument(transferInfo, resultSets, filterSet, params, rootNode);
    }
 
    /**
-    * Retrieve a document based on the specified filters.
+    * Retrieve a document based on the specified result sets.
     *
     * <p>The filter set must contain at least one root filter.</p>
     *
     * @param transferInfo Map and connection information.
+    * @param resultSets An hashtable containing result sets keyed by result set name.
+    *    There must be one result set for each result set filter in the filter set.
     * @param filterSet The filter set specifying the data to retrieve.
-    * @param resultSets An array of result sets whose number match those in the filter document.
     * @param params A Hashtable containing the names (keys) and values (elements) of
     *    any parameters used in the filters. Null if there are no parameters.
-    * @rootNode The Node to which the retrieved document is to be added. If this is
+    * @param rootNode The Node to which the retrieved document is to be added. If this is
     *    null, retrieveDocument will create a new Document.
     * @return The document. If rootNode is not null, this is the owner Document.
     *    Otherwise, it is a new Document.
     */
-   public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable resultSets, Hashtable params, Node rootNode)
+   public Document retrieveDocument(TransferInfo transferInfo, Hashtable resultSets, FilterSet filterSet, Hashtable params, Node rootNode)
       throws ParserUtilsException, SQLException, MapException
    {
       OrderedNode     orderedRootNode;
@@ -236,10 +237,9 @@ public class DBMSToDOM
       if (filters.size() < 1)
          throw new IllegalArgumentException("You must specify at least one filter.");
 
-      // Set the filter parameters. We do this here because the filters are optimized
-      // for the parameters only being set once.
+      // Set the filter parameters.
 
-      setFilterParameters(filters, params);
+      filterSet.setFilterParameters(params);
 
       // Get an OrderedNode over the Node to which elements will be added.
 
@@ -306,7 +306,7 @@ public class DBMSToDOM
 
       rootConditions = rootFilter.getRootFilterConditions();
       rootTable = rootConditions.getTable();
-      rootTableMap = map.getClassTableMap(rootTable.getDatabaseName(), rootTable.getCatalogName(), rootTable.getSchemaName(), rootTable.getTableName());
+      rootTableMap = map.getClassTableMap(rootTable);
 
       // Get a DataHandler
 
@@ -364,6 +364,7 @@ public class DBMSToDOM
       // Create a new row.
 
       classRow = new Row();
+      table = classTableMap.getTable();
 
       // Process the result set.
 
@@ -371,8 +372,8 @@ public class DBMSToDOM
       {
          // Cache the row data so we can access it randomly
 
-         table = classTableMap.getTable();
-         populateRow(table, classRow, rs);
+         classRow.clear();
+         classRow.setColumnValues(rs, table, map.emptyStringIsNull());
 
          // Create an element node for the row, get the order information, and
          // insert the node into the parent node. An OrderedNode is returned.
@@ -633,7 +634,8 @@ public class DBMSToDOM
 
       while (rs.next())
       {
-         populateRow(propTableMap.getTable(), row, rs);
+         row.clear();
+         row.setColumnValues(rs, propTableMap.getTable(), map.emptyStringIsNull());
          processColumn(parentNode, row, propTableMap);
       }
    }
@@ -706,7 +708,7 @@ public class DBMSToDOM
             if (filter instanceof RootFilter)
             {
                rootTable = ((RootFilter)filter).getRootFilterConditions().getTable();
-               rootTableMap = map.getClassTableMap(rootTable.getDatabaseName(), rootTable.getCatalogName(), rootTable.getSchemaName(), rootTable.getTableName());
+               rootTableMap = map.getClassTableMap(rootTable);
             }
             else // if (filter instanceof ResultSetFilter)
             {
@@ -818,38 +820,6 @@ public class DBMSToDOM
          prefix = (String)prefixes.nextElement();
          uri = (String)namespaceURIs.get(prefix);
          element.setAttributeNS(XMLNSURI, XMLNS + prefix, uri);
-      }
-   }
-
-   private void setFilterParameters(Vector filters, Hashtable params)
-   {
-      // Set the filter parameters. We do this here because the filters
-      // are optimized for the parameters only being set once.
-
-      FilterBase         filter;
-      Enumeration        tableFilters, relatedTableFilters;
-      TableFilter        tableFilter;
-      RelatedTableFilter relatedTableFilter;
-
-      for (int i = 0; i < filters.size(); i++)
-      {
-         filter = (FilterBase)filters.elementAt(i);
-         if (filter instanceof RootFilter)
-         {
-            ((RootFilter)filter).getRootFilterConditions().setParameters(params);
-         }
-
-         tableFilters = filter.getTableFilters();
-         while (tableFilters.hasMoreElements())
-         {
-            tableFilter = (TableFilter)tableFilters.nextElement();
-            relatedTableFilters = tableFilter.getRelatedTableFilters();
-            while (relatedTableFilters.hasMoreElements())
-            {
-               relatedTableFilter = (RelatedTableFilter)relatedTableFilters.nextElement();
-               relatedTableFilter.setParameters(params);
-            }
-         }
       }
    }
 
@@ -1108,45 +1078,6 @@ public class DBMSToDOM
          // returns integers as BigDecimals.
 
          return ((Number)orderValue).longValue();
-      }
-   }
-
-   private void populateRow(Table table, Row row, ResultSet rs)
-      throws SQLException
-   {
-      Column[] rsColumns;
-      Object   o;
-
-      row.clear();
-
-      rsColumns = table.getResultSetColumns();
-      for (int i = 0; i < rsColumns.length; i++)
-      {
-         // We use Table.getResultSetColumns() since this:
-         // (a) Retrieves only the necessary columns (the result set might have more), and
-         // (b) Retrieves the columns in ascending order, which is needed for interoperability.
-
-         o = rs.getObject(rsColumns[i].getResultSetIndex());
-         row.setColumnValue(rsColumns[i], o);
-
-         if (rs.wasNull())
-         {
-            if (map.emptyStringIsNull())
-            {
-               // If empty strings are to be treated as NULLs, then
-               // return an empty string, not a null.
-
-               row.setColumnValue(rsColumns[i], EMPTYSTRING);
-            }
-            else
-            {
-               // This probably isn't necessary, but the JDBC spec
-               // doesn't state what is returned if the column value was
-               // NULL, even though most drivers probably return null.
-
-               row.setColumnValue(rsColumns[i], null);
-            }
-         }
       }
    }
 
