@@ -21,6 +21,7 @@ package org.xmlmiddleware.xmldbms.filters;
 
 import org.xmlmiddleware.xmldbms.maps.Table;
 
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -37,11 +38,13 @@ public class FilterConditions
    // Class variables
    //*********************************************************************
 
-   private Table   table;
-   private Vector  conditions = new Vector();
-   private Vector  expandedConditions = new Vector();
-   private String  whereCondition;
-   private boolean reparse = true;
+   private Table     table;
+   private Vector    conditions = new Vector();
+   private Vector    expandedConditions = new Vector();
+   private Vector    paramNames = new Vector();
+   private Hashtable vectorConditions = new Hashtable(), params = null;
+   private String    whereCondition;
+   private boolean   parseConditions = true, parseVectorConditions = true;
 
    //*********************************************************************
    // Constants
@@ -49,6 +52,16 @@ public class FilterConditions
 
    private static final int FINDDOLLAR = 0;
    private static final int DOLLARFOUND = 1;
+
+   private static final int WHITESPACEAFTERPAREN  = 0;
+   private static final int PAREN                 = 1;
+   private static final int WHITESPACEBEFOREPAREN = 2;
+   private static final int N                     = 3;
+   private static final int I                     = 4;
+   private static final int WHITESPACEBEFOREIN    = 5;
+
+   private static String EMPTYSTRING = new String();
+   private static Object O = new Object();
 
    //*********************************************************************
    // Constructors
@@ -116,7 +129,7 @@ public class FilterConditions
    public void addCondition(String condition)
    {
       conditions.addElement(condition);
-      reparse = true;
+      parseConditions = true;
    }
 
    /**
@@ -137,7 +150,7 @@ public class FilterConditions
       else
          throw new IllegalArgumentException("Invalid index: " + index);
 
-      reparse = true;
+      parseConditions = true;
    }
 
    /**
@@ -146,28 +159,78 @@ public class FilterConditions
    public void removeAllConditions()
    {
       conditions.removeAllElements();
-      reparse = true;
+      parseConditions = true;
+   }
+
+   //*********************************************************************
+   // WHERE clause and parameters
+   //*********************************************************************
+
+   /**
+    * Set the parameters to be used with the conditions.
+    *
+    * <p>If the conditions have any parameter arguments, this must be
+    * called before calling getWhereCondition() or getParameterValues().</p>
+    *
+    * @param params A Hashtable containing parameter names and values. Parameter
+    *    names must start with a dollar sign ($). Null if there are no parameters.
+    */
+   public void setParameters(Hashtable params)
+   {
+      this.params = (params == null) ? new Hashtable() : params;
+      parseVectorConditions = true;
    }
 
    /**
     * Get the condition that can be appended to the WHERE clause.
     *
-    * <p>This condition has parameter names replaced with ?'s, multi-valued
-    * parameters expanded into OR'ed conditions, and all conditions AND'ed
-    * together.</p>
+    * <p>This condition has parameter names replaced with ?'s and all
+    * conditions AND'ed together.</p>
     *
-    * @param params A Hashtable containing parameter names and values. Parameter
-    *    names must start with a dollar sign ($).
     * @return The condition. This may be zero-length but is never null.
+    * @exception IllegalArgumentException Thrown if a named parameter is found in
+    *    a condition but no corresponding parameter value is provided.
     */
-   public final String getWhereCondition(Hashtable params)
+   public final String getWhereCondition()
    {
-      if (reparse)
-      {
-         expandConditions(params);
-         appendConditions();
-      }
+      parse();
       return whereCondition;
+   }
+
+   /**
+    * Get a list of parameter values.
+    *
+    * <p>These occur in the order the corresponding names appear in the WHERE condition.</p>
+    *
+    * @return The list. May be empty.
+    * @exception IllegalArgumentException Thrown if a named parameter is found in
+    *    a condition but no corresponding parameter value is provided.
+    */
+   public final Vector getParameterValues()
+   {
+      Vector v, paramValues = new Vector();
+      Object paramValue;
+
+      parse();
+
+      for (int i = 0; i < paramNames.size(); i++)
+      {
+         paramValue = params.get(paramNames.elementAt(i));
+         if (paramValue instanceof Vector)
+         {
+            v = (Vector)paramValue;
+            for (int j = 0; j < v.size(); j++)
+            {
+               paramValues.addElement(v.elementAt(j));
+            }
+         }
+         else
+         {
+            paramValues.addElement(paramValue);
+         }
+      }
+
+      return paramValues;
    }
 
    //*********************************************************************
@@ -178,22 +241,67 @@ public class FilterConditions
    // Private methods
    //*********************************************************************
 
-   private void expandConditions(Hashtable params)
+   private void parse()
    {
-      expandedConditions.removeAllElements();
+      if (parseConditions)
+      {
+         // Initialize global arrays.
+
+         expandedConditions.removeAllElements();
+         for (int i = 0; i < conditions.size(); i++)
+         {
+            expandedConditions.addElement(EMPTYSTRING);
+         }
+
+         paramNames.removeAllElements();
+         vectorConditions.clear();
+
+         parseConditions();
+         appendConditions();
+      }
+      else if (parseVectorConditions)
+      {
+         parseVectorConditions();
+         appendConditions();
+      }
+      parseConditions = false;
+      parseVectorConditions = false;
+   }
+
+   private void parseConditions()
+   {
       for (int i = 0; i < conditions.size(); i++)
       {
-         expandCondition(i, params);
+         parseCondition(i);
       }
    }
 
-   private void expandCondition(int index, Hashtable params)
+   private void parseVectorConditions()
    {
-      String       condition, param;
+      Enumeration e;
+
+      e = vectorConditions.keys();
+      while (e.hasMoreElements())
+      {
+         parseCondition(((Integer)e.nextElement()).intValue());
+      }
+   }
+
+   private void parseCondition(int index)
+   {
+      // WARNING! The index parameter is fragile. In particular, if parseConditions
+      // is true, then parseCondition(index) must be called with values of index that
+      // increase by 1. This is so we can build the list of parameter names in the
+      // order they occur in the conditions. This, in turn, allows us to build the
+      // list of parameter values in the order the parameter markers occur in the
+      // conditions.
+
+      String       condition, paramName;
       char[]       src;
       StringBuffer dest = new StringBuffer();
       int          save = 0, dollar = 0, state = FINDDOLLAR, numParams;
       Object       paramValue;
+      boolean      inClause = false;
 
       condition = (String)conditions.elementAt(index);
       src = condition.toCharArray();
@@ -205,6 +313,25 @@ public class FilterConditions
             switch (src[i])
             {
                case '$':
+                  // If the parameter name is escaped, remove the escape
+                  // character and ignore the parameter.
+
+                  if (i > 0)
+                  {
+                     if (src[i - 1] == '\\')
+                     {
+                        dest.append(src, save, i - save);
+                        save = i;
+                        break;
+                     }
+                  }
+
+                  // Check if the parameter occurs in an IN clause.
+
+                  inClause = checkINClause(src, dollar);
+
+                  // Otherwise, start parsing the parameter name.
+
                   state = DOLLARFOUND;
                   dollar = i;
                   break;
@@ -221,35 +348,56 @@ public class FilterConditions
                case 0x20:   // Space
                case 0x0d:   // Tab
 
-                  // Search for the end of the parameter name token and
-                  // get the parameter value.
+                  // If the parameter name is zero-length -- that is, we
+                  // have a standalone dollar sign, ignore it.
 
-                  param = new String(src, dollar, i - dollar);
-                  paramValue = params.get(param);
-
-                  // If the parameter name does not match a parameter name
-                  // passed by the application, ignore it.
-
-                  if (paramValue == null)
+                  if ((i - dollar) == 0)
                   {
                      state = FINDDOLLAR;
                      break;
                   }
+
+                  // Construct the parameter name (including the dollar sign)
+                  // and get the parameter value.
+
+                  paramName = new String(src, dollar, i - dollar);
+                  paramValue = params.get(paramName);
 
                   // Otherwise, append the text up to (but not including) the dollar
                   // sign to the destination string.
 
                   dest.append(src, save, dollar - save);
 
-                  // If the parameter is a Vector, replace it with Vector.size()
-                  // parameter markers (?). Otherwise, replace it with a single
-                  // parameter marker.
+                  // If the parameter is in an IN clause and is not null, it must be
+                  // a Vector. In this case, replace it with Vector.size() parameter
+                  // markers (?). Otherwise, replace it with a single parameter marker.
 
-                  numParams = (paramValue instanceof Vector) ? ((Vector)paramValue).size() : 1;
+                  numParams = (inClause && (paramValue != null)) ? ((Vector)paramValue).size() : 1;
                   for (int j = 0; j < numParams; j++)
                   {
                      if (j != 0) dest.append(',');
                      dest.append('?');
+                  }
+
+                  // Save information about the parameters to optimize later parsing.
+                  // Note we only do this on the initial parse, not when reparsing
+                  // conditions with Vectors.
+
+                  if (parseConditions)
+                  {
+                     if (inClause)
+                     {
+                        // Save a list of the numbers of conditions that have Vector
+                        // parameters. We use a Hashtable so that conditions with more
+                        // than one Vector parameter appear only once in the list.
+
+                        vectorConditions.put(new Integer(index), O);
+                     }
+
+                     // Save the names of parameters. We use these later to extract 
+                     // parameter values from the params Hashtable.
+
+                     paramNames.addElement(paramName);
                   }
 
                   // Start all over...
@@ -269,19 +417,47 @@ public class FilterConditions
 
       dest.append(src, save, src.length - save);
       expandedConditions.setElementAt(dest.toString(), index);
+   }
 
-/*
-??
+   private boolean checkINClause(char[] src, int pos)
+   {
+      int state;
 
-1) need efficient reparsing.
-a) first time, parse everything.
-b) in same run, no reparsing.
-c) next time, only reparse Vectors
+      // Parse backwards and see if we are in an IN clause.
 
-2) need to return hashtable of parameter names/numbers
-a) build during initial parse run
-b) rebuild when reparsing vectors => need to keep info about start/stop param nums
-*/
+      state = WHITESPACEAFTERPAREN;
+      for (int i = pos - 1; i >= 0; i--)
+      {
+         switch (state)
+         {
+            case WHITESPACEAFTERPAREN:
+               if ((src[i] != 0x20) && (src[i] != 0x0d)) state = PAREN;
+               break;
+
+            case PAREN:
+               if (src[i] != '(') return false;
+               state = WHITESPACEBEFOREPAREN;
+               break;
+
+            case WHITESPACEBEFOREPAREN:
+               if ((src[i] != 0x20) && (src[i] != 0x0d)) state = N;
+               break;
+
+            case N:
+               if ((src[i] != 'n') && (src[i] != 'N')) return false;
+               break;
+
+            case I:
+               if ((src[i] != 'i') && (src[i] != 'I')) return false;
+               state = WHITESPACEBEFOREIN;
+               break;
+
+            case WHITESPACEBEFOREIN:
+               if ((src[i] == 0x20) || (src[i] == 0x0d)) return true;
+               return false;
+         }
+      }
+      return false;
    }
 
    private void appendConditions()
@@ -295,6 +471,5 @@ b) rebuild when reparsing vectors => need to keep info about start/stop param nu
       }
       sb.append(')');
       whereCondition = sb.toString();
-      reparse = false;
    }
 }
