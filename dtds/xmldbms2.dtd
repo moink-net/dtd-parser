@@ -465,17 +465,98 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
            <UseClassMap ElementType="Address" />
         </ClassMap>
 
-     Note that the element type specified with UseClassMap may not
-     itself have been mapped with UseClassMap.
-
      (UseClassMap in a ClassMap element is essentially a shorthand
      for using UseClassMap with the same ElementType attribute in all
      RelatedClass elements that point to the element type. For
      information about using UseClassMap in RelatedClass, see the next
      section.)
 
-     Mapping element types differently for different parents
+     Using UseClassMap to support local element types
      =======================================================
+     Local element types are supported in two ways in XML-DBMS. Simple
+     local element types, such as Name in the following XML, are supported
+     through PropertyMaps. This is because the element type is mapped as
+     a property and is mapped separately for each content model in which
+     it appears. Thus, the <Name> child of <Deparment> can be mapped to
+     Departments.Name and the <Name> child of <Employee> can be mapped to
+     Employees.Name.
+
+        <Department>
+           <Name>Accounting<Name>
+           ...
+           <Employee>
+              <Name>Fred Foo</Name>
+              ...
+           </Employee>
+        </Department>
+
+     Complex element types are also mapped separately for each content
+     model in which they appear using the RelatedClass element. However,
+     a RelatedClass element always points to a ClassMap. Since the element
+     type name in a RelatedClass is used to link the RelatedClass to the
+     ClassMap, this is a problem when mapping complex local element types.
+     For example, consider the following XML:
+
+        <EnvironmentalData>
+           <WeatherStation>
+              <Name>Lighthouse Point</Name>
+              <Longitude>122.26</Longitude>
+              <Latitude>37.00</Latitude>
+              <Data>
+                 <Date>011029</Date>
+                 <Temperature>35</Temperature>
+                 <Wind>10</Wind>
+                 <WindDirection>NW</WindDirection>
+              </Data>
+              <Data>
+                 ...
+              </Data>
+           </WeatherStation>
+           ...
+           <UnderwaterStation>
+              <Name>Steamer's Lane</Name>
+              <Longitude>122.25</Longitude>
+              <Latitude>37.00</Latitude>
+              <Depth>3</Depth>
+              <Data>
+                 <Date>011029</Date>
+                 <Temperature>14</Temperature>
+                 <Salinity>34</Salinity>
+                 <O2>511</O2>
+                 <Visibility>3.6</Visibility>
+              </Data>
+              <Data>
+                 ...
+              </Data>
+           </UnderwaterStation>
+           ...
+        </EnvironmentalData>
+
+     The <Data> elements are local element types defined in both
+     <WeatherStation> and <UnderwaterStation>. As it is normally used,
+     a RelatedClass element can't distinguish between the two different
+     <Data> element types. This is because the RelatedClass elements
+     in the ClassMaps for both <WeatherStation> and <UnderwaterStation>
+     point to the ClassMap for <Data>.
+
+     This is solved by including a UseClassMap element in each RelatedClass
+     element and having them point to ClassMaps with phony names. For example:
+
+        <ClassMap>
+           <ElementType Name="WeatherStation" />
+           <ToClassTable Name="WeatherStations" />
+           ... property maps ...
+           <RelatedClass KeyInParentTable="Unique" />
+              <ElementType Name="Data" />
+              <UseClassMap ElementType="WeatherData" />
+              ...
+           </RelatedClass>
+        </ClassMap>
+        <ClassMap>
+           <ElementType Name="WeatherData" />
+           <ToClassTable Name="WeatherData" />
+           ... property maps ...
+        </ClassMap>
 
      You can also use the UseClassMap element inside a RelatedClass
      element to map the same element type differently, depending on
@@ -510,41 +591,6 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 
      You map the Author element type in a similar fashion when it is
      a child of the Play element type.
-
-     (Mapping the "same" element type differently based on its parent
-     occurs in two different cases. The first is the one shown above,
-     where the element type is global but you want to map it based on
-     its parent.
-
-     The second is when local element types in XML Schemas are used.
-     In this case, the elements have the same name but probably have
-     different content models. In an instance document, it is impossible
-     to tell if an element is declared locally or globally in the
-     absence of schema information and a whole lot of annoying processing.
-
-     The likely solution to this problem is as follows. Element type
-     names for locally declared element types will be a path of names.
-     The path will consist of the name of the global element type in which
-     the local element type is declared, followed by any number of
-     intermediate local element type names (local element types can have
-     local element types), followed by the name of the local element type
-     being declared. The element type names are separated by carets (^).
-     For example:
-
-        GlobalName^LocalName1^LocalName2^LocalName3
-
-     When an element in an instance document is encountered, it is first
-     assumed that the element name is global and a lookup is done under
-     that name. If this is successful, then no further lookups are done
-     and the element name becomes the global name for constructing paths
-     to any child element names. If this is not successful, then the
-     element name is appended to the end of the current path and a lookup
-     is done with this name.
-
-     The current solution - UseClassMap in the RelatedClass element - is
-     equivalent to a path in which there are no intermediate local element
-     type names. That is, only the first level of local element types is
-     supported.)
 
      Note that omitting the UseClassMap element from a RelatedClass
      element is equivalent to having a UseClassMap element that points
@@ -632,6 +678,13 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
      is no information in the database or the mapping of the Author
      element type that tells XML-DBMS whether a given row came from a
      BookAuthor or PlayAuthor element.
+
+     (The same limitation occurs when using UseClassMap in a RelatedClass
+     to point to a ClassMap with a phony element type name, as is done
+     when mapping complex local element types. Although all of the rows
+     come from the same element type, this element type is not available
+     to the root table, so data is returned using the phony element type
+     name.)
 
      Fortunately, this limitation only applies when the table is the
      root table. When the table is a child table - that is, when its
