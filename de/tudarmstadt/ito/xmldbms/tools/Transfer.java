@@ -40,8 +40,9 @@ import java.io.ByteArrayInputStream;
  *
  * <ul>
  * <li>Database properties are used to connect to the database. They are
- *     Driver, URL, User, Password, DBInitialContext, DataSource, and
- *     JDBCLevel.</li>
+ *     Driver (JDBC 1.0), URL (JDBC 1.0), DBInitialContext (JDBC 2.0),
+ *     DataSource (JDBC 2.0), User (JDBC 1.0 and 2.0), Password (JDBC 1.0
+ *     and 2.0), and JDBCLevel (determines if you are using 1.0 or 2.0).</li>
  *
  * <li>ParserProperties provide information about the XML parser / DOM
  *     implementation. They are ParserUtilsClass and NameQualifierClass.</p>

@@ -64,22 +64,30 @@ public class MapEngine
     /**
     	* Set the properties used to connect to the database.
     	*
-    	* <p>This method must be called before transferring data between
-    	* an XML document and a database. The following properties are
-    	* accepted:</p>
+    	* <p>This method must be called before generating a map. The following
+      * properties are accepted for JDBC 1.0 drivers:</p>
     	*
     	* <ul>
     	* <li>Driver: Name of the JDBC driver class to use. Required.</li>
-    	* <li>URL: URL of the database containing the XMLDBMSKey table. Required.</li>
-    	* <li>User: Database user name. Optional.</li>
-    	* <li>Password: Database password. Optional.</li>
+    	* <li>URL: URL of the database. Required.</li>
+    	* <li>User: Database user name. Depends on database.</li>
+    	* <li>Password: Database password. Depends on database.</li>
     	* </ul>
     	*
+    	* <p>The following properties are accepted for JDBC 2.0 drivers:</p>
+    	*
+    	* <ul>
+    	* <li>DBInitialContext: Name of the JNDI Context in which to create
+      *     the JDBC 2.0 DataSource. Required.</li>
+    	* <li>DataSource: Logical name of the database. Required.</li>
+    	* <li>User: Database user name. Depends on database.</li>
+    	* <li>Password: Database password. Depends on database.</li>
+    	* </ul>
+      *
+      * <p>The JDBCLevel property is used to specify whether you are using
+      * a JDBC 1.0 or JDBC 2.0 driver. If it is not present, JDBC 1.0 is assumed.</p>
+      *
     	* @param props A Properties object containing the above properties.
-    	* Changed by Adam Flinton 08/04/2001. Now the method evaluates the JDBC level to work out
-    	* which JDBC level to use (presently 1 or 2). Level 2 requires JNDI & Javax.sql so to compensate
-    	* for the possibility of level 1 useage instantiation is used.
-    	* If & when JDBC level 3 comes along shoving it in as well should be easy.
     	*/
     public void setDatabaseProperties(Properties props)
         throws
@@ -326,7 +334,7 @@ public class MapEngine
     {
         FileOutputStream mapFile;
         // Serialize the map to a mapping document with the same base name.
-        mapFile = new FileOutputStream(basename + ".map");
+        mapFile = new FileOutputStream(basename + ".xdb");
         map.serialize(mapFile, true, 3);
         mapFile.close();
     }

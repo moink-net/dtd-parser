@@ -97,14 +97,14 @@ public class ProcessProperties
         return props;
     }
     /**
-    	* Adds properties from a Java properties file.
-    	* Will try to get it first from the Cache.
+    	* Add properties to a Properties object from a Java properties file.
+      * 
     	* @param props Properties object to which the properties are to be added.
     	* @param propFilename Name of the properties file.
-    	* @exception FileNotFoundException Thrown if an input file is not found.
-    	* @exception IOException Thrown if an error occurs accessing an input file.
+    	* @exception FileNotFoundException Thrown if the properties file is not found.
+    	* @exception IOException Thrown if an error occurs accessing the properties file.
     	*/
-    private void addPropertiesFromFile(Properties props, String propFilename)
+    public void addPropertiesFromFile(Properties props, String propFilename)
         throws Exception
     {
         Properties fileProps = new Properties();

@@ -11,7 +11,10 @@ import java.util.Properties;
  * Properties-driven and command line interface to the map factories.
  *
  * <p>GenerateMap provides a properties-driven interface to the map factories.
- * Properties may be passed either programmatically through
+ * It creates map files and, if appropriate, files of SQL statements needed
+ * to create the tables associated with a given map.</p>
+ *
+ * <p>Properties may be passed either programmatically through
  * dispatch(Properties) or on a command line. The command line syntax for
  * GenerateMap is:</p>
  *
