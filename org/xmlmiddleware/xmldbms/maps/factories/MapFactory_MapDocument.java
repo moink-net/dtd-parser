@@ -1087,7 +1087,10 @@ public class MapFactory_MapDocument
    }
 
    private void processExtends(Attributes attrs)
+      throws MapException
    {
+      throw new MapException("Extends keyword not yet implemented.");
+/*
       String   qualifiedName;
       ClassMap baseClassMap;
 
@@ -1098,6 +1101,7 @@ public class MapFactory_MapDocument
       qualifiedName = getAttrValue(attrs, XMLDBMSConst.ATTR_ELEMENTTYPE);
       baseClassMap = map.createClassMap(XMLName.create(qualifiedName, map.getNamespaceURIs()));
       classMap.setBaseClassMap(baseClassMap);
+*/
    }
 
    private void processFixedOrder(Attributes attrs)
