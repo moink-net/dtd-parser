@@ -22,10 +22,10 @@ package org.xmlmiddleware.xmldbms.maps;
 import java.sql.Types;
 import java.sql.DatabaseMetaData;
 import java.text.DateFormat;
-import java.text.Format;
 import java.text.NumberFormat;
 
 import org.xmlmiddleware.utils.JDBCTypes;
+import org.xmlmiddleware.xmldbms.XMLFormatter;
 
 /**
  * Describes a column; <a href="../readme.html#NotForUse">not for general
@@ -101,18 +101,15 @@ public class Column extends MapBase
 
    private String name = null;
 
-   private int resultSetIndex = -1;
-   private int rowIndex = -1;
-   private int parameterIndex = -1;
-   private int type = Types.NULL;
-   private int length = -1;
-   private int precision = -1;
-   private int scale = Integer.MIN_VALUE;
-   private int nullability = DatabaseMetaData.columnNullableUnknown;
-   private Format format = null;
-
-   private boolean defaultFormat = true;
-   private String formatName = null;
+   private int    resultSetIndex = -1;
+   private int    rowIndex = -1;
+   private int    parameterIndex = -1;
+   private int    type = Types.NULL;
+   private int    length = -1;
+   private int    precision = -1;
+   private int    scale = Integer.MIN_VALUE;
+   private int    nullability = DatabaseMetaData.columnNullableUnknown;
+   private Object formatObject = null;
 
    // ********************************************************************
    // Constructors
@@ -273,18 +270,6 @@ public class Column extends MapBase
       if (!JDBCTypes.typeIsValid(type))
          throw new IllegalArgumentException("Invalid JDBC type: " + type);
 
-      // If the format is not the default format -- that is, the format has been
-      // explicitly set -- check that the format type is legal for the new data
-      // type.
-
-      if (!defaultFormat)
-      {
-         if ((format instanceof DateFormat) && !JDBCTypes.typeIsDateTime(type))
-            throw new IllegalArgumentException("Format is a DateFormat and type is not a date/time type.");
-         else if ((format instanceof NumberFormat) && !JDBCTypes.typeIsNumeric(type))
-            throw new IllegalArgumentException("Format is a NumberFormat and type is not a numeric type.");
-      }
-
       // If the new type is not a character or binary type, set the length to -1.
 
       if (!JDBCTypes.typeIsChar(type) && !JDBCTypes.typeIsBinary(type))
@@ -433,97 +418,42 @@ public class Column extends MapBase
    }
 
    // ********************************************************************
-   // Format
+   // Format object
    // ********************************************************************
 
    /**
-    * Get the column format.
+    * Get the column format object.
     *
-    * <p>This method returns a DateFormat or NumberFormat object. The calling method
-    * must determine the class of the returned object.</p>
+    * <p>This method returns a DateFormat object, a NumberFormat object, or an
+    * object that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.
+    * The calling method must determine the class of the returned object.</p>
     *
-    * @return The format. May be null.
+    * @return The format object. May be null.
     */
-   public final Format getFormat()
+   public final Object getFormatObject()
    {
-      return format;
+      return formatObject;
    }
 
    /**
-    * Set the column format.
+    * Set the column format object.
     *
-    * @param format The format. If this is null, the default format for
-    *    the column type will be used.
+    * <p>The format object can be a DateFormat object, a NumberFormat object, or an object
+    * that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
+    *
+    * @param formatObject The format object. If this is null, the default format
+    *    object for the column type will be used.
     */
-   public void setFormat(Format format)
+   public void setFormatObject(Object formatObject)
    {
-      // Formats can only be set when the type is NULL (not yet set), date/time,
-      // or numeric.
-
-      if ((type != Types.NULL) && !JDBCTypes.typeIsDateTime(type) && !JDBCTypes.typeIsNumeric(type))
-         throw new IllegalStateException("Formats may only be set for date, time, timestamp, and numeric columns.");
-
-      // If the format is null, use the default format.
-
-      if (format == null)
+      if (formatObject != null)
       {
-         this.defaultFormat = true;
-         this.format = null;
-         return;
+         if (!(formatObject instanceof DateFormat) &&
+             !(formatObject instanceof NumberFormat) &&
+             !(formatObject instanceof XMLFormatter))
+            throw new IllegalArgumentException("Format object must be a DateFormat or NumberFormat object or implement the org.xmlmiddleware.xmldbms.XMLFormatter interface.");
       }
 
-      // If the format is not null, check that it is:
-      // a) A DateFormat or a NumberFormat, and
-      // b) Appropriate for the type (if the type is set).
-
-      if (format instanceof DateFormat)
-      {
-         if ((type != Types.NULL) && (!JDBCTypes.typeIsDateTime(type)))
-            throw new IllegalArgumentException("Format is a DateFormat and the column type is not a date/time type.");
-      }
-      else if (format instanceof NumberFormat)
-      {
-         if ((type != Types.NULL) && (!JDBCTypes.typeIsNumeric(type)))
-            throw new IllegalArgumentException("Format is a NumberFormat and the column type is not a numeric type.");
-      }
-      else
-         throw new IllegalArgumentException("Format must be a DateFormat or a NumberFormat.");
-
-      // Set the new format and note that this is not the default format.
-
-      this.format = format;
-      this.defaultFormat = false;
-   }
-
-   /**
-    * Whether a column uses the default format.
-    *
-    * <p>The default format is the date, time, datetime, or number format
-    * appropriate for the data type. This is the default specified through
-    * Map.addXxxxFormat or the system format if no default has been specified.</p>
-    *
-    * <p>The column uses a default format if no format has been explicitly set
-    * or the format has been set to null. Note that if Map.setDefaultFormats()
-    * has been called, getFormat() returns the default format if no format has
-    * been explicitly set.</p>
-    *
-    * @return Whether a column uses the default format.
-    */
-   public final boolean useDefaultFormat()
-   {
-      return defaultFormat;
-   }
-
-   // ********************************************************************
-   // Package methods
-   // ********************************************************************
-
-   void setDefaultFormat(Format format)
-   {
-      // This method is called by Map.setDefaultFormats() to set the appropriate
-      // format for the column. It assumes that the type is not Types.NULL and that
-      // this.defaultFormat is true.
- 
-      this.format = format;
+      this.formatObject = formatObject;
    }
 }

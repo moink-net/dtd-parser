@@ -41,7 +41,7 @@ public class MapBase
    static final String ARG_COLUMNNAME           = "columnName";
    static final String ARG_ELEMENTINSERTIONMAP  = "elementInsertionMap";
    static final String ARG_ELEMENTTYPENAME      = "elementTypeName";
-   static final String ARG_FORMAT               = "format";
+   static final String ARG_FORMATOBJECT         = "formatObject";
    static final String ARG_INLINECLASSMAP       = "inlineClassMap";
    static final String ARG_KEY                  = "key";
    static final String ARG_KEYNAME              = "keyName";

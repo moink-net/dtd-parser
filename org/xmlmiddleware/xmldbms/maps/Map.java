@@ -21,10 +21,11 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
+import org.xmlmiddleware.utils.JDBCTypes;
 import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.xmldbms.XMLFormatter;
 
 import java.text.DateFormat;
-import java.text.Format;
 import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -345,10 +346,7 @@ public class Map extends MapBase
    //  Options
 
    private boolean   emptyStringIsNull = false;
-   private Hashtable dateFormats = new Hashtable();     // Indexed by format name
-   private Hashtable timeFormats = new Hashtable();     // Indexed by format name
-   private Hashtable datetimeFormats = new Hashtable(); // Indexed by format name
-   private Hashtable numberFormats = new Hashtable();   // Indexed by format name
+   private Hashtable defaultFormatObjects = new Hashtable();  // Indexed by type
    private Hashtable classMaps = new Hashtable();       // Indexed by universal name
    private Hashtable classTableMaps = new Hashtable();  // Indexed by table name
    private Hashtable tables = new Hashtable();          // Indexed by table name
@@ -362,7 +360,7 @@ public class Map extends MapBase
    /** Construct a new Map. */
    public Map()
    {
-      initFormats();
+//      initFormats();
    }
 
    //**************************************************************************
@@ -395,364 +393,92 @@ public class Map extends MapBase
    }
 
    //**************************************************************************
-   // Default formats
+   // Default format objects
    //**************************************************************************
 
    /**
-    * Set the default formats for columns.
+    * Get the default format object for a type.
     *
-    * <p>This method sets the format for all columns for which the format has not
-    * explicitly been set. It must be called after the data type has been set for
-    * each column.</p>
+    * <p>This method returns a DateFormat object, a NumberFormat object, or an
+    * object that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.
+    * The calling method must determine the class of the returned object.</p>
     *
+    * @param The JDBC type. Must be a valid value from the java.sql.Types class.
+    *
+    * @return The format object. May be null.
     */
-/*
-   public void setDefaultFormats()
+   public final Object getDefaultFormatObject(int type)
    {
-      Enumeration tables, columns;
-      Table       table;
-      Column      column;
-      int         type;
-
-      tables = getTables();
-      while (tables.hasMoreElements())
-      {
-         table = tables.nextElement()
-         columns = table.getColumns();
-         while (columns.hasMoreElements())
-         {
-            column = columns.nextElement();
-            if (column.useDefaultFormat())
-            {
-               type = column.getType();
-               if (type == Types.NULL)
-                  throw new IllegalStateException("Type not set for column: " + column.getName());
-               switch (type)
-               {
-                  case Types.DATE:
-                     column.setDefaultFormat(getDefaultDateFormat());
-                     break;
-
-                  case Types.TIME:
-                     column.setDefaultFormat(getDefaultTimeFormat());
-                     break;
-
-                  case Types.DATETIME:
-                     column.setDefaultFormat(getDefaultDateTimeFormat());
-                     break;
-
-                  case Types.BIGINT:
-                  case Types.BIT:
-                  case Types.DECIMAL:
-                  case Types.DOUBLE:
-                  case Types.FLOAT:
-                  case Types.INTEGER:
-                  case Types.NUMERIC:
-                  case Types.REAL:
-                  case Types.SMALLINT:
-                  case Types.TINYINT:
-                     column.setDefaultFormat(getDefaultNumberFormat());
-                     break;
-
-                  default:
-                     break;
-               }
-            }
-         }
-      }
-   }
-*/
-
-   //**************************************************************************
-   // Date formats
-   //**************************************************************************
-
-   /**
-    * Get a date format by name.
-    *
-    * @return The date format.
-    */
-   public final DateFormat getDateFormat(String name)
-   {
-      return (DateFormat)getFormat(dateFormats, name);
+      if (!JDBCTypes.typeIsValid(type))
+         throw new IllegalArgumentException("Not a valid JDBC type: " + type);
+      return defaultFormatObjects.get(new Integer(type));
    }
 
    /**
-    * Get the default date format.
-    *
-    * @return The default date format.
-    */
-   public final DateFormat getDefaultDateFormat()
-   {
-      return (DateFormat)getDefaultFormat(dateFormats, DEFAULTDATE);
-   }
-
-   /**
-    * Get a Hashtable containing all date formats hashed by name.
+    * Get a Hashtable containing the default format objects hashed by JDBC type.
     *
     * @return The Hashtable.
     */
-   public final Hashtable getDateFormats()
+   public final Hashtable getDefaultFormatObjects()
    {
-      return (Hashtable)dateFormats.clone();
+      return (Hashtable)defaultFormatObjects.clone();
    }
 
    /**
-    * Add a date format.
+    * Add the default format object for a type.
     *
-    * <p>Use the name "DefaultDate" to override the default date format.
-    * Default formats must be explicitly enabled by calling setDefaultFormats().</p>
+    * <p>The format object can be a DateFormat object, a NumberFormat object, or an object
+    * that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
     *
-    * @param name Format name.
-    * @param format The date format.
-    * @exception MapException Thrown if the format already exists
-    *    (except for the default date format, which may be overridden).
+    * @param type The JDBC type.
+    * @param formatObject The format object. If this is null, the default format
+    *    object for the column type is removed.
+    * @exception MapException Thrown if a default format has already been set for the type.
     */
-   public void addDateFormat(String name, DateFormat format)
+   public void addDefaultFormatObject(int type, Object formatObject)
       throws MapException
    {
-      addFormat(dateFormats, name, format);
+      Integer i;
+
+      if (!JDBCTypes.typeIsValid(type))
+         throw new IllegalArgumentException("Not a valid JDBC type: " + type);
+      checkArgNull(formatObject, ARG_FORMATOBJECT);
+      if (!(formatObject instanceof DateFormat) &&
+          !(formatObject instanceof NumberFormat) &&
+          !(formatObject instanceof XMLFormatter))
+         throw new IllegalArgumentException("Format object must be a DateFormat object, a NumberFormat object, or an object that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.");
+
+      i = new Integer(type);
+      if (defaultFormatObjects.get(i) != null)
+         throw new IllegalArgumentException("Default format for type " + JDBCTypes.getName(type) + " already set.");
+      defaultFormatObjects.put(i, formatObject);
    }
 
    /**
-    * Remove a date format.
+    * Remove a default format object.
     *
-    * @param name Format name.
+    * @param type The JDBC type.
     * @exception MapException Thrown if the format is not found.
     */
-   public void removeDateFormat(String name)
+   public void removeDateFormat(int type)
       throws MapException
    {
-      removeFormat(dateFormats, name);
+      Object o;
+
+      if (!JDBCTypes.typeIsValid(type))
+         throw new IllegalArgumentException("Not a valid JDBC type: " + type);
+
+      o = defaultFormatObjects.remove(new Integer(type));
+      if (o == null)
+         throw new MapException("Default format for type " + JDBCTypes.getName(type) + " not found.");
    }
 
    /**
-    * Remove all date formats except the default format.
+    * Remove the default format objects for all types.
     */
-   public void removeAllDateFormats()
+   public void removeAllDefaultFormatObjects()
    {
-      removeAllFormats(dateFormats);
-   }
-
-   //**************************************************************************
-   // Time formats
-   //**************************************************************************
-
-   /**
-    * Get a time format by name.
-    *
-    * @return The time format.
-    * @exception MapException Thrown if the format is not found.
-    */
-   public final DateFormat getTimeFormat(String name)
-      throws MapException
-   {
-      return (DateFormat)getFormat(timeFormats, name);
-   }
-
-   /**
-    * Get the default time format.
-    *
-    * @return The default time format.
-    */
-   public final DateFormat getDefaultTimeFormat()
-   {
-      return (DateFormat)getDefaultFormat(timeFormats, DEFAULTTIME);
-   }
-
-   /**
-    * Get a Hashtable containing all time formats hashed by name.
-    *
-    * @return The Hashtable.
-    */
-   public final Hashtable getTimeFormats()
-   {
-      return (Hashtable)timeFormats.clone();
-   }
-
-   /**
-    * Add a time format.
-    *
-    * <p>Use the name "DefaultTime" to override the default time format.
-    * Default formats must be explicitly enabled by calling setDefaultFormats().</p>
-    *
-    * @param name Format name.
-    * @param format The time format.
-    * @exception MapException Thrown if the format already exists
-    *    (except for the default time format, which may be overridden).
-    */
-   public void addTimeFormat(String name, DateFormat format)
-      throws MapException
-   {
-      addFormat(timeFormats, name, format);
-   }
-
-   /**
-    * Remove a time format.
-    *
-    * <p>The default format may not be removed.</p>
-    *
-    * @param name Format name.
-    * @exception MapException Thrown if the format is not found.
-    */
-   public void removeTimeFormat(String name)
-      throws MapException
-   {
-      removeFormat(timeFormats, name);
-   }
-
-   /**
-    * Remove all time formats except the default format.
-    */
-   public void removeAllTimeFormats()
-   {
-      removeAllFormats(timeFormats);
-   }
-
-   //**************************************************************************
-   // Datetime formats
-   //**************************************************************************
-
-   /**
-    * Get a datetime format by name.
-    *
-    * @return The datetime format.
-    */
-   public final DateFormat getDateTimeFormat(String name)
-   {
-      return (DateFormat)getFormat(datetimeFormats, name);
-   }
-
-   /**
-    * Get the default datetime format.
-    *
-    * @return The default datetime format.
-    */
-   public final DateFormat getDefaultDateTimeFormat()
-   {
-      return (DateFormat)getDefaultFormat(datetimeFormats, DEFAULTDATETIME);
-   }
-
-   /**
-    * Get a Hashtable containing all datetime formats hashed by name.
-    *
-    * @return The Hashtable.
-    */
-   public final Hashtable getDateTimeFormats()
-   {
-      return (Hashtable)datetimeFormats.clone();
-   }
-
-   /**
-    * Add a datetime format.
-    *
-    * <p>Use the name "DefaultDateTime" to override the default datetime format.
-    * Default formats must be explicitly enabled by calling setDefaultFormats().</p>
-    *
-    * @param name Format name.
-    * @param datetimeFormat The datetime format.
-    * @exception MapException Thrown if the format already exists
-    *    (except for the default datetime format, which may be overridden).
-    */
-   public void addDateTimeFormat(String name, DateFormat format)
-      throws MapException
-   {
-      addFormat(datetimeFormats, name, format);
-   }
-
-   /**
-    * Remove a datetime format.
-    *
-    * <p>The default format may not be removed.</p>
-    *
-    * @param name Format name.
-    * @exception MapException Thrown if the format is not found.
-    */
-   public void removeDateTimeFormat(String name)
-      throws MapException
-   {
-      removeFormat(datetimeFormats, name);
-   }
-
-   /**
-    * Remove all datetime formats except the default format.
-    */
-   public void removeAllDateTimeFormats()
-   {
-      removeAllFormats(datetimeFormats);
-   }
-
-   //**************************************************************************
-   // Number formats
-   //**************************************************************************
-
-   /**
-    * Get a number format by name.
-    *
-    * @return The number format.
-    */
-   public final NumberFormat getNumberFormat(String name)
-   {
-      return (NumberFormat)getFormat(numberFormats, name);
-   }
-
-   /**
-    * Get the default number format.
-    *
-    * @return The default number format.
-    */
-   public final NumberFormat getDefaultNumberFormat()
-   {
-      return (NumberFormat)getDefaultFormat(numberFormats, DEFAULTNUMBER);
-   }
-
-   /**
-    * Get a Hashtable containing all number formats hashed by name.
-    *
-    * @return The Hashtable.
-    */
-   public final Hashtable getNumberFormats()
-   {
-      return (Hashtable)numberFormats.clone();
-   }
-
-   /**
-    * Add a number format.
-    *
-    * <p>Use the name "DefaultNumber" to override the default number format.
-    * Default formats must be explicitly enabled by calling setDefaultFormats().</p>
-    *
-    * @param name Format name.
-    * @param numberFormat The number format.
-    * @exception MapException Thrown if the format already exists
-    *    (except for the default number format, which may be overridden).
-    */
-   public void addNumberFormat(String name, NumberFormat format)
-      throws MapException
-   {
-      addFormat(numberFormats, name, format);
-   }
-
-   /**
-    * Remove a number format.
-    *
-    * <p>The default format may not be removed.</p>
-    *
-    * @param name Format name.
-    * @exception MapException Thrown if the format is not found.
-    */
-   public void removeNumberFormat(String name)
-      throws MapException
-   {
-      removeFormat(numberFormats, name);
-   }
-
-   /**
-    * Remove all number formats except the default format.
-    */
-   public void removeAllNumberFormats()
-   {
-      removeAllFormats(numberFormats);
+      defaultFormatObjects.clear();
    }
 
    //**************************************************************************
@@ -771,6 +497,7 @@ public class Map extends MapBase
       throws MapException
    {
       String uri;
+
       checkArgNull(prefix, ARG_PREFIX);
       uri = (String)uris.get(prefix);
       if (uri == null)
@@ -790,6 +517,7 @@ public class Map extends MapBase
       throws MapException
    {
       String prefix;
+
       checkArgNull(uri, ARG_URI);
       prefix = (String)prefixes.get(uri);
       if (prefix == null)
@@ -1271,6 +999,7 @@ public class Map extends MapBase
    // Private methods
    //**************************************************************************
 
+/*
    private void initFormats()
    {
       dateFormats.put(DEFAULT, DateFormat.getDateInstance());
@@ -1278,69 +1007,5 @@ public class Map extends MapBase
       datetimeFormats.put(DEFAULT, DateFormat.getDateTimeInstance());
       numberFormats.put(DEFAULT, NumberFormat.getInstance());
    }
-
-   private final Object getFormat(Hashtable hash, String name)
-   {
-      Object o;
-
-      checkArgNull(name, ARG_NAME);
-      o = hash.get(name);
-      return o;
-   }
-
-   private final Object getDefaultFormat(Hashtable hash, String defaultName)
-   {
-      Object o;
-
-      // First try to get the user-specified default (DefaultDate, etc.).
-      // If this does not exist, use the system default.
-
-      o = hash.get(defaultName);
-      if (o == null)
-      {
-         o = hash.get(DEFAULT);
-      }
-      return o;
-   }
-
-   private void addFormat(Hashtable hash, String name, Format format)
-      throws MapException
-   {
-      Object o;
-
-      checkArgNull(name, ARG_NAME);
-      checkArgNull(format, ARG_FORMAT);
-
-      if (name.equals(DEFAULT))
-         throw new IllegalArgumentException("The name \"" + DEFAULT + "\" is reserved and may not be used.");
-
-      // Check if the format name is already used.
-      o = hash.get(name);
-      if (o != null)
-         throw new MapException("Format already exists: " + name);
-      hash.put(name, format);
-   }
-
-   private void removeFormat(Hashtable hash, String name)
-      throws MapException
-   {
-      Object o;
-
-      checkArgNull(name, ARG_NAME);
-      if (name.equals(DEFAULT))
-         throw new IllegalArgumentException("The name \"" + DEFAULT + "\" is reserved and may not be used.");
-
-      o = hash.remove(name);
-      if (o == null)
-         throw new MapException("Format not found: " + name);
-   }
-
-   private void removeAllFormats(Hashtable hash)
-   {
-      Object o;
-
-      o = hash.get(DEFAULT);
-      hash.clear();
-      hash.put(DEFAULT, o);
-   }
+*/
 }

@@ -25,6 +25,8 @@ import org.xmlmiddleware.utils.XMLName;
 import org.xmlmiddleware.utils.XMLWriter;
 import org.xmlmiddleware.utils.JDBCTypes;
 
+import org.xmlmiddleware.xmldbms.XMLFormatter;
+
 import org.xmlmiddleware.xmldbms.maps.ClassMap;
 import org.xmlmiddleware.xmldbms.maps.ClassMapBase;
 import org.xmlmiddleware.xmldbms.maps.Column;
@@ -45,7 +47,6 @@ import java.io.Writer;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
 import java.text.DecimalFormat;
-import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -54,6 +55,15 @@ import java.util.Vector;
 
 /**
  * Serializes a Map object to a character stream.
+ *
+ * <p><b>WARNING:</b> MapSerializer cannot serialize DateFormat and
+ * NumberFormat formatting objects. That is, it cannot generate DateFormat,
+ * TimeFormat, DateTimeFormat, and NumberFormat elements. This is
+ * because the formatting objects do not contain enough information to
+ * construct these elements. MapSerializer can serialize SimpleDateFormat,
+ * DecimalFormat, and XMLFormatter formatting objects. It also cannot
+ * generate Locale children of SimpleDateFormat and DecimalFormat elements,
+ * although it does generate localized patterns.</p>
  *
  * <p>If you want to use a specific encoding, the Writer must be an OutputStreamWriter
  * or a subclass of an OutputStreamWriter. For example, you might use the following
@@ -105,6 +115,8 @@ public class MapSerializer extends XMLWriter
    //**************************************************************************
 
    private static String XMLDBMS2DTD = "xmldbms2.dtd";
+   private static String FORMAT = "Format";
+   private static String SPACE = " ";
 
    //**************************************************************************
    // Variables
@@ -113,6 +125,9 @@ public class MapSerializer extends XMLWriter
    private Map       map;
    private Hashtable uris = null;
    private Hashtable prefixes = null;
+   private Hashtable defaultFormats = new Hashtable();
+   private Hashtable namedFormats = new Hashtable();
+   private int       formatNumber = 0;
 
    //**************************************************************************
    // Constructors
@@ -174,10 +189,6 @@ public class MapSerializer extends XMLWriter
     *
     * <p>No system or public ID is written in the DOCTYPE statement.</p>
     *
-??    * <p>Note that serialize cannot currently create the Locale element
-    * or the values FULL, LONG, MEDIUM, or SHORT in the Date, Time, and
-    * Timestamp attributes of the Patterns element.</p>
-    *
     * @param map The Map.
     * @exception IOException Thrown if an I/O exception occurs.
     */
@@ -190,10 +201,6 @@ public class MapSerializer extends XMLWriter
 
    /**
     * Serialize a Map using the XML-DBMS mapping language.
-    *
-??    * <p>Note that serialize cannot currently create the Locale element
-    * or the values FULL, LONG, MEDIUM, or SHORT in the Date, Time, and
-    * Timestamp attributes of the Patterns element.</p>
     *
     * @param map The Map.
     * @param systemID System ID of the DTD. If this is null, "xmldbms2.dtd" is used.
@@ -315,7 +322,8 @@ public class MapSerializer extends XMLWriter
       throws IOException
    {
       int    count = 0, type, length, precision, scale, nullability;
-      Format format;
+      Object formatObject;
+      String formatName;
 
       attrs[count] = XMLDBMSConst.ATTR_NAME;
       values[count++] = column.getName();
@@ -366,10 +374,18 @@ public class MapSerializer extends XMLWriter
          values[count++] = XMLDBMSConst.ENUM_NO;
       }
 
-      format = column.getFormat();
-      if (format != null)
+      formatObject = column.getFormatObject();
+      if (formatObject != null)
       {
-         throw new IllegalStateException("Column format not supported.");
+         // If the format object has a name, it means it is serializable.
+         // See formatObjectSerializable() for details.
+
+         formatName = (String)namedFormats.get(formatObject);
+         if (formatName != null)
+         {
+            attrs[count] = XMLDBMSConst.ATTR_FORMAT;
+            values[count++] = formatName;
+         }
       }
 
       writeElementStart(XMLDBMSConst.ELEM_COLUMN, count, true);
@@ -469,9 +485,7 @@ public class MapSerializer extends XMLWriter
          {
             attrs[0] = XMLDBMSConst.ATTR_NAME;
             values[0] = newDatabaseName;
-            attrs[1] = XMLDBMSConst.ATTR_QUOTEIDENTIFIERS;
-            values[1] = (table.quoteIdentifiers()) ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
-            writeElementStart(XMLDBMSConst.ELEM_DATABASE, 2, false);
+            writeElementStart(XMLDBMSConst.ELEM_DATABASE, 1, false);
             currDatabaseName = newDatabaseName;
          }
 
@@ -510,30 +524,25 @@ public class MapSerializer extends XMLWriter
       writeElementEnd(XMLDBMSConst.ELEM_DATABASES);
    }
 
-   private void writeDateTimeFormats(Hashtable hash, String elementName)
+   private void writeDefaultFormatElements()
       throws IOException
    {
-      // Bug! DateFormat does not return the information we need to reconstruct
-      // the <DateFormat> element. The best we can do is check if the DateFormat
-      // is a SimpleDateFormat and, if so, use the pattern from that.
+      Enumeration formatObjects;
+      Object      formatObject;
+      Vector      typeVector;
+      String      name;
 
-      Enumeration formatNames;
-      String      formatName;
-      Object      format;
+      // Write the default format objects. Remember to check if any of
+      // these is also a named format object, in which case we also write
+      // the name.
 
-      formatNames = hash.keys();
-
-      while (formatNames.hasMoreElements())
+      formatObjects = defaultFormats.keys();
+      while (formatObjects.hasMoreElements())
       {
-         formatName = (String)formatNames.nextElement();
-         if (!formatName.equals("Default"))
-         {
-            format = hash.get(formatName);
-            if (format instanceof SimpleDateFormat)
-            {
-               writeFormatElement(elementName, formatName, (SimpleDateFormat)format);
-            }
-         }
+         formatObject = formatObjects.nextElement();
+         typeVector = (Vector)defaultFormats.get(formatObject);
+         name = (String)namedFormats.get(formatObject);
+         writeFormatElement(formatObject, typeVector, name);
       }
    }
 
@@ -580,16 +589,60 @@ public class MapSerializer extends XMLWriter
       writeElementEnd(XMLDBMSConst.ELEM_EXTENDS);
    }
 
-   private void writeFormatElement(String elementName, String formatName, SimpleDateFormat format)
+   private void writeFormatElement(Object formatObject, Vector types, String name)
       throws IOException
    {
-      attrs[0] = XMLDBMSConst.ATTR_NAME;
-      values[0] = formatName;
-      writeElementStart(elementName, 1, false);
-      attrs[0] = XMLDBMSConst.ATTR_VALUE;
-      values[0] = format.toPattern();
-      writeElementStart(XMLDBMSConst.ELEM_PATTERN, 1, true);
-      writeElementEnd(elementName);
+      int          count = 0, type;
+      StringBuffer sb;
+
+      if (types != null)
+      {
+         sb = new StringBuffer();
+         for (int i = 0; i < types.size(); i++)
+         {
+            if (i != 0) sb.append(SPACE);
+            type = ((Integer)types.elementAt(i)).intValue();
+            sb.append(JDBCTypes.getName(type));
+         }
+         attrs[count] = XMLDBMSConst.ATTR_DEFAULTFORTYPES;
+         values[count++] = sb.toString();
+      }
+
+      if (name != null)
+      {
+         attrs[count] = XMLDBMSConst.ATTR_NAME;
+         values[count++] = name;
+      }
+
+      if (formatObject instanceof XMLFormatter)
+      {
+         attrs[count] = XMLDBMSConst.ATTR_CLASS;
+         values[count++] = formatObject.getClass().getName();
+         writeElementStart(XMLDBMSConst.ELEM_FORMATCLASS, count, true);
+      }
+      else if (formatObject instanceof SimpleDateFormat)
+      {
+         attrs[count] = XMLDBMSConst.ATTR_PATTERN;
+         values[count++] = ((SimpleDateFormat)formatObject).toLocalizedPattern();
+         writeElementStart(XMLDBMSConst.ELEM_SIMPLEDATEFORMAT, count, true);
+      }
+      else if (formatObject instanceof DecimalFormat)
+      {
+         attrs[count] = XMLDBMSConst.ATTR_PATTERN;
+         values[count++] = ((DecimalFormat)formatObject).toLocalizedPattern();
+         writeElementStart(XMLDBMSConst.ELEM_DECIMALFORMAT, count, true);
+      }
+      else
+         throw new IllegalStateException("Programming bug.");
+   }
+
+   private void writeFormatElements()
+      throws IOException
+   {
+      buildDefaultFormatTable();
+      buildNamedFormatTable();
+      writeDefaultFormatElements();
+      writeNamedFormatElements();
    }
 
    private void writeInlineClassMap(InlineClassMap inlineClassMap)
@@ -689,6 +742,27 @@ public class MapSerializer extends XMLWriter
       writeElementStart(XMLDBMSConst.ELEM_XMLTODBMS, 2, false);
    }
 
+   private void writeNamedFormatElements()
+      throws IOException
+   {
+      Enumeration formatObjects;
+      Object      formatObject;
+      String      name;
+
+      // Write the named format elements. Note that we don't write any
+      // named format objects that are also default format objects. This
+      // is because they have already been written with writeDefaultFormatElements().
+
+      formatObjects = namedFormats.keys();
+      while (formatObjects.hasMoreElements())
+      {
+         formatObject = formatObjects.nextElement();
+         if (defaultFormats.get(formatObject) != null) continue;
+         name = (String)namedFormats.get(formatObject);
+         writeFormatElement(formatObject, null, name);
+      }
+   }
+
    private void writeNamespaces()
       throws IOException
    {
@@ -719,43 +793,12 @@ public class MapSerializer extends XMLWriter
       }
    }
 
-   private void writeNumberFormats()
-      throws IOException
-   {
-      Hashtable     numberFormats;
-      Enumeration   formatNames;
-      String        formatName;
-      DecimalFormat format;
-
-      numberFormats = map.getNumberFormats();
-      formatNames = numberFormats.keys();
-
-      while (formatNames.hasMoreElements())
-      {
-         formatName = (String)formatNames.nextElement();
-         if (!formatName.equals("Default"))
-         {
-            format = (DecimalFormat)numberFormats.get(formatName);
-            attrs[0] = XMLDBMSConst.ATTR_NAME;
-            values[0] = formatName;
-            writeElementStart(XMLDBMSConst.ELEM_NUMBERFORMAT, 1, false);
-            attrs[0] = XMLDBMSConst.ATTR_VALUE;
-            values[0] = format.toPattern();
-            writeElementStart(XMLDBMSConst.ELEM_PATTERN, 1, true);
-            writeElementEnd(XMLDBMSConst.ELEM_NUMBERFORMAT);
-         }
-      }
-   }
-
    private void writeOptions()
       throws IOException
    {
       writeElementStart(XMLDBMSConst.ELEM_OPTIONS, 0, false);
       writeEmptyStringIsNull();
-      writeDateTimeFormats(map.getDateFormats(), XMLDBMSConst.ELEM_DATEFORMAT);
-      writeDateTimeFormats(map.getTimeFormats(), XMLDBMSConst.ELEM_TIMEFORMAT);
-      writeDateTimeFormats(map.getDateTimeFormats(), XMLDBMSConst.ELEM_DATETIMEFORMAT);
-      writeNumberFormats();
+      writeFormatElements();
       writeNamespaces();
       writeElementEnd(XMLDBMSConst.ELEM_OPTIONS);
    }
@@ -1142,5 +1185,127 @@ public class MapSerializer extends XMLWriter
             }
          }
       }
+   }
+
+   //**************************************************************************
+   // Private methods - formatting stuff
+   //**************************************************************************
+
+   private void buildDefaultFormatTable()
+   {
+      Hashtable   formatsByType;
+      Enumeration types;
+      Object      type, formatObject;
+      Vector      typeVector;
+
+      // Initialize the defaultFormats Hashtable.
+
+      defaultFormats.clear();
+
+      // Get the Hashtable of default formatting objects. These are hashed
+      // using JDBC type as a key.
+
+      formatsByType = map.getDefaultFormatObjects();
+      types = formatsByType.keys();
+
+      // Invert the hashtable so that the formatting object is the key.
+      // Since more than one JDBC type might use the same formatting
+      // object, the stored element is a Vector of JDBC types.
+
+      while (types.hasMoreElements())
+      {
+         // Get the next type and the corresponding formatting object.
+         // Check if the format object can be serialized in a map
+         // document. This is possible only for certain classes of
+         // formatting objects.
+
+         type = types.nextElement();
+         formatObject = formatsByType.get(type);
+         if (formatObjectSerializable(formatObject))
+         {
+            // Check if the formatting object has already been used as a key.
+            // If so, use the existing type Vector. If not, allocate a new type
+            // Vector and store it in the Hashtable.
+
+            typeVector = (Vector)defaultFormats.get(formatObject);
+            if (typeVector == null)
+            {
+               typeVector = new Vector();
+               defaultFormats.put(formatObject, typeVector);
+            }
+
+            // Add the type to the type Vector.
+
+            typeVector.addElement(type);
+         }
+      }
+   }
+
+   private void buildNamedFormatTable()
+   {
+      Enumeration tables, columns;
+      Table       table;
+      Column      column;
+      Object      formatObject;
+
+      // Initialize the namedFormats Hashtable and the format number.
+
+      namedFormats.clear();
+      formatNumber = 0;
+
+      // Get the list of tables in the Map. For each table, get
+      // the list of columns. For each column, get the formatting
+      // object (if any). If the formatting object exists, is
+      // serializable (see formatObjectSerializable), and hasn't
+      // yet been processed, add it to the hashtable of named
+      // format objects.
+
+      tables = map.getTables();
+      while (tables.hasMoreElements())
+      {
+         table = (Table)tables.nextElement();
+         columns = table.getColumns();
+         while (columns.hasMoreElements())
+         {
+            column = (Column)columns.nextElement();
+            formatObject = column.getFormatObject();
+            if (formatObject != null)
+            {
+               if (formatObjectSerializable(formatObject))
+               {
+                  if (namedFormats.get(formatObject) == null)
+                  {
+                     namedFormats.put(formatObject, getFormatName());
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   private boolean formatObjectSerializable(Object formatObject)
+   {
+      // Not all formatting objects can be used to construct formatting
+      // elements in the map document. This is because some format classes
+      // do not expose enough information to construct a corresponding
+      // formatting element.
+      //
+      // XMLFormatter, DecimalFormat, and SimpleDateFormat objects can be
+      // used to construct formatting elements (although the locale for
+      // SimpleDateFormat objects is lost). DateFormat and NumberFormat
+      // objects cannot be used.
+
+      if (formatObject instanceof SimpleDateFormat) return true;
+      if (formatObject instanceof DecimalFormat) return true;
+      if (formatObject instanceof XMLFormatter) return true;
+      return false;
+   }
+
+   private String getFormatName()
+   {
+      // Construct format names of the form Format1, Format2, ...
+
+      formatNumber++;
+      return (FORMAT + formatNumber);
    }
 }

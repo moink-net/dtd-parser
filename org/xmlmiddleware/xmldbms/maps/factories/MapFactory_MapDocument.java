@@ -25,6 +25,8 @@ import org.xmlmiddleware.utils.JDBCTypes;
 import org.xmlmiddleware.utils.TokenList;
 import org.xmlmiddleware.utils.XMLName;
 
+import org.xmlmiddleware.xmldbms.XMLFormatter;
+
 import org.xmlmiddleware.xmldbms.maps.ClassMap;
 import org.xmlmiddleware.xmldbms.maps.Column;
 import org.xmlmiddleware.xmldbms.maps.InlineClassMap;
@@ -56,6 +58,7 @@ import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Stack;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 /**
@@ -140,11 +143,6 @@ public class MapFactory_MapDocument
    private static final Integer STATE_INLINECLASS     = new Integer(iSTATE_INLINECLASS);
    private static final Integer STATE_TOPROPERTYTABLE = new Integer(iSTATE_TOPROPERTYTABLE);
 
-   // Date/time format type
-   private static final int DATE = 0;
-   private static final int TIME = 1;
-   private static final int DATETIME = 2;
-
    //**************************************************************************
    // Variables
    //**************************************************************************
@@ -161,19 +159,20 @@ public class MapFactory_MapDocument
    private Vector          keyColumns = new Vector();
    private Hashtable       propTables = new Hashtable();
    private Hashtable       classTables = new Hashtable();
+   private Hashtable       formats = new Hashtable();
 
    // State variables -- map
    private Map             map;
 
    // State variables -- databases
    private String           databaseName, catalogName, schemaName;
-   private boolean          quoteIdentifiers;
    private Table            table;
    private Key              key;
 
    // State variables -- options
    private Locale           locale;
-   private String           pattern, formatName;
+   private String           pattern, formatName, defaultForTypes;
+   private int              dateStyle, timeStyle;
 
    // State variables -- class maps
    private XMLName          elementTypeName;
@@ -195,7 +194,7 @@ public class MapFactory_MapDocument
    private InlineClassMap   inlineClassMap;
 
    // Debugging variables
-   private int              indent;
+   private int              indent = 0;
    private boolean          debug = false;
 
    //**************************************************************************
@@ -322,20 +321,17 @@ public class MapFactory_MapDocument
 
       // Initialize global variables.
       state = STATE_NONE;
-      map = new Map();
-      locale = null;
-      pattern = null;
-      formatName = null;
-      databaseName = null;
-      catalogName = null;
-      schemaName = null;
-      table = null;
-      key = null;
-      classMap = null;
-      propMap = null;
-      inlineClassMap = null;
-//      indent = 0;
+      stateStack.removeAllElements();
+      fkWrapperStack.removeAllElements();
+      baseTableWrapperStack.removeAllElements();
+      rcmWrapperStack.removeAllElements();
+      inlineClassMapStack.removeAllElements();
+      propTables.clear();
+      classTables.clear();
+      formats.clear();
 
+      map = new Map();
+      inlineClassMap = null;
    }
 
    /**
@@ -412,11 +408,15 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_DATEFORMAT:
-               processFormatStart(attrs);
+               processDateFormatStart(attrs, true, false);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_DATETIMEFORMAT:
-               processFormatStart(attrs);
+               processDateFormatStart(attrs, true, true);
+               break;
+
+            case XMLDBMSConst.ELEM_TOKEN_DECIMALFORMAT:
+               processDecimalFormatStart(attrs);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_ELEMENTTYPE:
@@ -439,6 +439,10 @@ public class MapFactory_MapDocument
                stateStack.push(state);
                state = STATE_KEY;
                processForeignKey(attrs);
+               break;
+
+            case XMLDBMSConst.ELEM_TOKEN_FORMATCLASS:
+               processFormatClass(attrs);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_INLINEMAP:
@@ -469,10 +473,6 @@ public class MapFactory_MapDocument
                processOrderColumn(attrs, false);
                break;
 
-            case XMLDBMSConst.ELEM_TOKEN_PATTERN:
-               processPattern(attrs);
-               break;
-
             case XMLDBMSConst.ELEM_TOKEN_PCDATA:
                processPCDATA();
                break;
@@ -501,12 +501,16 @@ public class MapFactory_MapDocument
                processSchema(attrs);
                break;
 
+            case XMLDBMSConst.ELEM_TOKEN_SIMPLEDATEFORMAT:
+               processSimpleDateFormatStart(attrs);
+               break;
+
             case XMLDBMSConst.ELEM_TOKEN_TABLE:
                processTable(attrs);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_TIMEFORMAT:
-               processFormatStart(attrs);
+               processDateFormatStart(attrs, false, true);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_TOCLASSTABLE:
@@ -603,11 +607,15 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_DATEFORMAT:
-               processDateFormat();
+               processDateFormatEnd();
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_DATETIMEFORMAT:
-               processDateTimeFormat();
+               processDateTimeFormatEnd();
+               break;
+
+            case XMLDBMSConst.ELEM_TOKEN_DECIMALFORMAT:
+               processDecimalFormatEnd();
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_FOREIGNKEY:
@@ -621,7 +629,7 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_NUMBERFORMAT:
-               processNumberFormat();
+               processNumberFormatEnd();
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_PRIMARYKEY:
@@ -629,8 +637,12 @@ public class MapFactory_MapDocument
                state = (Integer)stateStack.pop();
                break;
 
+            case XMLDBMSConst.ELEM_TOKEN_SIMPLEDATEFORMAT:
+               processSimpleDateFormatEnd();
+               break;
+
             case XMLDBMSConst.ELEM_TOKEN_TIMEFORMAT:
-               processTimeFormat();
+               processTimeFormatEnd();
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_UNIQUEKEY:
@@ -655,13 +667,13 @@ public class MapFactory_MapDocument
             case XMLDBMSConst.ELEM_TOKEN_EMPTYSTRINGISNULL:
             case XMLDBMSConst.ELEM_TOKEN_EXTENDS:
             case XMLDBMSConst.ELEM_TOKEN_FIXEDORDER:
+            case XMLDBMSConst.ELEM_TOKEN_FORMATCLASS:
             case XMLDBMSConst.ELEM_TOKEN_LOCALE:
             case XMLDBMSConst.ELEM_TOKEN_MAPS:
             case XMLDBMSConst.ELEM_TOKEN_MVORDERCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_NAMESPACE:
             case XMLDBMSConst.ELEM_TOKEN_OPTIONS:
             case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
-            case XMLDBMSConst.ELEM_TOKEN_PATTERN:
             case XMLDBMSConst.ELEM_TOKEN_PCDATA:
             case XMLDBMSConst.ELEM_TOKEN_SCHEMA:
             case XMLDBMSConst.ELEM_TOKEN_TABLE:
@@ -806,6 +818,7 @@ public class MapFactory_MapDocument
       Column column;
       String columnName, attrValue;
       int    type, nullability;
+      Object formatObject;
 
       // Create the column and add it to the table. This throws an error if
       // the column already exists.
@@ -876,36 +889,103 @@ public class MapFactory_MapDocument
          column.setNullability(nullability);
       }
 
-      // Get the column format if any.
+      // Get the named column format if any.
 
-/*
-?? DTD bug here. Since we don't necessarily know the column type, we don't know whether to look through the date, time, timestamp, or number formats. If we combine all formats into a single hashtable, we can't distinguish betwen date, time, and timestamp formats, which is a problem when serializing the DTD. If we leave them separate, we have to search four different hashtables (a) to find a format and (b) every time we add a format.
-
-One solution is to store the format names in each column, then later have Map.resolveFormats() get the correct format for each name, including getting default formats.
-*/
       attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_FORMAT);
       if (attrValue != null)
       {
-         throw new MapException("Bug. Column formats not implemented yet.");
+         formatObject = formats.get(attrValue);
+         if (formatObject == null)
+            throw new MapException("Column " + columnName + " uses the named format " + attrValue + ". The format was not declared.");
+         column.setFormatObject(formatObject);
       }
    }
 
    private void processDatabase(Attributes attrs)
    {
       databaseName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME, XMLDBMSConst.DEF_DATABASENAME);
-      quoteIdentifiers = isYes(getAttrValue(attrs, XMLDBMSConst.ATTR_QUOTEIDENTIFIERS, XMLDBMSConst.DEF_QUOTEIDENTIFIERS));
    }
 
-   private void processDateFormat()
+   private void processDateFormatEnd()
       throws MapException
    {
-      map.addDateFormat(formatName, getDateFormat(DATE));
+      Object formatObject;
+
+      formatObject = (locale == null) ? DateFormat.getDateInstance(dateStyle) :
+                                        DateFormat.getDateInstance(dateStyle, locale);
+
+      // Add the formatting object to the hashtable of named formatting
+      // objects and/or the list of default formatting objects.
+
+      addNamedFormatObject(formatName, formatObject);
+      addDefaultFormatObject(defaultForTypes, formatObject);
    }
 
-   private void processDateTimeFormat()
+   private void processDateFormatStart(Attributes attrs, boolean getDateStyle, boolean getTimeStyle)
       throws MapException
    {
-      map.addDateTimeFormat(formatName, getDateFormat(DATETIME));
+      processFormatStart(attrs);
+      if (getDateStyle)
+      {
+         dateStyle = enumTokens.getToken(getAttrValue(attrs, XMLDBMSConst.ATTR_DATESTYLE));
+      }
+      if (getTimeStyle)
+      {
+         timeStyle = enumTokens.getToken(getAttrValue(attrs, XMLDBMSConst.ATTR_TIMESTYLE));
+      }
+   }
+
+   private void processDateTimeFormatEnd()
+      throws MapException
+   {
+      Object formatObject;
+
+      formatObject = (locale == null) ?
+                     DateFormat.getDateTimeInstance(dateStyle, timeStyle) :
+                     DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale);
+
+      // Add the formatting object to the hashtable of named formatting
+      // objects and/or the list of default formatting objects.
+
+      addNamedFormatObject(formatName, formatObject);
+      addDefaultFormatObject(defaultForTypes, formatObject);
+   }
+
+   private void processDecimalFormatStart(Attributes attrs)
+      throws MapException
+   {
+      processFormatStart(attrs);
+
+      pattern = getAttrValue(attrs, XMLDBMSConst.ATTR_PATTERN);
+   }
+
+   private void processDecimalFormatEnd()
+      throws MapException
+   {
+      Object formatObject;
+
+      if (locale != null)
+      {
+         try
+         {
+            formatObject = NumberFormat.getInstance(locale);
+            ((DecimalFormat)formatObject).applyLocalizedPattern(pattern);
+         }
+         catch (ClassCastException c)
+         {
+            throw new MapException("No DecimalFormat object available for locale with country " + locale.getCountry() + " and language " + locale.getLanguage() + ".");
+         }
+      }
+      else
+      {
+         formatObject = new DecimalFormat(pattern);
+      }
+
+      // Add the formatting object to the hashtable of named formatting
+      // objects and/or the list of default formatting objects.
+
+      addNamedFormatObject(formatName, formatObject);
+      addDefaultFormatObject(defaultForTypes, formatObject);
    }
 
    private void processElementType(Attributes attrs)
@@ -1079,11 +1159,49 @@ One solution is to store the format names in each column, then later have Map.re
       fkWrapper.foreignKey = key;
    }
 
-   private void processFormatStart(Attributes attrs)
+   private void processFormatClass(Attributes attrs)
+      throws MapException
    {
+      String className;
+      Object formatObject;
+
+      // Get the common attributes.
+
+      processFormatStart(attrs);
+
+      // Instantiate an object of the custom formatting class.
+
+      className = getAttrValue(attrs, XMLDBMSConst.ATTR_CLASS);
+      try
+      {
+         formatObject = Class.forName(className).newInstance();
+      }
+      catch (Exception e)
+      {
+         throw new MapException(e.getClass().getName() + ": " + e.getMessage());
+      }
+      if (!(formatObject instanceof XMLFormatter))
+         throw new MapException("Format class " + className + " does not implement org.xmlmiddleware.xmldbms.XMLFormatter.");
+
+      // Add the formatting object to the hashtable of named formatting
+      // objects and/or the list of default formatting objects.
+
+      addNamedFormatObject(formatName, formatObject);
+      addDefaultFormatObject(defaultForTypes, formatObject);
+   }
+
+   private void processFormatStart(Attributes attrs)
+      throws MapException
+   {
+      // Get the attribute values and check that the Name or DefaultForTypes
+      // or both attributes are present.
+
       formatName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
+      defaultForTypes = getAttrValue(attrs, XMLDBMSConst.ATTR_DEFAULTFORTYPES);
+      if ((formatName == null) && (defaultForTypes == null))
+         throw new MapException("At least one of the attributes Name and DefaultForTypes must be present on a formatting element.");
+
       locale = null;
-      pattern = null;
    }
 
    private void processKeyEnd()
@@ -1132,20 +1250,18 @@ One solution is to store the format names in each column, then later have Map.re
       map.addNamespace(prefix, uri);
    }
 
-   private void processNumberFormat()
+   private void processNumberFormatEnd()
       throws MapException
    {
-      NumberFormat numberFormat;
+      Object formatObject;
 
-      if (pattern != null)
-      {
-         numberFormat = new DecimalFormat(pattern);
-      }
-      else // if (locale != null)
-      {
-         numberFormat = NumberFormat.getInstance(locale);
-      }
-      map.addNumberFormat(formatName, numberFormat);
+      formatObject = NumberFormat.getInstance(locale);
+
+      // Add the formatting object to the hashtable of named formatting
+      // objects and/or the list of default formatting objects.
+
+      addNamedFormatObject(formatName, formatObject);
+      addDefaultFormatObject(defaultForTypes, formatObject);
    }
 
    private void processOrderColumn(Attributes attrs, boolean multiValued)
@@ -1233,11 +1349,6 @@ One solution is to store the format names in each column, then later have Map.re
       // Set whether order is generated.
 
       orderInfo.setGenerateOrder(generate);
-   }
-
-   private void processPattern(Attributes attrs)
-   {
-      pattern = getAttrValue(attrs, XMLDBMSConst.ATTR_VALUE);
    }
 
    private void processPCDATA()
@@ -1332,6 +1443,28 @@ One solution is to store the format names in each column, then later have Map.re
       schemaName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
    }
 
+   private void processSimpleDateFormatEnd()
+      throws MapException
+   {
+      Object formatObject;
+
+      formatObject = (locale == null) ? new SimpleDateFormat(pattern) :
+                                        new SimpleDateFormat(pattern, locale);
+
+      // Add the formatting object to the hashtable of named formatting
+      // objects and/or the list of default formatting objects.
+
+      addNamedFormatObject(formatName, formatObject);
+      addDefaultFormatObject(defaultForTypes, formatObject);
+   }
+
+   private void processSimpleDateFormatStart(Attributes attrs)
+      throws MapException
+   {
+      processFormatStart(attrs);
+      pattern = getAttrValue(attrs, XMLDBMSConst.ATTR_PATTERN);
+   }
+
    private void processTable(Attributes attrs)
       throws MapException
    {
@@ -1346,10 +1479,19 @@ One solution is to store the format names in each column, then later have Map.re
       map.addTable(table);
    }
 
-   private void processTimeFormat()
+   private void processTimeFormatEnd()
       throws MapException
    {
-      map.addTimeFormat(formatName, getDateFormat(TIME));
+      Object formatObject;
+
+      formatObject = (locale == null) ? DateFormat.getTimeInstance(timeStyle) :
+                                        DateFormat.getTimeInstance(timeStyle, locale);
+
+      // Add the formatting object to the hashtable of named formatting
+      // objects and/or the list of default formatting objects.
+
+      addNamedFormatObject(formatName, formatObject);
+      addDefaultFormatObject(defaultForTypes, formatObject);
    }
 
    private void processToClassTable(Attributes attrs)
@@ -1714,6 +1856,34 @@ One solution is to store the format names in each column, then later have Map.re
       return orderInfo;
    }
 
+   private void addNamedFormatObject(String formatName, Object formatObject)
+      throws MapException
+   {
+      if (formatName == null) return;
+      if (formats.get(formatName) != null)
+         throw new MapException("Format name " + formatName + " used more than once.");
+      formats.put(formatName, formatObject);
+   }
+
+   private void addDefaultFormatObject(String defaultForTypes, Object formatObject)
+      throws MapException
+   {
+      StringTokenizer tokenizer;
+      String          typeName;
+      int             type;
+
+      if (defaultForTypes == null) return;
+      tokenizer = new StringTokenizer(defaultForTypes, " \n\r\t", false);
+      while (tokenizer.hasMoreTokens())
+      {
+         typeName = tokenizer.nextToken();
+         type = JDBCTypes.getType(typeName);
+         if (type == Types.NULL)
+            throw new MapException("Invalid JDBC type name: " + typeName);
+         map.addDefaultFormatObject(type, formatObject);
+      }
+   }
+
    private void resolveFKWrappers()
       throws MapException
    {
@@ -2003,49 +2173,6 @@ One solution is to store the format names in each column, then later have Map.re
       fkUniqueKey = foreignKey.getRemoteKey();
       if (!fkUniqueKey.equals(uniqueKey))
          throw new MapException("<" + tag + ">" + " uses foreign key " + foreignKey.getName() + " on table " + foreignKeyTable.getUniversalName() + ". This references unique key " + fkUniqueKey.getName() + " on table " + fkUniqueKeyTable.getUniversalName() + " but <UseUniqueKey> uses key " + uniqueKey.getName() + " on table " + uniqueKeyTable.getUniversalName());
-   }
-
-   private DateFormat getDateFormat(int type)
-   {
-      int style;
-
-      // Convert the pattern to a style.
-
-      style = enumTokens.getToken(pattern);
-
-      if (style == XMLDBMSConst.ENUM_TOKEN_INVALID)
-      {
-         // The pattern was not "FULL", "LONG", "MEDIUM", or "SHORT", so it
-         // must be a SimpleDateFormat pattern like "MM-dd-yy". Use this to
-         // build a SimpleDateFormat.
-
-         return (locale == null) ? new SimpleDateFormat(pattern) :
-                                   new SimpleDateFormat(pattern, locale);
-      }
-      else
-      {
-         // The pattern was "FULL", "LONG", "MEDIUM", or "SHORT", so use this
-         // to build a DateFormat.
-
-         switch (type)
-         {
-            case DATE:
-               return (locale == null) ? DateFormat.getDateInstance(style) :
-                                         DateFormat.getDateInstance(style, locale);
-
-            case TIME:
-               return (locale == null) ? DateFormat.getTimeInstance(style) :
-                                         DateFormat.getTimeInstance(style, locale);
-
-            case DATETIME:
-               return (locale == null) ? DateFormat.getDateTimeInstance(style, style) :
-                                         DateFormat.getDateTimeInstance(style, style, locale);
-
-            default:
-               // Shouldn't ever hit this, but it keeps the compiler happy...
-               return null;
-         }
-      }
    }
 
    //**************************************************************************
