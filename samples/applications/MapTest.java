@@ -9,16 +9,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 import org.xml.sax.InputSource;
-import org.xml.sax.Parser;
-
-/*
-// Imports for the Oracle version 2 parser
-import oracle.xml.parser.v2.SAXParser;
-*/
-
-/*
-// Imports for the Sun parser (none needed -- see getSAXParser())
-*/
+import org.xml.sax.XMLReader;
 
 // Imports for the Xerces parser
 import org.apache.xerces.parsers.SAXParser;
@@ -72,7 +63,7 @@ public class MapTest
    static Map createMap(InputSource src, String filename)
       throws Exception
    {
-      MapFactory_MapDocument factory = new MapFactory_MapDocument(getSAXParser());
+      MapFactory_MapDocument factory = new MapFactory_MapDocument(getSAXXMLReader());
       return factory.createMap(src);
    }
 
@@ -143,41 +134,11 @@ public class MapTest
    }
 
    // ***********************************************************************
-   // Methods that use the Oracle version 2 parser
-   // Comment these methods out if you are using a different parser.
-   // ***********************************************************************
-/*
-   static Parser getSAXParser()
-   {
-      // WARNING! This code is specific to the Oracle parser.
-
-      SAXParser parser;
-
-      // Instantiate the parser and set various options
-      parser = new SAXParser();
-      parser.setValidationMode(true);
-      return parser;
-   }
-*/
-   // ***********************************************************************
-   // Methods that use the Sun parser
-   // Comment these methods out if you are using a different parser.
-   // ***********************************************************************
-/*
-   static Parser getSAXParser()
-   {
-      // WARNING! This code is specific to the Sun parser.
-
-      return new com.sun.xml.parser.Parser();
-   }
-*/
-
-   // ***********************************************************************
    // Methods that use the Xerces parser
    // Comment these methods out if you are using a different parser.
    // ***********************************************************************
 
-   static Parser getSAXParser()
+   static XMLReader getSAXXMLReader()
    {
       // WARNING! This code is specific to the Xerces parser.
 
