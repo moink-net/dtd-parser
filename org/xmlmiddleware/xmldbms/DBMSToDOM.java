@@ -53,8 +53,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.SAXException;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -139,7 +138,7 @@ public class DBMSToDOM
    // 8/01 Adam Flinton
    // Replaced DocumentFactory with ParserUtils.
    public DBMSToDOM(ParserUtils utils)
-      throws SAXNotRecognizedException, SAXNotSupportedException, ParserUtilsException
+      throws SAXException, ParserUtilsException
    {
       this.utils = utils;
       fragmentBuilder = new FragmentBuilder(utils.getXMLReader());
@@ -382,10 +381,11 @@ public class DBMSToDOM
    }
 */
 
+/*
    public void setDBErrorHandling??
    public SQLException getSQLExceptions??
    public SQLException getSQLWarnings??
-
+*/
    // ************************************************************************
    // Helper methods for getting started
    // ************************************************************************
@@ -395,7 +395,7 @@ public class DBMSToDOM
    {
       ClassTableMap rootTableMap;
       Table         rootTable;
-      DBAction      dbAction;
+      DataHandler   dataHandler;
       ResultSet     rs;
 
       // Get the map for the table, construct a result set
@@ -404,9 +404,9 @@ public class DBMSToDOM
       rootTableMap = map.getClassTableMap(databaseName, catalogName, schemaName, tableName);
       rootTable = rootTableMap.getTable();
 
-      dbAction = transferInfo.getDBAction(rootTable.getDatabaseName());
+      dataHandler = transferInfo.getDataHandler(rootTable.getDatabaseName());
 
-      rs = dbAction.select(rootTable, key, null);
+      rs = dataHandler.select(rootTable, key, null);
       processClassResultSet(rootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
       rs.close();
    }
@@ -595,7 +595,7 @@ public class DBMSToDOM
       Table         table;
       Column[]      keyColumns;
       Object[]      keyValues;
-      DBAction      dbAction;
+      DataHandler   dataHandler;
       OrderInfo     orderInfo;
       ResultSet     rs;
 
@@ -609,16 +609,16 @@ public class DBMSToDOM
       keyColumns = relatedClassTableMap.getLinkInfo().getParentKey().getColumns();
       keyValues = classRow.getColumnValues(keyColumns);
 
-      // Get the DBAction used by the table
+      // Get the DataHandler used by the table
 
       classTableMap = relatedClassTableMap.getClassTableMap();
       table = classTableMap.getTable();
-      dbAction = transferInfo.getDBAction(table.getDatabaseName());
+      dataHandler = transferInfo.getDataHandler(table.getDatabaseName());
 
       // Get the result set over the related class table and process it.
 
       orderInfo = relatedClassTableMap.getOrderInfo();
-      rs = dbAction.select(table, keyValues, orderInfo);
+      rs = dataHandler.select(table, keyValues, orderInfo);
       processClassResultSet(classNode,
                             rs,
                             relatedClassTableMap.getElementTypeName(),
@@ -634,7 +634,7 @@ public class DBMSToDOM
       Table       table;
       Column[]    keyColumns;
       Object[]    keyValues;
-      DBAction    dbAction;
+      DataHandler dataHandler;
       OrderInfo   rsOrderInfo;
       ResultSet   rs;
 
@@ -647,10 +647,10 @@ public class DBMSToDOM
       keyColumns = propTableMap.getLinkInfo().getParentKey().getColumns();
       keyValues = classRow.getColumnValues(keyColumns);
 
-      // Get the DBAction used by the table
+      // Get the DataHandler used by the table
 
       table = propTableMap.getTable();
-      dbAction = transferInfo.getDBAction(table.getDatabaseName());
+      dataHandler = transferInfo.getDataHandler(table.getDatabaseName());
 
       // Get the result set over the property table and process it. Note that
       // how we sort the result set depends on whether we are processing a list
@@ -660,7 +660,7 @@ public class DBMSToDOM
 
       rsOrderInfo = (propTableMap.isTokenList()) ? propTableMap.getTokenListOrderInfo() :
                                                    propTableMap.getOrderInfo();
-      rs = dbAction.select(table, keyValues, rsOrderInfo);
+      rs = dataHandler.select(table, keyValues, rsOrderInfo);
       processPropResultSet(parentNode, rs, propTableMap);
       rs.close();
    }
