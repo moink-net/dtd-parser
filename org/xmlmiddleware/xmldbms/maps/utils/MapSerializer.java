@@ -825,7 +825,7 @@ public class MapSerializer extends XMLWriter
       writeElementEnd(XMLDBMSConst.ELEM_OPTIONS);
    }
 
-   private void writeOrderInfo(OrderInfo orderInfo, boolean multiValued)
+   private void writeOrderInfo(OrderInfo orderInfo, boolean isTokenList)
       throws IOException
    {
       String name;
@@ -847,7 +847,7 @@ public class MapSerializer extends XMLWriter
          values[1] = orderInfo.getOrderColumn().getName();
          attrs[2] = XMLDBMSConst.ATTR_GENERATE;
          values[2] = orderInfo.generateOrder() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
-         name = (multiValued) ? XMLDBMSConst.ELEM_MVORDERCOLUMN : XMLDBMSConst.ELEM_ORDERCOLUMN;
+         name = (isTokenList) ? XMLDBMSConst.ELEM_TLORDERCOLUMN : XMLDBMSConst.ELEM_ORDERCOLUMN;
          writeElementStart(name, 3, true);
       }
    }
@@ -950,8 +950,8 @@ public class MapSerializer extends XMLWriter
 
       // Start the <PropertyMap> element.
 
-      attrs[0] = XMLDBMSConst.ATTR_MULTIVALUED;
-      values[0] = propMap.isMultiValued() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
+      attrs[0] = XMLDBMSConst.ATTR_TOKENLIST;
+      values[0] = propMap.isTokenList() ? XMLDBMSConst.ENUM_YES : XMLDBMSConst.ENUM_NO;
       writeElementStart(XMLDBMSConst.ELEM_PROPERTYMAP, 1, false);
 
       // Write the <Attribute>, <PCDATA>, or <ElementType> element.
@@ -976,9 +976,9 @@ public class MapSerializer extends XMLWriter
       writeToPropertyTable(propMap);
       writeToColumn(propMap.getColumn());
       writeOrderInfo(propMap.getOrderInfo(), false);
-      if (propMap.isMultiValued())
+      if (propMap.isTokenList())
       {
-         writeOrderInfo(propMap.getMVOrderInfo(), true);
+         writeOrderInfo(propMap.getTokenListOrderInfo(), true);
       }
 
       // End the <PropertyMap> element.

@@ -266,7 +266,7 @@ public class MapInverter
       PropertyTableMap newPropTableMap;
       PropertyMapBase  newPropMapBase;
       Table            propTable;
-      boolean          multiValued;
+      boolean          isTokenList;
 
       // Check if the property is mapped to a column in the parent table or a property
       // table. In the former case, create a ColumnMap; in the latter case, create a
@@ -304,11 +304,11 @@ public class MapInverter
 
       // Set the common properties.
 
-      multiValued = propMap.isMultiValued();
-      newPropMapBase.setIsMultiValued(multiValued);
-      if (multiValued)
+      isTokenList = propMap.isTokenList();
+      newPropMapBase.setIsTokenList(isTokenList);
+      if (isTokenList)
       {
-         newPropMapBase.setMVOrderInfo(propMap.getMVOrderInfo());
+         newPropMapBase.setTokenListOrderInfo(propMap.getTokenListOrderInfo());
       }
       if (propMap.getType() != PropertyMapBase.ATTRIBUTE)
       {
@@ -513,7 +513,7 @@ public class MapInverter
 
       PropertyMap newPropMap;
       int         type;
-      boolean     multiValued;
+      boolean     isTokenList;
 
       // Create a new PropertyMap and add it to the appropriate list.
 
@@ -544,11 +544,11 @@ public class MapInverter
                           ((PropertyTableMap)propMapBase).getLinkInfo());
       }
 
-      multiValued = propMapBase.isMultiValued();
-      newPropMap.setIsMultiValued(multiValued);
-      if (multiValued)
+      isTokenList = propMapBase.isTokenList();
+      newPropMap.setIsTokenList(isTokenList);
+      if (isTokenList)
       {
-         newPropMap.setMVOrderInfo(propMapBase.getMVOrderInfo());
+         newPropMap.setTokenListOrderInfo(propMapBase.getTokenListOrderInfo());
       }
       if (type != PropertyMapBase.ATTRIBUTE)
       {
