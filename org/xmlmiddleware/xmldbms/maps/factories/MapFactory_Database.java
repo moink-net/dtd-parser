@@ -17,6 +17,7 @@
 package org.xmlmiddleware.xmldbms.maps.factories;
 
 import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.utils.JDBCTypes;
 
 import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
 import org.xmlmiddleware.xmldbms.maps.Column;
@@ -208,9 +209,9 @@ public class MapFactory_Database
    private static final String PERIOD = ".";
    private static final String CONNECTIONS = "connections";
    private static final String DATABASENAME = "database name";
-   private static final String CATALOGNAME = "root catalog name";
-   private static final String SCHEMANAME = "root schema name";
-   private static final String TABLENAME = "root table name";
+   private static final String CATALOGNAME = "catalog name";
+   private static final String SCHEMANAME = "schema name";
+   private static final String TABLENAME = "table name";
    private static final String ARRAY = "s array";
    private static final String STOP = "Stop ";
    private static final String ROOT = "root ";
@@ -401,10 +402,10 @@ public class MapFactory_Database
    public Map createMap(String[] rootDatabaseNames, String[] rootCatalogNames, String[] rootSchemaNames, String[] rootTableNames)
       throws SQLException, MapException
    {
-      checkArray(rootTableNames, 0, true, null, ROOT + TABLENAME);
+      checkArray(rootTableNames, 0, true, null, TABLENAME);
       checkArray(rootDatabaseNames, rootTableNames.length, false, DEFAULT, ROOT + DATABASENAME);
-      checkArray(rootCatalogNames, rootTableNames.length, false, null, ROOT + CATALOGNAME);
-      checkArray(rootSchemaNames, rootTableNames.length, false, null, ROOT + SCHEMANAME);
+      checkArray(rootCatalogNames, rootTableNames.length, false, null, CATALOGNAME);
+      checkArray(rootSchemaNames, rootTableNames.length, false, null, SCHEMANAME);
 
       initGlobalVariables();
 
@@ -568,15 +569,15 @@ public class MapFactory_Database
                        tableNames = new Vector();
 
       // Get a DatabaseMetaData object for the connection used by the database and
-      // set up the variables for the DatabaseMetaData.getTables method. If
-      // the catalog or schema name is null, it means there is no catalog
-      // or schema. In this case, set the name to an empty string, which
-      // constrains the methods to tables without a catalog/schema. Also escape the
-      // _ and % characters in the schema name, as these are treated as wildcards.
+      // escape the _ and % characters in the schema name, as these are treated as wildcards.
+
+      // It is not clear whether to set null catalog and schema names to null or an
+      // empty string. For the moment, set these to an empty string. See the catalog
+      // methods in DatabaseMetaData (getTables, getColumns, etc.) for details.
 
       meta = getDatabaseMetaData(databaseName);
-      if (catalogName == null) catalogName = "";
-      if (schemaName == null) schemaName = "";
+//      if (catalogName == null) catalogName = "";
+//      if (schemaName == null) schemaName = "";
       schemaName = escapeDBName(meta, schemaName);
 
       // Get the catalog, schema, and table names and cache them.
@@ -638,15 +639,15 @@ public class MapFactory_Database
       classTableMap = map.createClassTableMap(table);
 
       // Get a DatabaseMetaData object for the connection used by the database and
-      // set up the variables for the various calls to DatabaseMetaData methods. If
-      // the catalog or schema name is null in the Table object, it means there is
-      // no catalog or schema. In this case, set the name to an empty string, which
-      // constrains the methods to tables without a catalog/schema. Also escape the
-      // _ and % characters in the schema name, as these are treated as wildcards.
+      // escape the _ and % characters in the schema name, as these are treated as wildcards.
+
+      // It is not clear whether to set null catalog and schema names to null or an
+      // empty string. For the moment, set these to an empty string. See the catalog
+      // methods in DatabaseMetaData (getTables, getColumns, etc.) for details.
 
       meta = getDatabaseMetaData(databaseName);
-      if (catalogName == null) catalogName = "";
-      if (schemaName == null) schemaName = "";
+//      if (catalogName == null) catalogName = "";
+//      if (schemaName == null) schemaName = "";
       schemaName = escapeDBName(meta, schemaName);
 
       // Get the primary key and add it to the table. Note that some of this
@@ -716,6 +717,7 @@ public class MapFactory_Database
       ResultSet   rs;
       String      columnName;
       Column      column;
+      int         type;
       int         len;
 
       // If we are converting to attributes, build a hashtable to hold the attribute names.
@@ -756,13 +758,14 @@ public class MapFactory_Database
 
          // Set the various column metadata.
 
-         column.setType(rs.getShort(5));
-         column.setNullability(rs.getInt(11));
-         len = rs.getInt(16);
-         if (!rs.wasNull())
+         type = JDBCTypes.convertDateTimeType(rs.getShort(5));
+         column.setType(type);
+         len = rs.getInt(7);
+         if (JDBCTypes.typeIsChar(type) || JDBCTypes.typeIsBinary(type))
          {
             column.setLength(len);
          }
+         column.setNullability(rs.getInt(11));
 
          // If the column is not part of a foreign key, create a ColumnMap for it.
 
@@ -926,28 +929,27 @@ public class MapFactory_Database
             primaryKey = table.createPrimaryKey(pkName);
          }
       }
+
+      // Close the result set.
+
       rs.close();
 
-      // Check that a primary key object was created. If not, throw an error that
-      // the JDBC driver has a bug in it.
+      // If a primary key object was created, allocate an array for the primary
+      // key columns and place each column in its correct position in the array,
+      // then set the array of columns in the Key. (No primary key object is created
+      // if the table does not have a primary key.)
 
-      if (primaryKey == null)
-         throw new SQLException("JDBC driver does not correctly support DatabaseMetaData.getPrimaryKeys(). No row with a value of 1 in the KEY_SEQ column was found.");
-
-      // Allocate an array for the primary key columns, then place each
-      // column in its correct position in the array.
-
-      pkColumns = new Column[pkColumnNames.size()];
-      for (int i = 0; i < pkColumnNames.size(); i++)
+      if (primaryKey != null)
       {
-         iKeySeq = ((Integer)keySeqs.elementAt(i)).intValue();
-         pkColumnName = (String)pkColumnNames.elementAt(i);
-         pkColumns[iKeySeq - 1] = table.createColumn(pkColumnName);
+         pkColumns = new Column[pkColumnNames.size()];
+         for (int i = 0; i < pkColumnNames.size(); i++)
+         {
+            iKeySeq = ((Integer)keySeqs.elementAt(i)).intValue();
+            pkColumnName = (String)pkColumnNames.elementAt(i);
+            pkColumns[iKeySeq - 1] = table.createColumn(pkColumnName);
+         }
+         primaryKey.setColumns(pkColumns);
       }
-
-      // Set the array of columns in the Key.
-
-      primaryKey.setColumns(pkColumns);
    }
 
    private void getForeignKeys(DatabaseMetaData meta, String databaseName, String catalogName, String schemaName, String tableName, Vector remoteTables, Vector linkInfos, boolean getExportedKeys, Hashtable stopTables)
@@ -1032,7 +1034,7 @@ public class MapFactory_Database
 
          fkName = rs.getString(12);
          if (rs.wasNull()) fkName = null;
-         pkName = rs.getString(12);
+         pkName = rs.getString(13);
          if (rs.wasNull()) pkName = null;
 
          // Each key is sorted by key sequence number, so when the key sequence
@@ -1098,20 +1100,19 @@ public class MapFactory_Database
          pkColumnNames.addElement(pkColumnName);
       }
 
-      // Check that a foreign key object was created. If not, throw an error that
-      // the JDBC driver has a bug in it.
-
-      if (foreignKey == null)
-         throw new SQLException("JDBC driver does not correctly support either DatabaseMetaData.getImportedKeys() or getExportedKeys(). No row with a value of 1 in the KEY_SEQ column was found.");
-
-      // Set the key columns in the last keys.
-
-      setKeyColumnArray(fkTable, fkColumnNames, foreignKey);
-      setKeyColumnArray(pkTable, pkColumnNames, primaryKey);
-
       // Close the result set.
 
       rs.close();
+
+      // If a foreign key object was created, set the key columns in the last
+      // keys processed. (No foreign key object is created if the table does not
+      // export its primary key or import any foreign keys.)
+
+      if (foreignKey != null)
+      {
+         setKeyColumnArray(fkTable, fkColumnNames, foreignKey);
+         setKeyColumnArray(pkTable, pkColumnNames, primaryKey);
+      }
    }
 
    private void setKeyColumnArray(Table table, Vector columnNames, Key key)
@@ -1169,7 +1170,11 @@ public class MapFactory_Database
    {
       String       escapeChar;
       StringBuffer escapedName = new StringBuffer();
-      char[]       buf = new char[name.length()];
+      char[]       buf;
+
+      // Just return if name is null.
+
+      if (name == null) return null;
 
       // Get the character used to escape wildcard characters.
 
@@ -1177,7 +1182,8 @@ public class MapFactory_Database
 
       // Read through the name and escape any wildcard characters.
 
-      name.copyValueOf(buf);
+      buf = new char[name.length()];
+      name.getChars(0, name.length(), buf, 0);
       for (int i = 0; i < buf.length; i++)
       {
          switch (buf[i])
@@ -1204,7 +1210,7 @@ public class MapFactory_Database
 
    private XMLName getXMLName(String databaseName, String catalogName, String schemaName, String tableName, String columnName, String parentElementTypeName, int type)
    {
-      String[] names = new String[4];
+      String[] names = new String[5];
 
       names[0] = columnName;
       names[1] = tableName;
@@ -1365,11 +1371,11 @@ public class MapFactory_Database
       }
    }
 
-   private void setDefault(Object[] names, Object defaultValue)
+   private void setDefault(Object[] array, Object defaultValue)
    {
-      for (int i = 0; i < names.length; i++)
+      for (int i = 0; i < array.length; i++)
       {
-         if (names[i] == null) names[i] = defaultValue;
+         if (array[i] == null) array[i] = defaultValue;
       }
    }
 }

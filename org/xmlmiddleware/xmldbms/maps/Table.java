@@ -59,7 +59,8 @@ public class Table extends MapBase
 
    private static final String DEFAULT = "Default";
    private static final String DOUBLEQUOTE = "\"";
-   private static final String DQPDQ = "\".\""; // Double Quote Period Double Quote
+   private static final String DQPDQ = "\".\"";    // Double Quote Period Double Quote
+   private static final String PRIMARYKEY = "PrimaryKey";
 
    // ********************************************************************
    // Variables
@@ -361,6 +362,10 @@ public class Table extends MapBase
     */
    public Key createPrimaryKey(String keyName)
    {
+      if (keyName == null)
+      {
+         keyName = PRIMARYKEY;
+      }
       if (primaryKey == null)
       {
          primaryKey = Key.createPrimaryKey(keyName);

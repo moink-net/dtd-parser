@@ -281,4 +281,35 @@ public class JDBCTypes
               (type == Types.SMALLINT) ||
               (type == Types.TINYINT));
    }
+
+
+   /**
+    * Convert date/time types from ODBC 2.0 values to ODBC 3.0/JDBC values.
+    *
+    * <p>The numbers for the date/time data types changed between ODBC 2.0 and
+    * ODBC 3.0. JDBC uses the 3.0 numbers. This method converts the ODBC 2.0
+    * values to ODBC 3.0/JDBC values. It is possible to get ODBC 2.0 values
+    * when the ODBC Driver Manager or the ODBC-JDBC bridge hasn't converted them.</p>
+    *
+    * @param type The type.
+    * @return The converted type. This is the same as the input type if the
+    *    type is not an ODBC 2.0 date/time type.
+    */
+   public static int convertDateTimeType(int type)
+   {
+      switch (type)
+      {
+         case 9:
+            return Types.DATE;
+
+         case 10:
+            return Types.TIME;
+
+         case 11:
+            return Types.TIMESTAMP;
+
+         default:
+            return type;
+      }
+   }   
 }
