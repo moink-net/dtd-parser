@@ -28,7 +28,7 @@ import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.utils.XMLName;
 import org.xmlmiddleware.utils.XMLWriter;
 
-import org.xmlmiddleware.xmldbms.XMLFormatter;
+import org.xmlmiddleware.conversions.StringFormatter;
 import org.xmlmiddleware.xmldbms.helpers.DateFormatter;
 import org.xmlmiddleware.xmldbms.helpers.NumberFormatter;
 
@@ -327,9 +327,9 @@ public class MapSerializer extends XMLWriter
    private void writeColumn(Column column)
       throws IOException
    {
-      int          count = 0, type, length, precision, scale, nullability;
-      XMLFormatter formatter;
-      String       formatName;
+      int             count = 0, type, length, precision, scale, nullability;
+      StringFormatter formatter;
+      String          formatName;
 
       attrs[count] = XMLDBMSConst.ATTR_NAME;
       values[count++] = column.getName();
@@ -529,10 +529,10 @@ public class MapSerializer extends XMLWriter
    private void writeDefaultFormatElements()
       throws IOException
    {
-      Enumeration  formatters;
-      XMLFormatter formatter;
-      Vector       typeVector;
-      String       name;
+      Enumeration     formatters;
+      StringFormatter formatter;
+      Vector          typeVector;
+      String          name;
 
       // Write the default formatting objects. Remember to check if any of
       // these is also a named format object, in which case we also write
@@ -541,7 +541,7 @@ public class MapSerializer extends XMLWriter
       formatters = defaultFormatters.keys();
       while (formatters.hasMoreElements())
       {
-         formatter = (XMLFormatter)formatters.nextElement();
+         formatter = (StringFormatter)formatters.nextElement();
          typeVector = (Vector)defaultFormatters.get(formatter);
          name = (String)namedFormatters.get(formatter);
          writeFormatElement(formatter, typeVector, name);
@@ -591,7 +591,7 @@ public class MapSerializer extends XMLWriter
       writeElementEnd(XMLDBMSConst.ELEM_EXTENDS);
    }
 
-   private void writeFormatElement(XMLFormatter formatter, Vector types, String name)
+   private void writeFormatElement(StringFormatter formatter, Vector types, String name)
       throws IOException
    {
       int          count = 0, type;
@@ -766,9 +766,9 @@ public class MapSerializer extends XMLWriter
    private void writeNamedFormatElements()
       throws IOException
    {
-      Enumeration  formatters;
-      XMLFormatter formatter;
-      String       name;
+      Enumeration     formatters;
+      StringFormatter formatter;
+      String          name;
 
       // Write the named format elements. Note that we don't write any
       // named format objects that are also default format objects. This
@@ -777,7 +777,7 @@ public class MapSerializer extends XMLWriter
       formatters = namedFormatters.keys();
       while (formatters.hasMoreElements())
       {
-         formatter = (XMLFormatter)formatters.nextElement();
+         formatter = (StringFormatter)formatters.nextElement();
          if (defaultFormatters.get(formatter) != null) continue;
          name = (String)namedFormatters.get(formatter);
          writeFormatElement(formatter, null, name);
@@ -1213,11 +1213,11 @@ public class MapSerializer extends XMLWriter
 
    private void buildDefaultFormatTable()
    {
-      Hashtable    formatsByType;
-      XMLFormatter formatter;
-      Enumeration  types;
-      Object       type;
-      Vector       typeVector;
+      Hashtable       formatsByType;
+      StringFormatter formatter;
+      Enumeration     types;
+      Object          type;
+      Vector          typeVector;
 
       // Initialize the defaultFormatters Hashtable.
 
@@ -1241,7 +1241,7 @@ public class MapSerializer extends XMLWriter
          // formatting objects.
 
          type = types.nextElement();
-         formatter = (XMLFormatter)formatsByType.get(type);
+         formatter = (StringFormatter)formatsByType.get(type);
          if (formatterSerializable(formatter))
          {
             // Check if the formatting object has already been used as a key.
@@ -1264,10 +1264,10 @@ public class MapSerializer extends XMLWriter
 
    private void buildNamedFormatTable()
    {
-      Enumeration  tables, columns;
-      Table        table;
-      Column       column;
-      XMLFormatter formatter;
+      Enumeration     tables, columns;
+      Table           table;
+      Column          column;
+      StringFormatter formatter;
 
       // Initialize the namedFormatters Hashtable and the format number.
 
@@ -1304,7 +1304,7 @@ public class MapSerializer extends XMLWriter
       }
    }
 
-   private boolean formatterSerializable(XMLFormatter formatter)
+   private boolean formatterSerializable(StringFormatter formatter)
    {
       DateFormat   df;
       NumberFormat nf;
