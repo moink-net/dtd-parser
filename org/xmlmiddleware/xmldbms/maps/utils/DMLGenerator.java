@@ -66,13 +66,17 @@ public class DMLGenerator
     * Construct a new DMLGenerator.
     *
     * @param meta A DatabaseMetaData object.
+    * @param SQLException Thrown if an error occurs retrieving database metadata.
     */
    public DMLGenerator(DatabaseMetaData meta)
       throws SQLException
    {
       m_quote = meta.getIdentifierQuoteString();
+      if (m_quote == null) m_quote = "";
       m_isCatalogAtStart = meta.isCatalogAtStart();
       m_catalogSeparator = meta.getCatalogSeparator();
+      if (m_catalogSeparator == null) m_catalogSeparator = ".";
+      if (m_catalogSeparator.length() == 0) m_catalogSeparator = ".";
       m_useCatalog = meta.supportsCatalogsInDataManipulation();
       m_useSchema = meta.supportsSchemasInDataManipulation();
    }

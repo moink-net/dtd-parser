@@ -76,6 +76,9 @@ public class Column extends MapBase
    private int             scale;
    private int             nullability;
    private StringFormatter formatter;
+   private boolean         precisionExists = false;
+   private boolean         scaleExists = false;
+   private boolean         lengthExists = false;
 
    // ********************************************************************
    // Constructors
@@ -207,10 +210,17 @@ public class Column extends MapBase
    // ********************************************************************
 
    /**
-    * Get the column length.
+    * Whether a length value exists.
     *
-    * <p>This method should only be called for character and binary types.
-    * The return value is undefined for other types.</p>
+    * @return Whether a length value exists
+    */
+   public final boolean lengthExists()
+   {
+      return lengthExists;
+   }
+
+   /**
+    * Get the column length.
     *
     * @return The column length. This is -1 if the length is not set.
     */
@@ -222,17 +232,14 @@ public class Column extends MapBase
    /**
     * Set the column length.
     *
-    * <p>This method may only be called for character and binary types.</p>
-    *
     * @return The column length.
     */
    public void setLength(int length)
    {
-      if (!JDBCTypes.typeIsChar(type) || JDBCTypes.typeIsBinary(type))
-         throw new IllegalStateException("setLength may be called only for columns with a character or binary type.");
       if (length < 1)
          throw new IllegalArgumentException("Length must be >= 1");
       this.length = length;
+      lengthExists = true;
    }
 
    // ********************************************************************
@@ -240,10 +247,17 @@ public class Column extends MapBase
    // ********************************************************************
 
    /**
-    * Get the column precision.
+    * Whether a precision value exists.
     *
-    * <p>This method should only be called for DECIMAL and NUMERIC types.
-    * The return value is undefined for other types.</p>
+    * @return Whether a precision value exists
+    */
+   public final boolean precisionExists()
+   {
+      return precisionExists;
+   }
+
+   /**
+    * Get the column precision.
     *
     * @return The column precision.
     */
@@ -255,17 +269,14 @@ public class Column extends MapBase
    /**
     * Set the column precision.
     *
-    * <p>This method may only be called for DECIMAL and NUMERIC types.</p>
-    *
     * @return The column precision.
     */
    public void setPrecision(int precision)
    {
-      if ((type != Types.DECIMAL) && (type != Types.NUMERIC))
-         throw new IllegalStateException("setPrecision may be called only for columns with a DECIMAL or NUMERIC type.");
       if (precision < 1)
          throw new IllegalArgumentException("Precision must be >= 1");
       this.precision = precision;
+      precisionExists = true;
    }
 
    // ********************************************************************
@@ -273,10 +284,17 @@ public class Column extends MapBase
    // ********************************************************************
 
    /**
-    * Get the column scale.
+    * Whether a scale value exists.
     *
-    * <p>This method should only be called for DECIMAL and NUMERIC types.
-    * The return value is undefined for other types.</p>
+    * @return Whether a scale value exists
+    */
+   public final boolean scaleExists()
+   {
+      return scaleExists;
+   }
+
+   /**
+    * Get the column scale.
     *
     * @return The column scale.
     */
@@ -288,15 +306,12 @@ public class Column extends MapBase
    /**
     * Set the column scale.
     *
-    * <p>This method may only be called for DECIMAL and NUMERIC types.</p>
-    *
     * @return The column scale.
     */
    public void setScale(int scale)
    {
-      if ((type != Types.DECIMAL) && (type != Types.NUMERIC))
-         throw new IllegalStateException("setScale may be called only for columns with a DECIMAL or NUMERIC type.");
       this.scale = scale;
+      scaleExists = true;
    }
 
    // ********************************************************************
