@@ -45,6 +45,7 @@ public class FilterTest
       InputSource      src;
       Map              map;
       FilterSet        filterSet;
+      String           basename;
 
       // Create an InputSource over the map and filter files.
 
@@ -53,6 +54,9 @@ public class FilterTest
 
       src = new InputSource(getFileURL(filterFilename));
       filterSet = createFilterSet(map, src);
+
+      basename = getBasename(filterFilename);
+      serializeFilterSet(filterSet, basename);
    }
 
    static Map createMap(InputSource src)
@@ -69,25 +73,23 @@ public class FilterTest
       return compiler.compile(map, src);
    }
 
-/*
-   static void serializeMap(Map map, String basename)
+   static void serializeFilterSet(FilterSet filterSet, String basename)
       throws Exception
    {
-      MapSerializer serializer;
+      FilterSerializer serializer;
       Writer        writer;
 
       // Construct a new FileWriter.
       writer = new FileWriter(basename + ".out");
     
       // Serialize the map.
-      serializer = new MapSerializer(writer);
+      serializer = new FilterSerializer(writer);
       serializer.setPrettyPrinting(true, 3);
-      serializer.serialize(map, "xmldbms2.dtd", null);
+      serializer.serialize(filterSet, "filters.dtd", null);
 
       // Close the file.
       writer.close();
    }
-*/
 
    // ***********************************************************************
    // General utility methods
