@@ -30,8 +30,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.XMLReader;
 
 import org.w3c.dom.Document;
@@ -74,8 +72,10 @@ public class FragmentBuilder implements ContentHandler
    // ************************************************************************
 
    public FragmentBuilder(XMLReader xmlReader)
-      throws SAXNotRecognizedException, SAXNotSupportedException
+      throws SAXException
    {
+      if (xmlReader == null)
+         throw new IllegalArgumentException("xmlReader argument must not be null.");
       this.xmlReader = xmlReader;
       xmlReader.setContentHandler(this);
       xmlReader.setFeature(NAMESPACES, true);
@@ -89,6 +89,8 @@ public class FragmentBuilder implements ContentHandler
    public DocumentFragment parse(Document doc, String xml)
       throws SAXException, IOException
    {
+      if ((doc == null) || (xml == null))
+         throw new IllegalArgumentException("doc and xml arguments must not be null.");
       this.doc = doc;
       fragment = doc.createDocumentFragment();
       current = fragment;
@@ -100,14 +102,17 @@ public class FragmentBuilder implements ContentHandler
    // Public methods -- SAX
    // ************************************************************************
 
+   /** For internal use only. */
    public void startDocument () throws SAXException
    {
    }
 
+   /** For internal use only. */
    public void endDocument() throws SAXException
    {
    }
 
+   /** For internal use only. */
    public void startElement (String uri, String localName, String qName, Attributes attrs)
       throws SAXException
    {
@@ -135,11 +140,13 @@ public class FragmentBuilder implements ContentHandler
       }
    }
 
+   /** For internal use only. */
    public void endElement (String uri, String localName, String qName) throws SAXException
    {
       current = current.getParentNode();
    }
 
+   /** For internal use only. */
    public void characters (char ch[], int start, int length)
       throws SAXException
    {
@@ -149,12 +156,14 @@ public class FragmentBuilder implements ContentHandler
       current.appendChild(text);
    }
    
+   /** For internal use only. */
    public void ignorableWhitespace (char ch[], int start, int length)
       throws SAXException
    {
       characters(ch, start, length);
    }
 
+   /** For internal use only. */
    public void processingInstruction (String target, String data)
       throws SAXException
    {
@@ -164,20 +173,24 @@ public class FragmentBuilder implements ContentHandler
       current.appendChild(pi);
    }
 
+   /** For internal use only. */
    public void startPrefixMapping(String prefix, String uri)
       throws SAXException
    {
    }
 
+   /** For internal use only. */
    public void endPrefixMapping(String prefix)
       throws SAXException
    {
    }
 
+   /** For internal use only. */
    public void setDocumentLocator (Locator locator)
    {
    }
 
+   /** For internal use only. */
    public void skippedEntity(String name)
       throws SAXException
    {
