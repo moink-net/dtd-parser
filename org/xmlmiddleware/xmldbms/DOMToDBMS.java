@@ -126,6 +126,7 @@ public class DOMToDBMS
 
    private static final String DUMMY = "dummy";
    private static final String AND = "AND ";
+   private static final String SPACE = " ";
 
    // ************************************************************************
    // Constructors
@@ -1113,9 +1114,30 @@ public class DOMToDBMS
          s = propNode.getNodeValue();
       }
 
-      // If empty strings are treated as NULLs, then check the length of
-      // the property value and, if it is 0, set the value to null, which
-      // is later interpreted as NULL.
+      // If the string is empty (length == 0), then:
+      //
+      // (a) If we treat empty strings in the XML document as NULLs, then
+      //     set the value to null, which is later interpreted as NULL.
+      //
+      // (b) If we treat empty strings as empty strings, then set the value to a
+      //     single space. We do this because most relational databases cannot
+      //     store empty strings; when they encounter an empty string in an INSERT
+      //     statement, they store a NULL instead. To get around this, we store
+      //     a space instead of an empty string. While this is technically incorrect
+      //     -- it means we confuse <foo></foo> with <foo> </foo> -- the latter case
+      //    is much less common and we simply live with it.
+
+      if (s.length() == 0)
+      {
+         if (m_dbMap.getMap().emptyStringIsNull())
+         {
+            s = null;
+         }
+         else
+         {
+            s = SPACE;
+         }
+      }
 
       if (m_dbMap.getMap().emptyStringIsNull() && s.length() == 0)
       {

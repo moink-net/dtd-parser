@@ -44,6 +44,7 @@ public class Row
    // ********************************************************************
 
    private static final String EMPTYSTRING = "";
+   private static final String SPACE = " ";
 
    // ********************************************************************
    // Constructors
@@ -208,6 +209,25 @@ public class Row
             }
             else
                throw new SQLException("[XML-DBMS] The driver returned data for the " + rsColumns[i].getName() + " column as an InputStream. JDBC does not support conversions from stream (byte) data to " + JDBCTypes.getName(type) + ".");
+         }
+         else if (o instanceof String)
+         {
+            // If the returned object is a String, check if it is a single space.
+            // If so, then set it to an empty string. This is a hack so that we can
+            // handle empty elements (<foo></foo> or <foo />). The problem is that
+            // most relational databases refuse to store an empty string in a column;
+            // instead, they store a NULL, which is a different thing altogether.
+            // (It means the element or attribute is missing, not empty.)
+            //
+            // To get around this, we store a space instead of an empty string. While
+            // this is technically incorrect -- it means we confuse <foo></foo> with
+            // <foo> </foo> -- the latter case is much less common and we simply live
+            // with it.
+            //
+            // Note that this is unrelated to the empty-string-is-null flag. That refers
+            // to empty strings in the XML document, not empty strings in the database.
+
+            if (((String)o).equals(SPACE)) o = EMPTYSTRING;
          }
 
          // Set the column value.
