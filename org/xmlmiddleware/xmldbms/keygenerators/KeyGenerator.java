@@ -1,8 +1,20 @@
-// No copyright, no warranty; use as you will.
-// Written by Ronald Bourret, Technical University of Darmstadt, 1998-9
+// This software is in the public domain.
+//
+// The software is provided "as is", without warranty of any kind,
+// express or implied, including but not limited to the warranties
+// of merchantability, fitness for a particular purpose, and
+// noninfringement. In no event shall the author(s) be liable for any
+// claim, damages, or other liability, whether in an action of
+// contract, tort, or otherwise, arising from, out of, or in connection
+// with the software or the use or other dealings in the software.
+//
+// Parts of this software were originally developed in the Database
+// and Distributed Systems Group at the Technical University of
+// Darmstadt, Germany:
+//
+//    http://www.informatik.tu-darmstadt.de/DVS1/
 
 // Version 2.0
-
 // Changes from version 1.0: None
 // Changes from version 1.01:
 // * Added initialize(Properties) and close() methods
@@ -37,7 +49,7 @@ import java.util.*;
  * <P>The helper class KeyGeneratorHighLow provides a sample implementation
  * of this interface.</P>
  *
- * @author Ronald Bourret, Technical University of Darmstadt
+ * @author Ronald Bourret
  * @version 2.0
  */
 

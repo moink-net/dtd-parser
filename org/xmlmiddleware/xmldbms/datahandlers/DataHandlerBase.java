@@ -1,3 +1,22 @@
+// This software is in the public domain.
+//
+// The software is provided "as is", without warranty of any kind,
+// express or implied, including but not limited to the warranties
+// of merchantability, fitness for a particular purpose, and
+// noninfringement. In no event shall the author(s) be liable for any
+// claim, damages, or other liability, whether in an action of
+// contract, tort, or otherwise, arising from, out of, or in connection
+// with the software or the use or other dealings in the software.
+//
+// Parts of this software were originally developed in the Database
+// and Distributed Systems Group at the Technical University of
+// Darmstadt, Germany:
+//
+//    http://www.informatik.tu-darmstadt.de/DVS1/
+
+// Version 2.0
+// Changes from version 1.x: New in version 2.0
+
 package org.xmlmiddleware.xmldbms.datahandlers;
 
 import org.xmlmiddleware.conversions.*;
@@ -12,600 +31,784 @@ import java.util.*;
 import javax.sql.*;
 
 /**
- * Implements basic support for the DataHandler interface. The insert(...) 
- * is implemented by child classes.
+ * (Optional) base class for classes that implement the DataHandler interface.
+ *
+ * <p>Child classes must implement the insert method.</p>
  *
  * @author Sean Walter
  * @version 2.0
  */
 public abstract class DataHandlerBase
-    implements DataHandler
+   implements DataHandler
 {
-    // ************************************************************************
-    // Variables used by this and child classes
-    // ************************************************************************
+   // ************************************************************************
+   // Variables
+   // ************************************************************************
 
-    /**
-     * The connection.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public Connection m_connection = null;
+   private Connection   m_connection = null;
+   private DMLGenerator m_dml = null;
+   private SQLStrings   m_strings = null;
+   private boolean      m_dirtyConnection = false;
+   private int          m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
+   private Hashtable    m_refreshCols = null; // Indexed by table.
 
-    /**
-     * The DMLGenerator used to generate SQL statements.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public DMLGenerator m_dml = null;
+   // ************************************************************************
+   // Constants
+   // ************************************************************************
 
-    /**
-     * The SQLStrings object used to cache the string form of SQL statements.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public SQLStrings m_strings = null;
+   private static final Object OBJECT = new Object();
 
-    // ************************************************************************
-    // Private variables
-    // ************************************************************************
+   // ************************************************************************
+   // Constructor
+   // ************************************************************************
 
-    // Does the connection need a commit?
-    private boolean m_dirtyConnection = false;
+   /**
+    * Creates a DataHandlerBase
+    */
+   public DataHandlerBase()
+   {
+   }
 
-    // The current Commit mode
-    private int m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
+   // ************************************************************************
+   // Public methods -- accessors
+   // ************************************************************************
 
-    // Cache of refreshCols by table
-    private Hashtable m_refreshCols = null;
+   /**
+    * Get the connection used by the DataHandler.
+    *
+    * @return The Connection. Null if initialize() has not been called.
+    */
+   public final Connection getConnection()
+   {
+      return m_connection;
+   }
 
+   /**
+    * Get the DMLGenerator used by the DataHandler.
+    *
+    * @return The DMLGenerator. Null if initialize() has not been called.
+    */
+   public final DMLGenerator getDMLGenerator()
+   {
+      return m_dml;
+   }
 
-    // ************************************************************************
-    // Constructor
-    // ************************************************************************
+   /**
+    * Get the SQLStrings object used by the DataHandler.
+    *
+    * @return The SQLStrings. Null if initialize() has not been called.
+    */
+   public final SQLStrings getSQLStrings()
+   {
+      return m_strings;
+   }
 
-    /**
-     * Creates a DataHandlerBase
-     */
-    public DataHandlerBase()
-    {
-    }
+   /**
+    * Get the commit mode used by the DataHandler.
+    *
+    * <p>One of DataHandler.COMMIT_AFTERSTATEMENT, COMMIT_AFTERDOCUMENT,
+    * COMMIT_NONE, or COMMIT_NOTRANSACTIONS.
+    *
+    * @return The commit mode. COMMIT_AFTERSTATEMENT if initialize() has not been called.
+    */
+   public final int getCommitMode()
+   {
+      return m_commitMode;
+   }
 
+   // ************************************************************************
+   // Public Methods -- DataHandler interface
+   // ************************************************************************
 
-    // ************************************************************************
-    // Public Methods
-    // ************************************************************************
+   /**
+    * Implements the initialize method in the DataHandler interface.
+    *
+    * @param dataSource The DataSource to get Connections from.
+    * @param user The user to connect to the database as. May be null.
+    * @param password The password to connect to the database with. May be null.
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public void initialize(DataSource dataSource, String user, String password)
+      throws SQLException
+   {
+      if (m_dirtyConnection)
+         throw new IllegalStateException("Cannot initialize the DataHandler. A connection has uncommitted results.");
 
-    /**
-     * Initialize a DataHandler object
-     *
-     * @param dataSource The DataSource to get Connection's from.
-     * @param user User to connect to the database as.
-     * @param password Password to connect to the database with.
-     */
-    public void initialize(DataSource dataSource, String user, String password)
-        throws SQLException
-    {
-        if (m_dirtyConnection)
-           throw new IllegalStateException("Cannot initialize the DataHandler. A connection has uncommitted results.");
+      // Get the connection
 
-        // Get the connection
-        m_connection = dataSource.getConnection(user, password);
+      m_connection = (user == null) ? dataSource.getConnection() :
+                                      dataSource.getConnection(user, password);
 
-        // And DML generator
-        m_dml = new DMLGenerator(m_connection.getMetaData());
-        m_strings = new SQLStrings(m_dml);
+      // And the DML generator
 
-        m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
-        m_dirtyConnection = false;
-        m_refreshCols = new Hashtable();
-    }
+      m_dml = new DMLGenerator(m_connection.getMetaData());
+      m_strings = new SQLStrings(m_dml);
 
-    /**
-     * Is called when a document begins processing using this
-     * DataHandler
-     *
-     * @param commitMode Commit mode for the current document.
-     */
-    public void startDocument(int commitMode)
-        throws SQLException
-    {
-        checkState();
+      // Set the remaining variables.
 
-        m_commitMode = commitMode;
+      m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
+      m_dirtyConnection = false;
+      m_refreshCols = new Hashtable();
+   }
 
-        if(m_commitMode == COMMIT_AFTERSTATEMENT)
-            m_connection.setAutoCommit(true);
+   /**
+    * Implements the startDocument method in the DataHandler interface.
+    *
+    * @param commitMode One of COMMIT_AFTERSTATEMENT, COMMIT_AFTERDOCUMENT,
+    *    COMMIT_NONE, or COMMIT_NOTRANSACTIONS.
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public void startDocument(int commitMode)
+      throws SQLException
+   {
+      checkState();
 
-        // TODO: Do we need to do this for COMMIT_NONE?
-        // It should have already been done, by the time we get this connection, no?
-        else if(m_commitMode == COMMIT_AFTERDOCUMENT || 
-                m_commitMode == COMMIT_NONE)
-            m_connection.setAutoCommit(false);   
+      // Set the commit mode.
 
-        m_dirtyConnection = false;
-    }
+      if ((commitMode != COMMIT_AFTERSTATEMENT) &&
+          (commitMode != COMMIT_AFTERDOCUMENT) &&
+          (commitMode != COMMIT_NONE) &&
+          (commitMode != COMMIT_NOTRANSACTIONS))
+         throw new IllegalArgumentException("Invalid commit mode: " + m_commitMode);
+      m_commitMode = commitMode;
 
+      // Set the auto-commit mode if necessary.
 
-    /**
-     * Is called when a document has completed processing using
-     * this DataHandler. Commits if necessary. 
-     */
-    public void endDocument()
-        throws SQLException
-    {
-        checkState();
+      if(m_commitMode == COMMIT_AFTERSTATEMENT)
+      {
+         // Check the auto-commit state first.
 
-        if(m_dirtyConnection && m_commitMode == COMMIT_AFTERDOCUMENT)
-        {
-            m_connection.commit();
-            m_dirtyConnection = false;
-        }
+         if (!m_connection.getAutoCommit()) m_connection.setAutoCommit(true);
+      }
+      else if((m_commitMode == COMMIT_AFTERDOCUMENT) ||
+              (m_commitMode == COMMIT_NONE))
+      {
+         // Check the auto-commit state first. MS Access has a bug where
+         // setting auto-commit to false more than once wipes out all future
+         // statements. That is, they are executed, but the state of the
+         // database is not changed.
 
-        // TODO: How do errors/commit/rollback interact?
-    }
+         if (m_connection.getAutoCommit()) m_connection.setAutoCommit(false);
+      }
 
+      m_dirtyConnection = false;
+   }
 
-    /** 
-     * Implemented in child classes
-     *
-     * @param table Table to insert into.
-     * @param row Row with values to insert.
-     */
-    public abstract void insert(Table table, Row row)
-        throws SQLException; 
+   /**
+    * Implements the endDocument method in the DataHandler interface.
+    *
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public void endDocument()
+      throws SQLException
+   {
+      checkState();
 
+      // Commit the transaction if any statements have been executed and
+      // we commit after processing the entire document.
 
-    /**
-     * Update a row in a table.
-     * 
-     * @param table Table to update.
-     * @param row Row with values to update.
-     * @param cols Columns to update. If null then all values present in 'row' will be updated.
-     */
-    public void update(Table table, Row row, Column[] cols)
-        throws SQLException
-    {
-        checkState();
+      if(m_dirtyConnection && (m_commitMode == COMMIT_AFTERDOCUMENT))
+      {
+         m_connection.commit();
+         m_dirtyConnection = false;
+      }
+   }
 
-        PreparedStatement stmt = makeUpdate(table, row, cols);
-        int numRows = stmt.executeUpdate();
+   /**
+    * Implements the recoverFromException method in the DataHandler interface.
+    *
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public void recoverFromException()
+      throws SQLException
+   {
+      // If the commit mode is AFTERDOCUMENT, attempt to roll back changes. Note
+      // that we don't check the dirty flag, since the error might have occurred
+      // after the changes were made but before the dirty flag was set.
 
+      if (m_commitMode == COMMIT_AFTERDOCUMENT)
+      {
+         m_connection.rollback();
+         m_dirtyConnection = false;
+      }
+   }
 
-        if(numRows == 0)
-            throw new SQLException("[xmldbms] Row to be updated is not present in table.");
-        else if(numRows > 1)
-            throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
+   /**
+    * Implements the insert method in the DataHandler interface; must be implemented
+    * by child classes.
+    *
+    * @param table The table.
+    * @param row The row. This may contain values for columns that do not
+    *    belong to the table.
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public abstract void insert(Table table, Row row)
+      throws SQLException;
 
-        executedStatement();
+   /**
+    * Implements the update method in the DataHandler interface.
+    *
+    * @param table The table.
+    * @param row The row. This may contain values for columns that do not
+    *    belong to the table.
+    * @param columns The columns to update. These must have values in the
+    *    Row object unless they are nullable.
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public void update(Table table, Row row, Column[] cols)
+      throws SQLException
+   {
+      checkState();
 
-        // TODO: Do we need to refresh values here? I think not. Any changes 
-        // should have been done by us, and updating keys is suspect.
-    }
+      PreparedStatement stmt = buildUpdate(table, row, cols);
+      int numRows = stmt.executeUpdate();
 
+      if(numRows == 0)
+         throw new SQLException("[xmldbms] Row to be updated is not present in table.");
+      else if(numRows > 1)
+         throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
 
-    /** 
-     * Update a row in a table if present. If not present then insert.
-     *
-     * @param table Table to modify.
-     * @param row Row with values.
-     */
-    public void updateOrInsert(Table table, Row row)
-        throws SQLException
-    {
-        checkState();
+      databaseModified();
+   }
 
-        PreparedStatement stmt = makeUpdate(table, row, null);  
-        int numRows = stmt.executeUpdate();
+   /**
+    * Implements the updateOrInsert method in the DataHandler interface.
+    *
+    * @param table The table.
+    * @param row The row. This may contain values for columns that do not
+    *    belong to the table.
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public void updateOrInsert(Table table, Row row)
+      throws SQLException
+   {
+      checkState();
 
-        if(numRows == 0)
-            insert(table, row);
-        else if(numRows > 1)
-            throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
+      PreparedStatement stmt = buildUpdate(table, row, null);
+      int numRows = stmt.executeUpdate();
 
-        executedStatement();
-    }
+      if(numRows == 0)
+      {
+         insert(table, row);
+      }
+      else if(numRows > 1)
+         throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
 
+      databaseModified();
+   }
 
-    /**
-     * Delete a row from a table.
-     *
-     * @param table Table to delete from.
-     * @param row Row with key values to delete.
-     */
-    public void delete(Table table, Row row, Key key)
-        throws SQLException
-    {
-        checkState();
+   /**
+    * Implements the delete method in the DataHandler interface.
+    *
+    * @param table The table.
+    * @param row The row. This may contain values for columns that do not
+    *    belong to the table.
+    * @param The key. This may be any type of key (primary, unique, or foreign).
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public void delete(Table table, Row row, Key key)
+      throws SQLException
+   {
+      checkState();
 
-        PreparedStatement stmt = makeDelete(table, row, key);
-        int numRows = stmt.executeUpdate();
+      PreparedStatement stmt = buildDelete(table, row, key);
+      int numRows = stmt.executeUpdate();
 
-        if(key.getType() == Key.PRIMARY_KEY)
-        {
+      if(key.getType() == Key.PRIMARY_KEY)
+      {
+         if(numRows == 0)
+            throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
+         else if(numRows > 1)
+            throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
+      }
+
+      databaseModified();
+   }
+
+   /**
+    * Implements the delete method in the DataHandler interface.
+    *
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with. May be null.
+    * @param keyValue The value of the key. Null if the key is null.
+    * @param where An additional where constraint. May be null.
+    * @param paramColumns The columns corresponding to parameters in the where constraint.
+    *   Null if there are no parameters.
+    * @param paramValues The values of parameters in the where constraint. Null if there
+    *   are no parameters.
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public void delete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
+      throws SQLException
+   {
+      checkState();
+
+      PreparedStatement stmt = buildDelete(table, key, keyValue, where, paramColumns, paramValues);
+      int numRows = stmt.executeUpdate();
+
+      if (key != null)
+      {
+         if(key.getType() == Key.PRIMARY_KEY)
+         {
             if(numRows == 0)
-                throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
+               throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
             else if(numRows > 1)
-                throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
-        }
+               throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
+         }
+      }
 
-        executedStatement();
-    }
+      databaseModified();
+   }
 
-    /**
-     * Delete rows from a given table.
-     *
-     * <p>The DELETE statement has the form:</p>
-     *
-     * <pre>
-     *    SELECT FROM Table WHERE Key = ? AND &lt;where>
-     * </pre>
-     *
-     * @param t The table to select from. Must not be null.
-     * @param key The key to restrict with. May be null.
-     * @param keyValue The value of the key.
-     * @param where An additional where constraint. May be null.
-     * @param paramColumns The columns corresponding to parameters in the where constraint.
-     *    Null if there are no parameters.
-     * @param paramValues The values of parameters in the where constraint. Null if there
-     *    are no parameters.
-     */
-    public void delete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
-        throws SQLException
-    {
-        checkState();
+   /**
+    * Implements the select method in the DataHandler interface.
+    *
+    * @param t The table to select from. Must not be null.
+    * @param key The key to restrict with. May be null.
+    * @param keyValue The value of the key.
+    * @param where An additional where constraint. May be null.
+    * @param paramColumns The columns corresponding to parameters in the where constraint.
+    *   Null if there are no parameters.
+    * @param paramValues The values of parameters in the where constraint. Null if there
+    *   are no parameters.
+    * @param order The sort information. May be null.
+    * @return The result set.
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public ResultSet select(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
+      throws SQLException
+   {
+      checkState();
 
-        PreparedStatement stmt = makeDelete(table, key, keyValue, where, paramColumns, paramValues);
-        int numRows = stmt.executeUpdate();
+      PreparedStatement stmt = buildSelect(table, key, keyValue, where, paramColumns, paramValues, orderInfo);
+      return stmt.executeQuery();
+   }
 
-        if (key != null)
-        {
-           if(key.getType() == Key.PRIMARY_KEY)
-           {
-               if(numRows == 0)
-                   throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
-               else if(numRows > 1)
-                   throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
-           }
-        }
+   // ************************************************************************
+   // Public methods -- build statements
+   // ************************************************************************
 
-        executedStatement();
-    }
+   /**
+    * Builds a prepared INSERT statement
+    *
+    * @param table The table into which to insert rows.
+    * @param row The row containing data to insert.
+    * @return The prepared INSERT statement
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public PreparedStatement buildInsert(Table table, Row row)
+      throws SQLException
+   {
+      // NOTE: The insert string is not cached because the row can have a
+      // different set of columns each time.
 
-    /**
-     * Select rows from a given table.
-     *
-     * <p>The SELECT statement has the form:</p>
-     *
-     * <pre>
-     *    SELECT * FROM Table WHERE Key = ? AND &lt;where> ORDER BY ?
-     * </pre>
-     *
-     * @param t The table to select from. Must not be null.
-     * @param key The key to restrict with.
-     * @param keyValue The value of the key
-     * @param where An additional where constraint. May be null.
-     * @param order The sort information. May be null.
-     * @param paramColumns The columns corresponding to parameters in the where constraint
-     * @param paramValues The values of parameters in the where constraint
-     * @return The result set.
-     */
-    public ResultSet select(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
-       throws SQLException
-    {
-        checkState();
+/*
+RPB: This code does not appear to be necessary. If the key column has a value
+in the Row object, it is because there was a value in the XML document. And if
+this value is null, it is because it was null in the XML document. If this causes
+problems in the database, then that is a bug in the data, not a problem XML-DBMS
+needs to solve.
 
-        PreparedStatement stmt = makeSelect(table, key, keyValue, where, paramColumns, paramValues, orderInfo);
-        return stmt.executeQuery();
-    }
+      Vector colVec = row.getColumnVectorFor(table);
 
-    // ************************************************************************
-    // Helper methods. Also used by base classes
-    // ************************************************************************
+      // If any of the database generated key values are null
+      // remove from the insert list. Certain DBMS have problems
+      // otherwise.
 
-    /**
-     * Checks whether the DataHandler has been initialized.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public void checkState()
-    {
-        if (m_connection == null)
-            throw new IllegalStateException("Invalid state. DataHandler has not been initialized.");
-    }
+      Column[] dbGeneratedCols = getDBGeneratedKeyCols(table);
+      for(int i = 0; i < dbGeneratedCols.length; i++)
+      {
+         if(colVec.contains(dbGeneratedCols[i]) &&
+            (row.getColumnValue(dbGeneratedCols[i]) == null))
+         {
+            colVec.removeElement(dbGeneratedCols[i]);
+         }
+      }
 
-    /** 
-     * To be called after a statement that modifies the database
-     * has been executed.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public void executedStatement()
-    {
-        if(m_commitMode == COMMIT_AFTERDOCUMENT)
-        {
-            m_dirtyConnection = true;
-        }
+      Column[] cols = new Column[colVec.size()];
+      colVec.copyInto(cols);
+*/
 
-        // For COMMIT_AFTERSTATEMENT we use auto commit
-    }
+      // Get a list of the columns that have values in the row.
 
+      Column[] cols = row.getColumnArrayFor(table);
 
-    /**
-     * Makes a SELECT statement.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public PreparedStatement makeSelect(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
-        throws SQLException
-    {
-        // These can be cached. Use SQLStrings
-        String sql = m_strings.getSelectWhere(table, key, where, orderInfo);
+      // Build the INSERT statement
 
-        // Make the SELECT statement
-        PreparedStatement stmt = m_connection.prepareStatement(sql);
+      String sql = m_dml.getInsert(table, cols);
+      PreparedStatement stmt = m_connection.prepareStatement(sql);
 
-        // Set the parameters
-        int start = 0;
-        if (key != null)
-        {
-           Column[] keyColumns = key.getColumns();
-           Parameters.setParameters(stmt, 0, keyColumns, keyValue);
-           start = keyColumns.length;
-        }
-        if (paramColumns != null)
-        {
-           Parameters.setParameters(stmt, start, paramColumns, paramValues);
-        }
+      // Set the parameters
 
-        return stmt;
-    }
+      Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
 
-    /**
-     * Makes an INSERT statement
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public PreparedStatement makeInsert(Table table, Row row)
-        throws SQLException
-    {
-        // NOTE: The PreparedStatements returned cannot be cached, as the row
-        // may have a different amount of valid values each time.
+      return stmt;
+   }
 
-        Vector colVec = row.getColumnVectorFor(table);
+   /**
+    * Builds an UPDATE statement of the form "UPDATE table SET (column = ?, ...) WHERE Key = ?".
+    *
+    * @param table The table into which to update data.
+    * @param row The row containing new data values.
+    * @param cols The columns to update. If this is null, all columns not in a
+    *    primary or unique key for which there is data in the row are updated.
+    * @return The prepared UPDATE statement
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public PreparedStatement buildUpdate(Table table, Row row, Column[] cols)
+      throws SQLException
+   {
+      Column[]          priCols, keyCols;
+      Vector            colVec;
+      Hashtable         colHash;
+      int               i;
+      Enumeration       e;
+      String            sql;
+      PreparedStatement stmt;
 
-        // If any of the database generated key values are null
-        // remove from the insert list. Certain DBMS have problems
-        // otherwise
-        Column[] refreshCols = getRefreshCols(table);
-        for(int i = 0; i < refreshCols.length; i++)
-        {
-            if(colVec.contains(refreshCols[i]) &&
-               row.getColumnValue(refreshCols[i]) == null)
+      // NOTE: The update string is not cached because the row can have a
+      // different set of columns each time.
+
+      // Get the columns in the primary key.
+
+      priCols = table.getPrimaryKey().getColumns();
+
+      // If no update columns are passed, update all non-unique/primary key
+      // columns for which values are supplied.
+
+      if(cols == null)
+      {
+         // Build a hashtable from the columns in the row that apply to this table.
+
+         colVec = row.getColumnVectorFor(table);
+         colHash = new Hashtable(colVec.size());
+         for (i = 0; i < colVec.size(); i++)
+         {
+            colHash.put(colVec.elementAt(i), OBJECT);
+         }
+         
+         // Remove the primary key columns. We don't update primary keys.
+
+         for(i = 0; i < priCols.length; i++)
+         {
+            if(colHash.remove(priCols[i]) == null)
+               throw new SQLException("[xmldbms] When updating data, you must supply values for all primary key columns. No value supplied for the " + priCols[i].getName() + " column.");
+         }
+
+         // Remove the unique key columns. We don't update unique keys.
+
+         e = table.getUniqueKeys();
+         while(e.hasMoreElements())
+         {
+            keyCols = ((Key)e.nextElement()).getColumns();
+            for(i = 0; i < keyCols.length; i++)
             {
-                colVec.removeElement(refreshCols[i]);
+               colHash.remove(keyCols[i]);
             }
-        }
+         }
 
-        Column[] cols = new Column[colVec.size()];
-        colVec.copyInto(cols);
+         // Copy the remaining columns for the table into an array.
 
-        // Make the INSERT statement
-        String sql = m_dml.getInsert(table, cols);
-        PreparedStatement stmt = m_connection.prepareStatement(sql);
+         cols = new Column[colHash.size()];
+         e = colHash.keys();
+         i = 0;
+         while (e.hasMoreElements())
+         {
+            cols[i++] = (Column)e.nextElement();
+         }
+      }
 
-        // Set the parameters
-        Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
+      // Build the UPDATE statement
 
-        return stmt;
-    }
+      sql = m_dml.getUpdate(table, table.getPrimaryKey(), cols);
+      stmt = m_connection.prepareStatement(sql);
 
-    /**
-     * Makes an UPDATE statement.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public PreparedStatement makeUpdate(Table table, Row row, Column[] cols)
-        throws SQLException
-    { 
-        // NOTE: The PreparedStatements returned cannot be cached, as the row
-        // may have a different amount of valid values each time, or cols may be
-        // different.
+      // Set the parameters for SET clauses
 
-        Column[] priCols = table.getPrimaryKey().getColumns();
+      Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
 
-        if(cols == null)
-        {
-            // Get the columns that were set
-            Vector colVec = row.getColumnVectorFor(table);
-    
-            // Remove the primary key from columns
-            for(int i = 0; i < priCols.length; i++)
+      // And the parameters for the WHERE clause
+
+      Parameters.setParameters(stmt, cols.length, priCols, row.getColumnValues(priCols));
+
+      // Return the statement ready for execution
+
+      return stmt;
+   }
+
+   /**
+    * Builds a DELETE statement of the form "DELETE FROM table WHERE Key = ?".
+    *
+    * @param table The table from which to delete data.
+    * @param row The row containing data for the key.
+    * @param key The key that identifies the row or rows to delete.
+    * @return The prepared DELETE statement
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public PreparedStatement buildDelete(Table table, Row row, Key key)
+      throws SQLException
+   {
+
+/*
+RPB - Nobody uses this, so let's delete it and force people to pass the primary key.
+      if(key == null)
+         key = table.getPrimaryKey();
+*/
+
+      // These can be cached so use SQLStrings
+
+      String sql = m_strings.getDelete(table, key);
+
+      // Build the DELETE statement
+
+      PreparedStatement stmt = m_connection.prepareStatement(sql);
+
+      // Set the parameters
+
+      Column[] cols = key.getColumns();
+      Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
+
+      // Return the prepared statement
+
+      return stmt;
+   }
+
+   /**
+    * Builds a DELETE statement of the form "DELETE FROM table WHERE Key = ? AND &lt;where>".
+    *
+    * @param table The table from which to delete data.
+    * @param key The key that identifies the row or rows to delete. May be null.
+    * @param keyValue The key's value.
+    * @param where Additional delete conditions. May be null.
+    * @param paramColumns Column objects that correspond to parameter markers (?) in the
+    *    where parameter.
+    * @param paramValues Parameter values for the where parameter.
+    * @return The prepared DELETE statement
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public PreparedStatement buildDelete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
+      throws SQLException
+   {
+      // These can be cached. Use SQLStrings
+
+      String sql = m_strings.getDelete(table, key, where);
+
+      // Build the DELETE statement
+
+      PreparedStatement stmt = m_connection.prepareStatement(sql);
+
+      // Set the parameters
+
+      int start = 0;
+      if (key != null)
+      {
+         Column[] keyColumns = key.getColumns();
+         Parameters.setParameters(stmt, 0, keyColumns, keyValue);
+         start = keyColumns.length;
+      }
+      if (paramColumns != null)
+      {
+         Parameters.setParameters(stmt, start, paramColumns, paramValues);
+      }
+
+      // Return the prepared statement.
+
+      return stmt;
+   }
+
+   /**
+    * Builds a SELECT statement of the form
+    * "SELECT * FROM table WHERE Key = ? AND &lt;where> ORDER BY ?".
+    *
+    * @param table The table from which to select data.
+    * @param key The key that identifies the row or rows to select. May be null.
+    * @param keyValue The key's value.
+    * @param where Additional select conditions. May be null.
+    * @param paramColumns Column objects that correspond to parameter markers (?) in the
+    *    where parameter.
+    * @param paramValues Parameter values for the where parameter.
+    * @param orderInfo The sort information. May be null.
+    * @return The prepared SELECT statement
+    * @exception SQLException Thrown if a database error occurs.
+    */
+   public PreparedStatement buildSelect(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues, OrderInfo orderInfo)
+      throws SQLException
+   {
+      // These can be cached. Use SQLStrings
+
+      String sql = m_strings.getSelect(table, key, where, orderInfo);
+
+      // Build the SELECT statement
+
+      PreparedStatement stmt = m_connection.prepareStatement(sql);
+
+      // Set the parameters
+
+      int start = 0;
+      if (key != null)
+      {
+         Column[] keyColumns = key.getColumns();
+         Parameters.setParameters(stmt, 0, keyColumns, keyValue);
+         start = keyColumns.length;
+      }
+      if (paramColumns != null)
+      {
+         Parameters.setParameters(stmt, start, paramColumns, paramValues);
+      }
+
+      // Return the statement.
+
+      return stmt;
+   }
+
+   // ************************************************************************
+   // Public methods -- helpers
+   // ************************************************************************
+
+   /**
+    * Checks if the DataHandler has been initialized.
+    *
+    * <p>Throws an exception if the DataHandler has not been initialized.</p>
+    */
+   public void checkState()
+   {
+      if (m_connection == null)
+         throw new IllegalStateException("Invalid state. DataHandler has not been initialized.");
+   }
+
+   /**
+    * Child classes must call this method after executing a statement that
+    * modifies the database.
+    *
+    * <p>This allows DataHandlerBase to correctly commit transactions.</p>
+    */
+   public void databaseModified()
+   {
+      if(m_commitMode == COMMIT_AFTERDOCUMENT)
+      {
+         m_dirtyConnection = true;
+      }
+
+      // For COMMIT_AFTERSTATEMENT we use auto commit
+   }
+
+   /**
+    * Get the columns used in database-generated keys.
+    *
+    * @param table The table for which to get columns.
+    * @return The columns. May be empty.
+    */
+   public Column[] getDBGeneratedKeyCols(Table table)
+   {
+      // If we have already gotten the columns, just return them.
+
+      if(m_refreshCols.contains(table)) return (Column[])m_refreshCols.get(table);
+
+      // Allocate a new Vector.
+
+      Vector colVec = new Vector();
+
+      // Add the primary key columns if the primary key is generated by the database.
+
+      Key priKey = table.getPrimaryKey();
+      if(priKey.getKeyGeneration() == Key.DATABASE)
+      {
+         Column[] priCols = priKey.getColumns();
+         for(int i = 0; i < priCols.length; i++)
+         {
+            colVec.addElement(priCols[i]);
+         }
+      }
+
+      // Add unique key columns for unique keys generated by the database.
+
+      Enumeration e = table.getUniqueKeys();
+      while(e.hasMoreElements())
+      {
+         Key key = (Key)e.nextElement();
+         if(key.getKeyGeneration() == Key.DATABASE)
+         {
+            Column[] keyCols = key.getColumns();
+            for(int i = 0; i < keyCols.length; i++)
             {
-                if(!colVec.contains(priCols[i]))
-                    throw new SQLException("[xmldbms] Primary key value not supplied for UPDATE.");
-            
-                colVec.removeElement(priCols[i]);
+               colVec.addElement(keyCols[i]);
             }
+         }
+      }
 
-            // Remove unique key columns. These should not be updated
-            Enumeration e = table.getUniqueKeys();
-            while(e.hasMoreElements())
-            {
-                Column[] keyCols = ((Key)e.nextElement()).getColumns();
-                for(int i = 0; i < keyCols.length; i++)
-                {
-                    colVec.removeElement(keyCols[i]);
-                }
-            }
+      // Copy the columns into an array, stored the array for later use,
+      // and return it.
 
-            cols = new Column[colVec.size()];
-            colVec.copyInto(cols);
-        }
+      Column[] cols = new Column[colVec.size()];
+      colVec.copyInto(cols);
 
+      m_refreshCols.put(table, cols);
 
-        // Make the UPDATE statement
-        String sql = m_dml.getUpdate(table, table.getPrimaryKey(), cols);
-        PreparedStatement stmt = m_connection.prepareStatement(sql);
+      return cols;
+   }
 
+   /**
+    * Create a key for a single column.
+    *
+    * @param colName The column's name
+    * @param type The column's type
+    * @return The key
+    */
+   public Key createColumnKey(String colName, int type)
+   {
+      // Create a single column array.
 
-        // Set the parameters for SET clauses
-        Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
+      Column[] keyCols = { Column.create(colName) };
+      keyCols[0].setType(type);
 
-        // And the parameters for the WHERE clause
-        Parameters.setParameters(stmt, cols.length, priCols, row.getColumnValues(priCols));
+      // Make a key out of it
 
+      Key key = Key.createPrimaryKey(null);
+      key.setColumns(keyCols);
 
-        // Return the statement ready for execution
-        return stmt;
-    }
+      // Return the key
 
+      return key;
+   }
 
-    /**
-     * Makes a DELETE statement.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public PreparedStatement makeDelete(Table table, Row row, Key key)
-        throws SQLException
-    {
-        if(key == null)
-            key = table.getPrimaryKey();
+   /**
+    * Retrieves the PreparedStatement used by the driver.
+    *
+    * <p>If the PreparedStatement has been wrapped by SPPreparedStatement, the
+    * driver's PreparedStatement is returned. Otherwise, the input PreparedStatement
+    * is returned.</p>
+    *
+    * @param stmt The (possibly wrapped) PreparedStatement.
+    * @return The PreparedStatement actually used by the driver.
+    */
+   public PreparedStatement getRawStatement(PreparedStatement stmt)
+   {
+      if(stmt instanceof SPPreparedStatement)
+         return ((SPPreparedStatement)stmt).getUnderlyingStatement();
+      else
+         return stmt;
+   }
 
-        // These can be cached so use SQLStrings
-        String sql = m_strings.getDelete(table, key);
-
-        // Make the DELETE statement
-        PreparedStatement stmt = m_connection.prepareStatement(sql);
-
-        Column[] cols = key.getColumns();
-        // Set the parameters
-        Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
-
-        // Execute Statement
-        return stmt;
-    }
-
-    /**
-     * Makes a DELETE statement
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public PreparedStatement makeDelete(Table table, Key key, Object[] keyValue, String where, Column[] paramColumns, Object[] paramValues)
-        throws SQLException
-    {
-        // These can be cached. Use SQLStrings
-        String sql = m_strings.getDeleteWhere(table, key, where);
-
-        // Make the DELETE statement
-        PreparedStatement stmt = m_connection.prepareStatement(sql);
-
-        // Set the parameters
-        int start = 0;
-        if (key != null)
-        {
-           Column[] keyColumns = key.getColumns();
-           Parameters.setParameters(stmt, 0, keyColumns, keyValue);
-           start = keyColumns.length;
-        }
-        if (paramColumns != null)
-        {
-           Parameters.setParameters(stmt, start, paramColumns, paramValues);
-        }
-
-        return stmt;
-    }
-
-    /**
-     * Get the columns in a table that need refreshing
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public Column[] getRefreshCols(Table table)
-    {
-        if(m_refreshCols.contains(table))
-            return (Column[])m_refreshCols.get(table);
-
-        Vector colVec = new Vector();
-
-        // Add the primary key
-        Key priKey = table.getPrimaryKey();
-        if(priKey.getKeyGeneration() == Key.DATABASE)
-        {
-            Column[] priCols = priKey.getColumns();
-            for(int i = 0; i < priCols.length; i++)
-                colVec.addElement(priCols[i]);
-        }
-
-        // Add unique key columns. These should not be updated
-        Enumeration e = table.getUniqueKeys();
-        while(e.hasMoreElements())
-        {
-            Key key = (Key)e.nextElement();
-            if(key.getKeyGeneration() == Key.DATABASE)
-            {
-                Column[] keyCols = key.getColumns();
-                for(int i = 0; i < keyCols.length; i++)
-                    colVec.addElement(keyCols[i]);
-            }
-        }
-
-        Column[] cols = new Column[colVec.size()];
-        colVec.copyInto(cols);
-
-        m_refreshCols.put(table, cols);
-
-        return cols;
-    }
-
-
-    /** 
-     * Creates a key for a single column.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public Key createColumnKey(String colName, int type)
-    {
-        Column[] keyCols = { Column.create(colName) };
-        keyCols[0].setType(type);
-
-        // Make a key out of it
-        Key key = Key.createPrimaryKey(null);
-        key.setColumns(keyCols);
-
-        return key;
-    }    
-    
-
-    /**
-     * Retrieves a driver PreparedStatement from a 
-     * possibly wrapped one.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public PreparedStatement getRawStatement(PreparedStatement stmt)
-    {
-        if(stmt instanceof SPPreparedStatement)
-            return ((SPPreparedStatement)stmt).getUnderlyingStatement();
-        else
-            return stmt;
-    }
-
-    /**
-     * Sets a column value in a Row.
-     *
-     * <p>For use by DataHandlerBase and child classes only.</p>
-     */
-    public void setColumnValue(Row row, Column column, Object val)
-        throws SQLException
-    {
-        try
-        {
-            row.setColumnValue(column, ConvertObject.convertObject(val, column.getType(), column.getFormatter()));
-        }
-        catch(XMLMiddlewareException e)
-        {
-            throw new SQLException("[xmldbms]Conversion error: " + e.getMessage());
-        }
-    }
-}   
+   /**
+    * Sets a column value in a Row.
+    *
+    * <p>This method converts the value to the type used by the column.</p>
+    *
+    * @param row The Row in which to set the value.
+    * @param column The Column for which to set the value.
+    * @param val The value. May be null.
+    * @exception SQLException Thrown if a conversion error occurs.
+    */
+   public void setColumnValue(Row row, Column column, Object val)
+      throws SQLException
+   {
+      try
+      {
+         row.setColumnValue(column, ConvertObject.convertObject(val, column.getType(), column.getFormatter()));
+      }
+      catch(XMLMiddlewareException e)
+      {
+         throw new SQLException("[xmldbms]Conversion error: " + e.getMessage());
+      }
+   }
+}

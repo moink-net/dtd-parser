@@ -58,31 +58,31 @@ import java.util.Vector;
  *
  * <pre>
  *    // Create the XMLDBMSMap object with a user-defined function.
- *
+ *    <br />
  *    map = createMap("orders.map");
- *
+ *    <br />
  *    // Create the FilterSet object with a user-defined function.
- *
+ *    <br />
  *    filterSet = createFilterSet(map, "ordersbynumber.ftr");
- *
+ *    <br />
  *    // Create a new DBMSToDOM object that uses the Xerces parser.
- *
+ *    <br />
  *    dbmsToDOM = new DBMSToDOM(new ParserUtilsXerces());
- *
+ *    <br />
  *    // Create a data source and data handler for our database, then
  *    // bundle these into a TransferInfo object.
- *
+ *    <br />
  *    ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
  *    handler = new GenericHandler(ds, null, null);
  *    ti = new TransferInfo(map, null, handler);
- *
+ *    <br />
  *    // Build the parameters hashtable.
- *
+ *    <br />
  *    params = new Hashtable();
  *    params.put("$Number", "123");
- *
+ *    <br />
  *    // Call retrieveDocument to transfer the data.
- *
+ *    <br />
  *    doc = dbmsToDOM.retrieveDocument(ti, filterSet, params, null);
  * </pre>
  *
@@ -96,16 +96,20 @@ public class DBMSToDOM
    // Private variables
    // ************************************************************************
 
+   // Per-execution globals
+
    private XMLDBMSMap   map;
    private FilterBase   filterBase;
    private Document     doc;
+   private TransferInfo    transferInfo;
+
+   // Truly global globals
 
    // 8/01 Adam Flinton
    // Replaced DocumentFactory with ParserUtils.
 
    private ParserUtils     utils;
    private FragmentBuilder fragmentBuilder;
-   private TransferInfo    transferInfo;
    private String          publicID;
    private String          systemID;
 
@@ -234,12 +238,8 @@ public class DBMSToDOM
    {
       OrderedNode     orderedRootNode;
       Vector          filters;
-      Object          filter;
-      ResultSetFilter rsFilter;
-      String          rsName;
-      ResultSet       rs;
 
-      // Set things up.
+      // Initialize the per-execution global variables.
 
       initGlobals(transferInfo);
 
@@ -256,6 +256,43 @@ public class DBMSToDOM
       // Get an OrderedNode over the Node to which elements will be added.
 
       orderedRootNode = getOrderedRootNode(rootNode, filterSet);
+
+      // Retrieve the data and add it to the root node.
+
+      retrieveData(filters, resultSets, orderedRootNode);
+
+      // Add namespace declarations to the children of the real root node. We add these
+      // to the children instead of the root for two reasons. First, the root might be
+      // a Document node. Second, if the root is a wrapper element, we don't want to
+      // collide with the wrapper element namespaces.
+
+      addNamespaceDeclsToChildren(orderedRootNode.realNode, map.getNamespaceURIs());
+
+      // Reset the per-execution global variables.
+
+      resetGlobals();
+
+      // Return the document.
+
+      return doc;
+   }
+
+/*
+   public void setDBErrorHandling??
+   public SQLException getSQLExceptions??
+   public SQLException getSQLWarnings??
+*/
+   // ************************************************************************
+   // Helper methods for getting started
+   // ************************************************************************
+
+   private void retrieveData(Vector filters, Hashtable resultSets, OrderedNode orderedRootNode)
+      throws SQLException, XMLMiddlewareException
+   {
+      Object          filter;
+      ResultSetFilter rsFilter;
+      String          rsName;
+      ResultSet       rs;
 
       // Retrieve the data.
 
@@ -280,27 +317,7 @@ public class DBMSToDOM
             retrieveResultSetData(orderedRootNode, rsFilter, rs);
          }
       }
-
-      // Add namespace declarations to the children of the real root node. We add these
-      // to the children instead of the root for two reasons. First, the root might be
-      // a Document node. Second, if the root is a wrapper element, we don't want to
-      // collide with the wrapper element namespaces.
-
-      addNamespaceDeclsToChildren(orderedRootNode.realNode, map.getNamespaceURIs());
-
-      // Return the document.
-
-      return doc;
    }
-
-/*
-   public void setDBErrorHandling??
-   public SQLException getSQLExceptions??
-   public SQLException getSQLWarnings??
-*/
-   // ************************************************************************
-   // Helper methods for getting started
-   // ************************************************************************
 
    private void retrieveRootTableData(OrderedNode rootNode, RootFilter rootFilter)
       throws SQLException, XMLMiddlewareException
@@ -384,7 +401,7 @@ public class DBMSToDOM
       {
          // Cache the row data so we can access it randomly
 
-         classRow.clear();
+         classRow.removeAllColumnValues();
          classRow.setColumnValues(rs, table, map.emptyStringIsNull());
 
          // Create an element node for the row, get the order information, and
@@ -646,7 +663,7 @@ public class DBMSToDOM
 
       while (rs.next())
       {
-         row.clear();
+         row.removeAllColumnValues();
          row.setColumnValues(rs, propTableMap.getTable(), map.emptyStringIsNull());
          processColumn(parentNode, row, propTableMap);
       }
@@ -662,6 +679,17 @@ public class DBMSToDOM
 
       this.transferInfo = transferInfo;
       map = transferInfo.getMap();
+   }
+
+   private void resetGlobals()
+   {
+      // Set the per-execution global variables to null so we don't hold
+      // any unnecessary references.
+
+      transferInfo = null;
+      map = null;
+      filterBase = null;
+      doc = null;
    }
 
    private OrderedNode getOrderedRootNode(Node rootNode, FilterSet filterSet)

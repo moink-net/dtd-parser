@@ -33,6 +33,17 @@ import java.util.*;
 
 public class DMLGenerator
 {
+
+   //**************************************************************************
+   // Member variables
+   //**************************************************************************
+
+   protected String m_quote;
+   protected String m_catalogSeparator;
+   protected boolean m_isCatalogAtStart;
+   protected boolean m_useCatalog;
+   protected boolean m_useSchema;
+
    //**************************************************************************
    // Constants
    //**************************************************************************
@@ -40,22 +51,22 @@ public class DMLGenerator
    private final static String INSERT      = "INSERT INTO ";
    private final static String VALUES      = " VALUES (";
    private final static String UPDATE      = "UPDATE ";
-   private final static String SET          = " SET ";
+   private final static String SET         = " SET ";
    private final static String DELETE      = "DELETE ";
    
-   private final static String PARAM         = "? ";
-   private final static String COMMA         = ", ";
-   private final static String COMMAPARAM   = ", ? ";
-   private final static String CLOSEPAREN   = ")";
-   private final static String OPENPAREN      = " (";
-   private final static String SPACE         = " ";
+   private final static String PARAM       = "? ";
+   private final static String COMMA       = ", ";
+   private final static String COMMAPARAM  = ", ? ";
+   private final static String CLOSEPAREN  = ")";
+   private final static String OPENPAREN   = " (";
+   private final static String SPACE       = " ";
    private final static String SELECT      = "SELECT ";
-   private final static String FROM         = " FROM ";
-   private final static String WHERE         = " WHERE ";
-   private final static String ORDERBY      = " ORDER BY ";
-   private final static String DESC         = " DESC";
+   private final static String FROM        = " FROM ";
+   private final static String WHERE       = " WHERE ";
+   private final static String ORDERBY     = " ORDER BY ";
+   private final static String DESC        = " DESC";
    private final static String AND         = " AND ";
-   private final static String EQUALSPARAM   = " = ? ";
+   private final static String EQUALSPARAM = " = ? ";
    private final static String PERIOD      = ".";
 
    //**************************************************************************
@@ -85,15 +96,25 @@ public class DMLGenerator
    // Public methods
    //**************************************************************************
 
+   /**
+    * Returns an INSERT SQL string for the given table.
+    *
+    * <p>The INSERT string includes all columns in the table.
+    *
+    * @param t The table. Must not be null.
+    * @return The INSERT string.
+    */
    public String getInsert(Table t)
    {
       return getInsert(t, null);
    }
-    
+
    /**
     * Returns an INSERT SQL string for the given table.
     *
     * @param t The table. Must not be null.
+    * @param cols The columns to include in the INSERT statement. If this is null,
+    *    all columns are included.
     * @return The INSERT string.
     */
    public String getInsert(Table t, Column[] cols)
@@ -180,24 +201,6 @@ public class DMLGenerator
       return buildSelect(t, makeWhereLink(key.getColumns()), cols, null);
    }
 
-/*
-   This is currently not used and just confuses things. We can resurrect it if needed.
-
-   /** 
-    * Returns a "SELECT cols WHERE &lt;where> ORDER BY ?" SQL string for a given table
-    * 
-    * @param t The table to select from. Must not be null.
-    * @param where The entire where clause
-    * @param cols The columns to select.
-    * @param order The sort information. May be null.
-    * @return The SELECT string.
-    *
-   public String getSelect(Table t, String where, Column[] cols, OrderInfo order)
-   {
-      return buildSelect(t, WHERE + where, cols, order);
-   }
-*/
-
    /** 
     * Returns a "SELECT * WHERE Key = ? AND &lt;where> ORDER BY ?"
     * SQL string for a given table
@@ -234,7 +237,7 @@ public class DMLGenerator
    public String getUpdate(Table t, Key key, Column[] cols)
    {
       StringBuffer update = new StringBuffer(1000);
-      boolean         first = true;
+      boolean      first = true;
 
       update.append(UPDATE);
 
@@ -308,7 +311,7 @@ public class DMLGenerator
     * @param where An additional where constraint. May be null.
     * @return The DELETE string.
     */
-   public String getDeleteWhere(Table t, Key key, String where)
+   public String getDelete(Table t, Key key, String where)
    {
       StringBuffer delete = new StringBuffer(1000);
       String       whereClause = null;
@@ -338,11 +341,12 @@ public class DMLGenerator
     * necessary) table name.
     *
     * @param table The table.
+    * @return The quoted table name.
     */
    public String getTableName(Table table)
    {
       String catalog = null, schema;
-      String s = new String();
+      StringBuffer name = new StringBuffer(512);
 
       // 6/9/00, Ruben Lainez, Ronald Bourret
       // Use the identifier m_quote character for the table name.
@@ -352,8 +356,8 @@ public class DMLGenerator
          catalog = table.getCatalogName();
          if((catalog != null) && (m_isCatalogAtStart))
          {
-            s += makeQuotedName(catalog);
-            s += m_catalogSeparator;
+            name.append(makeQuotedName(catalog));
+            name.append(m_catalogSeparator);
          }
       }
  
@@ -362,23 +366,23 @@ public class DMLGenerator
          schema = table.getSchemaName();
          if(schema != null)
          {
-            s += makeQuotedName(schema);
-            s += PERIOD;
+            name.append(makeQuotedName(schema));
+            name.append(PERIOD);
          }
       }
  
-      s += makeQuotedName(table.getTableName());
+      name.append(makeQuotedName(table.getTableName()));
  
       if(m_useCatalog)
       {
          if((catalog != null) && (!m_isCatalogAtStart))
          {
-            s += m_catalogSeparator;
-            s += makeQuotedName(catalog);
+            name.append(m_catalogSeparator);
+            name.append(makeQuotedName(catalog));
          }
       }
 
-      return s;
+      return name.toString();
    }
 
    //**************************************************************************
@@ -420,25 +424,26 @@ public class DMLGenerator
    protected String makeWhereLink(Column[] keyColumns)
    {
       // Add WHERE clause.
-      String str = new String();
+      StringBuffer where = new StringBuffer(1000);
 
-      str += WHERE;
+      where.append(WHERE);
 
       for(int i = 0; i < keyColumns.length; i++)
       {
          if(i != 0)
-            str += AND;
+            where.append(AND);
       
-         str += makeColumnName(keyColumns[i], false);
-         str += EQUALSPARAM;
+         where.append(makeColumnName(keyColumns[i], false));
+         where.append(EQUALSPARAM);
       }
 
-      return str;
+      return where.toString();
    }
 
    protected void appendOrderBy(StringBuffer stmt, OrderInfo order)
    {
       // Just return if we are using fixed order values
+
       if (order.orderValueIsFixed()) return;
 
       // Add the ORDER BY clause
@@ -456,22 +461,11 @@ public class DMLGenerator
       if(comma)
          return COMMA + str;
       else
-        return str;
+         return str;
    }
-
 
    private String makeQuotedName(String name)
    {
       return m_quote + name + m_quote;
    }
-
-   //**************************************************************************
-   // Member variables
-   //**************************************************************************
-
-   protected String m_quote;
-   protected String m_catalogSeparator;
-   protected boolean m_isCatalogAtStart;
-   protected boolean m_useCatalog;
-   protected boolean m_useSchema;
 }

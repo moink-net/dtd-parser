@@ -42,7 +42,8 @@ import javax.xml.parsers.SAXParserFactory;
 /**
  * Implements ParserUtils for the Xerces parser.
  *
- * <p>Supports any(?) version of Xerces that supports JAXP.</p>
+ * <p>Supports any(?) version of Xerces that supports JAXP. Known to work with
+ * versions 1.3.1 and 1.4.4.</p>
  *
  * @author Adam Flinton
  * @author Paul Gubbay

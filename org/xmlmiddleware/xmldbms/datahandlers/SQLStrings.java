@@ -26,10 +26,11 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * Get SELECT, UPDATE, INSERT, and DELETE strings.
+ * Get SELECT and DELETE strings.
  *
- * <p>The class caches all strings except UPDATE strings, calling DMLGenerator
- * to generate new strings as needed.</p>
+ * <p>The class caches SELECT and DELETE strings, calling DMLGenerator
+ * to generate new strings as needed. It cannot cache INSERT and UPDATE
+ * strings because these can contain differing columns on each call.</p>
  *
  * @author Sean Walter, 2001
  * @version 2.0
@@ -39,6 +40,21 @@ import java.util.*;
 public class SQLStrings
 {
    //**************************************************************************
+   // Member variables
+   //**************************************************************************
+
+   protected Hashtable m_strings;
+   protected DMLGenerator m_dml;
+
+   //**************************************************************************
+   // Constants
+   //**************************************************************************
+
+   private static final String SELECT = "SELECT_";
+   private static final String DELETE = "DELETE_";
+   private static final String DELETEWHERE = "DELETEWHERE_";
+
+   //**************************************************************************
    // Constructors
    //**************************************************************************
 
@@ -46,7 +62,7 @@ public class SQLStrings
     * Construct a new SQLStrings.
     *
     * @param conn A database connection. This is used to get database metadata.
-    * @exception SQLException Thrown if a database exception occurs while
+    * @exception SQLException Thrown if an exception occurs while
     *    getting the database metadata.
     */
    public SQLStrings(Connection conn)
@@ -69,68 +85,9 @@ public class SQLStrings
       m_strings = new Hashtable();
    }
 
-
    //**************************************************************************
    // Public methods
    //**************************************************************************
-
-   /**
-    * Returns an INSERT SQL string for the given table.
-    *
-    * @param t The table. Must not be null.
-    * @return The INSERT string.
-    */
-   public String getInsert(Table t)
-   {
-      String id = "INSERT_" + t.getUniversalName();
-
-      if(!m_strings.containsKey(id))
-         m_strings.put(id, m_dml.getInsert(t));
-
-      return (String)m_strings.get(id);
-   }
-
-   /**
-    * Returns a "SELECT * WHERE key = ? ORDER BY ?" SQL string for a 
-    * given table. 
-    * 
-    * @param t The table to select from. Must not be null.
-    * @param key The key to restrict with.
-    * @param order The sort information. May be null.
-    * @return The SELECT string.
-    */
-   public String getSelectRow(Table t, Key key, OrderInfo order)
-   {
-      String id;
-
-      id = "SELECTROW_" + t.getUniversalName() + key.getName();
-      if (order != null)
-      {
-         id += ";" + String.valueOf(order.hashCode());
-      }
-      
-      if(!m_strings.containsKey(id))
-         m_strings.put(id, m_dml.getSelect(t, key, order));
-
-      return (String)m_strings.get(id);
-   }
-
-   /**
-    * Returns a "SELECT key WHERE key = ?" SQL string for a given table.
-    *
-    * @param t The table to select from. Must not be null.
-    * @param key The key to restrict with.
-    * @return The SELECT string.
-    */
-   public String getSelectKey(Table t, Key key)
-   {
-      String id = "SELECTKEY_" + t.getUniversalName() + key.getName();
-      
-      if(!m_strings.containsKey(id))
-         m_strings.put(id, m_dml.getSelect(t, key));
-
-      return (String)m_strings.get(id);
-   }
 
    /**
     * Returns a "SELECT * WHERE key = ? AND &lt;where> ORDER BY ?" SQL string for a 
@@ -142,11 +99,13 @@ public class SQLStrings
     * @param order The sort information. May be null.
     * @return The SELECT string.
     */
-   public String getSelectWhere(Table t, Key key, String where, OrderInfo order)
+   public String getSelect(Table t, Key key, String where, OrderInfo order)
    {
-      String id;
+      String id, str;
 
-      id = "SELECTWHERE_" + t.getUniversalName();
+      // Build the id.
+
+      id = SELECT + t.getUniversalName();
       if (key != null)
       {
          id += key.getName();
@@ -160,27 +119,19 @@ public class SQLStrings
          id += ";" + String.valueOf(order.hashCode());
       }
 
-      if(!m_strings.containsKey(id))
-         m_strings.put(id, m_dml.getSelect(t, key, where, order));
+      // Get the cached string or build and cache the string.
 
-      return (String)m_strings.get(id);
+      str = (String)m_strings.get(id);
+      if (str == null)
+      {
+         str = m_dml.getSelect(t, key, where, order);
+         m_strings.put(id, str);
+      }
+
+      // Return the string.
+
+      return str;
    }
-
-   /**
-    * Returns an UPDATE SQL string for a given table, key, and set of columns.
-    *
-    * @param t The table to update. Must not be null.
-    * @param key The key to restrict with. Must not be null.
-    * @param cols The columns to update. If this is null, all columns are included.
-    * @return The UPDATE string.
-    */
-   public String getUpdate(Table t, Key key, Column[] cols)
-   {
-      // TODO: We may want to remove this column
-      // We don't do caching for this one because chances are
-      // the columns are different every time
-      return m_dml.getUpdate(t, key, cols);
-   }   
 
    /**
     * Returns a DELETE SQL string for a given table.
@@ -190,14 +141,23 @@ public class SQLStrings
     * @return The DELETE string.
     */
    public String getDelete(Table t, Key key)
-   {        
-      String id = "DELETE_" + t.getUniversalName() + key.getName();
+   {
+      // Build the ID.
 
-      
-      if(!m_strings.containsKey(id))
-         m_strings.put(id, m_dml.getDelete(t, key));
+      String id = DELETE + t.getUniversalName() + key.getName();
 
-      return (String)m_strings.get(id);
+      // Get the cached string or build and cache the string.
+
+      String str = (String)m_strings.get(id);
+      if (str == null)
+      {
+         str = m_dml.getDelete(t, key);
+         m_strings.put(id, str);
+      }
+
+      // Return the string
+
+      return str;
    }
 
    /**
@@ -209,11 +169,13 @@ public class SQLStrings
     * @param where An additional where clause. May be null.
     * @return The DELETE string.
     */
-   public String getDeleteWhere(Table t, Key key, String where)
+   public String getDelete(Table t, Key key, String where)
    {
-      String id;
+      String id, str;
 
-      id = "DELETEWHERE_" + t.getUniversalName();
+      // Build the id.
+
+      id = DELETEWHERE + t.getUniversalName();
       if (key != null)
       {
          id += key.getName();
@@ -223,17 +185,17 @@ public class SQLStrings
          id += ";" + String.valueOf(where.hashCode());
       }
 
-      if(!m_strings.containsKey(id))
-         m_strings.put(id, m_dml.getDeleteWhere(t, key, where));
+      // Get the cached string or build and cache the string.
 
-      return (String)m_strings.get(id);
+      str = (String)m_strings.get(id);
+      if (str == null)
+      {
+         str = m_dml.getDelete(t, key, where);
+         m_strings.put(id, str);
+      }
+
+      // Return the string.
+
+      return str;
    }
-
-   //**************************************************************************
-   // Member variables
-   //**************************************************************************
-
-   protected Hashtable m_strings;
-   protected DMLGenerator m_dml;
 }
-

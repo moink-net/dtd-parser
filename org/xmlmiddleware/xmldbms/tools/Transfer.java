@@ -178,7 +178,7 @@ import javax.sql.*;
  *
  * <pre>
  *   java org.xmlmiddleware.xmldbms.tools.Transfer 
- *                  ParserUtilsClass=org.xmlmiddleware.domutils.helpers.ParserUtilsXerces
+ *                  ParserUtilsClass=org.xmlmiddleware.xmlutils.external.ParserUtilsXerces
  *                  DataSourceClass=JDBC1DataSource
  *                  Driver=sun.jdbc.odbc.JdbcOdbcDriver URL=jdbc:odbc:xmldbms
  *                  User=ron Password=ronpwd

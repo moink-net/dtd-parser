@@ -44,28 +44,35 @@ import java.util.*;
  *
  * <pre>
  *    // Create the XMLDBMSMap object with a user-defined function.
+ *    <br />
  *    map = createMap("orders.map");
  *    <br />
  *    // Create an Actions object with a user-defined function.
+ *    <br />
  *    actions = createActions(map, "deleteorders.ftr");
  *    <br />
  *    // Create the FilterSet object with a user-defined function.
+ *    <br />
  *    filterSet = createFilterSet(map, "ordersbynumber.ftr");
  *    <br />
  *    // Create a new DBMSDelete object that uses the Xerces parser.
+ *    <br />
  *    dbmsDelete = new DBMSDelete(new ParserUtilsXerces());
  *    <br />
  *    // Create a data source and data handler for our database, then
  *    // bundle these into a TransferInfo object.
+ *    <br />
  *    ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
  *    handler = new GenericHandler(ds, null, null);
  *    ti = new TransferInfo(map, null, handler);
  *    <br />
  *    // Build the parameters hashtable.
+ *    <br />
  *    params = new Hashtable();
  *    params.put("$Number", "123");
  *    <br />
  *    // Call deleteDocument to delete the data.
+ *    <br />
  *    dbmsDelete.deleteDocument(ti, filterSet, params, actions);
  * </pre>
  *
@@ -77,9 +84,6 @@ import java.util.*;
 
 public class DBMSDelete
 {
-   private static boolean debug  = false;
-//   private static boolean debug  = true;
-
    // ************************************************************************
    // Private variables
    // ************************************************************************
@@ -190,9 +194,7 @@ public class DBMSDelete
 
       // Initialize the globals
 
-      this.transferInfo = transferInfo;
-      map = transferInfo.getMap();
-      this.actions = actions;
+      initGlobals(transferInfo, actions);
 
       // Set the filter parameters. We do this here because the filters are optimized
       // for the parameters only being set once.
@@ -210,7 +212,28 @@ public class DBMSDelete
 
       // Delete the data.
 
-      processRootTables(filterSet);
+      try
+      {
+         processRootTables(filterSet);
+      }
+      catch (Exception e)
+      {
+         // If an exception occurs, notify the DataHandlers so they
+         // can roll back the current transaction.
+
+         dataHandlers = transferInfo.getDataHandlers();
+         while(dataHandlers.hasMoreElements())
+         {
+            ((DataHandler)dataHandlers.nextElement()).recoverFromException();
+         }
+
+         // Rethrow the exception so the calling code knows about it.
+
+         if (e instanceof SQLException)
+            throw (SQLException)e;
+         else if (e instanceof XMLMiddlewareException)
+            throw (XMLMiddlewareException)e;
+      }
 
       // Call endDocument here. This allows data handlers to do any
       // necessary finalization, such as committing transactions.
@@ -220,6 +243,8 @@ public class DBMSDelete
       {
          ((DataHandler)dataHandlers.nextElement()).endDocument();
       }
+
+      resetGlobals();
    }
 
    // ************************************************************************
@@ -341,7 +366,7 @@ public class DBMSDelete
       {
          // Cache the row data so we can access it randomly
 
-         classRow.clear();
+         classRow.removeAllColumnValues();
          classRow.setColumnValues(rs, classTableMap.getTable(), map.emptyStringIsNull());
 
          // Process the related tables for the row.
@@ -581,6 +606,23 @@ public class DBMSDelete
       }
    }
 
+   private void initGlobals(TransferInfo transferInfo, Actions actions)
+   {
+      this.transferInfo = transferInfo;
+      map = transferInfo.getMap();
+      this.actions = actions;
+   }
+
+   private void resetGlobals()
+   {
+      // Reset the globals so we don't hold any unnecessary references.
+
+      map = null;
+      transferInfo = null;
+      actions = null;
+      filterBase = null;
+   }
+
    // ************************************************************************
    // Delete rows
    // ************************************************************************
@@ -641,16 +683,30 @@ public class DBMSDelete
       Column[] columns = null;
       Object[] params = null;
 
-      RowInfo(int action, Table table, LinkInfo linkInfo, Row row, FilterConditions filterConditions)
+      RowInfo(int action, Table table, LinkInfo linkInfo, Row parentRow, FilterConditions filterConditions)
          throws XMLMiddlewareException
       {
+         // Set the action and the table.
+
          this.action = action;
          this.table = table;
+
+         // If the link info is not null, add the key to the list of columns to
+         // process. Note that since we process the tables in hierarchical order
+         // and we are interested in working on the child table, we take the Column
+         // information from the child table, but the values from the parent row.
+         // (We don't have the child row yet -- we're using this information to get
+         // and/or delete it.)
+
          if (linkInfo != null)
          {
             key = linkInfo.getChildKey();
-            keyValue = row.getColumnValues(linkInfo.getParentKey().getColumns());
+            keyValue = parentRow.getColumnValues(linkInfo.getParentKey().getColumns());
          }
+
+         // If the filter conditions are not null, add them to the list of columns
+         // to process.
+
          if (filterConditions != null)
          {
             where = filterConditions.getWhereCondition();
@@ -659,66 +715,4 @@ public class DBMSDelete
          }
       }
    }
-/*
-*******************************************************
-?   private static String EMPTYSTRING  = "";
-?   private static String DELETEFROM   = "DELETE FROM ";
-?   private static String WHERE        = " WHERE ";
-?   private static String EQUALS       = " = ";
-?   private static String AND          = " AND ";
-
-
-
-private String buildDeleteString(String tableName, Column[]
-keyColumns, Object[] key)
-{
-StringBuffer deleteString = new StringBuffer();
-if (debug) System.out.println("DBMSDelete.table name: " + tableName);
-
-deleteString.append(DELETEFROM);
-deleteString.append(tableName);
-deleteString.append(WHERE);
-deleteString.append(keyColumns[0].name);
-//PM: change to ISNULL due to bug "= nullpointer"
-if (key[0] != null) { 
-	deleteString.append(EQUALS);
-	deleteString.append(key[0].toString());}
-else { 	deleteString.append(" IS NULL ");}
-for (int i = 1; i < keyColumns.length; i++)
-{
-deleteString.append(AND);
-deleteString.append(keyColumns[i].name);
-if (key[i] != null) { 
-	deleteString.append(EQUALS);
-	deleteString.append(key[i].toString());}
-else { 	deleteString.append(" IS NULL ");}
 }
-if (debug) System.out.println("DBMSDelete.deleteString: " + deleteString.toString());
-//PM
-
-return deleteString.toString();
-}
-
-/* Original
-	private String buildDeleteString(String tableName, Column[] keyColumns, Object[] key)
-   {
-      StringBuffer deleteString = new StringBuffer();
-      deleteString.append(DELETEFROM);
-      deleteString.append(tableName);
-      deleteString.append(WHERE);
-      deleteString.append(keyColumns[0].name);
-      deleteString.append(EQUALS);
-      deleteString.append(key[0].toString());
-
-      for (int i = 1; i < keyColumns.length; i++)
-      {
-         deleteString.append(AND);
-         deleteString.append(keyColumns[i].name);
-         deleteString.append(EQUALS);
-         deleteString.append(key[i].toString());
-      }
-      return deleteString.toString();
-   }
-*/
-}
-

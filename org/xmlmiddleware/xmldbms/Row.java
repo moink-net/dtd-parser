@@ -31,113 +31,119 @@ import java.util.*;
 
 public class Row
 {
-    // ********************************************************************
-    // Variables
-    // ********************************************************************
-    private Hashtable m_columnValues;
+   // ********************************************************************
+   // Variables
+   // ********************************************************************
 
-    // ********************************************************************
-    // Constants
-    // ********************************************************************
+   private Hashtable m_columnValues;
 
-    private static final String EMPTYSTRING = "";
+   // ********************************************************************
+   // Constants
+   // ********************************************************************
 
-    // ********************************************************************
-    // Constructors
-    // ********************************************************************
+   private static final String EMPTYSTRING = "";
 
-    /** 
-     * Construct a Row 
-     */
-    public Row()
-    {
-        m_columnValues = new Hashtable();
-    }
+   // ********************************************************************
+   // Constructors
+   // ********************************************************************
 
+   /**
+    * Construct a new Row object.
+    */
+   public Row()
+   {
+      m_columnValues = new Hashtable();
+   }
 
-    // ********************************************************************
-    // Methods
-    // ********************************************************************
+   // ********************************************************************
+   // Methods
+   // ********************************************************************
 
-    /**
-	 * Set a column value.
-	 *
-	 * @param column Column for which to set the value.
-	 * @param value Value to set (null for a NULL value).
-	 */
-    public void setColumnValue(Column column, Object value)
-    {
-        // Hashtable won't accept null objects, so we create
-        // a placeholder for NULL
+   /**
+    * Set a column value.
+    *
+    * @param column Column for which to set the value.
+    * @param value Value to set (null for a NULL value).
+    */
+   public void setColumnValue(Column column, Object value)
+   {
+      // Hashtable won't accept null objects, so we create
+      // a placeholder for NULL
 
-        if(value == null)
-            m_columnValues.put(column, new Null());
-        else
-	        m_columnValues.put(column, value);
-        //  m_columnValues.put(column, ConvertObject.convertObject(value, column.getType()));
-        }
+      if(value == null)
+      {
+         m_columnValues.put(column, new Null());
+      }
+      else
+      {
+         m_columnValues.put(column, value);
+      }
+   }
 
-    
-    /**
-	 * Get a column value.
-	 *
-	 * @param column Column for which to get the value.
-	 * @return Returned value. Will return null if column not set or
-     *         value is null. @see haveColumn.
-	 */
-    public Object getColumnValue(Column column)
-    {
-        Object val = m_columnValues.get(column);
+   /**
+    * Get a column value.
+    *
+    * @param column Column for which to get the value.
+    * @return Returned value. Returns null if the column is not set or
+    *     the value is null.
+    */
+   public Object getColumnValue(Column column)
+   {
+      Object val = m_columnValues.get(column);
 
-        if(val == null || val instanceof Null)
-            return null;
-        else
-            return val;
-    }
+      if(val == null || val instanceof Null)
+      {
+         return null;
+      }
+      else
+      {
+         return val;
+      }
+   }
 
+   /**
+    * Remove a column value.
+    *
+    * @param column Column to remove value for.
+    */
+   public void removeColumnValue(Column column)
+   {
+      m_columnValues.remove(column);
+   }
 
-    /**
-     * Clear a column of a value.
-     *
-     * @param column Column to clear.
-     */
-    public void clearColumnValue(Column column)
-    {
-        m_columnValues.remove(column);
-    }
+   /**
+    * Remove all column values.
+    */
+   public void removeAllColumnValues()
+   {
+      m_columnValues.clear();
+   }
 
+   /**
+    * Set multiple column values.
+    *
+    * @param columns Columns for which to set values.
+    * @param values Values to set.
+    */
+   public void setColumnValues(Column[] columns, Object[] values)
+   {
+      // Typically, this is used to set a multi-column key value.
 
-    /**
-     * Clear all column values.
-     */
-    public void clear()
-    {
-        m_columnValues.clear();
-    }
+      for(int i = 0; i < columns.length; i++)
+      {
+         setColumnValue(columns[i], values[i]);
+      }
+   }
 
-
-    /**
-	 * Set multiple column values.
-	 *
-	 * @param columns Columns for which to set values.
-	 * @param values Values to set.
-	 */
-    public void setColumnValues(Column[] columns, Object[] values)
-    {
-	    // Typically, this is used to set a multi-column key value.
-        for(int i = 0; i < columns.length; i++)
-		    setColumnValue(columns[i], values[i]);
-    }   
-
-    /**
-	 * Set column values from a result set
-	 *
-	 * @param rs The result set.
-	 * @param table The Table object describing the rows in the result set
-	 */
-    public void setColumnValues(ResultSet rs, Table table, boolean emptyStringIsNull)
-        throws SQLException
-    {
+   /**
+    * Set column values from a result set
+    *
+    * @param rs The result set.
+    * @param table The Table object describing the rows in the result set
+    */
+   public void setColumnValues(ResultSet rs, Table table, boolean emptyStringIsNull)
+      throws SQLException
+   {
       Column[] rsColumns;
       Object   o;
 
@@ -165,107 +171,114 @@ public class Row
 
          setColumnValue(rsColumns[i], o);
       }
-    }   
+   }
 
+   /**
+    * Get multiple column values.
+    *
+    * @param columns Columns for which to get values.
+    * @return Returned values.
+    */
+   public Object[] getColumnValues(Column[] columns)
+   {
+      // Typically, this is used to get a multi-column key value.
 
-    /**
-	 * Get multiple column values.
-	 *
-	 * @param columns Columns for which to get values.
-	 * @return Returned values.
-	 */
-    public Object[] getColumnValues(Column[] columns)
-    {
-	    // Typically, this is used to get a multi-column key value.
-	    Object[] values = new Object[columns.length];
+      Object[] values = new Object[columns.length];
 
-	    for(int i = 0; i < columns.length; i++)
-		    values[i] = getColumnValue(columns[i]);
+      for(int i = 0; i < columns.length; i++)
+      {
+         values[i] = getColumnValue(columns[i]);
+      }
 
-	    return values;
-    }
+      return values;
+   }
 
-    
-    /**
-     * Returns the columns in this row that apply to a given
-     * table. Only returns columns that have values (including
-     * null).
-     *
-     * @param table The table.
-     */
-    public Vector getColumnVectorFor(Table table)
-    {
-        Vector cols = new Vector();
-        Enumeration e = table.getColumns();
-        
-        while(e.hasMoreElements())
-        {
-            Column col = (Column)e.nextElement();
-            if(haveColumn(col))
-                cols.addElement(col);
-        }
+   /**
+    * Get a Vector of Column objects for the values in this row that apply
+    * to a given table.
+    *
+    * <p>This method only returns Columns for values (including null values)
+    * that have explicitly been set.</p>
+    *
+    * @param table The table.
+    * @return A Vector of Column objects. May be empty.
+    */
+   public Vector getColumnVectorFor(Table table)
+   {
+      Vector cols = new Vector();
+      Enumeration e = table.getColumns();
 
-        return cols;
-    }
+      while(e.hasMoreElements())
+      {
+         Column col = (Column)e.nextElement();
+         if(isColumnSet(col))
+         {
+            cols.addElement(col);
+         }
+      }
 
-    /**
-     * Returns the columns in this row that apply to a given
-     * table. Only returns columns that have values (including
-     * null).
-     *
-     * @param table The table.
-     */
-    public Column[] getColumnsFor(Table table)
-    {
-        Vector cols = getColumnVectorFor(table);
-        Column[] array = new Column[cols.size()];
-        cols.copyInto(array);
-        return array;
-    }
+      return cols;
+   }
 
+   /**
+    * Get an array of Column objects for the values in this row that apply
+    * to a given table.
+    *
+    * <p>This method only returns Columns for values (including null values)
+    * that have explicitly been set.</p>
+    *
+    * @param table The table.
+    * @return An array of Column objects. May be zero length.
+    */
+   public Column[] getColumnArrayFor(Table table)
+   {
+      Vector   cols = getColumnVectorFor(table);
+      Column[] array = new Column[cols.size()];
+      cols.copyInto(array);
+      return array;
+   }
 
-    /**
-	 * Whether a column has a value (including null).
-	 *
-	 * @param column Column to test.
-	 * @return Whether the column has a value.
-	 */
-    boolean haveColumn(Column column)
-    {
-        return m_columnValues.get(column) != null;
-    }   
+   /**
+    * Whether a column has a value (including null).
+    *
+    * @param column Column to test.
+    * @return Whether the column has a value.
+    */
+   boolean isColumnSet(Column column)
+   {
+      return m_columnValues.get(column) != null;
+   }
 
+   /**
+    * Whether all of a set of columns have values
+    * (including null).
+    *
+    * @param columns Columns to test.
+    * @return Whether all column have values.
+    */
+   boolean areColumnsSet(Column[] columns)
+   {
+      // Generally, this is used with an assumption that if any columns
+      // in a key are emtpy, the key has not been set.
 
-    /**
-	 * Whether all of a set of columns have values
-     * (including null).
-	 *
-	 * @param columns Columns to test.
-	 * @return Whether all column have values.
-	 */
-    boolean haveColumns(Column[] columns)
-    {
-	    // Generally, this is used with an assumption that if any columns
-	    // in a key are emtpy, the key has not been set.
-	    for(int i = 0; i < columns.length; i++)
-        {
-            if(!haveColumn(columns[i]))
-                return false;
-        }
+      for(int i = 0; i < columns.length; i++)
+      {
+         if(!isColumnSet(columns[i]))
+            return false;
+      }
 
-        return true;
-    }  
- 
-    // ********************************************************************
-    // Variables
-    // ********************************************************************
+      return true;
+   }
 
-    /**
-     * Denotes a null value in the row.
-     */
-    class Null
-    {
+   // ********************************************************************
+   // Variables
+   // ********************************************************************
 
-    };
+   /**
+    * Denotes a null value in the row.
+    */
+   class Null
+   {
+   };
 
 }
