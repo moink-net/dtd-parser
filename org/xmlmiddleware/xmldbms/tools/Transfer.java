@@ -173,7 +173,8 @@ import java.util.*;
  * sales.xml file to the database:</p>
  *
  * <pre>
- *   java Transfer  ParserUtilsClass=org.xmlmiddleware.domutils.helpers.ParserUtilsXerces
+ *   java org.xmlmiddleware.xmldbms.tools.Transfer 
+ *                  ParserUtilsClass=org.xmlmiddleware.domutils.helpers.ParserUtilsXerces
  *                  DataSourceClass=JDBC1DataSource
  *                  Driver=sun.jdbc.odbc.JdbcOdbcDriver URL=jdbc:odbc:xmldbms
  *                  User=ron Password=ronpwd
@@ -187,8 +188,8 @@ import java.util.*;
  * is equivalent to the previous command line:</p>
  *
  * <pre>
- *   java Transfer File1=xerces.props File2=db.props Method=StoreDocument
- *                 MapFile=sales.map XMLFile=sales.xml ActionFile=sales.act
+ *   java org.xmlmiddleware.xmldbms.tools.Transfer File1=xerces.props File2=db.props
+ *           Method=StoreDocument MapFile=sales.map XMLFile=sales.xml ActionFile=sales.act
  * </pre>
  *
  * <p>Notice that when more than one File property is used, the File properties
