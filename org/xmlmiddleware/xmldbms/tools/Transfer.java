@@ -209,6 +209,9 @@ import javax.sql.*;
  *                  XMLLocation=sales.xml ActionLocation=sales.act
  * </pre>
  *
+ * <p>Notice that no XxxxResolverClass properties are present, so XxxxLocation properties
+ * are interpreted as filenames.</p>
+ *
  * <p>A special property, File, can be used to designate a file containing
  * other properties. For example, if the parser properties are stored in
  * xerces.props and the database properties stored in db.props, the following

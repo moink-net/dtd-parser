@@ -34,7 +34,6 @@ public class XMLDBMSProps
 {
    // Properties used to process properties.
 
-   public static String BASEURL = "BaseURL";
    public static String FILE = "File";
 
    // Parser properties
@@ -64,14 +63,15 @@ public class XMLDBMSProps
    public static String XMLLOCATION = "XMLLocation";
    public static String ACTIONLOCATION = "ActionLocation";
    public static String FILTERLOCATION = "FilterLocation";
+   public static String DTDLOCATION = "DTDLocation";
+   public static String SQLLOCATION = "SQLLocation";
+
    public static String MAPRESOLVERCLASS = "MapResolverClass";
    public static String XMLRESOLVERCLASS = "XMLResolverClass";
    public static String ACTIONRESOLVERCLASS = "ActionResolverClass";
    public static String FILTERRESOLVERCLASS = "FilterResolverClass";
-
-   public static String MAPFILE = "MapFile";
-   public static String DTDFILE = "DTDFile";
-   public static String SQLFILE = "SQLFile";
+   public static String DTDRESOLVERCLASS = "DTDResolverClass";
+   public static String SQLRESOLVERCLASS = "SQLResolverClass";
 
    public static String SELECT = "Select";
    public static String SELECTDBNAME = "SelectDBName";

@@ -26,6 +26,7 @@ import org.xmlmiddleware.utils.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.factories.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
+import org.xmlmiddleware.xmldbms.tools.resolvers.*;
 import org.xmlmiddleware.xmlutils.*;
 
 import org.xml.sax.*;
@@ -52,7 +53,7 @@ import javax.sql.*;
  * create from the map).</p>
  *
  * <p>The traditional API either creates an XMLDBMSMap object from the specified input
- * (map file, DTD, database) or creates something from an XMLDBMSMap object (map file,
+ * (map document, DTD, database) or creates something from an XMLDBMSMap object (map document,
  * DTD, set of CREATE TABLE statements).</p>
  *
  * <p><b>Properties</b></p>
@@ -73,8 +74,8 @@ import javax.sql.*;
  *    implementation. These are ParserUtilsClass and Validate.</p></li>
  *
  * <li><p>Input and output properties specify what is to be done (create a map
- *    from a DTD, write a map file, etc.). These are Input, Output, MapFile,
- *    DTDFile, SQLFile, RootDatabaseName(n), RootCatalogName(n), RootSchemaName(n),
+ *    from a DTD, write a map document, etc.). These are Input, Output, MapLocation,
+ *    DTDLocation, SQLLocation, RootDatabaseName(n), RootCatalogName(n), RootSchemaName(n),
  *    RootTableName(n), StopDatabaseName(n), StopCatalogName(n), StopSchemaName(n),
  *    and StopTableName(n). See below for details.</p></li>
  *
@@ -94,10 +95,10 @@ import javax.sql.*;
  *    is used. This is an error if there is more than one database.</p></li>
  *
  * <li><p>Configuration properties specify how the classes are to function.
- *    They are OrderType, DatabaseName, CatalogName, SchemaName,
- *    Prefix(n), URI(n), MapColumnsAs, FollowPrimaryKeys,
- *    FollowForeignKeys, Encoding, SystemID, PublicID, Pretty, Indent, and SQLSeparator.
- *    See below for details.</p></li>
+ *    They are OrderType, DatabaseName, CatalogName, SchemaName, Prefix(n), URI(n),
+ *    MapColumnsAs, FollowPrimaryKeys, FollowForeignKeys, Encoding, SystemID,
+ *    PublicID, Pretty, Indent, SQLSeparator, MapResolverClass, DTDResolverClass,
+ *    and SQLResolverClass. See below for details.</p></li>
  * </ul>
  *
  * <p>When using the command line or the dispatch-style API, the Input and Output properties
@@ -116,38 +117,40 @@ import javax.sql.*;
  * <th>Configuration properties</th></tr>
  * <tr valign="top">
  * <td>Map</td>
- * <td>MapFile*</td>
+ * <td>MapLocation*</td>
  * <td>Not used.</td>
- * <td>Validate [1]</td>
+ * <td>Validate [1]<br />MapResolverClass[2]</td>
  * </tr>
  *
  * <tr valign="top">
  * <td>DTD</td>
- * <td>DTDFile*</td>
+ * <td>DTDLocation*</td>
  * <td>Single set of values. Optional. [2]</td>
- * <td>DatabaseName [3]<br />CatalogName [3]<br />SchemaName [3]<br />
- *     Prefix(n) [4]<br />URI(n) [4]</td>
+ * <td>DTDResolverClass[2]<br />DatabaseName [4]<br />CatalogName [4]<br />SchemaName [4]<br />
+ *     Prefix(n) [5]<br />URI(n) [5]</td>
  * </tr>
  *
  * <tr valign="top">
- * <td>Database [5]</td>
+ * <td>Database [6]</td>
  * <td>RootDatabase(n)<br />RootCatalog(n)<br />RootSchema(n)<br />RootTable(n)*<br />
  *     StopDatabase(n)<br />StopCatalog(n)<br />StopSchema(n)<br />StopTable(n)</td>
  * <td>Set of values for each database that is read. Required.</td>
- * <td>MapColumnsAs [6]<br />FollowPrimaryKeys [1]<br />FollowForeignKeys [1]<br />
- *     Prefix [7]<br />URI [7]</td>
+ * <td>MapColumnsAs [7]<br />FollowPrimaryKeys [1]<br />FollowForeignKeys [1]<br />
+ *     Prefix [8]<br />URI [8]</td>
  * </tr>
  * </table>
  *
  * <p>NOTES:<br />
  * [1] Legal values are Yes (default) and No.<br />
- * [2] Used to check that generated names are legal and do not conflict with existing
+ * [2] If this is omitted, org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver is
+ *     used. In other words, the location is interpreted as a filename.
+ * [3] Used to check that generated names are legal and do not conflict with existing
  *     names.<br />
- * [3] Database structure to which element types and attributes are mapped.<br />
- * [4] Maps namespace prefixes in DTD to namespace URIs.<br />
- * [5] See MapFactory_Database for an explanation of properties.<br />
- * [6] Legal values are ElementTypes (default) and Attributes.<br />
- * [7] Namespace prefix and URI of generated element type names.
+ * [4] Database structure to which element types and attributes are mapped.<br />
+ * [5] Maps namespace prefixes in DTD to namespace URIs.<br />
+ * [6] See MapFactory_Database for an explanation of properties.<br />
+ * [7] Legal values are ElementTypes (default) and Attributes.<br />
+ * [8] Namespace prefix and URI of generated element type names.
  * </p>
  *
  * <p>The following table shows which properties are used with each value of the
@@ -161,24 +164,24 @@ import javax.sql.*;
  *
  * <tr valign="top">
  * <td>Map</td>
- * <td>MapFile*</td>
+ * <td>MapLocation*</td>
  * <td>Not used</td>
- * <td>Encoding<br />URI(n) [1]<br />Prefix(n) [1]<br />SystemID<br />PublicID<br />
- *     Pretty [2]<br />Indent [3]</td>
+ * <td>MapResolverClass[1]<br />Encoding<br />URI(n) [2]<br />Prefix(n) [2]<br />
+ *     SystemID<br />PublicID<br />Pretty [3]<br />Indent [4]</td>
  * </tr>
  *
  * <tr valign="top">
  * <td>DTD</td>
- * <td>DTDFile*</td>
+ * <td>DTDLocation*</td>
  * <td>Not used</td>
- * <td>Encoding<br />Pretty [2]</td>
+ * <td>DTDResolverClass[1]<br />Encoding<br />Pretty [3]</td>
  * </tr>
  *
  * <tr valign="top">
  * <td>SQL</td>
- * <td>SQLFile*</td>
- * <td>Set of values for each database used by the map. Optional. [4]</td>
- * <td>Encoding<br />SQLSeparator [5]</td>
+ * <td>SQLLocation*</td>
+ * <td>Set of values for each database used by the map. Optional. [5]</td>
+ * <td>SQLResolverClass[1]<br />Encoding<br />SQLSeparator [6]</td>
  * </tr>
  * </table>
  *
@@ -214,10 +217,13 @@ import javax.sql.*;
  *              DataSourceClass=JDBC1DataSource
  *              Driver=sun.jdbc.odbc.JdbcOdbcDriver URL=jdbc:odbc:xmldbms
  *              User=ron Password=ronpwd
- *              Input=DTD DTDFile=sales.dtd
- *              Output1=Map MapFile=sales.map
- *              Output2=SQL SQLFile=sales.sql
+ *              Input=DTD DTDLocation=sales.dtd
+ *              Output1=Map MapLocation=sales.map
+ *              Output2=SQL SQLLocation=sales.sql
  * </pre>
+ *
+ * <p>Notice that no XxxxResolverClass properties are present, so XxxxLocation properties
+ * are interpreted as filenames.</p>
  *
  * <p>A special property, File, can be used to designate a file containing
  * other properties. For example, if the database properties are stored in db.props,
@@ -225,9 +231,9 @@ import javax.sql.*;
  *
  * <pre>
  *   java org.xmlmiddleware.xmldbms.tools.MapManager File=db.props
- *              Input=DTD DTDFile=sales.dtd
- *              Output1=Map MapFile=sales.map
- *              Output2=SQL SQLFile=sales.sql
+ *              Input=DTD DTDLocation=sales.dtd
+ *              Output1=Map MapLocation=sales.map
+ *              Output2=SQL SQLLocation=sales.sql
  * </pre>
  *
  * <p>If more than one File property is used, the File properties
@@ -274,6 +280,7 @@ public class MapManager extends PropertyProcessor
    private static String DEFAULT = "Default";
    private static String JDBC1DATASOURCE = "org.xmlmiddleware.db.JDBC1DataSource";
    private static String JDBC2DATASOURCE = "org.xmlmiddleware.db.JDBC2DataSource";
+   private static String FILENAMERESOLVER = "org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver";
 
    // ************************************************************************
    // Constructor
@@ -368,7 +375,7 @@ public class MapManager extends PropertyProcessor
    public void dispatch(Properties props)
       throws XMLMiddlewareException, SQLException
    {
-      String     input, temp, filename;
+      String     input, temp, location;
       String[]   outputs,
                  rootDatabaseNames, rootCatalogNames, rootSchemaNames, rootTableNames,
                  stopDatabaseNames, stopCatalogNames, stopSchemaNames, stopTableNames;
@@ -401,10 +408,10 @@ public class MapManager extends PropertyProcessor
 
       if (input.equals(XMLDBMSProps.DTD))
       {
-         filename = props.getProperty(XMLDBMSProps.DTDFILE);
-         if (filename == null)
-            throw new XMLMiddlewareException("You must specify the DTDFile property when the value of the Input property is DTD.");
-         map = createMapFromDTD(props, props, filename);
+         location = props.getProperty(XMLDBMSProps.DTDLOCATION);
+         if (location == null)
+            throw new XMLMiddlewareException("You must specify the DTDLocation property when the value of the Input property is DTD.");
+         map = createMapFromDTD(props, props, location);
       }
       else if (input.equals(XMLDBMSProps.DATABASE))
       {
@@ -456,10 +463,10 @@ public class MapManager extends PropertyProcessor
       }
       else if (input.equals(XMLDBMSProps.MAP))
       {
-         filename = props.getProperty(XMLDBMSProps.MAPFILE);
-         if (filename == null)
-            throw new XMLMiddlewareException("You must specify the MapFile property when the value of the Input property is Map.");
-         map = compileMap(props, filename);
+         location = props.getProperty(XMLDBMSProps.MAPLOCATION);
+         if (location == null)
+            throw new XMLMiddlewareException("You must specify the MapLocation property when the value of the Input property is Map.");
+         map = compileMap(props, location);
       }
       else
          throw new XMLMiddlewareException("Invalid value of " + XMLDBMSProps.INPUT + " property: " + input);
@@ -470,24 +477,24 @@ public class MapManager extends PropertyProcessor
       {
          if (outputs[i].equals(XMLDBMSProps.MAP))
          {
-            filename = props.getProperty(XMLDBMSProps.MAPFILE);
-            if (filename == null)
-               throw new XMLMiddlewareException("You must specify the MapFile property when the value of the Output(n) property is Map.");
-            writeMap(props, map, filename);
+            location = props.getProperty(XMLDBMSProps.MAPLOCATION);
+            if (location == null)
+               throw new XMLMiddlewareException("You must specify the MapLocation property when the value of the Output(n) property is Map.");
+            writeMap(props, map, location);
          }
          else if (outputs[i].equals(XMLDBMSProps.DTD))
          {
-            filename = props.getProperty(XMLDBMSProps.DTDFILE);
-            if (filename == null)
-               throw new XMLMiddlewareException("You must specify the DTDFile property when the value of the Output(n) property is DTD.");
-            createDTD(props, map, filename);
+            location = props.getProperty(XMLDBMSProps.DTDLOCATION);
+            if (location == null)
+               throw new XMLMiddlewareException("You must specify the DTDLocation property when the value of the Output(n) property is DTD.");
+            createDTD(props, map, location);
          }
          else if (outputs[i].equals(XMLDBMSProps.SQL))
          {
-            filename = props.getProperty(XMLDBMSProps.SQLFILE);
-            if (filename == null)
-               throw new XMLMiddlewareException("You must specify the SQLFile property when the value of the Output(n) property is SQL.");
-            createSQL(props, props, map, filename);
+            location = props.getProperty(XMLDBMSProps.SQLLOCATION);
+            if (location == null)
+               throw new XMLMiddlewareException("You must specify the SQLLocation property when the value of the Output(n) property is SQL.");
+            createSQL(props, props, map, location);
          }
          else
             throw new XMLMiddlewareException("Invalid value of " + XMLDBMSProps.OUTPUT + " property: " + outputs[i]);
@@ -495,18 +502,19 @@ public class MapManager extends PropertyProcessor
    }
 
    /**
-    * Compiles a map file.
+    * Compiles a map document.
     *
     * @param configProps See the introduction. May be null.
-    * @param mapFilename Name of the map file.
+    * @param mapLocation Location of the map document.
     * @exception XMLMiddlewareException Thrown for all errors
     */
-   public XMLDBMSMap compileMap(Properties configProps, String mapFilename)
+   public XMLDBMSMap compileMap(Properties configProps, String mapLocation)
       throws XMLMiddlewareException
    {
-      MapCompiler compiler = null;
-      String      validateString;
-      boolean     validate;
+      MapCompiler      compiler = null;
+      String           validateString;
+      boolean          validate;
+      LocationResolver resolver;
 
       if (configProps == null) configProps = emptyProps;
 
@@ -517,7 +525,8 @@ public class MapManager extends PropertyProcessor
          validateString = configProps.getProperty(XMLDBMSProps.VALIDATE);
          validate = (validateString == null) ? true : getYesNo(validateString);
          compiler = new MapCompiler(utils.getXMLReader(validate));
-         return compiler.compile(new InputSource(new FileReader(mapFilename)));
+         resolver = getLocationResolver(configProps, XMLDBMSProps.MAPRESOLVERCLASS);
+         return compiler.compile(getInputSource(resolver, mapLocation));
       }
       catch (SAXException s)
       {
@@ -539,18 +548,19 @@ public class MapManager extends PropertyProcessor
     * @param dbProps A Properties object describing the database to which to map
     *    the DTD. May be null.
     * @param configProps See the introduction. May be null.
-    * @param dtdFilename Name of the DTD file.
+    * @param dtdLocation Location of the DTD.
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors
     */
-   public XMLDBMSMap createMapFromDTD(Properties dbProps, Properties configProps, String dtdFilename)
+   public XMLDBMSMap createMapFromDTD(Properties dbProps, Properties configProps, String dtdLocation)
       throws XMLMiddlewareException, SQLException
    {
-      DBInfo         dbInfo;
-      Connection     conn;
-      MapFactory_DTD factory;
-      String         order, databaseName, catalogName, schemaName;
-      Hashtable      namespaceURIs;
+      DBInfo           dbInfo;
+      Connection       conn;
+      MapFactory_DTD   factory;
+      String           order, databaseName, catalogName, schemaName;
+      Hashtable        namespaceURIs;
+      LocationResolver resolver;
 
       if (dbProps == null) dbProps = emptyProps;
       if (configProps == null) configProps = emptyProps;
@@ -607,7 +617,8 @@ public class MapManager extends PropertyProcessor
 
       try
       {
-         return factory.createMap(new InputSource(new FileReader(dtdFilename)), MapFactory_DTD.DTD_EXTERNAL, namespaceURIs);
+         resolver = getLocationResolver(configProps, XMLDBMSProps.DTDRESOLVERCLASS);
+         return factory.createMap(getInputSource(resolver, dtdLocation), MapFactory_DTD.DTD_EXTERNAL, namespaceURIs);
       }
       catch (Exception e)
       {
@@ -755,30 +766,32 @@ public class MapManager extends PropertyProcessor
    }
 
    /**
-    * Writes a map to a file.
+    * Writes out a map.
     *
     * @param configProps See the introduction. May be null.
     * @param map The map
-    * @param mapFilename The name of the file to write the map to.
+    * @param mapLocation The location to write the map to.
     * @exception XMLMiddlewareException Thrown for all other errors
     */
-   public void writeMap(Properties configProps, XMLDBMSMap map, String mapFilename)
+   public void writeMap(Properties configProps, XMLDBMSMap map, String mapLocation)
       throws XMLMiddlewareException
    {
-      String        systemID, prettyString, indentString;
-      Writer        writer;
-      MapSerializer serializer;
-      boolean       pretty;
-      Hashtable     uris;
-      Enumeration   prefixes;
-      String[]      uriArray, prefixArray;
-      int           indent, i;
+      LocationResolver resolver;
+      String           systemID, prettyString, indentString;
+      Writer           writer;
+      MapSerializer    serializer;
+      boolean          pretty;
+      Hashtable        uris;
+      Enumeration      prefixes;
+      String[]         uriArray, prefixArray;
+      int              indent, i;
 
       if (configProps == null) configProps = emptyProps;
 
       // Get the Writer and create the MapSerializer.
 
-      writer = getWriter(mapFilename, configProps);
+      resolver = getLocationResolver(configProps, XMLDBMSProps.MAPRESOLVERCLASS);
+      writer = getWriter(resolver, configProps, mapLocation);
       serializer = new MapSerializer(writer);
 
       // Set the pretty printing option.
@@ -840,22 +853,23 @@ public class MapManager extends PropertyProcessor
    }
 
    /**
-    * Creates a DTD from a map and writes it to a file.
+    * Creates a DTD from a map and writes it out.
     *
     * @param configProps See the introduction. May be null.
     * @param map The map
-    * @param dtdFilename The name of the file to write the DTD to.
+    * @param dtdLocation The location to write the DTD to.
     * @exception XMLMiddlewareException Thrown for all other errors
     */
-   public void createDTD(Properties configProps, XMLDBMSMap map, String dtdFilename)
+   public void createDTD(Properties configProps, XMLDBMSMap map, String dtdLocation)
       throws XMLMiddlewareException
    {
-      DTDGenerator  generator;
-      DTD           dtd;
-      DTDSerializer serializer;
-      Writer        writer;
-      String        prettyString;
-      boolean       pretty;
+      DTDGenerator     generator;
+      DTD              dtd;
+      LocationResolver resolver;
+      DTDSerializer    serializer;
+      Writer           writer;
+      String           prettyString;
+      boolean          pretty;
 
       if (configProps == null) configProps = emptyProps;
 
@@ -866,7 +880,8 @@ public class MapManager extends PropertyProcessor
 
       // Get the Writer and whether to pretty print;
 
-      writer = getWriter(dtdFilename, configProps);
+      resolver = getLocationResolver(configProps, XMLDBMSProps.DTDRESOLVERCLASS);
+      writer = getWriter(resolver, configProps, dtdLocation);
       prettyString = configProps.getProperty(XMLDBMSProps.PRETTY);
       pretty = (prettyString == null) ? true : getYesNo(prettyString);
 
@@ -889,16 +904,16 @@ public class MapManager extends PropertyProcessor
    }
 
    /**
-    * Creates CREATE TABLE statements from a map and writes them to a file.
+    * Creates CREATE TABLE statements from a map and writes them out.
     *
     * @param dbProps Properties for database to get type names, etc. from. May be null.
     * @param configProps See the introduction. May be null.
     * @param map The map
-    * @param sqlFilename The name of the file to write the CREATE TABLE statements to.
+    * @param sqlLocation The location to write the CREATE TABLE statements to.
     * @exception SQLException Thrown if a database error occurs.
     * @exception XMLMiddlewareException Thrown for all other errors
     */
-   public void createSQL(Properties dbProps, Properties configProps, XMLDBMSMap map, String sqlFilename)
+   public void createSQL(Properties dbProps, Properties configProps, XMLDBMSMap map, String sqlLocation)
       throws XMLMiddlewareException, SQLException
    {
       DBInfo             dbInfo;
@@ -911,6 +926,7 @@ public class MapManager extends PropertyProcessor
       String             dbName, separator;
       int                numDBNames;
       Vector             strings;
+      LocationResolver   resolver;
       Writer             writer;
 
       if (dbProps == null) dbProps = emptyProps;
@@ -965,7 +981,8 @@ public class MapManager extends PropertyProcessor
 
       // Get the writer.
 
-      writer = getWriter(sqlFilename, configProps);
+      resolver = getLocationResolver(configProps, XMLDBMSProps.SQLRESOLVERCLASS);
+      writer = getWriter(resolver, configProps, sqlLocation);
 
       // Get the statement separator, if any.
 
@@ -1247,34 +1264,6 @@ public class MapManager extends PropertyProcessor
    // Private methods -- general
    // ************************************************************************
 
-   private Writer getWriter(String filename, Properties props)
-      throws XMLMiddlewareException
-   {
-      String        encoding;
-      OutputStream  outputStream;
-
-      // Create a new Writer. How we do this depends on whether we use the
-      // default encoding or a different encoding.
-
-      try
-      {
-         encoding = props.getProperty(XMLDBMSProps.ENCODING);
-         if (encoding != null)
-         {
-            outputStream = new FileOutputStream(filename);
-            return new OutputStreamWriter(outputStream, encoding);
-         }
-         else
-         {
-         return new FileWriter(filename);
-         }
-      }
-      catch (Exception e)
-      {
-         throw new XMLMiddlewareException(e);
-      }              
-   }
-
    private void setParserUtils(Properties props)
       throws XMLMiddlewareException
    {
@@ -1308,6 +1297,70 @@ public class MapManager extends PropertyProcessor
       }
       else
          throw new XMLMiddlewareException(s);
+   }
+
+   private LocationResolver getLocationResolver(Properties props, String propName)
+      throws XMLMiddlewareException
+   {
+      String resolverClass;
+
+      // Get the name of the LocationResolver class. If the name isn't passed in,
+      // use org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver.
+
+      if (props == null)
+      {
+         resolverClass = FILENAMERESOLVER;
+      }
+      else
+      {
+         resolverClass = props.getProperty(propName, FILENAMERESOLVER);
+      }
+
+      // Instantiate the LocationResolver and return it.
+
+      return (LocationResolver)instantiateObject(resolverClass);
+   }
+
+   private InputSource getInputSource(LocationResolver resolver, String location)
+      throws XMLMiddlewareException
+   {
+      if (resolver.supportsReader())
+      {
+         return new InputSource(resolver.getReader(location));
+      }
+      else
+      {
+         return new InputSource(resolver.getInputStream(location));
+      }
+   }
+
+   private Writer getWriter(LocationResolver resolver, Properties props, String location)
+      throws XMLMiddlewareException
+   {
+      String encoding;
+
+      // Create a new Writer. How we do this depends on whether we use the
+      // default encoding or a different encoding.
+
+      encoding = props.getProperty(XMLDBMSProps.ENCODING);
+
+      try
+      {
+         if (resolver.supportsWriter())
+         {
+            return resolver.getWriter(location, encoding);
+         }
+         else
+         {
+            if (encoding != null)
+               throw new XMLMiddlewareException("Encodings not supported by LocationResolver: " + resolver.getClass().getName());
+            return new OutputStreamWriter(resolver.getOutputStream(location));
+         }
+      }
+      catch (Exception e)
+      {
+         throw new XMLMiddlewareException(e);
+      }              
    }
 
    private Object instantiateObject(String className)
