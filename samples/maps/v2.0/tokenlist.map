@@ -1,6 +1,6 @@
 <?xml version='1.0' ?>
 <!--
-     This sample tests the storage of multi-valued properties.
+     This sample tests the storage of token list properties.
      It maps the schema for the following XML documents:
 
      <root>
@@ -76,7 +76,7 @@
       <ClassMap>
          <ElementType Name="root"/>
          <ToClassTable Name="Root"/>
-         <PropertyMap MultiValued="Yes">
+         <PropertyMap TokenList="Yes">
             <ElementType Name="price1"/>
             <ToPropertyTable Name="Price1" KeyInParentTable="Unique">
                <UseUniqueKey Name="PrimaryKey" />
@@ -84,7 +84,7 @@
             </ToPropertyTable>
             <ToColumn Name="Price"/>
             <OrderColumn Name="OrderInRoot" Generate="Yes" />
-            <MVOrderColumn Name="PriceOrder" Generate="Yes" />
+            <TLOrderColumn Name="PriceOrder" Generate="Yes" />
          </PropertyMap>
       </ClassMap>
       <ClassMap>
@@ -94,20 +94,20 @@
             <Attribute Name="currency"/>
             <ToColumn Name="Currency"/>
          </PropertyMap>
-         <PropertyMap MultiValued="Yes">
+         <PropertyMap TokenList="Yes">
             <PCDATA/>
             <ToPropertyTable Name="Price2PCDATA" KeyInParentTable="Unique">
                <UseUniqueKey Name="PrimaryKey" />
                <UseForeignKey Name="root_FK" />
             </ToPropertyTable>
             <ToColumn Name="Price"/>
-            <MVOrderColumn Name="PriceOrder" Generate="Yes" />
+            <TLOrderColumn Name="PriceOrder" Generate="Yes" />
          </PropertyMap>
       </ClassMap>
       <ClassMap>
          <ElementType Name="price3"/>
          <ToClassTable Name="Price3"/>
-         <PropertyMap MultiValued="Yes">
+         <PropertyMap TokenList="Yes">
             <Attribute Name="price"/>
             <ToPropertyTable Name="Price3Attr" KeyInParentTable="Unique">
                <UseUniqueKey Name="PrimaryKey" />
