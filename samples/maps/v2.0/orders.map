@@ -149,9 +149,7 @@
             <ElementType Name="Item"/>
             <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="SO_FK"/>
-            <Order Direction="Ascending">
-               <UseColumn Name="Number"/>
-            </Order>
+            <OrderColumn Name="Number" Direction="Ascending" />
          </RelatedClass>
       </ClassMap>
    </Maps>

@@ -85,57 +85,43 @@
          <PropertyMap>
             <ElementType Name="Title"/>
             <ToColumn Name="Title"/>
-            <Order>
-               <FixedOrder Value="1" />
-            </Order>
+            <FixedOrder Value="1" />
          </PropertyMap>
          <InlineMap>
             <ElementType Name="Author"/>
             <PropertyMap>
                <ElementType Name="FirstName"/>
                <ToColumn Name="AuthorFirstName"/>
-               <Order>
-                  <FixedOrder Value="1" />
-               </Order>
+               <FixedOrder Value="1" />
             </PropertyMap>
             <PropertyMap>
                <ElementType Name="LastName"/>
                <ToColumn Name="AuthorLastName"/>
-               <Order>
-                  <FixedOrder Value="2" />
-               </Order>
+               <FixedOrder Value="2" />
             </PropertyMap>
             <InlineMap>
                <ElementType Name="Address"/>
                <PropertyMap>
                   <ElementType Name="Street"/>
                   <ToColumn Name="AuthorStreet"/>
-                  <Order>
-                     <FixedOrder Value="1" />
-                  </Order>
+                  <FixedOrder Value="1" />
                </PropertyMap>
                <PropertyMap>
                   <ElementType Name="City"/>
                   <ToColumn Name="AuthorCity"/>
-                  <Order>
-                     <FixedOrder Value="2" />
-                  </Order>
+                  <FixedOrder Value="2" />
                </PropertyMap>
                <PropertyMap>
                   <ElementType Name="State"/>
                   <ToColumn Name="AuthorState"/>
-                  <Order>
-                     <FixedOrder Value="3" />
-                  </Order>
+                  <FixedOrder Value="3" />
                </PropertyMap>
                <PropertyMap>
                   <Attribute Name="PostCode"/>
                   <ToColumn Name="AuthorPostCode"/>
                </PropertyMap>
             </InlineMap>
-            <Order>
-               <FixedOrder Value="2" />
-            </Order>
+            <FixedOrder Value="2" />
          </InlineMap>
       </ClassMap>
    </Maps>

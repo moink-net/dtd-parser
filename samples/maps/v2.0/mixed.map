@@ -87,10 +87,7 @@
                <UseForeignKey Name="Review_FK" />
             </ToPropertyTable>
             <ToColumn Name="PCDATA"/>
-            <Order>
-               <UseColumn Name="PCDATAOrder" />
-               <Generate />
-            </Order>
+            <OrderColumn Name="PCDATAOrder" Generate="Yes" />
          </PropertyMap>
          <PropertyMap>
             <ElementType Name="b"/>
@@ -99,19 +96,13 @@
                <UseForeignKey Name="Review_FK" />
             </ToPropertyTable>
             <ToColumn Name="b"/>
-            <Order>
-               <UseColumn Name="bOrder" />
-               <Generate />
-            </Order>
+            <OrderColumn Name="bOrder" Generate="Yes" />
          </PropertyMap>
          <RelatedClass KeyInParentTable="Unique">
             <ElementType Name="a"/>
             <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="Review_FK"/>
-            <Order>
-               <UseColumn Name="aOrder" />
-               <Generate />
-            </Order>
+            <OrderColumn Name="aOrder" Generate="Yes" />
          </RelatedClass>
       </ClassMap>
       <ClassMap>
