@@ -1,0 +1,174 @@
+<?xml version='1.0' ?>
+<!--
+     This sample identical to orders.map except that all the tables
+     are in different databases.
+-->
+
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
+
+<XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
+   <Databases>
+      <Database Name="orders">
+         <Catalog>
+            <Schema>
+               <Table Name="Orders">
+                  <Column Name="CustNumber" DataType="VARCHAR" Length="10" Nullable="No"/>
+                  <Column Name="Number" DataType="VARCHAR" Length="10" Nullable="No"/>
+                  <Column Name="Date" DataType="DATE" Nullable="Yes"/>
+                  <PrimaryKey>
+                     <UseColumn Name="Number"/>
+                  </PrimaryKey>
+                  <ForeignKey Name="Cust_FK">
+                     <UseTable Database="customers" Name="Customers" />
+                     <UseUniqueKey Name="PrimaryKey" />
+                     <UseColumn Name="CustNumber"/>
+                  </ForeignKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+      <Database Name="items">
+         <Catalog>
+            <Schema>
+               <Table Name="Items">
+                  <Column Name="Part" DataType="VARCHAR" Length="10" Nullable="No"/>
+                  <Column Name="Number" DataType="INTEGER" Nullable="No"/>
+                  <Column Name="Quantity" DataType="INTEGER" Nullable="No"/>
+                  <Column Name="SONumber" DataType="VARCHAR" Length="10" Nullable="No"/>
+                  <PrimaryKey>
+                     <UseColumn Name="SONumber"/>
+                     <UseColumn Name="Number"/>
+                  </PrimaryKey>
+                  <ForeignKey Name="Part_FK">
+                     <UseTable Database="parts" Name="Parts" />
+                     <UseUniqueKey Name="PrimaryKey" />
+                     <UseColumn Name="Part"/>
+                  </ForeignKey>
+                  <ForeignKey Name="SO_FK">
+                     <UseTable Database="orders" Name="Orders" />
+                     <UseUniqueKey Name="PrimaryKey" />
+                     <UseColumn Name="SONumber"/>
+                  </ForeignKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+      <Database Name="customers">
+         <Catalog>
+            <Schema>
+               <Table Name="Customers">
+                  <Column Name="Street" DataType="VARCHAR" Length="50" Nullable="No"/>
+                  <Column Name="Name" DataType="VARCHAR" Length="40" Nullable="No"/>
+                  <Column Name="Number" DataType="VARCHAR" Length="10" Nullable="No" />
+                  <Column Name="City" DataType="VARCHAR" Length="50" Nullable="No"/>
+                  <Column Name="PostalCode" DataType="VARCHAR" Length="10" Nullable="Yes"/>
+                  <Column Name="State" DataType="VARCHAR" Length="2" Nullable="No"/>
+                  <PrimaryKey KeyGenerator="Database">
+                     <UseColumn Name="Number"/>
+                  </PrimaryKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+      <Database Name="parts">
+         <Catalog>
+            <Schema>
+               <Table Name="Parts">
+                  <Column Name="Number" DataType="VARCHAR" Length="10" Nullable="No"/>
+                  <Column Name="Price" DataType="DOUBLE" Nullable="No"/>
+                  <Column Name="Description" DataType="VARCHAR" Length="255" Nullable="Yes"/>
+                  <PrimaryKey>
+                     <UseColumn Name="Number"/>
+                  </PrimaryKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+   </Databases>
+   <Maps>
+      <ClassMap>
+         <ElementType Name="Item"/>
+         <ToClassTable Database="items" Name="Items"/>
+         <PropertyMap>
+            <Attribute Name="LineNumber"/>
+            <ToColumn Name="Number"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Quantity"/>
+            <ToColumn Name="Quantity"/>
+         </PropertyMap>
+         <RelatedClass KeyInParentTable="Foreign">
+            <ElementType Name="Part"/>
+            <UseUniqueKey Name="PrimaryKey"/>
+            <UseForeignKey Name="Part_FK"/>
+         </RelatedClass>
+      </ClassMap>
+      <ClassMap>
+         <ElementType Name="Part"/>
+         <ToClassTable Database="parts" Name="Parts"/>
+         <PropertyMap>
+            <Attribute Name="PartNumber"/>
+            <ToColumn Name="Number"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Price"/>
+            <ToColumn Name="Price"/>
+         </PropertyMap>
+         <PropertyMap ContainsXML="Yes">
+            <ElementType Name="Description"/>
+            <ToColumn Name="Description"/>
+         </PropertyMap>
+      </ClassMap>
+      <ClassMap>
+         <ElementType Name="Customer"/>
+         <ToClassTable Database="customers" Name="Customers"/>
+         <PropertyMap>
+            <Attribute Name="CustNumber"/>
+            <ToColumn Name="Number"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Street"/>
+            <ToColumn Name="Street"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="CustName"/>
+            <ToColumn Name="Name"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="PostCode"/>
+            <ToColumn Name="PostalCode"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="City"/>
+            <ToColumn Name="City"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="State"/>
+            <ToColumn Name="State"/>
+         </PropertyMap>
+      </ClassMap>
+      <ClassMap>
+         <ElementType Name="SalesOrder"/>
+         <ToClassTable Database="orders" Name="Orders"/>
+         <PropertyMap>
+            <Attribute Name="SONumber"/>
+            <ToColumn Name="Number"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="OrderDate"/>
+            <ToColumn Name="Date"/>
+         </PropertyMap>
+         <RelatedClass KeyInParentTable="Foreign">
+            <ElementType Name="Customer"/>
+            <UseUniqueKey Name="PrimaryKey"/>
+            <UseForeignKey Name="Cust_FK"/>
+         </RelatedClass>
+         <RelatedClass KeyInParentTable="Unique">
+            <ElementType Name="Item"/>
+            <UseUniqueKey Name="PrimaryKey"/>
+            <UseForeignKey Name="SO_FK"/>
+            <OrderColumn Name="Number" Direction="Ascending" />
+         </RelatedClass>
+      </ClassMap>
+   </Maps>
+</XMLToDBMS>
