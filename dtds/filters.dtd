@@ -123,7 +123,7 @@
 
 <!ELEMENT %p;ResultSetInfo EMPTY>
 <!ATTLIST %p;ResultSetInfo
-          Number CDATA #FIXED "0"
+          Name CDATA "Default"
           Database CDATA "Default"
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
@@ -166,6 +166,10 @@ results in the following document:
       </Bar>
    </Foo>
 
+The Name attribute of the Wrapper element contains the QName (qualified
+name) of the element; the prefix (if any) used in the QName must be
+declared in a Namespace element.
+
 RootFilter: These filters are used to specify the values retrieve from
 the root table(s). They are effectively ORed together and are
 equivalent to the table name and key values passed to retrieveDocument
@@ -184,10 +188,8 @@ ClassMap can be used to map multiple result sets. For example, a
 ClassMap used to map all of the columns in a table can be used with any
 result set built over that table.
 
-WARNING: There is currently a restriction that, if a filter document
-contains a Filter with a ResultSetInfo child, there cannot be any other
-Filter elements in the filter document. This is done strictly for UI
-reasons and may be relaxed in the future.
+ResultSetInfo also provides the name (the Name attribute) used to
+identify the result set to which the filter applies.
 
 TableFilter: These filters are used to filter values within the
 document. A table may not appear in more than one TableFilter within
@@ -214,7 +216,7 @@ condition. This is an arbitrary string that is AND'ed to the end of the
 WHERE clause used to query the child table. It must apply to the columns
 in the child table. For example:
 
-   <Where Condition='PartNumber="123"' />
+   <Where Condition="PartNumber='123'" />
 
 If there is more than one Where element in a given filter, these are
 AND'ed together. For example, this:
@@ -235,6 +237,7 @@ must be placed inside a single Condition clause. For example:
 Condition attributes can contain named parameters. For example:
 
    <Where Condition="Price > $Price" />
+   <Where Condition="Name LIKE $Name" />
 
 The list of parameter names and values is passed to retrieveDocument.
 
@@ -296,12 +299,11 @@ by preceding it with backslash (\). For example:
    <Where Condition="Description LIKE '%\$token%'" />
    <Where Condition="PriceAsString = '\$10 (US)'" />
 
-
 3) The replacement of scalar parameters is simplistic: anything of the
 form $token is assumed to be a parameter (regardless of position) and
 is replaced by a parameter marker (?). The only exception is when the
-$token is preceded by a backslash (\).
-
+$token is preceded by a backslash (\). The end of a token is recognized
+by either whitespace (space or tab) or a closing parenthesis (")").
 
 4) The replacement of Vector parameters is also simplistic. In
 particular, the parameter is replaced by Vector.size() parameter
