@@ -789,7 +789,7 @@ public class Map extends MapBase
     */
    public final ClassTableMap getClassTableMap(String databaseName, String catalogName, String schemaName, String tableName)
    {
-      return (ClassTableMap)classTableMaps.get(Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+      return (ClassTableMap)classTableMaps.get(Table.getHashName(databaseName, catalogName, schemaName, tableName));
    }
 
    /**
@@ -818,7 +818,7 @@ public class Map extends MapBase
       String        name;
 
       checkArgNull(table, ARG_TABLE);
-      name = table.getUniversalName();
+      name = table.getHashName();
       classTableMap = (ClassTableMap)classTableMaps.get(name);
       if (classTableMap == null)
       {
@@ -841,10 +841,10 @@ public class Map extends MapBase
       Object o;
 
       checkArgNull(classTableMap, ARG_CLASSTABLEMAP);
-      name = classTableMap.getTable().getUniversalName();
+      name = classTableMap.getTable().getHashName();
       o = classTableMaps.get(name);
       if (o != null)
-         throw new MapException("Table already mapped: " + name);
+         throw new MapException("Table already mapped: " + classTableMap.getTable().getUniversalName());
       classTableMaps.put(name, classTableMap);
    }
 
@@ -861,13 +861,11 @@ public class Map extends MapBase
    public void removeClassTableMap(String databaseName, String catalogName, String schemaName, String tableName)
       throws MapException
    {
-      ClassTableMap classTableMap;
-      String name;
+      Object o;
 
-      name = Table.getUniversalName(databaseName, catalogName, schemaName, tableName);
-      classTableMap = (ClassTableMap)classTableMaps.remove(name);
-      if (classTableMap == null)
-         throw new MapException("Table not mapped as a class table: " + name);
+      o = classTableMaps.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
+      if (o == null)
+         throw new MapException("Table not mapped as a class table: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
    }
 
    /**
@@ -894,7 +892,7 @@ public class Map extends MapBase
     */
    public final Table getTable(String databaseName, String catalogName, String schemaName, String tableName)
    {
-      return (Table)tables.get(Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+      return (Table)tables.get(Table.getHashName(databaseName, catalogName, schemaName, tableName));
    }
 
    /**
@@ -923,9 +921,9 @@ public class Map extends MapBase
    {
       Table  table;
       String name;
-      Object           o;
+      Object o;
 
-      name = Table.getUniversalName(databaseName, catalogName, schemaName, tableName);
+      name = Table.getHashName(databaseName, catalogName, schemaName, tableName);
       table = (Table)tables.get(name);
       if (table == null)
       {
@@ -948,10 +946,10 @@ public class Map extends MapBase
       String name;
 
       checkArgNull(table, ARG_TABLE);
-      name = table.getUniversalName();
+      name = table.getHashName();
       o = tables.get(name);
       if (o != null)
-         throw new MapException("Table already exists: " + name);
+         throw new MapException("Table already exists: " + table.getUniversalName());
       tables.put(name, table);
    }
 
@@ -972,12 +970,10 @@ public class Map extends MapBase
       throws MapException
    {
       Object o;
-      String name;
 
-      name = Table.getUniversalName(databaseName, catalogName, schemaName, tableName);
-      o = tables.remove(name);
+      o = tables.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
       if (o == null)
-         throw new MapException("Table does not exist: " + name);
+         throw new MapException("Table does not exist: " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
    }
 
    /**

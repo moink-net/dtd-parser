@@ -44,11 +44,10 @@ import java.util.Hashtable;
  *    "database-name"."catalog-name"."schema-name"."table-name"
  * </pre>
  *
- * <p>These are used internally to identify tables in Hashtables and are
- * also used in error messages. XML-DBMS applications do not need to use them.
- * Note that it is probably possible to construct two different tables with
- * the same universal name. This will undoubtedly cause problems. However,
- * such naming is abusive and people who use it deserve what they get.</p>
+ * <p>These are used in error messages. XML-DBMS applications do not need to use
+ * them. Note that it is probably possible to construct two different tables with
+ * the same universal name, but since these names are only used in error messages,
+ * it shouldn't matter much.</p>
  *
  * @author Ronald Bourret, 1998-1999, 2001
  * @version 2.0
@@ -60,10 +59,12 @@ public class Table extends MapBase
    // Constants
    // ********************************************************************
 
-   private static final String DEFAULT = "Default";
-   private static final String DOUBLEQUOTE = "\"";
-   private static final String DQPDQ = "\".\"";    // Double Quote Period Double Quote
-   private static final String PRIMARYKEY = "PrimaryKey";
+   private static String DEFAULT = "Default";
+   private static String DOUBLEQUOTE = "\"";
+   private static String DQPDQ = "\".\"";    // Double Quote Period Double Quote
+   private static String PRIMARYKEY = "PrimaryKey";
+   private static String SEMICOLON = ";";
+   private static String NULL = "null";
 
    // ********************************************************************
    // Variables
@@ -74,7 +75,7 @@ public class Table extends MapBase
    private String schemaName = null;
    private String tableName = null;
 
-   private String universalName = null;
+   private String hashName = null;
 
    private Hashtable columns = new Hashtable();
 
@@ -92,7 +93,7 @@ public class Table extends MapBase
       this.catalogName = catalogName;
       this.schemaName = schemaName;
       this.tableName = tableName;
-      this.universalName = getUniversalName(databaseName, catalogName, schemaName, tableName);
+      hashName = getHashName(databaseName, catalogName, schemaName, tableName);
    }
 
    // ********************************************************************
@@ -166,15 +167,21 @@ public class Table extends MapBase
    /**
     * Get the universal name of the table.
     *
+    * <p>This name should be used only in error messages. For a "universal" name
+    * that can safely be hashed on, use getHashName().</p>
+    *
     * @return The universal name.
     */
    public final String getUniversalName()
    {
-      return universalName;
+      return getUniversalName(databaseName, catalogName, schemaName, tableName);
    }
 
    /**
     * Construct a universal table name from the specified names.
+    *
+    * <p>This name should be used only in error messages. For a "universal" name
+    * that can safely be hashed on, use getHashName(String, String, String, String).</p>
     *
     * @param databaseName Name of the database. If this is null, uses "Default".
     * @param catalogName Name of the catalog. May be null.
@@ -198,6 +205,43 @@ public class Table extends MapBase
       universalName.append(tableName);
       universalName.append(DOUBLEQUOTE);
       return universalName.toString();
+   }
+
+   /**
+    * Get a "universal" name that is safe for hashing.
+    *
+    * @return The hash name.
+    */
+   public final String getHashName()
+   {
+      return hashName;
+   }
+
+   /**
+    * Get a "universal" name that is safe for hashing.
+    *
+    * @param databaseName Name of the database. If this is null, uses "Default".
+    * @param catalogName Name of the catalog. May be null.
+    * @param schemaName Name of the schema. May be null.
+    * @param tableName Name of the table.
+    *
+    * @return The hash name.
+    */
+   public static String getHashName(String databaseName, String catalogName, String schemaName, String tableName)
+   {
+      String dHash, cHash, sHash, tHash;
+
+      checkArgNull(tableName, ARG_TABLENAME);
+      if (databaseName == null)
+      {
+         databaseName = DEFAULT;
+      }
+      dHash = Integer.toString(databaseName.hashCode());
+      cHash = (catalogName == null) ? NULL : Integer.toString(catalogName.hashCode());
+      sHash = (schemaName == null) ? NULL : Integer.toString(schemaName.hashCode());
+      tHash = Integer.toString(tableName.hashCode());
+
+      return (dHash + SEMICOLON + cHash + SEMICOLON + sHash + SEMICOLON + tHash);
    }
 
    // ********************************************************************
@@ -276,7 +320,7 @@ public class Table extends MapBase
       name = column.getName();
       o = columns.get(name);
       if (o != null)
-         throw new MapException("Column " + name + " already exists in " + universalName + ".");
+         throw new MapException("Column " + name + " already exists in " + getUniversalName() + ".");
       columns.put(name, column);
    }
 
@@ -299,7 +343,7 @@ public class Table extends MapBase
 
       o = columns.remove(columnName);
       if (o == null)
-         throw new MapException("Column " + columnName + " not found in table " + universalName);
+         throw new MapException("Column " + columnName + " not found in table " + getUniversalName());
    }
 
    /**
@@ -540,7 +584,6 @@ public class Table extends MapBase
       return (Key)hash.get(keyName);
    }
 
-
    private Key createKey(Hashtable hash, String keyName, int type)
    {
       Key key;
@@ -574,7 +617,7 @@ public class Table extends MapBase
       name = key.getName();
       o = hash.get(name);
       if (o != null)
-         throw new MapException("Key " + name + " already exists in " + universalName + ".");
+         throw new MapException("Key " + name + " already exists in " + getUniversalName() + ".");
       hash.put(name, key);
    }
 
@@ -587,6 +630,6 @@ public class Table extends MapBase
 
       o = hash.remove(keyName);
       if (o == null)
-         throw new MapException("Key " + keyName + " not found in table " + universalName + ".");
+         throw new MapException("Key " + keyName + " not found in table " + getUniversalName() + ".");
    }
 }

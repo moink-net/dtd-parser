@@ -308,7 +308,7 @@ public class ClassTableMap extends MapBase
     * Get the RelatedClassTableMap(s) for a table.
     *
     * <p><b>WARNING:</b> There can be more than one RelatedClassTableMap for
-    * a given table. This happens when two element types in a content model
+    * a single table. This happens when two element types in a content model
     * both inherit from the same complex type. For example, a ShipToAddress and
     * a BillToAddress could both inherit from Address and both be mapped to the
     * Addresses table.</p>
@@ -323,16 +323,16 @@ public class ClassTableMap extends MapBase
     */
    public final Enumeration getRelatedClassTableMap(String databaseName, String catalogName, String schemaName, String tableName)
    {
-      String               universalName;
+      String               hashName;
       RelatedClassTableMap relatedClassTableMap;
       Vector               matchingMaps = new Vector();
 
-      universalName = Table.getUniversalName(databaseName, catalogName, schemaName, tableName);
+      hashName = Table.getHashName(databaseName, catalogName, schemaName, tableName);
 
       for (int i = 0; i < relatedClassTableMaps.size(); i++)
       {
          relatedClassTableMap = (RelatedClassTableMap)relatedClassTableMaps.elementAt(i);
-         if (relatedClassTableMap.getClassTableMap().getTable().getUniversalName().equals(universalName))
+         if (relatedClassTableMap.getClassTableMap().getTable().getHashName().equals(hashName))
          {
             matchingMaps.addElement(relatedClassTableMap);
          }
@@ -385,15 +385,15 @@ public class ClassTableMap extends MapBase
    public void removeRelatedClassTableMaps(String databaseName, String catalogName, String schemaName, String tableName)
       throws MapException
    {
-      String               universalName;
+      String               hashName;
       RelatedClassTableMap relatedClassTableMap;
 
-      universalName = Table.getUniversalName(databaseName, catalogName, schemaName, tableName);
+      hashName = Table.getHashName(databaseName, catalogName, schemaName, tableName);
 
       for (int i = 0; i < relatedClassTableMaps.size(); i++)
       {
          relatedClassTableMap = (RelatedClassTableMap)relatedClassTableMaps.elementAt(i);
-         if (relatedClassTableMap.getClassTableMap().getTable().getUniversalName().equals(universalName))
+         if (relatedClassTableMap.getClassTableMap().getTable().getHashName().equals(hashName))
          {
             relatedClassTableMaps.removeElementAt(i);
          }
@@ -425,7 +425,7 @@ public class ClassTableMap extends MapBase
     */
    public final PropertyTableMap getPropertyTableMap(String databaseName, String catalogName, String schemaName, String tableName)
    {
-      return (PropertyTableMap)propTableMaps.get(Table.getUniversalName(databaseName, catalogName, schemaName, tableName));
+      return (PropertyTableMap)propTableMaps.get(Table.getHashName(databaseName, catalogName, schemaName, tableName));
    }
 
    /**
@@ -454,7 +454,7 @@ public class ClassTableMap extends MapBase
       String    name;
 
       checkArgNull(table, ARG_TABLE);
-      name = table.getUniversalName();
+      name = table.getHashName();
       propTableMap = (PropertyTableMap)propTableMaps.get(name);
       if (propTableMap == null)
       {
@@ -477,10 +477,10 @@ public class ClassTableMap extends MapBase
       String name;
 
       checkArgNull(propTableMap, ARG_PROPTABLEMAP);
-      name = propTableMap.getTable().getUniversalName();
+      name = propTableMap.getTable().getHashName();
       o = propTableMaps.get(name);
       if (o != null)
-         throw new MapException("Property table " + name + " already mapped.");
+         throw new MapException("Property table " + propTableMap.getTable().getUniversalName() + " already mapped.");
       propTableMaps.put(name, propTableMap);
    }
 
@@ -498,12 +498,10 @@ public class ClassTableMap extends MapBase
       throws MapException
    {
       Object o;
-      String name;
 
-      name = Table.getUniversalName(databaseName, catalogName, schemaName, tableName);
-      o = propTableMaps.remove(name);
+      o = propTableMaps.remove(Table.getHashName(databaseName, catalogName, schemaName, tableName));
       if (o == null)
-         throw new MapException("Property table " + name + " not mapped.");
+         throw new MapException("Property table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName)+ " not mapped.");
    }
 
    /**

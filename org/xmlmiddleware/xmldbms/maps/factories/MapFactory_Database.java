@@ -464,7 +464,7 @@ public class MapFactory_Database
 
       for (int i = 0; i < stopTableNames.length; i++)
       {
-         name = Table.getUniversalName(stopDatabaseNames[i], stopCatalogNames[i], stopSchemaNames[i], stopTableNames[i]);
+         name = Table.getHashName(stopDatabaseNames[i], stopCatalogNames[i], stopSchemaNames[i], stopTableNames[i]);
          stopTables.put(name, o);
       }
 
@@ -1021,11 +1021,11 @@ public class MapFactory_Database
 
          if (getExportedKeys)
          {
-            remoteTableName = Table.getUniversalName(databaseName, fkCatalogName, fkSchemaName, fkTableName);
+            remoteTableName = Table.getHashName(databaseName, fkCatalogName, fkSchemaName, fkTableName);
          }
          else
          {
-            remoteTableName = Table.getUniversalName(databaseName, pkCatalogName, pkSchemaName, pkTableName);
+            remoteTableName = Table.getHashName(databaseName, pkCatalogName, pkSchemaName, pkTableName);
          }
          if (stopTables.get(remoteTableName) != null) continue;
 

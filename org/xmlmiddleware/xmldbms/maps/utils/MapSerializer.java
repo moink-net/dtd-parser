@@ -399,8 +399,8 @@ public class MapSerializer extends XMLWriter
    {
       Enumeration tableEnum;
       Table       table;
-      Vector      universalNames = new Vector(), tables = new Vector();
-      String[]    universalNamesArray;
+      Vector      hashNames = new Vector(), tables = new Vector();
+      String[]    hashNamesArray;
       Table[]     tablesArray;
       String      currDatabaseName = null, newDatabaseName = null,
                   currCatalogName = null, newCatalogName = null,
@@ -412,24 +412,23 @@ public class MapSerializer extends XMLWriter
 
       writeElementStart(XMLDBMSConst.ELEM_DATABASES, 0, false);
 
-      // Get the tables. Note that this is probably
-      // broken in some extremely abusive naming cases...
+      // Get the tables.
 
       tableEnum = map.getTables();
       while (tableEnum.hasMoreElements())
       {
          table = (Table)tableEnum.nextElement();
-         universalNames.addElement(table.getUniversalName());
+         hashNames.addElement(table.getHashName());
          tables.addElement(table);
       }
 
-      // Sort the tables by universal table name.
+      // Sort the tables by hash name.
 
-      universalNamesArray = new String[universalNames.size()];
-      universalNames.copyInto(universalNamesArray);
+      hashNamesArray = new String[hashNames.size()];
+      hashNames.copyInto(hashNamesArray);
       tablesArray = new Table[tables.size()];
       tables.copyInto(tablesArray);
-      sort(universalNamesArray, tablesArray);
+      sort(hashNamesArray, tablesArray);
 
       // Process the tables, grouping them by database, catalog, and schema.
 

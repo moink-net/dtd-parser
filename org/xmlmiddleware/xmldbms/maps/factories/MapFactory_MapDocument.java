@@ -1523,7 +1523,7 @@ public class MapFactory_MapDocument
       throws MapException
    {
       Table  classTable;
-      String uniqueName;
+      String hashName;
 
       // Get the class table.
 
@@ -1531,12 +1531,12 @@ public class MapFactory_MapDocument
 
       // Check that it is not already mapped and add it to the list of mapped tables.
 
-      uniqueName = classTable.getUniversalName();
-      if (propTables.get(uniqueName) != null)
-         throw new MapException("Table already mapped as a property table: " + uniqueName);
-      else if (classTables.get(uniqueName) != null)
-         throw new MapException("Table already mapped as a class table: " + uniqueName);
-      classTables.put(uniqueName, classTable);
+      hashName = classTable.getHashName();
+      if (propTables.get(hashName) != null)
+         throw new MapException("Table already mapped as a property table: " + classTable.getUniversalName());
+      else if (classTables.get(hashName) != null)
+         throw new MapException("Table already mapped as a class table: " + classTable.getUniversalName());
+      classTables.put(hashName, classTable);
 
       // Set the table in the ClassMap.
 
@@ -1576,7 +1576,7 @@ public class MapFactory_MapDocument
    private void processToPropertyTable(Attributes attrs)
       throws MapException
    {
-      String uniqueName;
+      String hashName;
 
       // Get the property table and the location of the unique key. We will
       // set the property table in processUseForeignKey, since we will then
@@ -1587,12 +1587,12 @@ public class MapFactory_MapDocument
 
       // Check that the table is not already mapped and add it to the list of mapped tables.
 
-      uniqueName = propertyTable.getUniversalName();
-      if (propTables.get(uniqueName) != null)
-         throw new MapException("Table already mapped as a property table: " + uniqueName);
-      else if (classTables.get(uniqueName) != null)
-         throw new MapException("Table already mapped as a class table: " + uniqueName);
-      propTables.put(uniqueName, propertyTable);
+      hashName = propertyTable.getHashName();
+      if (propTables.get(hashName) != null)
+         throw new MapException("Table already mapped as a property table: " + propertyTable.getUniversalName());
+      else if (classTables.get(hashName) != null)
+         throw new MapException("Table already mapped as a class table: " + propertyTable.getUniversalName());
+      propTables.put(hashName, propertyTable);
    }
 
    private void processUniqueKey(Attributes attrs)
