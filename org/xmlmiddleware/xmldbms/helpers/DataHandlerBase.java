@@ -451,7 +451,15 @@ abstract class DataHandlerBase
     }
 
     protected void setColumnValue(Row row, Column column, Object val)
+        throws SQLException
     {
-        row.setColumnValue(column, ConvertObject.convertObject(val, column.getType(), column.getFormatter()));
+        try
+        {
+            row.setColumnValue(column, ConvertObject.convertObject(val, column.getType(), column.getFormatter()));
+        }
+        catch(ConversionException e)
+        {
+            throw new SQLException("[xmldbms]Conversion error: " + e.getMessage());
+        }
     }
 }   
