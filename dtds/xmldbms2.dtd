@@ -47,16 +47,23 @@ always used to join tables. Ideas welcome. -->
 
 <!-- A list of new features follows -->
 
-<!-- NUMBER FORMATS. Users can specify a locale and a pattern to
-be used in the java.text.DecimalFormat class. (Is this sufficient?
-DecimalFormat has other abilities as well, but the pattern seems to
-cover most of them.) -->
+<!-- NUMBER FORMATS. Users can specify a locale to use with the
+java.text.NumberFormat class or a pattern to use with the
+java.text.DecimalFormat class. -->
+
+<!-- DATE FORMATS. Users can specify to use the java.text.DateFormat
+or java.text.SimpleDateFormat classes. -->
+
+<!-- CUSTOM FORMATS. Users can write their own formatting classes
+and use these. These can be used for such things as proprietary
+date formats and conversion to/from Base64. The latter can easily
+be done by wrapping a third-party Base64 converter in a custom
+formatting class. -->
 
 <!-- PER-PROPERTY FORMATS. Formats can be named and property
-mappings can reference those names. If a mapping for a date/time
-or numeric column does not reference a format by name, then the
-mapping named "Default" is used. If there is no default mapping,
-XML-DBMS uses whatever Java gives it. -->
+mappings can reference those names. Users can also specify that a
+format be used as the default for a given type of column. If there
+is no default mapping, XML-DBMS uses whatever Java gives it. -->
 
 <!-- NAMED DATABASES. Users can specify databases by name.
 DOMToDBMS and DBMSToDOM will allow applications to pass in a list
@@ -68,9 +75,6 @@ from different manufacturers or on different servers. -->
 now specified explicitly, rather than in a fully qualified table
 name. This works around some bugs in JDBC drivers and also makes
 maps portable across databases. -->
-
-<!-- IDENTIFIER QUOTING. Users can specify whether to quote
-identifiers on a per-database basis. -->
 
 <!-- COLUMN METADATA: Users can specify column metadata in the map
 document, thereby speeding processing at run time. Users will still
@@ -103,13 +107,14 @@ with the Extends element type. If the UseBaseTable attribute
 of this element is yes, then the data for the class will be split
 into properties stored in the base table and properties stored in
 the class table; the ClassMap only needs to map those properties
-not stored in the base table. If UseBaseTable is No, all data for the class will be stored in
-the class table. -->
+not stored in the base table. If UseBaseTable is No, all data for
+the class will be stored in the class table. -->
 
 <!-- CASTING. Users can specify that one element type use the
 ClassMap of another element type with the UseClassMap element.
-This is most useful for mimicing complex types in XML Schemas,
-but can be used to do up- or downcasting as well. -->
+This is most useful for mimicking complex types and local element
+types in XML Schemas, but can be used to do up- or downcasting
+as well. -->
 
 <!-- FIXED ORDER VALUES: Added support for order values (the
 FixedOrder element). The Value attribute of this element must be
@@ -149,6 +154,9 @@ following throws an exception if B is inlined:
    </A>
 
 This is necessary for reconstructing the inlined element. -->
+
+<!-- MULTIVALUED PROPERTIES. Elements and PCDATA can now be multi-valued. That is,
+they can be a series of tokens. -->
 
 <!-- ************************************************************* -->
 <!--                         Namespace entities                    -->
@@ -216,7 +224,10 @@ This is necessary for reconstructing the inlined element. -->
 <!-- ************************************************************* -->
 
 <!ELEMENT %p;Options (%p;EmptyStringIsNull?,
-                      (%p;DateFormat | %p;TimeFormat | %p;DateTimeFormat | %p;NumberFormat)*,
+                      (%p;DateFormat | %p;DateTimeFormat |
+                       %p;TimeFormat | %p;SimpleDateFormat |
+                       %p;NumberFormat | %p;DecimalFormat |
+                       %p;FormatClass)*,
                       %p;Namespace*)>
 
 <!-- ****************** Null handling    ************************* -->
@@ -225,41 +236,117 @@ This is necessary for reconstructing the inlined element. -->
 
 <!-- ****************** Date, time, and number formatting  ************************* -->
 
-<!-- Format names are case sensitive and are shared among all four
-     format types. For example, it is an error to have a date format
-     and a time format both named "foo". To override the default format
-     for a given type, use the name DefaultXxxx, where Xxxx is Date,
-     Time, DateTime, or Number. -->
+<!-- 
+     Formatting classes
+     ==================
+     XML-DBMS performs formatting with Java's formatting classes as
+     well as with user-written classes. You can specify Java formatting
+     classes with the DateFormat, DateTimeFormat, TimeFormat,
+     SimpleDateFormat, NumberFormat, and DecimalFormat elements. You
+     can specify user-written formatting classes with the FormatClass
+     element.
 
-<!ELEMENT %p;DateFormat (%p;Locale?, %p;Pattern)>
+     The DateFormat, DateTimeFormat, and TimeFormat elements create
+     java.text.DateFormat objects according to the values of the
+     TimeStyle and DateStyle attributes and the optional Locale element.
+     If no locale is specified, the default locale is used. For
+     information about the SHORT, MEDIUM, LONG, and FULL styles, see
+     java.text.DateFormat.
+
+     The SimpleDateFormat element creates a java.text.SimpleDateFormat
+     object according to the Pattern attribute and the optional Locale
+     element. If no locale is specified, the default locale is used.
+     For information about patterns, see java.text.SimpleDateFormat.
+
+     The NumberFormat element creates a java.text.NumberFormat object for
+     the specified locale. If no locale is specified, the default locale
+     is used.
+
+     The DecimalFormat element creates a java.text.DecimalFormat object
+     according to the Pattern attribute. If a locale is specified, the pattern
+     is assumed to be localized to that locale; otherwise, it is assumed
+     to be localized to the default locale. For information about patterns,
+     see java.text.DecimalFormat and java.text.DecimalFormatSymbols.
+
+     If the options presented by the elements discussed above do not meet
+     your needs, or you want to perform formatting on a column that is not a
+     date, time, timestamp, or numeric column, you can write your own custom
+     formatting class and specify this with a FormatClass element. The class
+     must have a zero-argument constructor and implement the
+     org.xmlmiddleware.xmldbms.XMLFormatter interface.
+
+     Associating formats with columns
+     ================================
+     There are two ways to associate formats with columns. The first
+     is to name the format, then refer to the format name in the
+     Format attribute of the Column element. Format names are case
+     sensitive and are shared among all formats, regardless of
+     which mapping language element was used to specify the format.
+
+     The second way to specify a format for a column is to specify that
+     a format applies to all columns of a specific type or types. This
+     is done with the DefaultForTypes attribute.
+
+     When deciding which format to use, XML-DBMS first looks for a
+     named format and then for a default format for the column's type.
+     If it finds neither of these, it uses Java's default format for
+     the column's type and the current locale.
+
+     All formatting elements must have a Name attribute or a
+     DefaultForTypes attribute. They may have both.
+ -->
+
+<!ENTITY % DefaultForTypes "DefaultForTypes NMTOKENS #IMPLIED">
+<!ENTITY % Styles "(SHORT | MEDIUM | LONG | FULL)">
+<!ENTITY % DateStyle "DateStyle %Styles; #REQUIRED">
+<!ENTITY % TimeStyle "TimeStyle %Styles; #REQUIRED">
+
+<!ELEMENT %p;DateFormat (%p;Locale?)>
 <!ATTLIST %p;DateFormat
-          Name NMTOKEN #REQUIRED>
+          %DateStyle;
+          Name NMTOKEN #IMPLIED
+          %DefaultForTypes; >
 
-<!ELEMENT %p;TimeFormat (%p;Locale?, %p;Pattern)>
-<!ATTLIST %p;TimeFormat
-          Name NMTOKEN #REQUIRED>
-
-<!ELEMENT %p;DateTimeFormat (%p;Locale?, %p;Pattern)>
+<!ELEMENT %p;DateTimeFormat (%p;Locale?)>
 <!ATTLIST %p;DateTimeFormat
-          Name NMTOKEN #REQUIRED>
+          %DateStyle;
+          %TimeStyle;
+          Name NMTOKEN #IMPLIED
+          %DefaultForTypes; >
 
-<!ELEMENT %p;NumberFormat (%p;Locale | %p;Pattern)>
+<!ELEMENT %p;TimeFormat (%p;Locale?)>
+<!ATTLIST %p;TimeFormat
+          %TimeStyle;
+          Name NMTOKEN #IMPLIED
+          %DefaultForTypes; >
+
+<!ELEMENT %p;SimpleDateFormat (%p;Locale?)>
+<!ATTLIST %p;SimpleDateFormat
+          Pattern CDATA #REQUIRED
+          Name NMTOKEN #IMPLIED
+          %DefaultForTypes; >
+
+<!ELEMENT %p;NumberFormat (%p;Locale)>
 <!ATTLIST %p;NumberFormat
-          Name NMTOKEN #REQUIRED>
+          Name NMTOKEN #IMPLIED
+          %DefaultForTypes; >
+
+<!ELEMENT %p;DecimalFormat (%p;Locale?)>
+<!ATTLIST %p;DecimalFormat
+          Pattern CDATA #REQUIRED
+          Name NMTOKEN #IMPLIED
+          %DefaultForTypes; >
+
+<!ELEMENT %p;FormatClass EMPTY>
+<!ATTLIST %p;FormatClass
+          Name NMTOKEN #IMPLIED
+          Class NMTOKEN #REQUIRED
+          %DefaultForTypes; >
 
 <!ELEMENT %p;Locale EMPTY>
 <!ATTLIST %p;Locale
           Language NMTOKEN #REQUIRED
           Country NMTOKEN #REQUIRED>
-
-<!-- For date, time, and timestamp formats, use a SimpleDateFormat
-pattern or "FULL", "LONG", "MEDIUM", or "SHORT" (see DateFormat).
-For number formats, use a pattern from DecimalFormat (in which case
-Locale is ignored) or a Locale (in which case Pattern is ignored). -->
-
-<!ELEMENT %p;Pattern EMPTY>
-<!ATTLIST %p;Pattern
-          Value CDATA #REQUIRED>
 
 <!-- ****************** Namespaces ************************* -->
 
@@ -303,8 +390,7 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 
 <!ELEMENT %p;Database (%p;Catalog+)>
 <!ATTLIST %p;Database
-          Name CDATA "Default"
-          QuoteIdentifiers (Yes | No) "Yes">
+          Name CDATA "Default">
 
 <!-- If the catalog and schema name are missing, XML-DBMS will
      not use catalog or schema names. -->
@@ -330,6 +416,27 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
      to binary and character columns. Precision and scale only
      apply to NUMERIC and DECIMAL columns. -->
 
+<!ENTITY % JDBCTypes "BIGINT |
+                      BINARY |
+                      BIT |
+                      CHAR |
+                      DATE |
+                      DECIMAL |
+                      DOUBLE |
+                      FLOAT |
+                      INTEGER |
+                      LONGVARBINARY |
+                      LONGVARCHAR |
+                      NUMERIC |
+                      OTHER |
+                      REAL |
+                      SMALLINT |
+                      TIME |
+                      TIMESTAMP |
+                      TINYINT |
+                      VARBINARY |
+                      VARCHAR">
+
 <!ELEMENT %p;Column EMPTY>
 <!ATTLIST %p;Column
           Name CDATA #REQUIRED
@@ -338,26 +445,7 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
           Precision NMTOKEN #IMPLIED
           Nullable (Yes | No | Unknown) "Unknown"
           Format NMTOKEN #IMPLIED
-          DataType (BIGINT |
-                    BINARY |
-                    BIT |
-                    CHAR |
-                    DATE |
-                    DECIMAL |
-                    DOUBLE |
-                    FLOAT |
-                    INTEGER |
-                    LONGVARBINARY |
-                    LONGVARCHAR |
-                    NUMERIC |
-                    OTHER |
-                    REAL |
-                    SMALLINT |
-                    TIME |
-                    TIMESTAMP |
-                    TINYINT |
-                    VARBINARY |
-                    VARCHAR) #IMPLIED>
+          DataType (%JDBCTypes;) #IMPLIED>
 
 <!-- There are three choices of how to get a primary key value:
      - An element, attribute, or PCDATA are mapped to the primary

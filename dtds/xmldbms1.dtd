@@ -126,7 +126,7 @@
    These are defined by ISO-3166 and are also available on the Web. For
    example, try:
 
-      http://www.din.de/gremien/nas/nabd/iso3166ma/codlstp1.html
+      http://www.din.de/gremien/nas/nabd/iso3166ma/codlstp1/en_listp1.html
 
    The value of Date, Time, and Timestamp attributes must be either one
    of the keywords FULL, LONG, MEDIUM, or SHORT, whose formats are
