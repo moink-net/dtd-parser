@@ -1,0 +1,690 @@
+<!--
+This is the proposed DTD for XML-DBMS, version 2.0. This DTD
+includes virtually all features that anybody has requested
+since version 1.0 was released. Note that inclusion in the
+DTD does not mean that the feature will be implemented in 2.0
+- I have included them here so that the design will accomodate
+them easily in the future.
+
+Here is a list of new features and the probability they will be
+implemented in 2.0:
+
+   Primary keys in leaf tables:   100%
+   Eliminate root mappings:       100%
+   Database metadata in map:       75%
+   Order stored in map:            75%
+   Ascending or descending order:  75%
+   Per-property formatting:        75%
+   Number formats:                 75%
+   Per-table key generators:       75%
+   Casting:                        50-75%
+   Use of database generated keys: 50-75%
+   Heterogeneous joins:            50%
+   Pass-through:                   25-50%    // 100% in 2.x
+   Inheritance:                     0%
+
+I realize that this doesn't match everybody's priority list, but
+it is based partly on ease of implementation. For example, pass-
+through is not easy while per-property formatting is. -->
+
+<!-- Here is a list of names changed from the 1.0 DTD:
+
+   CandidateKey => UseUniqueKey
+   ForeignKey => UseForeignKey
+   "Candidate" attribute value => "Unique"
+
+The biggest change from a usability standpoint is that
+database information is now isolated in a Databases section and
+references to this section are made from the Maps section. One
+consequence of this is yet more typing, since you now have to
+refer to a definition elsewhere. (In particular, unique and
+foreign keys are referred to by name.)
+
+I'm not thrilled about this, but I couldn't see a way around it.
+The advantage is that it isolates the database information in a
+single spot. It also reduces some typing when the primary key is
+always used to join tables. Ideas welcome. -->
+
+<!-- A list of new features follows -->
+
+<!-- NUMBER FORMATS. Users can specify a locale and a pattern to
+be used in the java.text.DecimalFormat class. (Is this sufficient?
+DecimalFormat has other abilities as well, but the pattern seems to
+cover most of them.) -->
+
+<!-- PER-PROPERTY FORMATS. Formats can be named and property
+mappings can reference those names. If a mapping for a date/time
+or numeric column does not reference a format by name, then the
+mapping named "Default" is used. If there is no default mapping,
+XML-DBMS uses whatever Java gives it. -->
+
+<!-- NAMED DATABASES. Users can specify databases by name.
+DOMToDBMS and DBMSToDOM will allow applications to pass in a list
+of names and connection information, thereby allowing XML documents
+to be mapped to tables in different databases - that is, databases
+from different manufacturers or on different servers. -->
+
+<!-- SEPARATE CATALOG AND SCHEMA. Catalog and schema information are
+now specified explicitly, rather than in a fully qualified table
+name. This works around some bugs in JDBC drivers and also makes
+maps portable across databases. -->
+
+<!-- IDENTIFIER QUOTING. Users can specify whether to quote
+identifiers on a per-database basis. -->
+
+<!-- COLUMN METADATA: Users can specify column metadata in the map
+document, thereby speeding processing at run time. Users will still
+have the option of retrieving column metadata from the database, and
+will probably have the option of initializing column metadata from a
+separate XML document with a Databases element as its root; this would
+allow users to separate mapping information from column metadata. -->
+
+<!-- PRIMARY KEYS: Users can specify the primary key of a table.
+This means that leaf tables can now have generated primary keys.
+IMPORTANT: One consequence of this is that only the primary key of
+a table can be generated; in 1.0 it was possible to generate any
+unique key. -->
+
+<!-- PER-TABLE KEY GENERATORS: Users can specify key generators on
+a per-table basis. DOMToDBMS will accept a list of named objects
+that implement the KeyGenerator interface. -->
+
+<!-- DATABASE-GENERATED KEYS: Database-generated primary keys are
+supported. -->
+
+<!-- ROOT MAPS ELIMINATED: IgnoreRoot and PseudoRoot have been
+eliminated. This means that any element type mapped as a class
+or class table can be used as the root. The application passes
+primary key information and information about ignored roots to
+DOMToDBMS and DBMSToDOM as necessary. -->
+
+<!-- INHERITANCE. Users can specify a parent of a given class
+with the Extends element type. If the UseBaseTable attribute
+of this element is yes, then the data for the class will be split
+into properties stored in the base table and properties stored in
+the class table; the ClassMap only needs to map those properties
+not stored in the base table. If UseBaseTable is No, all data for the class will be stored in
+the class table. -->
+
+<!-- CASTING. Users can specify that one element type use the
+ClassMap of another element type with the UseClassMap element.
+This is most useful for mimicing complex types in XML Schemas,
+but can be used to do up- or downcasting as well. -->
+
+<!-- FIXED ORDER VALUES: Added support for order values (the
+FixedOrder element). The Value attribute of this element must be
+an integer value; there are no other restrictions. (Importantly,
+more than one property can have the same fixed order value.)
+
+This works with a limited number of DTDs, but these cover most
+useful cases in the data-centric world. In particular, all element
+types or PCDATA with the same order value are grouped together, but
+the order within the group is not specified. Thus, it is often
+sufficient for content models such as the following:
+
+   <!ELEMENT A (B*, C+, D?, E)>
+   <!ELEMENT A ((B | C)*, D+)> // B and C have same order value
+
+but not for:
+
+   <!ELEMENT A (B, C, B, C)>
+   <!ELEMENT A ((B | C)+, D, B)>
+-->
+
+<!-- DESCENDING ORDER. Added a flag so that descending order can
+be used. -->
+
+<!-- INLINING. Added inlining (pass through) support. Only a single
+element of a given type may be inlined. That is, the
+following throws an exception if B is inlined:
+
+   <A>
+      <B>
+        <C>...</C>
+      </B>
+      <B>
+        <C>...</C>
+      </B>
+      <D>...</D>
+   </A>
+
+This is necessary for reconstructing the inlined element. -->
+
+
+<!-- ************************************************************* -->
+<!--                         Root element                          -->
+<!-- ************************************************************* -->
+
+<!ELEMENT XMLToDBMS (Options?, Databases, Maps)>
+<!ATTLIST XMLToDBMS
+          Version CDATA #FIXED "2.0">
+
+<!-- ************************************************************* -->
+<!--                         Options                               -->
+<!-- ************************************************************* -->
+
+<!ELEMENT Options (EmptyStringIsNull?,
+                   (DateFormat | TimeFormat | DateTimeFormat | NumberFormat)*,
+                   Namespace*)>
+
+<!-- ****************** Null handling    ************************* -->
+
+<!ELEMENT EmptyStringIsNull EMPTY>
+
+<!-- ****************** Date, time, and number formatting  ************************* -->
+
+<!-- Format names are case sensitive and are shared among all four
+     format types. For example, it is an error to have a date format
+     and a time format both named "foo". To override the default format
+     for a given type, use the name DefaultXxxx, where Xxxx is Date,
+     Time, DateTime, or Number. -->
+
+<!ELEMENT DateFormat (Locale?, Pattern)>
+<!ATTLIST DateFormat
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT TimeFormat (Locale?, Pattern)>
+<!ATTLIST TimeFormat
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT DateTimeFormat (Locale?, Pattern)>
+<!ATTLIST DateTimeFormat
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT NumberFormat (Locale | Pattern)>
+<!ATTLIST NumberFormat
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT Locale EMPTY>
+<!ATTLIST Locale
+          Language NMTOKEN #REQUIRED
+          Country NMTOKEN #REQUIRED>
+
+<!-- For date, time, and timestamp formats, use a SimpleDateFormat
+pattern or "FULL", "LONG", "MEDIUM", or "SHORT" (see DateFormat).
+For number formats, use a pattern from DecimalFormat (in which case
+Locale is ignored) or a Locale (in which case Pattern is ignored). -->
+
+<!ELEMENT Pattern EMPTY>
+<!ATTLIST Pattern
+          Value CDATA #REQUIRED>
+
+<!-- ****************** Namespaces ************************* -->
+
+<!ELEMENT Namespace EMPTY>
+<!ATTLIST Namespace
+          Prefix NMTOKEN #REQUIRED
+          URI CDATA #REQUIRED>
+
+<!-- ************************************************************* -->
+<!--                      Database Elements                        -->
+<!-- ************************************************************* -->
+
+<!ELEMENT Databases (Database+)>
+
+<!ELEMENT Database (Catalog+)>
+<!ATTLIST Database
+          Name CDATA "Default"
+          QuoteIdentifiers (Yes | No) "Yes">
+
+<!-- If the catalog and schema name are missing, XML-DBMS will
+     not use catalog or schema names. -->
+
+<!ELEMENT Catalog (Schema+)>
+<!ATTLIST Catalog
+          Name CDATA #IMPLIED>
+
+<!ELEMENT Schema (Table+)>
+<!ATTLIST Schema
+          Name CDATA #IMPLIED>
+
+<!ELEMENT Table (Column+, PrimaryKey?, UniqueKey*, ForeignKey*)>
+<!ATTLIST Table
+          Name CDATA #REQUIRED>
+
+<!-- If no format is specified, the default format for the default
+     locale will be used. If a format is specified, it must be
+     appropriate for the data type. -->
+
+<!-- DataType must be the name of a JDBC datatype constant, as
+     specified in the java.sql.Types class. -->
+
+<!ELEMENT Column EMPTY>
+<!ATTLIST Column
+          Name CDATA #REQUIRED
+          Length NMTOKEN #IMPLIED
+          Nullable (Yes | No | Unknown) "Unknown"
+          Format NMTOKEN #IMPLIED
+          DataType (BIGINT |
+                    BINARY |
+                    BIT |
+                    CHAR |
+                    DATE |
+                    DECIMAL |
+                    DOUBLE |
+                    FLOAT |
+                    INTEGER |
+                    LONGVARBINARY |
+                    LONGVARCHAR |
+                    NUMERIC |
+                    OTHER |
+                    REAL |
+                    SMALLINT |
+                    TIME |
+                    TIMESTAMP |
+                    TINYINT |
+                    VARBINARY |
+                    VARCHAR) #IMPLIED>
+
+<!-- There are three choices of how to get a primary key value:
+     - An element, attribute, or PCDATA are mapped to the primary
+       key column. In this case, the KeyGenerator attribute is omitted.
+     - The database generates the primary key value. In this case,
+       the value of the KeyGenerator attribute is Database.
+     - A KeyGenerator generates the primary key value. In this case,
+       the value of the KeyGenerator attribute is the logical name of
+       the KeyGenerator, which is passed in at run time.
+-->
+
+<!ELEMENT PrimaryKey (UseColumn+)>
+<!ATTLIST PrimaryKey
+          KeyGenerator NMTOKEN #IMPLIED>
+
+<!ELEMENT UniqueKey (UseColumn+)>
+<!ATTLIST UniqueKey
+          Name CDATA #REQUIRED>
+
+<!ELEMENT ForeignKey (UseColumn+)>
+<!ATTLIST ForeignKey
+          Name CDATA #REQUIRED>
+
+<!-- ************************************************************* -->
+<!--                    Database Reference Elements                -->
+<!-- ************************************************************* -->
+
+<!ELEMENT UseColumn EMPTY>
+<!ATTLIST UseColumn
+          Name CDATA #REQUIRED>
+
+<!ELEMENT UseUniqueKey EMPTY>
+<!ATTLIST UseUniqueKey
+          Name CDATA "Primary Key">
+
+<!ELEMENT UseForeignKey EMPTY>
+<!ATTLIST UseForeignKey
+          Name CDATA #REQUIRED>
+
+<!-- ************************************************************* -->
+<!--                           Maps                                -->
+<!-- ************************************************************* -->
+
+<!ELEMENT Maps (ClassMap+)>
+
+<!-- ****************** Class maps ************************* -->
+
+<!ELEMENT ClassMap (ElementType,
+                    ((Extends?, ToClassTable,
+                     PropertyMap*, InlineMap*, RelatedClass*) |
+                    UseClassMap))>
+
+<!-- 
+     The UseClassMap element implements complex types (as found in
+     XML Schemas) as well as type casting. It does this by allowing
+     users to state that one element type should use the mapping of
+     another element type.
+
+     Mapping complex types
+     =====================
+
+     To define a "complex type" in XML-DBMS, you create a ClassMap that
+     maps the complex type to a table. (Note that this actually maps
+     an element type, not a complex type. However, the mapped element
+     type is not ever required to appear in an instance document, so
+     the effect is essentially the same. The only difference between
+     this and complex types in XML Schemas is that XML Schemas has
+     different "symbol spaces" (lexical spaces) for complex types and
+     element types, while XML-DBMS uses a single lexical space. Thus,
+     if you are mapping an XML Schema to a database, you might need
+     to change the names of some of your complex types.)
+
+     To use a complex type, you simply use the UseClassMap element to
+     point to the ClassMap for that complex type. For example, suppose
+     the BillToAddress and ShipToAddress elements both derive from the
+     Address complex type. To state that the BillToAddress and
+     ShipToAddress should both be mapped to the same table, you need
+     three ClassMap elements.
+
+     The first ClassMap element maps the Address element type to a
+     table, such as Addresses. The second and third ClassMap elements
+     contain a UseClassMap child, which states that the BillToAddress
+     and ShipToAddress element types should use the same ClassMap as
+     the Address element type. For example:
+
+        <ClassMap>
+           <ElementType Name="Address" />
+           <ToClassTable Name="Addresses" />
+           ... property maps ...
+        </ClassMap>
+        <ClassMap>
+           <ElementType Name="ShipToAddress" />
+           <UseClassMap ElementType="Address" />
+        </ClassMap>
+        <ClassMap>
+           <ElementType Name="BillToAddress" />
+           <UseClassMap ElementType="Address" />
+        </ClassMap>
+
+     Note that the element type specified with UseClassMap may not
+     itself have been mapped with UseClassMap.
+
+     (UseClassMap in a ClassMap element is essentially a shorthand
+     for using UseClassMap with the same ElementType attribute in all
+     RelatedClass elements that point to the element type. For
+     information about using UseClassMap in RelatedClass, see the next
+     section.)
+
+     Mapping element types differently for different parents
+     =======================================================
+
+     You can also use the UseClassMap element inside a RelatedClass
+     element to map the same element type differently, depending on
+     its parent. For example, suppose you want to map the Author
+     element type to the PlayAuthors table when it is a child of the
+     Play element and to the BookAuthors table when it is a child of
+     the Book element.
+
+     To do this, you map (for example) the BookAuthor element type to
+     the BookAuthors table and the PlayAuthor element type to the
+     PlayAuthors table. Next, in the ClassMap for the Book element,
+     you create a RelatedClass element for the Author element type and
+     use the UseClassMap element to state that the Author element type
+     (as a child of a Book element) should use the ClassMap for the
+     BookAuthor element type:
+
+        <ClassMap>
+           <ElementType Name="BookAuthor" />
+           <ToClassTable Name="BookAuthors" />
+           ... property maps ...
+        </ClassMap>
+        <ClassMap>
+           <ElementType Name="Book" />
+           <ToClassTable Name="Books" />
+           ... property maps ...
+           <RelatedClass KeyInParentTable="Foreign" />
+              <ElementType Name="Author" />
+              <UseClassMap ElementType="BookAuthor" />
+              ...
+           </RelatedClass>
+        </ClassMap>
+
+     You map the Author element type in a similar fashion when it is
+     a child of the Play element type.
+
+     (Mapping the same element type differently based on its parent is
+     admittedly uncommon. In fact, it is reasonable to argue that only
+     a poorly designed DTD would need this feature. That is, if the
+     same element type has different meanings depending on its parent,
+     different element types should have been used in the first case.
+     While this may be true, XML does not prevent such usage and
+     XML-DBMS therefore needs to support it.)
+
+     Note that omitting the UseClassMap element from a RelatedClass
+     element is equivalent to having a UseClassMap element that points
+     to the ClassMap for the element type being mapped. That is:
+
+        <RelatedClass KeyInParentTable="A" />
+           <ElementType Name="Author" />
+           ...
+        </RelatedClass>
+
+     is equivalent to:
+
+        <RelatedClass KeyInParentTable="A" />
+           <ElementType Name="Author" />
+           <UseClassMap ElementType="A" />
+           ...
+        </RelatedClass>
+
+     This duplicates the functionality found in version 1.0 of the
+     mapping language.
+
+     Downcasting, upcasting, and mixed casting
+     =========================================
+
+     When you map an element type and then state that a second element
+     type should use the first element type's class map, you are
+     effectively casting the second element type to the first element
+     type. For example, the section on complex types described how to
+     "cast" the BillToAddress and ShipToAddress element types to the
+     Address element type.
+
+     When you cast one element type to another element type, you
+     can also perform downcasting, upcasting, and mixed casting.
+
+     In downcasting, the first element type contains a subset of the
+     properties in the second element type. Thus, when an element of
+     the second type uses the class map of the first, some properties
+     will not be transferred to the database. Obviously, these
+     properties cannot be retrieved when transferring data from the
+     database back to an XML document.
+
+     In upcasting, the first element type contains a superset of the
+     properties in the second element type. Thus, when an element of
+     the second type uses the class map of the first, some properties
+     of the first type will have null values. These must be mapped to
+     nullable columns.
+
+     In mixed casting, the intersection and set differences of the
+     sets of properties in the first and second element types are all
+     non-empty. That is, the first and second element types have some
+     properties in common, but each also has properties not found in
+     the other type.
+
+     In this case, if the second element type uses the class map of
+     the first, any properties found in the second type but not in the
+     first will be discarded and any properties found in the first
+     type but not in the second must be mapped to nullable columns.
+
+     XML-DBMS does not attempt to determine if a given cast makes
+     sense. It simply discards properties and sets columns to null as
+     instructed by the class map.
+
+     Limitations
+     ===========
+
+     There are two limitations to using the UseClassMap element. Both
+     occur when transferring data from the database to an XML document.
+
+     The first of these is that XML-DBMS cannot determine the original
+     element type of a row in that table from the table itself. For
+     example, suppose you have two element types, a BookAuthor element
+     type that is a child of the Book element type and a PlayAuthor
+     element type that is a child of the Play element type. Also
+     suppose you map BookAuthor and PlayAuthor to the Authors table
+     using the ClassMap for Author.
+
+     You cannot then retrieve the data in the Authors table - such as
+     with a SELECT * FROM Authors statement - and have it returned as
+     a series of BookAuthor and PlayAuthor elements. Instead, it will
+     be returned as a series of Author elements. This is because there
+     is no information in the database or the mapping of the Author
+     element type that tells XML-DBMS whether a given row came from a
+     BookAuthor or PlayAuthor element.
+
+     Fortunately, this limitation only applies when the table is the
+     root table. When the table is a child table - that is, when its
+     rows are used to construct child elements - the problem does not
+     occur, except as discussed below. This is because the mapping of
+     the parent element type can provide the name of the element type
+     to use.
+
+     For example, suppose you want to retrieve all Book elements. When
+     XML-DBMS is retrieving rows from the Books table, the mapping
+     information for this table tells it that it also needs to retrieve
+     rows from the Authors table and to map these rows to BookAuthor
+     elements.
+
+     The second limitation occurs when two properties of the same
+     element type are mapped using the same ClassMap. In this case,
+     you must be careful to set up the mapping so that XML-DBMS can
+     determine which rows in the child table apply to which properties.
+     The easiest way to do this - and the way that the data is most
+     likely to be stored in the database - is to use the primary key
+     of the child table as a foreign key in the parent table.
+
+     For example, suppose you have an Invoice element type that has
+     BillToAddress and ShipToAddress children, both of which are
+     mapped using the ClassMap for the Address element type. If you
+     use the primary key of the Addresses table as foreign key in the
+     Invoices table - meaning that there are BillToAddress and
+     ShipToAddress columns in the Invoices table, each containing the
+     key of a (possibly different) address - there are no problems.
+     This is because XML-DBMS can distinguish between the two addresses
+     and retrieve the correct rows for each one.
+
+     On the other hand, if you use the primary key of the Invoices
+     table as a foreign key in the Addresses table (which violates good
+     database design anyway), you will have problems. The reason is
+     that there can be two rows in the Addresses table for each row in
+     the Invoices table - one for the ship-to address and one for the
+     bill-to address. The resulting XML document will have two
+     ShipToAddress children - one for each row found for the invoice
+     primary key - and two BillToAddress children in the Invoice
+     element.
+
+     Note that it is probably possible for XML-DBMS to check for this
+     condition, but that it does not do so now.
+-->
+
+<!ELEMENT UseClassMap EMPTY>
+<!ATTLIST UseClassMap
+          ElementType NMTOKEN #REQUIRED>
+
+<!-- The Extends element implements inheritance. It says that the
+     element type mapped with the ClassMap extends an existing
+     element type. It also allows the user to decide whether the
+     properties common to both the subclass and the superclass
+     should be stored in the subclass table or the superclass table.
+
+     The ClassMap for the subclass only maps the properties
+     (attributes, elements, PCDATA) that are added by extension. It
+     cannot map the common properties - that is, the properties that
+     also occur in the superclass element type. These must be mapped
+     in the ClassMap for the superclass element type. (As a
+     consequence, if you do not use the UseBaseTable element, the
+     subclass table must use the column names in the ClassMap for the
+     superclass. If you want to use different names, don't use the
+     Extends element at all.)
+
+     The Extends element supports a slight variation of the complex
+     type extension found in XML Schemas. In particular, type extension
+     in XML Schemas requires that new child elements be added to the
+     end of the existing content model in a sequence. Type extension
+     in XML-DBMS requires that new child elements not occur in the
+     existing content model.
+
+     In general, the type extension supported by XML-DBMS is more
+     liberal than that supported by XML Schemas, since new child
+     elements can be mixed with existing child elements. However,
+     XML Schemas supports one case not supported by XML-DBMS. This
+     is the case in which a new child element already occurs in the
+     content model. (Fortunately, this case is not likely to be
+     common in data centric XML documents.)
+
+     For example, XML Schemas supports the following type extension
+     that XML-DBMS does not:
+
+        (A, B, C) => (A, B, C, B)
+
+     and XML-DBMS supports the following type extension that XML
+     Schemas does not:
+
+        (A, B, C) => (A, D, B, C)
+-->
+
+<!ELEMENT Extends (UseBaseTable?)>
+<!ATTLIST Extends
+          ElementType NMTOKEN #REQUIRED>
+
+<!ELEMENT UseBaseTable (UseUniqueKey, UseForeignKey)>
+<!ATTLIST UseBaseTable
+          KeyInBaseTable (Unique | Foreign) #REQUIRED>
+
+<!ELEMENT ToClassTable EMPTY>
+<!ATTLIST ToClassTable
+          Database CDATA "Default"
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Name CDATA #REQUIRED>
+
+<!-- ****************** Property maps ************************* -->
+
+<!ELEMENT PropertyMap ((ElementType | Attribute | PCDATA),
+                       ToPropertyTable?, ToColumn,
+                       Order?)>
+
+<!--
+     Unlike in version 1.0, two different properties from two
+     different classes can be mapped to the same table. For example,
+     if BookAuthor is a child of Book and PlayAuthor is a child of
+     Play, BookAuthor and PlayAuthor can both be mapped to the
+     Authors table.
+
+     Note that multiple properties from the same class cannot be
+     mapped to the same property table. This might be allowed in
+     the future.
+-->
+
+<!ELEMENT ToPropertyTable (UseUniqueKey, UseForeignKey)>
+<!ATTLIST ToPropertyTable
+          Database CDATA "Default"
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Name CDATA #REQUIRED
+          KeyInParentTable (Unique | Foreign) #REQUIRED>
+
+<!ELEMENT ToColumn EMPTY>
+<!ATTLIST ToColumn
+          Name CDATA #REQUIRED>
+
+<!-- ****************** Inline ************************* -->
+
+<!ELEMENT InlineMap (ElementType,
+                     PropertyMap*, InlineMap*, RelatedClass*,
+                     Order?)>
+
+<!-- ****************** Related classes ************************* -->
+
+<!ELEMENT RelatedClass (ElementType,
+                        UseClassMap?,
+                        UseUniqueKey, UseForeignKey,
+                        Order?)>
+<!ATTLIST RelatedClass
+          KeyInParentTable (Unique | Foreign) #REQUIRED>
+
+<!-- ****************** Order ************************* -->
+
+<!ELEMENT Order ((UseColumn, Generate?) | FixedOrder)>
+<!ATTLIST Order
+          Direction (Ascending | Descending) "Ascending">
+
+<!ELEMENT Generate EMPTY>
+
+<!ELEMENT FixedOrder EMPTY>
+<!ATTLIST FixedOrder
+          Value NMTOKEN #REQUIRED>
+
+<!-- ************************************************************* -->
+<!--                           XML Elements                        -->
+<!-- ************************************************************* -->
+
+<!ELEMENT ElementType EMPTY>
+<!ATTLIST ElementType
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT Attribute EMPTY>
+<!ATTLIST Attribute
+          Name NMTOKEN #REQUIRED
+          MultiValued (Yes | No) "No">
+
+<!ELEMENT PCDATA EMPTY>

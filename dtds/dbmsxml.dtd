@@ -1,0 +1,218 @@
+<!--
+     This language (hopefully) provides the inverse of the version 2.0
+     mapping language. That is, while the version 2.0 language presents
+     the mapping from an XML viewpoint, this language presents the same
+     mapping from a database viewpoint.
+-->
+
+<!-- ************************************************************* -->
+<!--                         Root element                          -->
+<!-- ************************************************************* -->
+
+<!ELEMENT DBMSToXML (Options?, Databases, Maps)>
+<!ATTLIST DBMSToXML
+          Version CDATA #FIXED "2.0">
+
+<!-- ************************************************************* -->
+<!--                         Options                               -->
+<!-- ************************************************************* -->
+
+<!ELEMENT Options (EmptyStringIsNull?,
+                   Format*,
+                   Namespace*)>
+
+<!-- ****************** Null handling    ************************* -->
+
+<!ELEMENT EmptyStringIsNull EMPTY>
+
+<!-- ****************** Date, time, and number formatting  ************************* -->
+
+<!-- If you only have a single date, time, timestamp, or number
+     format, it is suggested you use the format names "Date",
+     "Time", "Timestamp", and "Number". Format names are case
+     sensitive. -->
+
+<!ELEMENT Format (Locale?, Pattern)>
+<!ELEMENT Format
+          Name NMTOKEN #REQUIRED
+          Type (Date | Time | Timestamp | Number) #REQUIRED>
+
+<!ELEMENT Locale EMPTY>
+<!ATTLIST Locale
+          Language NMTOKEN #REQUIRED
+          Country NMTOKEN #REQUIRED>
+
+<!ELEMENT Pattern EMPTY>
+<!ATTLIST Pattern
+          Value CDATA #REQUIRED>
+
+<!-- ****************** Namespaces ************************* -->
+
+<!ELEMENT Namespace EMPTY>
+<!ATTLIST Namespace
+          Prefix NMTOKEN #REQUIRED
+          URI CDATA #REQUIRED>
+
+<!-- ************************************************************* -->
+<!--                      Database Elements                        -->
+<!-- ************************************************************* -->
+
+<!ELEMENT Databases (Database+)>
+
+<!ELEMENT Database (Catalog+)>
+<!ATTLIST Database
+          Name CDATA #IMPLIED
+          QuoteIdentifers (Yes | No) "Yes">
+
+<!ELEMENT Catalog (Schema+)>
+<!ATTLIST Catalog
+          Name CDATA #IMPLIED>
+
+<!ELEMENT Schema (Table+)>
+<!ATTLIST Schema
+          Name CDATA #IMPLIED>
+
+<!ELEMENT Table (Column+, PrimaryKey?, UniqueKey*, ForeignKey*)>
+<!ATTLIST Table
+          Name CDATA #REQUIRED>
+
+<!ELEMENT Column EMPTY>
+<!ATTLIST Column
+          Name CDATA #REQUIRED
+          DataType NMTOKEN #IMPLIED
+          Length NMTOKEN #IMPLIED
+          Nullable (Yes | No | Unknown) #IMPLIED
+          Format NMTOKEN #IMPLIED>
+
+<!-- KeyGenerator is used only in the XML => database direction. -->
+<!ELEMENT PrimaryKey (KeyColumn+)>
+<!ATTLIST PrimaryKey
+          KeyGenerator NMTOKEN #IMPLIED>
+
+<!ELEMENT UniqueKey (KeyColumn+)>
+<!ATTLIST UniqueKey
+          Name CDATA #REQUIRED>
+
+<!ELEMENT ForeignKey (KeyColumn+)>
+<!ATTLIST ForeignKey
+          Name CDATA #REQUIRED>
+
+<!ELEMENT KeyColumn EMPTY>
+<!ATTLIST KeyColumn
+          Name CDATA #REQUIRED>
+
+<!-- ************************************************************* -->
+<!--                           Maps                                -->
+<!-- ************************************************************* -->
+
+<!ELEMENT Maps (ClassTableMap+)>
+
+<!-- ****************** Table maps ************************* -->
+
+<!ELEMENT ClassTableMap (Extends?, ToElementType,
+                    ColumnMap*, RelatedClassTable*, RelatedPropertyTable*, InsertElement*)>
+<!ATTLIST ClassTableMap
+          Database CDATA #IMPLIED
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Name CDATA #REQUIRED>
+
+<!-- UseBaseTable tells you whether the columns in the referred-to
+     TableMap are in this table or the referred-to table. The main
+     point of having Extends in the former case is that it cuts down
+     on the size of the mapping file if many tables are derived from
+     the same base table. -->
+<!ELEMENT Extends EMPTY>
+<!ATTLIST Extends
+          Database CDATA #IMPLIED
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Table CDATA #REQUIRED
+          UseBaseTable (Yes | No) #REQUIRED>
+
+<!ELEMENT ColumnMap ((ToElementType | ToAttribute | ToPCDATA),
+                     (OrderColumn | FixedOrder)?)>
+<!ATTLIST ColumnMap
+          Name CDATA #REQUIRED>
+
+<!-- If ToElementType is missing, then the element type in the
+     TableMap is used. ToElementType here allows the same table to
+     be mapped to different element types depending on its parent
+     table. This is the inverse of UseClassMap in RelatedClass in
+     the XML-centric language. -->
+
+<!ELEMENT RelatedClassTable (ToElementType?,
+                             UseUniqueKey, UseForeignKey,
+                             (OrderColumn | FixedOrder?))>
+<!ATTLIST RelatedClassTable
+          Database CDATA #IMPLIED
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Name CDATA #REQUIRED
+          KeyInParentTable (Unique | Foreign) #REQUIRED>
+
+<!ELEMENT RelatedPropertyTable((ToElementType | ToAttribute | ToPCDATA),
+                               PropertyColumn,
+                               InlineMap?,
+                               UseUniqueKey, UseForeignKey,
+                               (OrderColumn | FixedOrder?))>
+<!ATTLIST RelatedPropertyTable
+          Database CDATA #IMPLIED
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Name CDATA #REQUIRED
+          KeyInParentTable (Unique | Foreign) #REQUIRED>
+
+<!ELEMENT PropertyColumn EMPTY>
+<!ATTLIST PropertyColumn
+          Name CDATA #REQUIRED>
+
+<!-- Defines an element to be inserted between the class table
+     element and the column, related property table, or related
+     class table element. InsertElements can be nested within
+     themselves, defining a chain of elements to be inserted. -->
+
+<!ELEMENT InsertElement (ToElementType,
+                         ColumnMap*, RelatedClassTable*,
+                         RelatedPropertyTable*, InsertElement*,
+                         (OrderColumn | FixedOrder)?)>
+
+<!-- ****************** Order ************************* -->
+
+<!-- Generate is used only in the XML => database direction. -->
+<!ELEMENT OrderColumn EMPTY>
+<!ATTLIST OrderColumn
+          Name CDATA #REQUIRED
+          Generate (Yes | No) #REQUIRED
+          Direction (Ascending | Descending) "Ascending">
+
+<!ELEMENT FixedOrder EMPTY>
+<!ATTLIST FixedOrder
+          Value NMTOKEN #REQUIRED
+          Direction (Ascending | Descending) "Ascending">
+
+<!-- ************************************************************* -->
+<!--                    XML Reference Elements                     -->
+<!-- ************************************************************* -->
+
+<!ELEMENT ToElementType EMPTY>
+<!ATTLIST ToElementType
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT ToAttribute EMPTY>
+<!ATTLIST ToAttribute
+          Name NMTOKEN #REQUIRED>
+
+<!ELEMENT ToPCDATA EMPTY>
+
+<!-- ************************************************************* -->
+<!--                    Database Reference Elements                -->
+<!-- ************************************************************* -->
+
+<!ELEMENT UseUniqueKey EMPTY>
+<!ATTLIST UseUniqueKey
+          Name CDATA "Primary Key">
+
+<!ELEMENT UseForeignKey EMPTY>
+<!ATTLIST UseForeignKey
+          Name CDATA #REQUIRED>
