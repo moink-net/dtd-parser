@@ -85,18 +85,16 @@
      Filter documents are compiled and the resulting object is
      passed to DBMSToDOM.retrieveDocument:
 
-      public Document retrieveDocument(TransferInfo transferInfo,
-                                       FilterSet filterSet,
-                                       String[] paramNames,
-                                       Object[] params,
-                                       Node rootNode)
+     public Document retrieveDocument(TransferInfo transferInfo,
+                                      FilterSet filterSet,
+                                      Hashtable params,
+                                      Node rootNode)
 
-      public Document retrieveDocument(TransferInfo transferInfo,
-                                       ResultSet rs,
-                                       FilterSet filterSet,
-                                       String[] paramNames,
-                                       Object[] params,
-                                       Node rootNode)
+     public Document retrieveDocument(TransferInfo transferInfo,
+                                      FilterSet filterSet,
+                                      ResultSet rs,
+                                      Hashtable params,
+                                      Node rootNode)
 -->
 
 <!ELEMENT %p;FilterSet (%p;Options?, %p;Filters)>
@@ -240,13 +238,13 @@ Condition attributes can contain named parameters. For example:
 
 The list of parameter names and values is passed to retrieveDocument.
 
-If an expression contains a [NOT] IN clause, the value of the parameter
+If a parameter is used in a [NOT] IN clause, the value of the parameter
 must be a Vector. In this case, the IN clause is expanded to include
 the values in the Vector. For example, if the value of the
 EmployeeNumber parameter is a Vector with the Integers 1, 37, and
 23, then the following condition:
 
-   <Where Condition="EmpNum IN ($EmployeeNumber)" />
+   <Where Condition="EmpNum IN ($EmpNum)" />
 
 is equivalent to:
 
@@ -257,6 +255,32 @@ rows. For example, it could be used to retrieve multiple employee
 records and return them all in the same XML document.
 
 Note that the parentheses are required.
+
+Parameter names must be of the form:
+
+   $Column[$Suffix]
+
+where the suffix is needed only to make the parameter name unique
+within the filter document. The column name must match the name of the
+column in the table to which the parameter applies. This is necessary
+to retrieve type information. (In the case of computed parameters, use
+the name of a column whose type matches the result of the computation.)
+
+For example, the column name in the following condition is $Price,
+matching the name of the column to which it applies:
+
+   <Where Condition="Price > $Price" />
+
+When the Price column appears more than once, suffixes are used to
+distinguish between parameters:
+
+   <Where Condition="(Price > $Price$1) AND (Price < $Price$2)" />
+
+In the following, suppose Price is a FLOAT column and Quantity is
+an INTEGER column. The parameter is named $Price because the computed
+value Price * Quantity has the same data type as the Price column:
+
+   <Where Condition="Price * Quantity > $Price" />
 
 WARNINGS:
 =========
