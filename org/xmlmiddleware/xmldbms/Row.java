@@ -21,7 +21,9 @@ package org.xmlmiddleware.xmldbms;
 
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.conversions.*;
+import org.xmlmiddleware.db.*;
 
+import java.io.*;
 import java.sql.*;
 import java.util.*;
 
@@ -165,6 +167,47 @@ public class Row
          if (rs.wasNull())
          {
             o = (emptyStringIsNull) ? EMPTYSTRING : null;
+         }
+         else if (o instanceof InputStream)
+         {
+            // If the returned object is an InputStream, then the underlying column
+            // is probably a BLOB (LONGVARCHAR or LONGVARBINARY).
+
+            InputStream in = (InputStream)o;
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+            // Read the byte stream into a buffer.
+
+            int len;
+            byte[] buf = new byte[4096];
+            try
+            {
+               while ((len = in.read(buf)) != -1)
+               {
+                  out.write(buf);
+               }
+            }
+            catch (IOException e)
+            {
+               throw new SQLException("[XML-DBMS] IOException. " + e.getMessage());
+            }
+
+            // Convert the byte stream to a String (character data) or a ByteArray
+            // (binary data). If the data type is none of these, throw an exception,
+            // since JDBC doesn't define conversions between binary data and other
+            // kinds of data.
+
+            int type = rsColumns[i].getType();
+            if (JDBCTypes.typeIsChar(type))
+            {
+               o = out.toString();
+            }
+            else if (JDBCTypes.typeIsBinary(type))
+            {
+               o = new ByteArray(out.toByteArray());
+            }
+            else
+               throw new SQLException("[XML-DBMS] The driver returned data for the " + rsColumns[i].getName() + " column as an InputStream. JDBC does not support conversions from stream (byte) data to " + JDBCTypes.getName(type) + ".");
          }
 
          // Set the column value.
