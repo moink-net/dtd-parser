@@ -85,6 +85,15 @@ class Row
 
 
     /**
+     * Clear all column values.
+     */
+    public void clear()
+    {
+        m_columnValues.clear();
+    }
+
+
+    /**
 	 * Set multiple column values.
 	 *
 	 * @param columns Columns for which to set values.

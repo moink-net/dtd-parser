@@ -149,7 +149,7 @@ public class DMLGenerator
    public String getSelect(Table t, Key key, OrderInfo order)
       throws SQLException
    {
-      return buildSelect(t, key.getColumns(), null, order);
+      return buildSelect(t, key.getColumns(), t.getResultSetColumns(), order);
    }
 
    /**
@@ -267,23 +267,11 @@ public class DMLGenerator
 
       select.append(SELECT);
       
-      if(valueColumns == null)
+      // Add value column names.
+      for(int i = 0; i < valueColumns.length; i++)
       {
-         // Add column names.
-         for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
-         {
-            appendColumnName(select, (Column)e.nextElement(), first);
-            first = false;
-         }
-      }
-      else
-      {
-          // Add value column names.
-          for(int i = 0; i < valueColumns.length; i++)
-          {
-             appendColumnName(select, valueColumns[i], first);
-             first = false;
-          }
+         appendColumnName(select, valueColumns[i], first);
+         first = false;
       }
       
       // Add table name.

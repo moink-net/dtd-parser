@@ -37,8 +37,7 @@ import org.xmlmiddleware.conversions.StringFormatter;
  * document. Columns are stored in Tables, PropertyMaps, PropertyTableMaps,
  * OrderInfos, and Keys.</p>
  *
- * <p>Note that column values are stored in three separate objects
- * in XML-DBMS:</p>
+ * <p>Note that column values are stored in two separate objects in XML-DBMS:</p>
  * 
  * <ul>
  * <li><b>Result sets:</b> These are JDBC ResultSet objects either passed
@@ -47,48 +46,17 @@ import org.xmlmiddleware.conversions.StringFormatter;
  *
  * <li><b>Row object:</b> This is an intermediate object used by both
  * DBMSToDOM and DOMToDBMS to buffer column values.</li>
- *
- * <li><b>INSERT statement:</b> These are JDBC PreparedStatement objects
- * created by DOMToDBMS when transferring data from XML to the database.</li>
  * </ul>
  *
- * <p>The position of a column value can be different in each of these
- * three objects. For example, it could be in column 5 in the result set,
- * array index 3 in the Row object, and parameter 4 in the INSERT
- * statement. Thus, three sets of column numbers are needed:</p>
+ * <p>Row objects are hashtable-based and return column values by Column
+ * object. These are designed for random access.</p>
  *
- * <ul>
- * <li><b>Result set column number:</b> This is the number of the column in
- * the result set in which the value is stored. The number is 1-based and is
- * stored in the Table.rsColumnNumbers array. (Note that the order in which
- * result set column numbers are stored in this array guarantees that columns
- * in the result set will be accessed in increasing order.)</li>
- *
- * <li><b>Row object column number:</b> This is the index of the position in
- * the Row.columnValues array in which the value is stored. The index is
- * 0-based and is stored in the rowObjectIndex variable of Column. It is
- * also the index of the Table.rsColumnNumbers array; that is, column values
- * are stored in the Row object in the same order they occur in the result
- * set. In XML-DBMS version 1.0, this was named Column.number.</li>
- *
- * <li><b>INSERT statement parameter number:</b> This is the number of the
- * parameter in the INSERT statement in which the column value is stored. The
- * number is 1-based and corresponds to the order in which the Column object is
- * stored in the Table.columns array; it is therefore not stored separately.</li>
- * </ul>
- *
- * <p>In virtually all cases, these three column numbers are the same, except for
- * differences due to being 0- or 1-based. This is because XML-DBMS generates
- * SELECT and INSERT statements itself and therefore places the columns in the
- * same order in each. The only time that they differ is when the calling
- * application passes a result set to DBMSToDOM.retrieveDocument. In this case,
- * the number <i>and</i> order of columns in the result set can differ from the
- * order of the columns as they appear in the Table.columns array. Because of
- * this, the three different numbers are needed.</p>
- *
- * <p>In the future, the Column class should contain information about the
- * nullability and data type of the column as well. This will be used when creating
- * CREATE TABLE statements.</p>
+ * <p>Result sets are index-based and must be accessed in ascending order for
+ * interoperability reasons. To make this possible, each Column is given a
+ * result set index and the Table that owns the Column can return the Columns
+ * as an array sorted by result set index. This array must be used when (a)
+ * building SELECT statements to retrieve the columns in the table, and (b)
+ * when retrieving column values from those result sets.</p>
  *
  * @author Ronald Bourret, 1998-1999, 2001
  * @version 2.0
@@ -103,8 +71,6 @@ public class Column extends MapBase
    private String name = null;
 
    private int             resultSetIndex = -1;
-   private int             rowIndex = -1;
-   private int             parameterIndex = -1;
    private int             type = Types.NULL;
    private int             length = -1;
    private int             precision = -1;
@@ -157,36 +123,8 @@ public class Column extends MapBase
    }
 
    // ********************************************************************
-   // Row, result set, and parameter index
+   // Result setindex
    // ********************************************************************
-
-   /**
-    * Get the row index.
-    *
-    * <p>This is the index of the column value in the Rows.columnValues
-    * array. 0-based.</p>
-    *
-    * @return The row index.
-    */
-   public final int getRowIndex()
-   {
-      return rowIndex;
-   }
-
-   /**
-    * Set the row index.
-    *
-    * <p>This is the index of the column value in the Rows.columnValues
-    * array. 0-based.</p>
-    *
-    * @param index The row index.
-    */
-   public void setRowIndex(int index)
-   {
-      if (index < 0)
-         throw new IllegalArgumentException("Row index must be >= 0");
-      rowIndex = index;
-   }
 
    /**
     * Get the result set index.
@@ -212,34 +150,6 @@ public class Column extends MapBase
       if (index < 1)
          throw new IllegalArgumentException("Result set index must be >= 1");
       resultSetIndex = index;
-   }
-
-   /**
-    * Get the parameter index.
-    *
-    * <p>This is the index of the column value in a JDBC INSERT PreparedStatement.
-    * 1-based.</p>
-    *
-    * @return The parameter index.
-    */
-   public final int getParameterIndex()
-   {
-      return parameterIndex;
-   }
-
-   /**
-    * Set the parameter index.
-    *
-    * <p>This is the index of the column value in a JDBC INSERT PreparedStatement.
-    * 1-based.</p>
-    *
-    * @param index The parameter index.
-    */
-   public void setParameterIndex(int index)
-   {
-      if (index < 1)
-         throw new IllegalArgumentException("Parameter index must be >= 1");
-      parameterIndex = index;
    }
 
    // ********************************************************************

@@ -22,4 +22,5 @@ public interface DBAction
     public void delete(Table table, Row row, boolean soft)
         throws SQLException;
 
+    public ResultSet select(Table table, Object[] key, OrderInfo orderInfo);
 }

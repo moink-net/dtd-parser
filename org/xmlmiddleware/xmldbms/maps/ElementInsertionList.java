@@ -23,25 +23,24 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 /**
- * Lists wrapper elements that need to be inserted;
+ * Lists inlined elements that need to be inserted;
  * <a href="../readme.htm#NotForUse">not for general use</a>.
  *
  * <p>ElementInsertionList contains a list of ElementInsertionMaps, each of which
- * describes a wrapper element. When data is retrieved from the database, the
- * wrapper elements are constructed beneath the class element. The elements are
+ * describes an inlined element. When data is retrieved from the database, the
+ * inlined elements are constructed beneath the class element. The elements are
  * constructed in ascending order. That is, the first element in the list is
  * the first child of the class element.</p>
  *
- * <p>An ElementInsertionList describes a single chain of wrapper elements. Because
- * wrapper elements can form a tree -- which occurs when a WrapperClassMap contains
- * more than one child WrapperClassMap -- the ElementInsertionMaps in an
+ * <p>An ElementInsertionList describes a single chain of inlined elements. Because
+ * inlined elements can form a tree -- which occurs when a InlineClassMap contains
+ * more than one child InlineClassMap -- the ElementInsertionMaps in an
  * ElementInsertionList can appear in more than one ElementInsertionList. When this
- * occurs, DBMSToDOM is careful not to construct duplicate wrapper elements. In
- * particular, a class table or wrapper element can have at most one child wrapper
+ * occurs, DBMSToDOM is careful not to construct duplicate inlined elements. That
+ * is, a class table or inlined element can have at most one inlined child
  * element with a particular name.</p>
  *
- * <p>ElementInsertionLists are stored in ColumnMaps, PropertyMaps, and
- * RelatedClassTableMaps.</p>
+ * <p>ElementInsertionLists are stored in ColumnMaps and RelatedClassTableMaps.</p>
  *
  * @author Ronald Bourret, 1998-9, 2001
  * @version 2.0

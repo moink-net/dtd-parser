@@ -578,7 +578,7 @@ public class XMLName
    }
 
    //***********************************************************************
-   // Equals method
+   // Equals and hashCode methods
    //***********************************************************************
 
    /**
@@ -614,6 +614,19 @@ public class XMLName
       // Return true or false depending on whether the objects have the same local name.
 
       return local.equals( ((XMLName)obj).getLocalName() );
+   }
+
+   /**
+    * Overrides Object.hashCode().
+    *
+    * <p>Two XMLName objects that are equal according to the equals method return
+    * the same hash code.</p>
+    *
+    * @return The hash code
+    */
+   public int hashCode()
+   {
+      return universal.hashCode();
    }
 
    //***********************************************************************

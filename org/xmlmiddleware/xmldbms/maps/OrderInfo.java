@@ -62,7 +62,14 @@ public class OrderInfo extends MapBase
    private boolean ascending = true;
    private Column  orderColumn = null;
    private boolean generateOrder = false;
-   private int     orderValue = 0;
+   private long    orderValue = 0;
+
+   // *********************************************************************
+   // Constants
+   // ********************************************************************
+
+   /** Special value used to indicate that child is unordered. */
+   public final static long UNORDERED = Long.MIN_VALUE;
 
    // ********************************************************************
    // Constructors
@@ -135,7 +142,7 @@ public class OrderInfo extends MapBase
     *
     * @return The fixed order value. This is 0 by default.
     */
-   public final int getFixedOrderValue()
+   public final long getFixedOrderValue()
    {
       return orderValue;
    }
@@ -148,7 +155,7 @@ public class OrderInfo extends MapBase
     *
     * @param orderValue The fixed order value.
     */
-   public void setFixedOrderValue(int orderValue)
+   public void setFixedOrderValue(long orderValue)
    {
       this.orderValue = orderValue;
       this.orderColumn = null;

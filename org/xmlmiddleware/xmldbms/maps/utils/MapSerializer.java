@@ -25,6 +25,7 @@
 package org.xmlmiddleware.xmldbms.maps.utils;
 
 import org.xmlmiddleware.db.JDBCTypes;
+import org.xmlmiddleware.utils.Sort;
 import org.xmlmiddleware.utils.XMLName;
 import org.xmlmiddleware.utils.XMLWriter;
 
@@ -428,7 +429,7 @@ public class MapSerializer extends XMLWriter
       hashNames.copyInto(hashNamesArray);
       tablesArray = new Table[tables.size()];
       tables.copyInto(tablesArray);
-      sort(hashNamesArray, tablesArray);
+      Sort.sort(hashNamesArray, tablesArray);
 
       // Process the tables, grouping them by database, catalog, and schema.
 
@@ -1181,30 +1182,6 @@ public class MapSerializer extends XMLWriter
          return (oldName != null);
       }
       return !newName.equals(oldName);
-   }
-
-   private void sort(String[] keys, Object[] values)
-   {
-      String s;
-      Object o;
-
-      // Sort a Vector of values by the specified (String) keys.
-
-      for (int i = 0; i < keys.length; i++)
-      {
-         for (int j = i + 1; j < keys.length; j++)
-         { 
-            if (keys[i].compareTo(keys[j]) > 0)
-            {
-               s = keys[i];
-               o = values[i];
-               keys[i] = keys[j];
-               values[i] = values[j];
-               keys[j] = s;
-               values[j] = o;
-            }
-         }
-      }
    }
 
    //**************************************************************************

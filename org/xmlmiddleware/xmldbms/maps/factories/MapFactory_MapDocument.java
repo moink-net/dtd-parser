@@ -60,6 +60,7 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Stack;
@@ -476,7 +477,7 @@ public class MapFactory_MapDocument
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_TABLE:
-               processTable(attrs);
+               processTableStart(attrs);
                break;
 
             case XMLDBMSConst.ELEM_TOKEN_TIMEFORMAT:
@@ -615,6 +616,10 @@ public class MapFactory_MapDocument
                processSimpleDateFormatEnd();
                break;
 
+            case XMLDBMSConst.ELEM_TOKEN_TABLE:
+               processTableEnd();
+               break;
+
             case XMLDBMSConst.ELEM_TOKEN_TIMEFORMAT:
                processTimeFormatEnd();
                break;
@@ -649,7 +654,6 @@ public class MapFactory_MapDocument
             case XMLDBMSConst.ELEM_TOKEN_ORDERCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_PCDATA:
             case XMLDBMSConst.ELEM_TOKEN_SCHEMA:
-            case XMLDBMSConst.ELEM_TOKEN_TABLE:
             case XMLDBMSConst.ELEM_TOKEN_TLORDERCOLUMN:
             case XMLDBMSConst.ELEM_TOKEN_TOCLASSTABLE:
             case XMLDBMSConst.ELEM_TOKEN_TOCOLUMN:
@@ -1462,7 +1466,7 @@ public class MapFactory_MapDocument
       pattern = getAttrValue(attrs, XMLDBMSConst.ATTR_PATTERN);
    }
 
-   private void processTable(Attributes attrs)
+   private void processTableStart(Attributes attrs)
       throws MapException
    {
       String tableName;
@@ -1474,6 +1478,22 @@ public class MapFactory_MapDocument
       tableName = getAttrValue(attrs, XMLDBMSConst.ATTR_NAME);
       table = Table.create(databaseName, catalogName, schemaName, tableName);
       map.addTable(table);
+   }
+
+   private void processTableEnd()
+      throws MapException
+   {
+      Enumeration columns;
+      Column      column;
+
+      // Set the column numbers from 1 to n.
+
+      columns = table.getColumns();
+      for (int i = 1; i <= table.getNumberOfColumns(); i++)
+      {
+         column = (Column)columns.nextElement();
+         column.setResultSetIndex(i);
+      }
    }
 
    private void processTimeFormatEnd()

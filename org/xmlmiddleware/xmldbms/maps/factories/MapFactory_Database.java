@@ -683,9 +683,10 @@ public class MapFactory_Database
          getForeignKeys(meta, databaseName, catalogName, schemaName, tableName, remoteTables, remoteLinkInfos, false, stopTables);
       }
 
-      // Process the columns.
+      // Process the columns, then set the result set indexes.
 
       processColumns(meta, classTableMap, table, databaseName, catalogName, schemaName, tableName);
+      setResultSetIndexes(table);
 
       // If we are following primary keys, get the tables to which the primary keys
       // are exported and the LinkInfos needed to join those tables to the current table.
@@ -781,6 +782,21 @@ public class MapFactory_Database
       // Close the result set.
 
       rs.close();
+   }
+
+   private void setResultSetIndexes(Table table)
+   {
+      Enumeration columns;
+      Column      column;
+
+      // Set the column numbers from 1 to n.
+
+      columns = table.getColumns();
+      for (int i = 1; i <= table.getNumberOfColumns(); i++)
+      {
+         column = (Column)columns.nextElement();
+         column.setResultSetIndex(i);
+      }
    }
 
    private void createColumnMap(ClassTableMap classTableMap, Table table, Column column)

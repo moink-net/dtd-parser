@@ -21,6 +21,8 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
+import org.xmlmiddleware.utils.Sort;
+
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -78,6 +80,7 @@ public class Table extends MapBase
    private String hashName = null;
 
    private Hashtable columns = new Hashtable();
+   private Column[]  rsColumns = null;
 
    private Key primaryKey = null;
    private Hashtable uniqueKeys = new Hashtable();
@@ -253,7 +256,7 @@ public class Table extends MapBase
     *
     * @return The number of Columns. 
     */
-   public final int getNumberofColumns()
+   public final int getNumberOfColumns()
    {
       return columns.size();
    }
@@ -282,6 +285,38 @@ public class Table extends MapBase
    }
 
    /**
+    * Get all Columns in ascending order according to their result set index.
+    *
+    * <p>For more information, see the Column class.</p>
+    *
+    * @return The columns
+    */
+   public final Column[] getResultSetColumns()
+   {
+      Enumeration enum;
+      Column      column;
+      int[]       rsIndexes;
+
+      if (rsColumns == null)
+      {
+         rsIndexes = new int[columns.size()];
+         rsColumns = new Column[columns.size()];
+
+         enum = columns.elements();
+         for (int i = 0; i < columns.size(); i++)
+         {
+            column = (Column)enum.nextElement();
+            rsColumns[i] = column;
+            rsIndexes[i] = column.getResultSetIndex();
+         }
+
+         Sort.sort(rsIndexes, rsColumns);
+      }
+
+      return rsColumns;
+   }
+
+   /**
     * Create a Column and add it to the Table.
     *
     * <p>If the Column already exists, returns the existing Column.</p>
@@ -301,6 +336,9 @@ public class Table extends MapBase
          column = Column.create(columnName);
          columns.put(columnName, column);
       }
+
+      rsColumns = null;
+
       return column;
    }
 
@@ -322,6 +360,8 @@ public class Table extends MapBase
       if (o != null)
          throw new MapException("Column " + name + " already exists in " + getUniversalName() + ".");
       columns.put(name, column);
+
+      rsColumns = null;
    }
 
    /**
@@ -344,6 +384,8 @@ public class Table extends MapBase
       o = columns.remove(columnName);
       if (o == null)
          throw new MapException("Column " + columnName + " not found in table " + getUniversalName());
+
+      rsColumns = null;
    }
 
    /**
@@ -355,6 +397,7 @@ public class Table extends MapBase
    public void removeAllColumns()
    {
       columns.clear();
+      rsColumns = null;
    }
 
    // ********************************************************************
