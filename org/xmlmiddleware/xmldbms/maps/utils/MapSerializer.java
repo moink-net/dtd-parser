@@ -316,7 +316,7 @@ public class MapSerializer extends XMLWriter
    private void writeColumn(Column column)
       throws IOException
    {
-      int    count = 0, type, length, nullability;
+      int    count = 0, type, length, precision, scale, nullability;
       Format format;
 
       attrs[count] = XMLDBMSConst.ATTR_NAME;
@@ -332,12 +332,27 @@ public class MapSerializer extends XMLWriter
       if (JDBCTypes.typeIsChar(type) || JDBCTypes.typeIsBinary(type))
       {
          length = column.getLength();
+         if (length != -1)
          {
-            if (length != -1)
-            {
-               attrs[count] = XMLDBMSConst.ATTR_LENGTH;
-               values[count++] = String.valueOf(length);
-            }
+            attrs[count] = XMLDBMSConst.ATTR_LENGTH;
+            values[count++] = String.valueOf(length);
+         }
+      }
+
+      if ((type == Types.DECIMAL) || (type == Types.NUMERIC))
+      {
+         precision = column.getPrecision();
+         if (precision != -1)
+         {
+            attrs[count] = XMLDBMSConst.ATTR_PRECISION;
+            values[count++] = String.valueOf(precision);
+         }
+
+         scale = column.getScale();
+         if (scale != Integer.MIN_VALUE)
+         {
+            attrs[count] = XMLDBMSConst.ATTR_SCALE;
+            values[count++] = String.valueOf(scale);
          }
       }
 

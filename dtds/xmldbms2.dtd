@@ -326,12 +326,16 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
      appropriate for the data type. -->
 
 <!-- DataType must be the name of a JDBC datatype constant, as
-     specified in the java.sql.Types class. -->
+     specified in the java.sql.Types class. Length only applies
+     to binary and character columns. Precision and scale only
+     apply to NUMERIC and DECIMAL columns. -->
 
 <!ELEMENT %p;Column EMPTY>
 <!ATTLIST %p;Column
           Name CDATA #REQUIRED
           Length NMTOKEN #IMPLIED
+          Scale NMTOKEN #IMPLIED
+          Precision NMTOKEN #IMPLIED
           Nullable (Yes | No | Unknown) "Unknown"
           Format NMTOKEN #IMPLIED
           DataType (BIGINT |

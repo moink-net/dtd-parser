@@ -106,6 +106,8 @@ public class Column extends MapBase
    private int parameterIndex = -1;
    private int type = Types.NULL;
    private int length = -1;
+   private int precision = -1;
+   private int scale = Integer.MIN_VALUE;
    private int nullability = DatabaseMetaData.columnNullableUnknown;
    private Format format = null;
 
@@ -290,6 +292,15 @@ public class Column extends MapBase
          this.length = -1;
       }
 
+      // If the new type is not DECIMAL or NUMBER, set the precision and scale to
+      // invalid values.
+
+      if ((type != Types.DECIMAL) && (type != Types.NUMERIC))
+      {
+         this.precision = -1;
+         this.scale = Integer.MIN_VALUE;
+      }
+
       // Set the new type.
 
       this.type = type;
@@ -326,6 +337,70 @@ public class Column extends MapBase
       if (length < 1)
          throw new IllegalArgumentException("Length must be >= 1");
       this.length = length;
+   }
+
+   // ********************************************************************
+   // Precision
+   // ********************************************************************
+
+   /**
+    * Get the column precision.
+    *
+    * <p>This method should only be called for DECIMAL and NUMERIC types.
+    * The return value is undefined for other types.</p>
+    *
+    * @return The column precision.
+    */
+   public final int getPrecision()
+   {
+      return precision;
+   }
+
+   /**
+    * Set the column precision.
+    *
+    * <p>This method may only be called for DECIMAL and NUMERIC types.</p>
+    *
+    * @return The column precision.
+    */
+   public void setPrecision(int precision)
+   {
+      if ((type != Types.DECIMAL) && (type != Types.NUMERIC))
+         throw new IllegalStateException("setPrecision may be called only for columns with a DECIMAL or NUMERIC type.");
+      if (precision < 1)
+         throw new IllegalArgumentException("Precision must be >= 1");
+      this.precision = precision;
+   }
+
+   // ********************************************************************
+   // Scale
+   // ********************************************************************
+
+   /**
+    * Get the column scale.
+    *
+    * <p>This method should only be called for DECIMAL and NUMERIC types.
+    * The return value is undefined for other types.</p>
+    *
+    * @return The column scale.
+    */
+   public final int getScale()
+   {
+      return scale;
+   }
+
+   /**
+    * Set the column scale.
+    *
+    * <p>This method may only be called for DECIMAL and NUMERIC types.</p>
+    *
+    * @return The column scale.
+    */
+   public void setScale(int scale)
+   {
+      if ((type != Types.DECIMAL) && (type != Types.NUMERIC))
+         throw new IllegalStateException("setScale may be called only for columns with a DECIMAL or NUMERIC type.");
+      this.scale = scale;
    }
 
    // ********************************************************************

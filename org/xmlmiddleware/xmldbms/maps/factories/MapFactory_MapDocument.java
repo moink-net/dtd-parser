@@ -817,7 +817,7 @@ public class MapFactory_MapDocument
    {
       Column column;
       String columnName, attrValue;
-      int    type, length, nullability;
+      int    type, nullability;
 
       // Create the column and add it to the table. This throws an error if
       // the column already exists.
@@ -842,15 +842,23 @@ public class MapFactory_MapDocument
       attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_LENGTH);
       if (attrValue != null)
       {
-         try
-         {
-            length = Integer.parseInt(attrValue);
-         }
-         catch (NumberFormatException n)
-         {
-            throw new MapException("Invalid length: " + attrValue + ". " + n.getMessage());
-         }
-         column.setLength(length);
+         column.setLength(parseInt(attrValue));
+      }
+
+      // Get the column precision, if any.
+
+      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_PRECISION);
+      if (attrValue != null)
+      {
+         column.setPrecision(parseInt(attrValue));
+      }
+
+      // Get the column scale, if any.
+
+      attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_SCALE);
+      if (attrValue != null)
+      {
+         column.setScale(parseInt(attrValue));
       }
 
       // Get the nullability, if any. We translate here between the token
@@ -1037,19 +1045,9 @@ One solution is to store the format names in each column, then later have Map.re
       throws MapException
    {
       String attrValue;
-      int    orderValue;
 
       attrValue = getAttrValue(attrs, XMLDBMSConst.ATTR_VALUE);
-
-      try
-      {
-         orderValue = Integer.parseInt(attrValue);
-      }
-      catch (NumberFormatException n)
-      {
-         throw new MapException("Invalid fixed order value: " + attrValue + ". " + n.getMessage());
-      }
-      orderInfo.setFixedOrderValue(orderValue);
+      orderInfo.setFixedOrderValue(parseInt(attrValue));
    }
 
    private void processForeignKey(Attributes attrs)
@@ -1920,6 +1918,22 @@ One solution is to store the format names in each column, then later have Map.re
    private boolean isYes(String yesNo)
    {
       return yesNo.equals(XMLDBMSConst.ENUM_YES);
+   }
+
+   private int parseInt(String string)
+      throws MapException
+   {
+      int i;
+
+      try
+      {
+         i = Integer.parseInt(string);
+      }
+      catch (NumberFormatException n)
+      {
+         throw new MapException("Invalid integer value: " + string + ". " + n.getMessage());
+      }
+      return i;
    }
 
    //**************************************************************************

@@ -310,8 +310,10 @@ public class XMLDBMSConst
    public static String ATTR_MULTIVALUED      = "MultiValued";
    public static String ATTR_NAME             = "Name";
    public static String ATTR_NULLABLE         = "Nullable";
+   public static String ATTR_PRECISION        = "Precision";
    public static String ATTR_PREFIX           = "Prefix";
    public static String ATTR_QUOTEIDENTIFIERS = "QuoteIdentifiers";
+   public static String ATTR_SCALE            = "Scale";
    public static String ATTR_SCHEMA           = "Schema";
    public static String ATTR_URI              = "URI";
    public static String ATTR_USEBASETABLE     = "UseBaseTable";
@@ -334,8 +336,10 @@ public class XMLDBMSConst
                                          ATTR_MULTIVALUED,
                                          ATTR_NAME,
                                          ATTR_NULLABLE,
+                                         ATTR_PRECISION,
                                          ATTR_PREFIX,
                                          ATTR_QUOTEIDENTIFIERS,
+                                         ATTR_SCALE,
                                          ATTR_SCHEMA,
                                          ATTR_URI,
                                          ATTR_USEBASETABLE,
@@ -361,13 +365,15 @@ public class XMLDBMSConst
    public static final int ATTR_TOKEN_MULTIVALUED      = 12;
    public static final int ATTR_TOKEN_NAME             = 13;
    public static final int ATTR_TOKEN_NULLABLE         = 14;
-   public static final int ATTR_TOKEN_PREFIX           = 15;
-   public static final int ATTR_TOKEN_QUOTEIDENTIFIERS = 16;
-   public static final int ATTR_TOKEN_SCHEMA           = 17;
-   public static final int ATTR_TOKEN_URI              = 18;
-   public static final int ATTR_TOKEN_USEBASETABLE     = 19;
-   public static final int ATTR_TOKEN_VALUE            = 20;
-   public static final int ATTR_TOKEN_VERSION          = 21;
+   public static final int ATTR_TOKEN_PRECISION        = 15;
+   public static final int ATTR_TOKEN_PREFIX           = 16;
+   public static final int ATTR_TOKEN_QUOTEIDENTIFIERS = 17;
+   public static final int ATTR_TOKEN_SCALE            = 18;
+   public static final int ATTR_TOKEN_SCHEMA           = 19;
+   public static final int ATTR_TOKEN_URI              = 20;
+   public static final int ATTR_TOKEN_USEBASETABLE     = 21;
+   public static final int ATTR_TOKEN_VALUE            = 22;
+   public static final int ATTR_TOKEN_VERSION          = 23;
 
    public static final int[] ATTR_TOKENS = {
                                             ATTR_TOKEN_CATALOG,
@@ -385,8 +391,10 @@ public class XMLDBMSConst
                                             ATTR_TOKEN_MULTIVALUED,
                                             ATTR_TOKEN_NAME,
                                             ATTR_TOKEN_NULLABLE,
+                                            ATTR_TOKEN_PRECISION,
                                             ATTR_TOKEN_PREFIX,
                                             ATTR_TOKEN_QUOTEIDENTIFIERS,
+                                            ATTR_TOKEN_SCALE,
                                             ATTR_TOKEN_SCHEMA,
                                             ATTR_TOKEN_URI,
                                             ATTR_TOKEN_USEBASETABLE,
