@@ -382,7 +382,9 @@ abstract class DataHandlerBase
             }
         }
 
-        return (Column[])colVec.toArray();    
+        Column[] cols = new Column[colVec.size()];
+        colVec.copyInto(cols);
+        return cols;
     }
 
 

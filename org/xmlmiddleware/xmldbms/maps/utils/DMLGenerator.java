@@ -283,8 +283,8 @@ public class DMLGenerator
          catalog = table.getCatalogName();
          if((catalog != null) && (m_isCatalogAtStart))
          {
-            s.concat(makeQuotedName(catalog));
-            s.concat(m_catalogSeparator);
+            s += makeQuotedName(catalog);
+            s += m_catalogSeparator;
          }
       }
  
@@ -293,19 +293,19 @@ public class DMLGenerator
          schema = table.getSchemaName();
          if(schema != null)
          {
-            s.concat(makeQuotedName(schema));
-            s.concat(PERIOD);
+            s += makeQuotedName(schema);
+            s += PERIOD;
          }
       }
  
-      s.concat(makeQuotedName(table.getTableName()));
+      s += makeQuotedName(table.getTableName());
  
       if(m_useCatalog)
       {
          if((catalog != null) && (!m_isCatalogAtStart))
          {
-            s.concat(m_catalogSeparator);
-            s.concat(makeQuotedName(catalog));
+            s += m_catalogSeparator;
+            s += makeQuotedName(catalog);
          }
       }
 
@@ -356,15 +356,15 @@ public class DMLGenerator
       boolean first = false;
       String str = new String();
 
-      str.concat(WHERE);
+      str += WHERE;
 
       for(int i = 0; i < keyColumns.length; i++)
       {
          if(i != 0)
-            str.concat(AND);
+            str += AND;
       
-         str.concat(makeColumnName(keyColumns[i], false));
-         str.concat(EQUALSPARAM);
+         str += makeColumnName(keyColumns[i], false);
+         str += EQUALSPARAM;
       }
 
       return str;
