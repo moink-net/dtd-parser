@@ -28,8 +28,6 @@ import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.utils.XMLName;
 import org.xmlmiddleware.xmldbms.XMLFormatter;
 
-import java.text.DateFormat;
-import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -349,7 +347,7 @@ public class Map extends MapBase
    //  Options
 
    private boolean   emptyStringIsNull = false;
-   private Hashtable defaultFormatObjects = new Hashtable();  // Indexed by type
+   private Hashtable defaultFormatters = new Hashtable();  // Indexed by type
    private Hashtable classMaps = new Hashtable();       // Indexed by universal name
    private Hashtable classTableMaps = new Hashtable();  // Indexed by table name
    private Hashtable tables = new Hashtable();          // Indexed by table name
@@ -396,74 +394,69 @@ public class Map extends MapBase
    }
 
    //**************************************************************************
-   // Default format objects
+   // Default formatting objects
    //**************************************************************************
 
    /**
-    * Get the default format object for a type.
+    * Get the default formatting object for a type.
     *
-    * <p>This method returns a DateFormat object, a NumberFormat object, or an
-    * object that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.
-    * The calling method must determine the class of the returned object.</p>
+    * <p>This method returns an object that implements the
+    * org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
     *
     * @param The JDBC type. Must be a valid value from the java.sql.Types class.
     *
-    * @return The format object. May be null.
+    * @return The formatting object. May be null.
     */
-   public final Object getDefaultFormatObject(int type)
+   public final XMLFormatter getDefaultFormatter(int type)
    {
       if (!JDBCTypes.typeIsValid(type))
          throw new IllegalArgumentException("Not a valid JDBC type: " + type);
-      return defaultFormatObjects.get(new Integer(type));
+      return (XMLFormatter)defaultFormatters.get(new Integer(type));
    }
 
    /**
-    * Get a Hashtable containing the default format objects hashed by JDBC type.
+    * Get a Hashtable containing the default formatting objects hashed by JDBC type.
     *
     * @return The Hashtable.
     */
-   public final Hashtable getDefaultFormatObjects()
+   public final Hashtable getDefaultFormatters()
    {
-      return (Hashtable)defaultFormatObjects.clone();
+      return (Hashtable)defaultFormatters.clone();
    }
 
    /**
-    * Add the default format object for a type.
+    * Add the default formatting object for a type.
     *
-    * <p>The format object can be a DateFormat object, a NumberFormat object, or an object
-    * that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
+    * <p>The format object must be an object that implements the 
+    * org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
     *
     * @param type The JDBC type.
-    * @param formatObject The format object. If this is null, the default format
+    * @param formatter The formatting object. If this is null, the default format
     *    object for the column type is removed.
     * @exception MapException Thrown if a default format has already been set for the type.
     */
-   public void addDefaultFormatObject(int type, Object formatObject)
+   public void addDefaultFormatter(int type, XMLFormatter formatter)
       throws MapException
    {
       Integer i;
 
       if (!JDBCTypes.typeIsValid(type))
          throw new IllegalArgumentException("Not a valid JDBC type: " + type);
-      checkArgNull(formatObject, ARG_FORMATOBJECT);
-      if (!(formatObject instanceof DateFormat) &&
-          !(formatObject instanceof NumberFormat) &&
-          !(formatObject instanceof XMLFormatter))
-         throw new IllegalArgumentException("Format object must be a DateFormat object, a NumberFormat object, or an object that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.");
+      checkArgNull(formatter, ARG_FORMATTER);
 
       i = new Integer(type);
-      if (defaultFormatObjects.get(i) != null)
+      if (defaultFormatters.get(i) != null)
          throw new IllegalArgumentException("Default format for type " + JDBCTypes.getName(type) + " already set.");
-      defaultFormatObjects.put(i, formatObject);
+      defaultFormatters.put(i, formatter);
    }
 
    /**
-    * Remove a default format object.
+    * Remove a default formatting object.
     *
     * @param type The JDBC type.
-    * @exception MapException Thrown if the format is not found.
+    * @exception MapException Thrown if the formatting object is not found.
     */
-   public void removeDateFormat(int type)
+   public void removeDefaultFormatter(int type)
       throws MapException
    {
       Object o;
@@ -471,17 +464,17 @@ public class Map extends MapBase
       if (!JDBCTypes.typeIsValid(type))
          throw new IllegalArgumentException("Not a valid JDBC type: " + type);
 
-      o = defaultFormatObjects.remove(new Integer(type));
+      o = defaultFormatters.remove(new Integer(type));
       if (o == null)
          throw new MapException("Default format for type " + JDBCTypes.getName(type) + " not found.");
    }
 
    /**
-    * Remove the default format objects for all types.
+    * Remove the default formatting objects for all types.
     */
-   public void removeAllDefaultFormatObjects()
+   public void removeAllDefaultFormatters()
    {
-      defaultFormatObjects.clear();
+      defaultFormatters.clear();
    }
 
    //**************************************************************************

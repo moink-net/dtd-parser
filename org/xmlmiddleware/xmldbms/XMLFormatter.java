@@ -19,19 +19,13 @@
 
 package org.xmlmiddleware.xmldbms;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 /**
  * Interface for custom formatting classes.
  *
  * <p>Classes that are used with the FormatClass element in the XML-DBMS
- * mapping language must implement this interface. Such classes often
- * inherit from org.xmlmiddleware.xmldbms.helpers.XMLFormatterBase (in
- * which all of these methods return null) and override only one pair
- * of methods. For example, a custom formatting class might only perform
- * date formatting and therefore only override the formatDate and parseDate
- * methods.</p>
+ * mapping language must implement this interface and provide a no-argument
+ * constructor. Such classes usually support formatting for only a single
+ * type of object, such as an Integer or a Date.</p>
  *
  * <p><b>NOTE:</b> One possible use of custom formatting classes is a
  * to convert binary data to/from Base64. This could easily be done by
@@ -39,7 +33,6 @@ import java.util.Date;
  *
  * @author Ronald Bourret, 2001
  * @version 2.0
- * @see org.xmlmiddleware.xmldbms.helpers.XMLFormatterBase
  */
 
 public interface XMLFormatter
@@ -48,31 +41,31 @@ public interface XMLFormatter
    // Public methods
    // ********************************************************************
 
-   // CHAR, VARCHAR, LONGVARCHAR
-   public String formatString(String value) throws XMLFormatterException;
-   public String parseString(String string) throws XMLFormatterException;
+   /**
+    * Parse a string and create an object.
+    *
+    * <p>The actual type of the object, such as an Integer or Date, depends
+    * on the implementing class.</p>
+    *
+    * @param The string to parse.
+    * @return The object
+    * @exception XMLFormatterException Thrown if the string can't be parsed by
+    *     the implementing class.
+    */
+   public Object parse(String s) throws XMLFormatterException;
 
-   // DATE, TIME, TIMESTAMP
-   public String formatDate(Date value) throws XMLFormatterException;
-   public Date parseDate(String string) throws XMLFormatterException;
-
-   // BIGINT, INTEGER, SMALLINT, TINYINT
-   public String formatLong(Long value) throws XMLFormatterException;
-   public Long parseLong(String string) throws XMLFormatterException;
-
-   // DECIMAL, NUMERIC
-   public String formatDecimal(BigDecimal value) throws XMLFormatterException;
-   public BigDecimal parseDecimal(String string) throws XMLFormatterException;
-
-   // DOUBLE, FLOAT, REAL
-   public String formatDouble(Double value) throws XMLFormatterException;
-   public Double parseDouble(String string) throws XMLFormatterException;
-
-   // BINARY, VARBINARY, LONGVARBINARY
-   public String formatBinary(byte[] value) throws XMLFormatterException;
-   public byte[] parseBinary(String string) throws XMLFormatterException;
-
-   // BIT
-   public String formatBoolean(Boolean value) throws XMLFormatterException;
-   public Boolean parseBoolean(String string) throws XMLFormatterException;
+   /**
+    * Serialize an object as a string.
+    *
+    * <p>The implementing class will generally support only a specific type
+    * of object, such as an Integer or a Date.</p>
+    *
+    * @param The object to serialize.
+    * @return The string
+    * @exception XMLFormatterException Thrown if the object can't be serialized. This
+    *    usually occurs when the object is of a type not recognized by the implementing
+    *    class, such as when the implementing class operates only on Integers and the
+    *    calling code passes a Date.
+    */
+   public String format(Object o) throws XMLFormatterException;
 }

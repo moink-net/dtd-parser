@@ -24,8 +24,6 @@ package org.xmlmiddleware.xmldbms.maps;
 
 import java.sql.Types;
 import java.sql.DatabaseMetaData;
-import java.text.DateFormat;
-import java.text.NumberFormat;
 
 import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.xmldbms.XMLFormatter;
@@ -104,15 +102,15 @@ public class Column extends MapBase
 
    private String name = null;
 
-   private int    resultSetIndex = -1;
-   private int    rowIndex = -1;
-   private int    parameterIndex = -1;
-   private int    type = Types.NULL;
-   private int    length = -1;
-   private int    precision = -1;
-   private int    scale = Integer.MIN_VALUE;
-   private int    nullability = DatabaseMetaData.columnNullableUnknown;
-   private Object formatObject = null;
+   private int          resultSetIndex = -1;
+   private int          rowIndex = -1;
+   private int          parameterIndex = -1;
+   private int          type = Types.NULL;
+   private int          length = -1;
+   private int          precision = -1;
+   private int          scale = Integer.MIN_VALUE;
+   private int          nullability = DatabaseMetaData.columnNullableUnknown;
+   private XMLFormatter formatter = null;
 
    // ********************************************************************
    // Constructors
@@ -421,42 +419,33 @@ public class Column extends MapBase
    }
 
    // ********************************************************************
-   // Format object
+   // Formatting object
    // ********************************************************************
 
    /**
-    * Get the column format object.
+    * Get the column formatting object.
     *
-    * <p>This method returns a DateFormat object, a NumberFormat object, or an
-    * object that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.
-    * The calling method must determine the class of the returned object.</p>
+    * <p>This method returns an object that implements the
+    * org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
     *
-    * @return The format object. May be null.
+    * @return The formatting object. May be null.
     */
-   public final Object getFormatObject()
+   public final XMLFormatter getFormatter()
    {
-      return formatObject;
+      return formatter;
    }
 
    /**
-    * Set the column format object.
+    * Set the column formatting object.
     *
-    * <p>The format object can be a DateFormat object, a NumberFormat object, or an object
-    * that implements the org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
+    * <p>The formatting object must implement the
+    * org.xmlmiddleware.xmldbms.XMLFormatter interface.</p>
     *
-    * @param formatObject The format object. If this is null, the default format
+    * @param formatter The formatting object. If this is null, the default format
     *    object for the column type will be used.
     */
-   public void setFormatObject(Object formatObject)
+   public void setFormatter(XMLFormatter formatter)
    {
-      if (formatObject != null)
-      {
-         if (!(formatObject instanceof DateFormat) &&
-             !(formatObject instanceof NumberFormat) &&
-             !(formatObject instanceof XMLFormatter))
-            throw new IllegalArgumentException("Format object must be a DateFormat or NumberFormat object or implement the org.xmlmiddleware.xmldbms.XMLFormatter interface.");
-      }
-
-      this.formatObject = formatObject;
+      this.formatter = formatter;
    }
 }

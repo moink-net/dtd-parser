@@ -29,6 +29,8 @@ import org.xmlmiddleware.utils.XMLName;
 import org.xmlmiddleware.utils.XMLWriter;
 
 import org.xmlmiddleware.xmldbms.XMLFormatter;
+import org.xmlmiddleware.xmldbms.helpers.DateFormatter;
+import org.xmlmiddleware.xmldbms.helpers.NumberFormatter;
 
 import org.xmlmiddleware.xmldbms.maps.ClassMap;
 import org.xmlmiddleware.xmldbms.maps.ClassMapBase;
@@ -49,7 +51,9 @@ import java.io.IOException;
 import java.io.Writer;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -59,14 +63,13 @@ import java.util.Vector;
 /**
  * Serializes a Map object to a character stream.
  *
- * <p><b>WARNING:</b> MapSerializer cannot serialize DateFormat and
- * NumberFormat formatting objects. That is, it cannot generate DateFormat,
- * TimeFormat, DateTimeFormat, and NumberFormat elements. This is
- * because the formatting objects do not contain enough information to
- * construct these elements. MapSerializer can serialize SimpleDateFormat,
- * DecimalFormat, and XMLFormatter formatting objects. It also cannot
- * generate Locale children of SimpleDateFormat and DecimalFormat elements,
- * although it does generate localized patterns.</p>
+ * <p><b>WARNING:</b> MapSerializer cannot generate DateFormat, TimeFormat,
+ * DateTimeFormat, and NumberFormat elements. This is because the
+ * underlying formatting objects do not contain enough information to
+ * construct these elements. MapSerializer can generate SimpleDateFormat,
+ * DecimalFormat, and FormatClass elements, but cannot generate Locale
+ * children of SimpleDateFormat and DecimalFormat elements, again due to
+ * lack of information. However, it can generate localized patterns.</p>
  *
  * <p>If you want to use a specific encoding, the Writer must be an OutputStreamWriter
  * or a subclass of an OutputStreamWriter. For example, you might use the following
@@ -128,9 +131,9 @@ public class MapSerializer extends XMLWriter
    private Map       map;
    private Hashtable uris = null;
    private Hashtable prefixes = null;
-   private Hashtable defaultFormats = new Hashtable();
-   private Hashtable namedFormats = new Hashtable();
-   private int       formatNumber = 0;
+   private Hashtable defaultFormatters = new Hashtable();
+   private Hashtable namedFormatters = new Hashtable();
+   private int       formatterNumber = 0;
 
    //**************************************************************************
    // Constructors
@@ -324,9 +327,9 @@ public class MapSerializer extends XMLWriter
    private void writeColumn(Column column)
       throws IOException
    {
-      int    count = 0, type, length, precision, scale, nullability;
-      Object formatObject;
-      String formatName;
+      int          count = 0, type, length, precision, scale, nullability;
+      XMLFormatter formatter;
+      String       formatName;
 
       attrs[count] = XMLDBMSConst.ATTR_NAME;
       values[count++] = column.getName();
@@ -377,13 +380,10 @@ public class MapSerializer extends XMLWriter
          values[count++] = XMLDBMSConst.ENUM_NO;
       }
 
-      formatObject = column.getFormatObject();
-      if (formatObject != null)
+      formatter = column.getFormatter();
+      if (formatter != null)
       {
-         // If the format object has a name, it means it is serializable.
-         // See formatObjectSerializable() for details.
-
-         formatName = (String)namedFormats.get(formatObject);
+         formatName = (String)namedFormatters.get(formatter);
          if (formatName != null)
          {
             attrs[count] = XMLDBMSConst.ATTR_FORMAT;
@@ -530,22 +530,22 @@ public class MapSerializer extends XMLWriter
    private void writeDefaultFormatElements()
       throws IOException
    {
-      Enumeration formatObjects;
-      Object      formatObject;
-      Vector      typeVector;
-      String      name;
+      Enumeration  formatters;
+      XMLFormatter formatter;
+      Vector       typeVector;
+      String       name;
 
-      // Write the default format objects. Remember to check if any of
+      // Write the default formatting objects. Remember to check if any of
       // these is also a named format object, in which case we also write
       // the name.
 
-      formatObjects = defaultFormats.keys();
-      while (formatObjects.hasMoreElements())
+      formatters = defaultFormatters.keys();
+      while (formatters.hasMoreElements())
       {
-         formatObject = formatObjects.nextElement();
-         typeVector = (Vector)defaultFormats.get(formatObject);
-         name = (String)namedFormats.get(formatObject);
-         writeFormatElement(formatObject, typeVector, name);
+         formatter = (XMLFormatter)formatters.nextElement();
+         typeVector = (Vector)defaultFormatters.get(formatter);
+         name = (String)namedFormatters.get(formatter);
+         writeFormatElement(formatter, typeVector, name);
       }
    }
 
@@ -592,11 +592,13 @@ public class MapSerializer extends XMLWriter
       writeElementEnd(XMLDBMSConst.ELEM_EXTENDS);
    }
 
-   private void writeFormatElement(Object formatObject, Vector types, String name)
+   private void writeFormatElement(XMLFormatter formatter, Vector types, String name)
       throws IOException
    {
       int          count = 0, type;
       StringBuffer sb;
+      DateFormat   df;
+      NumberFormat nf;
 
       if (types != null)
       {
@@ -617,26 +619,43 @@ public class MapSerializer extends XMLWriter
          values[count++] = name;
       }
 
-      if (formatObject instanceof XMLFormatter)
+      if (formatter instanceof NumberFormatter)
       {
-         attrs[count] = XMLDBMSConst.ATTR_CLASS;
-         values[count++] = formatObject.getClass().getName();
-         writeElementStart(XMLDBMSConst.ELEM_FORMATCLASS, count, true);
+         // If the formatter is an instance of the NumberFormatter class,
+         // get the underlying NumberFormat object. If this is a DecimalFormat
+         // object, then we can serialize it.
+
+         nf = ((NumberFormatter)formatter).getNumberFormat();
+         if (nf instanceof DecimalFormat)
+         {
+            attrs[count] = XMLDBMSConst.ATTR_PATTERN;
+            values[count++] = ((DecimalFormat)nf).toLocalizedPattern();
+            writeElementStart(XMLDBMSConst.ELEM_DECIMALFORMAT, count, true);
+         }
       }
-      else if (formatObject instanceof SimpleDateFormat)
+      else if (formatter instanceof DateFormatter)
       {
-         attrs[count] = XMLDBMSConst.ATTR_PATTERN;
-         values[count++] = ((SimpleDateFormat)formatObject).toLocalizedPattern();
-         writeElementStart(XMLDBMSConst.ELEM_SIMPLEDATEFORMAT, count, true);
-      }
-      else if (formatObject instanceof DecimalFormat)
-      {
-         attrs[count] = XMLDBMSConst.ATTR_PATTERN;
-         values[count++] = ((DecimalFormat)formatObject).toLocalizedPattern();
-         writeElementStart(XMLDBMSConst.ELEM_DECIMALFORMAT, count, true);
+         // If the formatter is an instance of the DateFormatter class, get
+         // the underlying DateFormat object. If this is a SimpleDateFormat
+         // object, then we can serialize it.
+
+         df = ((DateFormatter)formatter).getDateFormat();
+         if (df instanceof SimpleDateFormat)
+         {
+            attrs[count] = XMLDBMSConst.ATTR_PATTERN;
+            values[count++] = ((SimpleDateFormat)df).toLocalizedPattern();
+            writeElementStart(XMLDBMSConst.ELEM_SIMPLEDATEFORMAT, count, true);
+         }
       }
       else
-         throw new IllegalStateException("Programming bug.");
+      {
+         // Otherwise, the formatter is an instance of a custom formatting
+         // class. In this case, just serialize the class name.
+
+         attrs[count] = XMLDBMSConst.ATTR_CLASS;
+         values[count++] = formatter.getClass().getName();
+         writeElementStart(XMLDBMSConst.ELEM_FORMATCLASS, count, true);
+      }
    }
 
    private void writeFormatElements()
@@ -748,21 +767,21 @@ public class MapSerializer extends XMLWriter
    private void writeNamedFormatElements()
       throws IOException
    {
-      Enumeration formatObjects;
-      Object      formatObject;
-      String      name;
+      Enumeration  formatters;
+      XMLFormatter formatter;
+      String       name;
 
       // Write the named format elements. Note that we don't write any
       // named format objects that are also default format objects. This
       // is because they have already been written with writeDefaultFormatElements().
 
-      formatObjects = namedFormats.keys();
-      while (formatObjects.hasMoreElements())
+      formatters = namedFormatters.keys();
+      while (formatters.hasMoreElements())
       {
-         formatObject = formatObjects.nextElement();
-         if (defaultFormats.get(formatObject) != null) continue;
-         name = (String)namedFormats.get(formatObject);
-         writeFormatElement(formatObject, null, name);
+         formatter = (XMLFormatter)formatters.nextElement();
+         if (defaultFormatters.get(formatter) != null) continue;
+         name = (String)namedFormatters.get(formatter);
+         writeFormatElement(formatter, null, name);
       }
    }
 
@@ -1196,19 +1215,20 @@ public class MapSerializer extends XMLWriter
 
    private void buildDefaultFormatTable()
    {
-      Hashtable   formatsByType;
-      Enumeration types;
-      Object      type, formatObject;
-      Vector      typeVector;
+      Hashtable    formatsByType;
+      XMLFormatter formatter;
+      Enumeration  types;
+      Object       type;
+      Vector       typeVector;
 
-      // Initialize the defaultFormats Hashtable.
+      // Initialize the defaultFormatters Hashtable.
 
-      defaultFormats.clear();
+      defaultFormatters.clear();
 
       // Get the Hashtable of default formatting objects. These are hashed
       // using JDBC type as a key.
 
-      formatsByType = map.getDefaultFormatObjects();
+      formatsByType = map.getDefaultFormatters();
       types = formatsByType.keys();
 
       // Invert the hashtable so that the formatting object is the key.
@@ -1223,18 +1243,18 @@ public class MapSerializer extends XMLWriter
          // formatting objects.
 
          type = types.nextElement();
-         formatObject = formatsByType.get(type);
-         if (formatObjectSerializable(formatObject))
+         formatter = (XMLFormatter)formatsByType.get(type);
+         if (formatterSerializable(formatter))
          {
             // Check if the formatting object has already been used as a key.
             // If so, use the existing type Vector. If not, allocate a new type
             // Vector and store it in the Hashtable.
 
-            typeVector = (Vector)defaultFormats.get(formatObject);
+            typeVector = (Vector)defaultFormatters.get(formatter);
             if (typeVector == null)
             {
                typeVector = new Vector();
-               defaultFormats.put(formatObject, typeVector);
+               defaultFormatters.put(formatter, typeVector);
             }
 
             // Add the type to the type Vector.
@@ -1246,20 +1266,20 @@ public class MapSerializer extends XMLWriter
 
    private void buildNamedFormatTable()
    {
-      Enumeration tables, columns;
-      Table       table;
-      Column      column;
-      Object      formatObject;
+      Enumeration  tables, columns;
+      Table        table;
+      Column       column;
+      XMLFormatter formatter;
 
-      // Initialize the namedFormats Hashtable and the format number.
+      // Initialize the namedFormatters Hashtable and the format number.
 
-      namedFormats.clear();
-      formatNumber = 0;
+      namedFormatters.clear();
+      formatterNumber = 0;
 
       // Get the list of tables in the Map. For each table, get
       // the list of columns. For each column, get the formatting
       // object (if any). If the formatting object exists, is
-      // serializable (see formatObjectSerializable), and hasn't
+      // serializable (see formatterSerializable), and hasn't
       // yet been processed, add it to the hashtable of named
       // format objects.
 
@@ -1271,14 +1291,14 @@ public class MapSerializer extends XMLWriter
          while (columns.hasMoreElements())
          {
             column = (Column)columns.nextElement();
-            formatObject = column.getFormatObject();
-            if (formatObject != null)
+            formatter = column.getFormatter();
+            if (formatter != null)
             {
-               if (formatObjectSerializable(formatObject))
+               if (formatterSerializable(formatter))
                {
-                  if (namedFormats.get(formatObject) == null)
+                  if (namedFormatters.get(formatter) == null)
                   {
-                     namedFormats.put(formatObject, getFormatName());
+                     namedFormatters.put(formatter, getFormatName());
                   }
                }
             }
@@ -1286,29 +1306,48 @@ public class MapSerializer extends XMLWriter
       }
    }
 
-   private boolean formatObjectSerializable(Object formatObject)
+   private boolean formatterSerializable(XMLFormatter formatter)
    {
+      DateFormat   df;
+      NumberFormat nf;
+
       // Not all formatting objects can be used to construct formatting
       // elements in the map document. This is because some format classes
       // do not expose enough information to construct a corresponding
       // formatting element.
-      //
-      // XMLFormatter, DecimalFormat, and SimpleDateFormat objects can be
-      // used to construct formatting elements (although the locale for
-      // SimpleDateFormat objects is lost). DateFormat and NumberFormat
-      // objects cannot be used.
+      
+      // If the formatting object is an instance of DateFormatter, get the
+      // underlying DateFormat object. If this is an instance of SimpleDateFormat,
+      // then we can serialize it, although we cannot serialize the locale. If
+      // not, we can't.
 
-      if (formatObject instanceof SimpleDateFormat) return true;
-      if (formatObject instanceof DecimalFormat) return true;
-      if (formatObject instanceof XMLFormatter) return true;
-      return false;
+      if (formatter instanceof DateFormatter)
+      {
+         df = ((DateFormatter)formatter).getDateFormat();
+         return (df instanceof SimpleDateFormat);
+      }
+
+      // If the formatting object is an instance of NumberFormatter, get the
+      // underlying NumberFormat object. If this is an instance of DecimalFormat,
+      // then we can serialize it. If not, we can't.
+
+      if (formatter instanceof NumberFormatter)
+      {
+         nf = ((NumberFormatter)formatter).getNumberFormat();
+         return (nf instanceof DecimalFormat);
+      }
+
+      // Otherwise, the formatting object is a custom formatting class, which
+      // we can serialize because we can get its name.
+
+      return true;
    }
 
    private String getFormatName()
    {
       // Construct format names of the form Format1, Format2, ...
 
-      formatNumber++;
-      return (FORMAT + formatNumber);
+      formatterNumber++;
+      return (FORMAT + formatterNumber);
    }
 }

@@ -19,6 +19,8 @@
 
 package org.xmlmiddleware.xmldbms;
 
+import org.xmlmiddleware.utils.WrappedException;
+
 /**
  * Thrown when a error occurs using the XMLFormatter interface.
  *
@@ -26,15 +28,47 @@ package org.xmlmiddleware.xmldbms;
  * @version 2.0
  */
 
-public class XMLFormatterException extends Exception
+public class XMLFormatterException extends WrappedException
 {
+   // ********************************************************************
+   // Constructors
+   // ********************************************************************
+   
    /**
-    * Construct a XMLFormatterException.
-    *
-    * @param message The error message.
-    */
-   public XMLFormatterException(String message)
+     * Create a new XMLFormatterException.
+     *
+     * @param message The error or warning message.
+     */
+   public XMLFormatterException(String message) 
    {
       super(message);
+   }
+   
+   /**
+     * Create a new XMLFormatterException wrapping an existing exception.
+     *
+     * <p>The existing exception will be embedded in the new
+     * one, and its message will become the default message for
+     * the XMLFormatterException.</p>
+     *
+     * @param e The exception to be wrapped in a XMLFormatterException.
+     */
+   public XMLFormatterException(Exception e)
+   {
+      super(e);
+   }
+   
+   /**
+     * Create a new XMLFormatterException from an existing exception.
+     *
+     * <p>The existing exception will be embedded in the new
+     * one, but the new exception will have its own message.</p>
+     *
+     * @param message The detail message.
+     * @param e The exception to be wrapped in a XMLFormatterException.
+     */
+   public XMLFormatterException(String message, Exception e)
+   {
+      super(message, e);
    }
 }
