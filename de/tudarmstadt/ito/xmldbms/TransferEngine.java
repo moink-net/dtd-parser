@@ -104,6 +104,9 @@ public class TransferEngine
     	* <li>Password: Database password. Depends on database.</li>
     	* </ul>
       *
+      * <p>The JDBCLevel property is used to specify whether you are using
+      * a JDBC 1.0 or JDBC 2.0 driver. If it is not present, JDBC 1.0 is assumed.</p>
+      *
     	* @param props A Properties object containing the above properties.
     	*/
     public void setDatabaseProperties(Properties props)
