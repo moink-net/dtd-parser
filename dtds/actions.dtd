@@ -73,10 +73,21 @@
 <!-- An action document consists of a set of actions to be applied
      to the values in an XML document. -->
 
-<!ELEMENT %p;Actions (%p;DefaultAction?, %p;Action+)>
+<!ELEMENT %p;Actions (%p;Options?, %p;DefaultAction?, %p;Action*)>
 <!ATTLIST %p;Actions
-          Version FIXED "2.0"
-          %nsdecl; CDATA "http://www.xmlmiddleware.org/xmldbms/actions/v1">
+          Version CDATA #FIXED "2.0"
+          %nsdecl; CDATA "http://www.xmlmiddleware.org/xmldbms/actions/v2">
+
+<!--
+     Namespace elements declare the namespace prefixes and URIs to be
+     used in the Name attribute of ElementType and Attribute elements.
+ -->
+
+<!ELEMENT %p;Options (%p;Namespace*)>
+<!ELEMENT %p;Namespace EMPTY>
+<!ATTLIST %p;Namespace
+          Prefix NMTOKEN #REQUIRED
+          URI CDATA #REQUIRED>
 
 <!-- The allowable actions are as follows:
 
@@ -107,7 +118,7 @@
                     %p;Update |
                     %p;UpdateOrInsert |
                     %p;Delete |
-                    %p;SoftDelete"
+                    %p;SoftDelete">
 <!ELEMENT %p;DefaultAction (%actions;)>
 <!ELEMENT %p;Action (%p;ElementType, (%actions;))>
 
@@ -115,9 +126,8 @@
 <!ELEMENT %p;Insert EMPTY>
 <!ELEMENT %p;SoftInsert EMPTY>
 <!ELEMENT %p;Update (%p;All |
-                     (%p;PCDATA?, (%p;ElementType | %p;Attribute)+))>
-<!ELEMENT %p;UpdateOrInsert (%p;All |
-                             (%p;PCDATA?, (%p;ElementType | %p;Attribute)+))>
+                     (%p;PCDATA?, (%p;ElementType | %p;Attribute)*))>
+<!ELEMENT %p;UpdateOrInsert EMPTY>
 <!ELEMENT %p;Delete EMPTY>
 <!ELEMENT %p;SoftDelete EMPTY>
 
