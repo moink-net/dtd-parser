@@ -21,7 +21,7 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.utils.JDBCTypes;
+import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.utils.XMLName;
 import org.xmlmiddleware.xmldbms.XMLFormatter;
 

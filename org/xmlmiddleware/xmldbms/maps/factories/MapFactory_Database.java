@@ -16,8 +16,8 @@
 
 package org.xmlmiddleware.xmldbms.maps.factories;
 
+import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.utils.XMLName;
-import org.xmlmiddleware.utils.JDBCTypes;
 
 import org.xmlmiddleware.xmldbms.maps.ClassTableMap;
 import org.xmlmiddleware.xmldbms.maps.Column;

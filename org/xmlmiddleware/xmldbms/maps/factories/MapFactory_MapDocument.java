@@ -21,7 +21,7 @@
 
 package org.xmlmiddleware.xmldbms.maps.factories;
 
-import org.xmlmiddleware.utils.JDBCTypes;
+import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.utils.TokenList;
 import org.xmlmiddleware.utils.XMLName;
 

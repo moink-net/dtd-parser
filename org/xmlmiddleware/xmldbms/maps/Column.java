@@ -24,7 +24,7 @@ import java.sql.DatabaseMetaData;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 
-import org.xmlmiddleware.utils.JDBCTypes;
+import org.xmlmiddleware.db.JDBCTypes;
 import org.xmlmiddleware.xmldbms.XMLFormatter;
 
 /**
