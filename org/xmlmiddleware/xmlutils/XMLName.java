@@ -167,6 +167,9 @@ public class XMLName
       XMLName xmlName;
       String  qualified, universal;
 
+      if (localName == null)
+         throw new IllegalArgumentException("Local name must not be null");
+
       if ((prefix != null) && (uri == null))
          throw new IllegalArgumentException("If prefix is non-null, URI must not be null.");
 
