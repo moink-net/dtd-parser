@@ -22,6 +22,7 @@ package org.xmlmiddleware.xmldbms.tools;
 
 import org.xmlmiddleware.db.*;
 import org.xmlmiddleware.utils.XMLMiddlewareException;
+import org.xmlmiddleware.utils.resolvers.*;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.actions.*;
 import org.xmlmiddleware.xmldbms.datahandlers.*;
@@ -30,7 +31,6 @@ import org.xmlmiddleware.xmldbms.keygenerators.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.factories.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
-import org.xmlmiddleware.xmldbms.tools.resolvers.*;
 import org.xmlmiddleware.xmlutils.*;
 
 import org.xml.sax.*;
@@ -133,7 +133,7 @@ import javax.sql.*;
  * a filename or URL. A location name is resolved by a class that implements
  * the LocationResolver interface; this is specified with the XxxxResolverClass property
  * (see below). If no XxxxResolverClass is specified, then the
- * org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver class is used. That is,
+ * org.xmlmiddleware.utils.resolvers.FilenameResolver class is used. That is,
  * the location name is assumed to be a filename.<br /><br />
  * [2] If the filter document uses parameters, these should be passed in as well.
  * Because parameter names begin with a dollar sign ($), there should be no conflict
@@ -203,8 +203,8 @@ import javax.sql.*;
  * [5] Value is a space-separated list containing Map, XML, and/or Action.<br /><br />
  * [6] Optional. XxxxResolverClass properties specify the class used to resolve XxxxLocations.
  * For example, if a location is a URL, then the resolver class should be
- * org.xmlmiddleware.xmldbms.tools.resolvers.URLResolver. The XxxxResolverClass
- * properties are optional; org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver
+ * org.xmlmiddleware.utils.resolvers.URLResolver. The XxxxResolverClass
+ * properties are optional; org.xmlmiddleware.utils.resolvers.FilenameResolver
  * is used by default. That is, locations are assumed to be filenames by default.<br /><br />
  * [7] Value is a space-separated list containing Map and/or Filter.<br /><br />
  * [8] Value is a space-separated list containing Map, Action, and/or Filter.</p>
@@ -303,8 +303,8 @@ import javax.sql.*;
  * @author Adam Flinton
  * @author Ronald Bourret
  * @version 2.0
+ * @see org.xmlmiddleware.utils.resolvers.LocationResolver
  * @see org.xmlmiddleware.xmldbms.tools.XMLDBMSProps
- * @see org.xmlmiddleware.xmldbms.tools.resolvers.LocationResolver
  */
 
 public class Transfer extends PropertyProcessor
@@ -332,7 +332,7 @@ public class Transfer extends PropertyProcessor
    private static String GENERICHANDLER = "org.xmlmiddleware.xmldbms.datahandlers.GenericHandler";
    private static String JDBC1DATASOURCE = "org.xmlmiddleware.db.JDBC1DataSource";
    private static String JDBC2DATASOURCE = "org.xmlmiddleware.db.JDBC2DataSource";
-   private static String FILENAMERESOLVER = "org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver";
+   private static String FILENAMERESOLVER = "org.xmlmiddleware.utils.resolvers.FilenameResolver";
    private static String DEFAULT = "Default";
    private static String YES = "YES";
 
@@ -2016,7 +2016,7 @@ public class Transfer extends PropertyProcessor
       LocationResolver resolver;
 
       // Get the name of the LocationResolver class. If the name isn't passed in,
-      // use org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver.
+      // use org.xmlmiddleware.utils.resolvers.FilenameResolver.
 
       if (props == null)
       {

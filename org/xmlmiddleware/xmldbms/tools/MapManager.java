@@ -23,10 +23,10 @@ package org.xmlmiddleware.xmldbms.tools;
 import org.xmlmiddleware.db.*;
 import org.xmlmiddleware.schemas.dtds.*;
 import org.xmlmiddleware.utils.*;
+import org.xmlmiddleware.utils.resolvers.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.xmldbms.maps.factories.*;
 import org.xmlmiddleware.xmldbms.maps.utils.*;
-import org.xmlmiddleware.xmldbms.tools.resolvers.*;
 import org.xmlmiddleware.xmlutils.*;
 
 import org.xml.sax.*;
@@ -141,15 +141,15 @@ import javax.sql.*;
  * </table>
  *
  * <p>NOTES:<br />
- * [1] Legal values are Yes (default) and No.<br />
- * [2] If this is omitted, org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver is
- *     used. In other words, the location is interpreted as a filename.
+ * [1] Legal values are Yes (default) and No.<br /><br />
+ * [2] If this is omitted, org.xmlmiddleware.utils.resolvers.FilenameResolver is
+ *     used. In other words, the location is interpreted as a filename.<br /><br />
  * [3] Used to check that generated names are legal and do not conflict with existing
- *     names.<br />
- * [4] Database structure to which element types and attributes are mapped.<br />
- * [5] Maps namespace prefixes in DTD to namespace URIs.<br />
- * [6] See MapFactory_Database for an explanation of properties.<br />
- * [7] Legal values are ElementTypes (default) and Attributes.<br />
+ *     names.<br /><br />
+ * [4] Database structure to which element types and attributes are mapped.<br /><br />
+ * [5] Maps namespace prefixes in DTD to namespace URIs.<br /><br />
+ * [6] See MapFactory_Database for an explanation of properties.<br /><br />
+ * [7] Legal values are ElementTypes (default) and Attributes.<br /><br />
  * [8] Namespace prefix and URI of generated element type names.
  * </p>
  *
@@ -186,10 +186,10 @@ import javax.sql.*;
  * </table>
  *
  * <p>NOTES:<br />
- * [1] Overrides the namespace prefixes currently in the map (if any). Rarely used.<br />
- * [2] Whether to pretty-print. Legal values are Yes (default) and No.<br />
- * [3] Number of spaces to indent when pretty-printing. Default is 3.<br />
- * [4] Used to retrieve database-specific type names.<br />
+ * [1] Overrides the namespace prefixes currently in the map (if any). Rarely used.<br /><br />
+ * [2] Whether to pretty-print. Legal values are Yes (default) and No.<br /><br />
+ * [3] Number of spaces to indent when pretty-printing. Default is 3.<br /><br />
+ * [4] Used to retrieve database-specific type names.<br /><br />
  * [5] Character(s) used to separate the CREATE TABLE statements. Default is semi-colon
  *     (;) plus the line separator system property.
  * </p>
@@ -280,7 +280,7 @@ public class MapManager extends PropertyProcessor
    private static String DEFAULT = "Default";
    private static String JDBC1DATASOURCE = "org.xmlmiddleware.db.JDBC1DataSource";
    private static String JDBC2DATASOURCE = "org.xmlmiddleware.db.JDBC2DataSource";
-   private static String FILENAMERESOLVER = "org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver";
+   private static String FILENAMERESOLVER = "org.xmlmiddleware.utils.resolvers.FilenameResolver";
 
    // ************************************************************************
    // Constructor
@@ -1305,7 +1305,7 @@ public class MapManager extends PropertyProcessor
       String resolverClass;
 
       // Get the name of the LocationResolver class. If the name isn't passed in,
-      // use org.xmlmiddleware.xmldbms.tools.resolvers.FilenameResolver.
+      // use org.xmlmiddleware.utils.resolvers.FilenameResolver.
 
       if (props == null)
       {
