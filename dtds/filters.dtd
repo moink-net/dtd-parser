@@ -65,6 +65,18 @@
 <!ENTITY % p "" >
 <!ENTITY % s "" >
 <!ENTITY % nsdecl "xmlns%s;" >
+<!ENTITY % FilterSet "%p;FilterSet">
+<!ENTITY % Options "%p;Options">
+<!ENTITY % Namespace "%p;Namespace">
+<!ENTITY % Wrapper "%p;Wrapper">
+<!ENTITY % Filters "%p;Filters">
+<!ENTITY % Filter "%p;Filter">
+<!ENTITY % RootFilter "%p;RootFilter">
+<!ENTITY % ResultSetInfo "%p;ResultSetInfo">
+<!ENTITY % TableFilter "%p;TableFilter">
+<!ENTITY % RelatedTableFilter "%p;RelatedTableFilter">
+<!ENTITY % Table "%p;Table">
+<!ENTITY % Where "%p;Where">
 
 <!-- ************************************************************* -->
 <!--                         Filter language                       -->
@@ -73,7 +85,8 @@
 <!--
      A filter document consists of a set of filters to be applied
      to the values in the database. This makes it possible to filter
-     the rows retrieved by DBMSToDOM.retrieveDocument. The filter
+     the rows retrieved by DBMSToDOM.retrieveDocument or deleted
+     by DBMSDelete.deleteDocument. The filter
      language is layered on the top of the mapping language. That
      is, it allows you to specify specific conditions under which
      data is retrieved, while the mapping language provides the
@@ -86,19 +99,31 @@
      passed to DBMSToDOM.retrieveDocument:
 
      public Document retrieveDocument(TransferInfo transferInfo,
-                                      FilterSet filterSet,
-                                      Hashtable params,
-                                      Node rootNode)
+                                      FilterSet    filterSet,
+                                      Hashtable    params,
+                                      Node         rootNode)
 
      public Document retrieveDocument(TransferInfo transferInfo,
-                                      FilterSet filterSet,
-                                      ResultSet rs,
-                                      Hashtable params,
-                                      Node rootNode)
+                                      ResultSet    rs,
+                                      FilterSet    filterSet,
+                                      Hashtable    params,
+                                      Node         rootNode)
+
+     or to DBMSDelete.deleteDocument:
+
+     public void deleteDocument(TransferInfo transferInfo,
+                                FilterSet    filterSet,
+                                Hashtabe     params,
+                                Actions      actions);
+
+     public void deleteDocument(TransferInfo transferInfo,
+                                FilterSet    filterSet,
+                                Hashtabe     params,
+                                int          action);
 -->
 
-<!ELEMENT %p;FilterSet (%p;Options?, %p;Filters)>
-<!ATTLIST %p;FilterSet
+<!ELEMENT %FilterSet; ((%Options;)?, %Filters;)>
+<!ATTLIST %FilterSet;
           Version CDATA #FIXED "2.0"
           %nsdecl; CDATA "http://www.xmlmiddleware.org/xmldbms/filters/v2">
 
@@ -107,47 +132,49 @@
      used in the Name attribute of Wrapper element.
  -->
 
-<!ELEMENT %p;Options (%p;Namespace*, Wrapper*)>
-<!ELEMENT %p;Namespace EMPTY>
-<!ATTLIST %p;Namespace
+<!ELEMENT %Options; ((%Namespace;)*, (%Wrapper;)*)>
+<!ELEMENT %Namespace; EMPTY>
+<!ATTLIST %Namespace;
           Prefix NMTOKEN #REQUIRED
           URI CDATA #REQUIRED>
-<!ELEMENT %p;Wrapper EMPTY>
-<!ATTLIST %p;Wrapper
+<!ELEMENT %Wrapper; EMPTY>
+<!ATTLIST %Wrapper;
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT %p;Filters (%p;Filter+)>
-<!ELEMENT %p;Filter ((%p;RootFilter | %p;ResultSetInfo), %p;TableFilter*)>
+<!ELEMENT %Filters; (%Filter;)+>
+<!ELEMENT %Filter; ((%RootFilter; | %ResultSetInfo;), (%TableFilter;)*)>
 
-<!ELEMENT %p;RootFilter (%p;Table, %p;Where+)>
+<!ELEMENT %RootFilter; (%Table;, (%Where;)+)>
 
-<!ELEMENT %p;ResultSetInfo EMPTY>
-<!ATTLIST %p;ResultSetInfo
+<!ELEMENT %ResultSetInfo; EMPTY>
+<!ATTLIST %ResultSetInfo;
           Name CDATA "Default"
           Database CDATA "Default"
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
           Table CDATA #REQUIRED>
 
-<!ELEMENT %p;TableFilter (%p;Table, %p;RelatedTableFilter+)>
-<!ELEMENT %p;RelatedTableFilter (%p;Table, %p;Where+)>
-<!ATTLIST %p;RelatedTableFilter
+<!ELEMENT %TableFilter; (%Table;, (%RelatedTableFilter;)+)>
+<!ELEMENT %RelatedTableFilter; (%Table;, (%Where;)+)>
+<!ATTLIST %RelatedTableFilter;
           ParentKey CDATA #IMPLIED
           ChildKey CDATA #IMPLIED>
 
-<!ELEMENT %p;Table EMPTY>
-<!ATTLIST %p;Table
+<!ELEMENT %Table; EMPTY>
+<!ATTLIST %Table;
           Database CDATA "Default"
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
           Name CDATA #REQUIRED>
-<!ELEMENT %p;Where EMPTY>
-<!ATTLIST %p;Where
+<!ELEMENT %Where; EMPTY>
+<!ATTLIST %Where;
           Condition CDATA #REQUIRED>
 
 <!--
 Here is an explanation of some of the less obvious element types
-and attributes.
+and attributes. THESE ARE EXPLAINED IN TERMS OF RETRIEVING DOCUMENTS,
+BUT APPLY EQUALLY TO DELETING DOCUMENTS (EXCEPT FOR THE RESULTSETINFO
+ELEMENTS).
 
 Wrapper: This is one or more elements that are used to wrap the results
 of the query - equivalent to the "ignored root" in version 1.0. If there
@@ -170,11 +197,11 @@ The Name attribute of the Wrapper element contains the QName (qualified
 name) of the element; the prefix (if any) used in the QName must be
 declared in a Namespace element.
 
-RootFilter: These filters are used to specify the values retrieve from
-the root table(s). They are effectively ORed together and are
-equivalent to the table name and key values passed to retrieveDocument
-in version 1.0, although they are obviously more flexible. The same
-table may appear in more than one RootFilter.
+RootFilter: These filters are used to specify the values retrieve
+from the root table(s). They are effectively ORed together and
+are equivalent to the table name and key values passed to
+retrieveDocument in version 1.0, although they are obviously more
+flexible. The same table may appear in more than one RootFilter.
 
 ResultSetInfo: This gives the name of the database / catalog / schema /
 table used in the map file to map the result set. That is, there must

@@ -64,8 +64,8 @@ unique key. -->
 a per-table basis. DOMToDBMS will accept a list of named objects
 that implement the KeyGenerator interface. -->
 
-<!-- DATABASE-GENERATED KEYS: Database-generated primary keys are
-supported. -->
+<!-- DATABASE-GENERATED KEYS: Database-generated primary and
+unique keys are supported. -->
 
 <!-- ROOT MAPS ELIMINATED: IgnoreRoot and PseudoRoot have been
 eliminated. This means that any element type mapped as a class
@@ -180,13 +180,55 @@ they can be a series of tokens. -->
 <!ENTITY % p "" >
 <!ENTITY % s "" >
 <!ENTITY % nsdecl "xmlns%s;" >
+<!ENTITY % XMLToDBMS "%p;XMLToDBMS">
+<!ENTITY % Options "%p;Options">
+<!ENTITY % EmptyStringIsNull "%p;EmptyStringIsNull">
+<!ENTITY % DateFormat "%p;DateFormat">
+<!ENTITY % DateTimeFormat "%p;DateTimeFormat">
+<!ENTITY % TimeFormat "%p;TimeFormat">
+<!ENTITY % SimpleDateFormat "%p;SimpleDateFormat">
+<!ENTITY % NumberFormat "%p;NumberFormat">
+<!ENTITY % DecimalFormat "%p;DecimalFormat">
+<!ENTITY % FormatClass "%p;FormatClass">
+<!ENTITY % Locale "%p;Locale">
+<!ENTITY % Namespace "%p;Namespace">
+<!ENTITY % Databases "%p;Databases">
+<!ENTITY % Database "%p;Database">
+<!ENTITY % Catalog "%p;Catalog">
+<!ENTITY % Schema "%p;Schema">
+<!ENTITY % Table "%p;Table">
+<!ENTITY % Column "%p;Column">
+<!ENTITY % PrimaryKey "%p;PrimaryKey">
+<!ENTITY % UniqueKey "%p;UniqueKey">
+<!ENTITY % ForeignKey "%p;ForeignKey">
+<!ENTITY % UseTable "%p;UseTable">
+<!ENTITY % UseColumn "%p;UseColumn">
+<!ENTITY % UseUniqueKey "%p;UseUniqueKey">
+<!ENTITY % UseForeignKey "%p;UseForeignKey">
+<!ENTITY % Maps "%p;Maps">
+<!ENTITY % ClassMap "%p;ClassMap">
+<!ENTITY % UseClassMap "%p;UseClassMap">
+<!ENTITY % Extends "%p;Extends">
+<!ENTITY % UseBaseTable "%p;UseBaseTable">
+<!ENTITY % ToClassTable "%p;ToClassTable">
+<!ENTITY % PropertyMap "%p;PropertyMap">
+<!ENTITY % ToPropertyTable "%p;ToPropertyTable">
+<!ENTITY % ToColumn "%p;ToColumn">
+<!ENTITY % InlineMap "%p;InlineMap">
+<!ENTITY % RelatedClass "%p;RelatedClass">
+<!ENTITY % OrderColumn "%p;OrderColumn">
+<!ENTITY % TLOrderColumn "%p;TLOrderColumn">
+<!ENTITY % FixedOrder "%p;FixedOrder">
+<!ENTITY % ElementType "%p;ElementType">
+<!ENTITY % Attribute "%p;Attribute">
+<!ENTITY % PCDATA "%p;PCDATA">
 
 <!-- ************************************************************* -->
 <!--                         Root element                          -->
 <!-- ************************************************************* -->
 
-<!ELEMENT %p;XMLToDBMS (%p;Options?, %p;Databases, %p;Maps)>
-<!ATTLIST %p;XMLToDBMS
+<!ELEMENT %XMLToDBMS; ((%Options;)?, %Databases;, %Maps;)>
+<!ATTLIST %XMLToDBMS;
           Version CDATA #FIXED "2.0"
           %nsdecl; CDATA "http://www.xmlmiddleware.org/xmldbms/v2">
 
@@ -194,16 +236,16 @@ they can be a series of tokens. -->
 <!--                         Options                               -->
 <!-- ************************************************************* -->
 
-<!ELEMENT %p;Options (%p;EmptyStringIsNull?,
-                      (%p;DateFormat | %p;DateTimeFormat |
-                       %p;TimeFormat | %p;SimpleDateFormat |
-                       %p;NumberFormat | %p;DecimalFormat |
-                       %p;FormatClass)*,
-                      %p;Namespace*)>
+<!ELEMENT %Options; ((%EmptyStringIsNull;)?,
+                     (%DateFormat; | %DateTimeFormat; |
+                      %TimeFormat; | %SimpleDateFormat; |
+                      %NumberFormat; | %DecimalFormat; |
+                      %FormatClass;)*,
+                     (%Namespace;)*)>
 
 <!-- ****************** Null handling    ************************* -->
 
-<!ELEMENT %p;EmptyStringIsNull EMPTY>
+<!ELEMENT %EmptyStringIsNull; EMPTY>
 
 <!-- ****************** Date, time, and number formatting  ************************* -->
 
@@ -275,57 +317,57 @@ they can be a series of tokens. -->
 <!ENTITY % DateStyle "DateStyle %Styles; #REQUIRED">
 <!ENTITY % TimeStyle "TimeStyle %Styles; #REQUIRED">
 
-<!ELEMENT %p;DateFormat (%p;Locale?)>
-<!ATTLIST %p;DateFormat
+<!ELEMENT %DateFormat; (%Locale;)?>
+<!ATTLIST %DateFormat;
           %DateStyle;
           %FormatName;
           %DefaultForTypes; >
 
-<!ELEMENT %p;DateTimeFormat (%p;Locale?)>
-<!ATTLIST %p;DateTimeFormat
+<!ELEMENT %DateTimeFormat; (%Locale;)?>
+<!ATTLIST %DateTimeFormat;
           %DateStyle;
           %TimeStyle;
           %FormatName;
           %DefaultForTypes; >
 
-<!ELEMENT %p;TimeFormat (%p;Locale?)>
-<!ATTLIST %p;TimeFormat
+<!ELEMENT %TimeFormat; (%Locale;)?>
+<!ATTLIST %TimeFormat;
           %TimeStyle;
           %FormatName;
           %DefaultForTypes; >
 
-<!ELEMENT %p;SimpleDateFormat (%p;Locale?)>
-<!ATTLIST %p;SimpleDateFormat
+<!ELEMENT %SimpleDateFormat; (%Locale;)?>
+<!ATTLIST %SimpleDateFormat;
           Pattern CDATA #REQUIRED
           %FormatName;
           %DefaultForTypes; >
 
-<!ELEMENT %p;NumberFormat (%p;Locale)>
-<!ATTLIST %p;NumberFormat
+<!ELEMENT %NumberFormat; (%Locale;)>
+<!ATTLIST %NumberFormat;
           %FormatName;
           %DefaultForTypes; >
 
-<!ELEMENT %p;DecimalFormat (%p;Locale?)>
-<!ATTLIST %p;DecimalFormat
+<!ELEMENT %DecimalFormat; (%Locale;)?>
+<!ATTLIST %DecimalFormat;
           Pattern CDATA #REQUIRED
           %FormatName;
           %DefaultForTypes; >
 
-<!ELEMENT %p;FormatClass EMPTY>
-<!ATTLIST %p;FormatClass
+<!ELEMENT %FormatClass; EMPTY>
+<!ATTLIST %FormatClass;
           Class NMTOKEN #REQUIRED
           %FormatName;
           %DefaultForTypes; >
 
-<!ELEMENT %p;Locale EMPTY>
-<!ATTLIST %p;Locale
+<!ELEMENT %Locale; EMPTY>
+<!ATTLIST %Locale;
           Language NMTOKEN #REQUIRED
           Country NMTOKEN #REQUIRED>
 
 <!-- ****************** Namespaces ************************* -->
 
-<!ELEMENT %p;Namespace EMPTY>
-<!ATTLIST %p;Namespace
+<!ELEMENT %Namespace; EMPTY>
+<!ATTLIST %Namespace;
           Prefix NMTOKEN #REQUIRED
           URI CDATA #REQUIRED>
 
@@ -360,25 +402,25 @@ they can be a series of tokens. -->
      file even if some maps only map some of the tables.
 -->
 
-<!ELEMENT %p;Databases (%p;Database+)>
+<!ELEMENT %Databases; (%Database;)+>
 
-<!ELEMENT %p;Database (%p;Catalog+)>
-<!ATTLIST %p;Database
+<!ELEMENT %Database; (%Catalog;)+>
+<!ATTLIST %Database;
           Name CDATA "Default">
 
 <!-- If the catalog and schema name are missing, XML-DBMS will
      not use catalog or schema names. -->
 
-<!ELEMENT %p;Catalog (Schema+)>
-<!ATTLIST %p;Catalog
+<!ELEMENT %Catalog; (%Schema;)+>
+<!ATTLIST %Catalog;
           Name CDATA #IMPLIED>
 
-<!ELEMENT %p;Schema (%p;Table+)>
-<!ATTLIST %p;Schema
+<!ELEMENT %Schema; (%Table;)+>
+<!ATTLIST %Schema;
           Name CDATA #IMPLIED>
 
-<!ELEMENT %p;Table (%p;Column+, %p;PrimaryKey?, %p;UniqueKey*, %p;ForeignKey*)>
-<!ATTLIST %p;Table
+<!ELEMENT %Table; ((%Column;)+, (%PrimaryKey;)?, (%UniqueKey;)*, (%ForeignKey;)*)>
+<!ATTLIST %Table;
           Name CDATA #REQUIRED>
 
 <!-- If no format is specified, the default format for the default
@@ -411,8 +453,8 @@ they can be a series of tokens. -->
                       VARBINARY |
                       VARCHAR">
 
-<!ELEMENT %p;Column EMPTY>
-<!ATTLIST %p;Column
+<!ELEMENT %Column; EMPTY>
+<!ATTLIST %Column;
           Name CDATA #REQUIRED
           Length NMTOKEN #IMPLIED
           Scale NMTOKEN #IMPLIED
@@ -421,64 +463,68 @@ they can be a series of tokens. -->
           Format NMTOKEN #IMPLIED
           DataType (%JDBCTypes;) #IMPLIED>
 
-<!-- There are three choices of how to get a primary key value:
-     - An element, attribute, or PCDATA are mapped to the primary
-       key column. In this case, the KeyGenerator attribute is omitted.
-     - The database generates the primary key value. In this case,
-       the value of the KeyGenerator attribute is Database.
-     - A KeyGenerator generates the primary key value. In this case,
-       the value of the KeyGenerator attribute is the logical name of
-       the KeyGenerator, which is passed in at run time.
+<!-- There are three choices of how to get a primary or unique key
+     value:
+     - An element, attribute, or PCDATA is mapped to the primary or
+       unique key column(s). In this case, the KeyGenerator attribute
+       is omitted.
+     - The database generates the primary or unique key value. In
+       this case, the value of the KeyGenerator attribute is Database.
+     - A KeyGenerator generates the primary or unique key value. In
+       this case, the value of the KeyGenerator attribute is the
+       logical name of the KeyGenerator. The key generator class
+       itself is passed in at run time.
 -->
 
-<!ELEMENT %p;PrimaryKey (%p;UseColumn+)>
-<!ATTLIST %p;PrimaryKey
+<!ELEMENT %PrimaryKey; (%UseColumn;)+>
+<!ATTLIST %PrimaryKey;
           Name CDATA "PrimaryKey"
           KeyGenerator NMTOKEN #IMPLIED>
 
-<!ELEMENT %p;UniqueKey (%p;UseColumn+)>
-<!ATTLIST %p;UniqueKey
-          Name CDATA #REQUIRED>
+<!ELEMENT %UniqueKey; (%UseColumn;)+>
+<!ATTLIST %UniqueKey;
+          Name CDATA #REQUIRED
+          KeyGenerator NMTOKEN #IMPLIED>
 
-<!ELEMENT %p;ForeignKey (%p;UseTable, %p;UseUniqueKey, %p;UseColumn+)>
-<!ATTLIST %p;ForeignKey
+<!ELEMENT %ForeignKey; (%UseTable;, %UseUniqueKey;, (%UseColumn;)+)>
+<!ATTLIST %ForeignKey;
           Name CDATA #REQUIRED>
 
 <!-- ************************************************************* -->
 <!--                    Database Reference Elements                -->
 <!-- ************************************************************* -->
 
-<!ELEMENT %p;UseTable EMPTY>
-<!ATTLIST %p;UseTable
+<!ELEMENT %UseTable; EMPTY>
+<!ATTLIST %UseTable;
           Database CDATA "Default"
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
           Name CDATA #REQUIRED>
 
-<!ELEMENT %p;UseColumn EMPTY>
-<!ATTLIST %p;UseColumn
+<!ELEMENT %UseColumn; EMPTY>
+<!ATTLIST %UseColumn;
           Name CDATA #REQUIRED>
 
-<!ELEMENT %p;UseUniqueKey EMPTY>
-<!ATTLIST %p;UseUniqueKey
+<!ELEMENT %UseUniqueKey; EMPTY>
+<!ATTLIST %UseUniqueKey;
           Name CDATA "PrimaryKey">
 
-<!ELEMENT %p;UseForeignKey EMPTY>
-<!ATTLIST %p;UseForeignKey
+<!ELEMENT %UseForeignKey; EMPTY>
+<!ATTLIST %UseForeignKey;
           Name CDATA #REQUIRED>
 
 <!-- ************************************************************* -->
 <!--                           Maps                                -->
 <!-- ************************************************************* -->
 
-<!ELEMENT %p;Maps (%p;ClassMap+)>
+<!ELEMENT %Maps; (%ClassMap;)+>
 
 <!-- ****************** Class maps ************************* -->
 
-<!ELEMENT %p;ClassMap (%p;ElementType,
-                       ((%p;Extends?, %p;ToClassTable,
-                        %p;PropertyMap*, %p;InlineMap*, %p;RelatedClass*) |
-                       %p;UseClassMap))>
+<!ELEMENT %ClassMap; (%ElementType;,
+                      (((%Extends;)?, %ToClassTable;,
+                       (%PropertyMap;)*, (%InlineMap;)*, (%RelatedClass;)*) |
+                      %UseClassMap;))>
 
 <!-- 
      The UseClassMap element implements complex types (as found in
@@ -793,8 +839,8 @@ they can be a series of tokens. -->
      condition, but that it does not do so now.
 -->
 
-<!ELEMENT %p;UseClassMap EMPTY>
-<!ATTLIST %p;UseClassMap
+<!ELEMENT %UseClassMap; EMPTY>
+<!ATTLIST %UseClassMap;
           ElementType NMTOKEN #REQUIRED>
 
 <!-- The Extends element implements inheritance. It says that the
@@ -839,16 +885,16 @@ they can be a series of tokens. -->
         (A, B, C) => (A, D, B, C)
 -->
 
-<!ELEMENT %p;Extends (%p;UseBaseTable?)>
-<!ATTLIST %p;Extends
+<!ELEMENT %Extends; (%UseBaseTable;)?>
+<!ATTLIST %Extends;
           ElementType NMTOKEN #REQUIRED>
 
-<!ELEMENT %p;UseBaseTable (%p;UseUniqueKey, %p;UseForeignKey)>
-<!ATTLIST %p;UseBaseTable
+<!ELEMENT %UseBaseTable; (%UseUniqueKey;, %UseForeignKey;)>
+<!ATTLIST %UseBaseTable;
           KeyInBaseTable (Unique | Foreign) #REQUIRED>
 
-<!ELEMENT %p;ToClassTable EMPTY>
-<!ATTLIST %p;ToClassTable
+<!ELEMENT %ToClassTable; EMPTY>
+<!ATTLIST %ToClassTable;
           Database CDATA "Default"
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
@@ -916,11 +962,11 @@ they can be a series of tokens. -->
      the retrieval speed will be faster (the column value is not parsed).
 -->
 
-<!ELEMENT %p;PropertyMap ((%p;ElementType | %p;Attribute | %p;PCDATA),
-                          %p;ToPropertyTable?, %p;ToColumn,
-                          (%p;OrderColumn | %p;FixedOrder)?,
-                          TLOrderColumn?)>
-<!ATTLIST %p;PropertyMap
+<!ELEMENT %PropertyMap; ((%ElementType; | %Attribute; | %PCDATA;),
+                         (%ToPropertyTable;)?, %ToColumn;,
+                         (%OrderColumn; | %FixedOrder;)?,
+                         (%TLOrderColumn;)?)>
+<!ATTLIST %PropertyMap;
           TokenList (Yes | No) "No"
           ContainsXML (Yes | No) "No">
 
@@ -941,23 +987,23 @@ they can be a series of tokens. -->
      can be solved by mapping the child as a class.
 -->
 
-<!ELEMENT %p;ToPropertyTable (%p;UseUniqueKey, %p;UseForeignKey)>
-<!ATTLIST %p;ToPropertyTable
+<!ELEMENT %ToPropertyTable; (%UseUniqueKey;, %UseForeignKey;)>
+<!ATTLIST %ToPropertyTable;
           Database CDATA "Default"
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
           Name CDATA #REQUIRED
           KeyInParentTable (Unique | Foreign) #FIXED "Unique">
 
-<!ELEMENT %p;ToColumn EMPTY>
-<!ATTLIST %p;ToColumn
+<!ELEMENT %ToColumn; EMPTY>
+<!ATTLIST %ToColumn;
           Name CDATA #REQUIRED>
 
 <!-- ****************** Inline ************************* -->
 
-<!ELEMENT %p;InlineMap (%p;ElementType,
-                        (%p;OrderColumn | %p;FixedOrder)?,
-                        %p;PropertyMap*, %p;InlineMap*, %p;RelatedClass*)>
+<!ELEMENT %InlineMap; (%ElementType;,
+                       (%OrderColumn; | %FixedOrder;)?,
+                       (%PropertyMap;)*, (%InlineMap;)*, (%RelatedClass;)*)>
 
 <!-- ****************** Related classes ************************* -->
 
@@ -965,11 +1011,11 @@ they can be a series of tokens. -->
      since UseForeignKey points to a table and a unique key. However,
      we leave UseUniqueKey in the content model for clarity. -->
 
-<!ELEMENT %p;RelatedClass (%p;ElementType,
-                           %p;UseClassMap?,
-                           %p;UseUniqueKey, %p;UseForeignKey,
-                           (%p;OrderColumn | %p;FixedOrder)?)>
-<!ATTLIST %p;RelatedClass
+<!ELEMENT %RelatedClass; (%ElementType;,
+                          (%UseClassMap;)?,
+                          %UseUniqueKey;, %UseForeignKey;,
+                          (%OrderColumn; | %FixedOrder;)?)>
+<!ATTLIST %RelatedClass;
           KeyInParentTable (Unique | Foreign) #REQUIRED>
 
 <!-- ****************** Order ************************* -->
@@ -979,16 +1025,16 @@ they can be a series of tokens. -->
                              %Direction;
                              Generate (Yes | No) "No"'>
 
-<!ELEMENT %p;OrderColumn EMPTY>
-<!ATTLIST %p;OrderColumn
+<!ELEMENT %OrderColumn; EMPTY>
+<!ATTLIST %OrderColumn;
           %OrderColumnAttrs;>
 
-<!ELEMENT %p;TLOrderColumn EMPTY>
-<!ATTLIST %p;TLOrderColumn
+<!ELEMENT %TLOrderColumn; EMPTY>
+<!ATTLIST %TLOrderColumn;
           %OrderColumnAttrs;>
 
-<!ELEMENT %p;FixedOrder EMPTY>
-<!ATTLIST %p;FixedOrder
+<!ELEMENT %FixedOrder; EMPTY>
+<!ATTLIST %FixedOrder;
           Value NMTOKEN #REQUIRED
           %Direction;>
 
@@ -996,12 +1042,12 @@ they can be a series of tokens. -->
 <!--                           XML Elements                        -->
 <!-- ************************************************************* -->
 
-<!ELEMENT %p;ElementType EMPTY>
-<!ATTLIST %p;ElementType
+<!ELEMENT %ElementType; EMPTY>
+<!ATTLIST %ElementType;
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT %p;Attribute EMPTY>
-<!ATTLIST %p;Attribute
+<!ELEMENT %Attribute; EMPTY>
+<!ATTLIST %Attribute;
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT %p;PCDATA EMPTY>
+<!ELEMENT %PCDATA; EMPTY>

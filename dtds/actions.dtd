@@ -39,13 +39,13 @@
               ...
 
      If you do not declare the p and s entities in the internal subset
-     of your map document, then declare the XML-DBMS v2 namespace as
+     of your map document, then declare the actions v2 namespace as
      the default namespace. For example:
 
-        <DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd">
-        <XMLToDBMS Version="2.0"
-                 xmlns:="http://www.xmlmiddleware.org/xmldbms/actions/v2">
-           <Options>
+        <DOCTYPE Actions SYSTEM "actions.dtd">
+        <Actions Version="2.0"
+                 xmlns="http://www.xmlmiddleware.org/xmldbms/actions/v2">
+           <Action>
               ...
 
      If you are using a parser that reads the external subset, such
@@ -65,6 +65,22 @@
 <!ENTITY % p "" >
 <!ENTITY % s "" >
 <!ENTITY % nsdecl "xmlns%s;" >
+<!ENTITY % Actions "%p;Actions">
+<!ENTITY % Options "%p;Options">
+<!ENTITY % Namespace "%p;Namespace">
+<!ENTITY % DefaultAction "%p;DefaultAction">
+<!ENTITY % Action "%p;Action">
+<!ENTITY % None "%p;None">
+<!ENTITY % Insert "%p;Insert">
+<!ENTITY % SoftInsert "%p;SoftInsert">
+<!ENTITY % Update "%p;Update">
+<!ENTITY % UpdateOrInsert "%p;UpdateOrInsert">
+<!ENTITY % Delete "%p;Delete">
+<!ENTITY % SoftDelete "%p;SoftDelete">
+<!ENTITY % All "%p;All">
+<!ENTITY % ElementType "%p;ElementType">
+<!ENTITY % Attribute "%p;Attribute">
+<!ENTITY % PCDATA "%p;PCDATA">
 
 <!-- ************************************************************* -->
 <!--                         Action language                       -->
@@ -73,8 +89,8 @@
 <!-- An action document consists of a set of actions to be applied
      to the values in an XML document. -->
 
-<!ELEMENT %p;Actions (%p;Options?, %p;DefaultAction?, %p;Action*)>
-<!ATTLIST %p;Actions
+<!ELEMENT %Actions; ((%Options;)?, (%DefaultAction;)?, (%Action;)*)>
+<!ATTLIST %Actions;
           Version CDATA #FIXED "2.0"
           %nsdecl; CDATA "http://www.xmlmiddleware.org/xmldbms/actions/v2">
 
@@ -83,9 +99,9 @@
      used in the Name attribute of ElementType and Attribute elements.
  -->
 
-<!ELEMENT %p;Options (%p;Namespace*)>
-<!ELEMENT %p;Namespace EMPTY>
-<!ATTLIST %p;Namespace
+<!ELEMENT %Options; (%Namespace;)*>
+<!ELEMENT %Namespace; EMPTY>
+<!ATTLIST %Namespace;
           Prefix NMTOKEN #REQUIRED
           URI CDATA #REQUIRED>
 
@@ -112,38 +128,38 @@
      specify that rows are to be deleted are used by DBMSDelete.
 -->
 
-<!ENTITY % actions "%p;None |
-                    %p;Insert |
-                    %p;SoftInsert |
-                    %p;Update |
-                    %p;UpdateOrInsert |
-                    %p;Delete |
-                    %p;SoftDelete">
-<!ELEMENT %p;DefaultAction (%actions;)>
-<!ELEMENT %p;Action (%p;ElementType, (%actions;))>
+<!ENTITY % actions "%None; |
+                    %Insert; |
+                    %SoftInsert; |
+                    %Update; |
+                    %UpdateOrInsert; |
+                    %Delete; |
+                    %SoftDelete;">
+<!ELEMENT %DefaultAction; (%actions;)>
+<!ELEMENT %Action; (%ElementType;, (%actions;))>
 
-<!ELEMENT %p;None EMPTY>
-<!ELEMENT %p;Insert EMPTY>
-<!ELEMENT %p;SoftInsert EMPTY>
-<!ELEMENT %p;Update (%p;All |
-                     (%p;PCDATA?, (%p;ElementType | %p;Attribute)*))>
-<!ELEMENT %p;UpdateOrInsert EMPTY>
-<!ELEMENT %p;Delete EMPTY>
-<!ELEMENT %p;SoftDelete EMPTY>
+<!ELEMENT %None; EMPTY>
+<!ELEMENT %Insert; EMPTY>
+<!ELEMENT %SoftInsert; EMPTY>
+<!ELEMENT %Update; (%All; |
+                    ((%PCDATA;)?, (%ElementType; | %Attribute;)*))>
+<!ELEMENT %UpdateOrInsert; EMPTY>
+<!ELEMENT %Delete; EMPTY>
+<!ELEMENT %SoftDelete; EMPTY>
 
 <!-- The All, ElementType, Attribute, and PCDATA elements specify
      which properties (columns) are to be updated. Note that element
      types specified in this context must be mapped as properties.
 -->
 
-<!ELEMENT %p;All EMPTY>
+<!ELEMENT %All; EMPTY>
 
-<!ELEMENT %p;ElementType EMPTY>
-<!ATTLIST %p;ElementType
+<!ELEMENT %ElementType; EMPTY>
+<!ATTLIST %ElementType;
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT %p;Attribute EMPTY>
-<!ATTLIST %p;Attribute
+<!ELEMENT %Attribute; EMPTY>
+<!ATTLIST %Attribute;
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT %p;PCDATA EMPTY>
+<!ELEMENT %PCDATA; EMPTY>
