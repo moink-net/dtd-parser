@@ -7,11 +7,20 @@ import javax.sql.*;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
+import org.sourceforge.jxdbcon.postgresql.PGPreparedStatement;
+
 class PostgresJDBXHandler
     extends DataHandlerBase
 {
     protected final static String OIDNAME = "oid";
 
+    /** 
+     * Creates a PostgresJDBXHandler
+     *
+     * @param dataSource The Datasource to retrive connections from.
+     * @param user Login name for dataSource.
+     * @param password Password for dataSource.
+     */
     PostgresJDBXHandler(DataSource dataSource, String user, String password)
         throws SQLException
     {
@@ -21,6 +30,13 @@ class PostgresJDBXHandler
         m_oidKey = createColumnKey(OIDNAME, Types.INTEGER);
     }
 
+    /**
+     * Inserts a row into the table. Refreshes any key columns needed. Does this
+     * via the oid column. 
+     *
+     * @param table Table to insert into.
+     * @param row Row to insert.
+     */
 	public void insert(Table table, Row row)
         throws SQLException
     {     
@@ -44,7 +60,7 @@ class PostgresJDBXHandler
             selStmt.setInt(1, oid);
 
             // Execute it 
-            ResultSet rs = selStmt.execute();
+            ResultSet rs = selStmt.executeQuery();
 
             // Set them in the row
             for(int i = 0; i < refreshCols.length; i++)
@@ -53,5 +69,6 @@ class PostgresJDBXHandler
         }
     }
 
+    // The key for the 'oid' column
     private Key m_oidKey;
 }

@@ -27,14 +27,14 @@ class ActionAttrParser
     protected static final String ATTR_ACTION_SOFTDELETE    = "SoftDelete";
 
 
-    public static Action getActionFor(Element el)
+    public static Action getAction(Element el)
         throws MapException
     {
         Attr attrAction = el.getAttributeNodeNS(NS_ACTIONS, ATTR_ACTION);
 
         if(attrAction == null)
         {
-            return m_actions.getAction(el.getNamespaceURI(), el.getLocalName());
+            return null;
         }
         else
         {

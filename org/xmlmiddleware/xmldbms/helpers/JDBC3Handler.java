@@ -24,7 +24,8 @@ class JDBC3Handler
 
 	public void insert(Table table, Row row)
         throws SQLException
-    {     
+    {   
+        throws SQLException("[xmldbms] Not Implemented!");
         // TODO!!!
     }
 

@@ -13,27 +13,37 @@ class PostgresHandler
 {
     protected final static String OIDNAME = "oid";
 
+    /** 
+     * Creates a PostgresHandler. 
+     *
+     * @param dataSource The Datasource to retrive connections from.
+     * @param user Login name for dataSource.
+     * @param password Password for dataSource.
+     */
     PostgresHandler(DataSource dataSource, String user, String password)
         throws SQLException
     {
         super(dataSource, user, password);
 
-        // Create the oid column
-        Column[] keyCols = { Column.create(OIDNAME); }
-        keyCol[0].setType(Types.INTEGER);
-
-        // Make a key out of it
-        m_oidKey = Key.createPrimaryKey(null);
-        m_oidKey.setColumns(keyCols);
+        // Create the key
+        m_oidKey = createColumnKey(OIDNAME, Types.INTEGER); 
     }
 
 
+    /**
+     * Inserts a row into the table. Refreshes any key columns needed. Does this
+     * via the oid column. 
+     *
+     * @param table Table to insert into.
+     * @param row Row to insert.
+     */
 	public void insert(Table table, Row row)
         throws SQLException
     {     
-        int rows = doInsert();
+        PreparedStatement stmt = makeInsert(table, row);
+        int numRows = stmt.executeUpdate();
 
-        Column[] refreshCols = getRefreshCols(table);
+        Column[] refreshCols = getRefreshCols(table, row);
 
         if(refreshCols.length > 0)
         {
@@ -49,7 +59,7 @@ class PostgresHandler
             selStmt.setInt(1, oid);
 
             // Execute it 
-            ResultSet rs = selStmt.execute();
+            ResultSet rs = selStmt.executeQuery();
 
             // Set them in the row
             for(int i = 0; i < refreshCols.length; i++)
@@ -59,5 +69,6 @@ class PostgresHandler
 
     }
 
-    private Column m_oidKey;
+    // The key for the 'oid' column
+    private Key m_oidKey;
 }

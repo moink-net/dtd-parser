@@ -173,7 +173,7 @@ public class DOMToDBMS
      
 
 
-        // Call beforeDocument here
+        // Call startDocument here
         Enumeration e = transInfo.dbActions.elements(); 
         while(e.hasMoreElements())
             ((DBAction)e.nextElement()).startDocument(m_commitMode);
@@ -182,7 +182,7 @@ public class DOMToDBMS
         processRoot(docInfo, el, 1);
 
 
-        // Call afterDocument here
+        // Call endDocument here
         Enumeration e = transInfo.dbActions.elements(); 
         while(e.hasMoreElements())
             ((DBAction)e.nextElement()).endDocument();
@@ -295,9 +295,16 @@ public class DOMToDBMS
 	            generateOrder(classRow, relMap.getOrderInfo(), orderInParent);
 
             // Get the action for the node
-            Action action = ActionAttrParser.getActionFor(classNode);
+            Action action = getActionFor(classNode);
             if(action == null)
-                action = parentAction;
+            {
+                // Copy the parent action. This is because
+                // we don't want to move over UpdateProperties
+
+                action = new Action(XMLName.create(classNode.getNamespaceURI(), 
+                                                   classNode.getLocalName()), classMap);
+                action.setAction(parentActon.getAction)
+            }
 
             // Okay work on all the children. Children to be processed later
             // (due to key constraints) are put in the fkChildren stack.
@@ -661,6 +668,13 @@ public class DOMToDBMS
 
 
 
+    public static Action getActionFor(Element el)
+        throws MapException
+    {
+        // TODO: When action: attributes are implemented put code here
+
+        return m_actions.getAction(el.getNamespaceURI(), el.getLocalName());
+    }
 
 
 
