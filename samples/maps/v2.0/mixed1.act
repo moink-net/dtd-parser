@@ -1,0 +1,16 @@
+<Actions Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/actions/v2">
+   <Action>
+      <ElementType Name="BookReview" />
+      <Update>
+         <PCDATA />
+         <ElementType Name="b" />
+      </Update>
+   </Action>
+   <Action>
+      <ElementType Name="a" />
+      <Update>
+         <PCDATA />
+         <Attribute Name="href" />
+      </Update>
+   </Action>
+</Actions>

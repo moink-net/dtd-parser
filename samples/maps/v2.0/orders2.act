@@ -1,0 +1,15 @@
+<Actions Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/actions/v2">
+   <DefaultAction>
+      <None />
+   </DefaultAction>
+   <Action>
+      <ElementType Name="Item" />
+      <Update>
+         <ElementType Name="Quantity" />
+      </Update>
+   </Action>
+   <Action>
+      <ElementType Name="Customer" />
+      <UpdateOrInsert />
+   </Action>
+</Actions>

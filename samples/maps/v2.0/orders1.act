@@ -1,0 +1,13 @@
+<Actions Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/actions/v2">
+   <DefaultAction>
+      <Insert />
+   </DefaultAction>
+   <Action>
+      <ElementType Name="Part" />
+      <UpdateOrInsert />
+   </Action>
+   <Action>
+      <ElementType Name="Customer" />
+      <UpdateOrInsert />
+   </Action>
+</Actions>
