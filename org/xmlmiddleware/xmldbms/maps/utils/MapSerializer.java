@@ -1155,31 +1155,23 @@ public class MapSerializer extends XMLWriter
    }
 
    private String getQualifiedName(XMLName xmlName)
-      throws MapException
    {
       // Constructs a qualified name from an xmlName, using the prefixes
       // passed to the MapSerializer, if any.
 
-      try
+      if (prefixes != null)
       {
-         if (prefixes != null)
-         {
-            // If the calling application set prefixes explicitly, use them. Throws
-            // an exception if no prefix is found for the URI in the universal name.
+         // If the calling application set prefixes explicitly, use them. Throws
+         // an exception if no prefix is found for the URI in the universal name.
 
-            return XMLName.getQualifiedName(xmlName.getUniversalName(), prefixes);
-         }
-         else
-         {
-            // If the calling application did not set prefixes, use the prefixes
-            // in the map. Throws an exception if prefixes are needed but not set.
-
-            return xmlName.getQualifiedName();
-         }
+         return XMLName.getQualifiedName(xmlName.getUniversalName(), prefixes);
       }
-      catch (Exception e)
+      else
       {
-         throw new MapException(e.getMessage());
+         // If the calling application did not set prefixes, use the prefixes
+         // in the map. Throws an exception if prefixes are needed but not set.
+
+         return xmlName.getQualifiedName();
       }
    }
 
