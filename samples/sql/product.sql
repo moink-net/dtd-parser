@@ -1,0 +1,8 @@
+CREATE TABLE `Item` (`ItemOrder` INTEGER, `ItemPK` INTEGER, `ListFK` INTEGER)
+CREATE TABLE `Link` (`LinkOrder` INTEGER, `URL` VARCHAR(255), `LinkPCDATAOrder` INTEGER, `ParaFK` INTEGER, `LinkPCDATA` VARCHAR(255), `ItemFK` INTEGER)
+CREATE TABLE `List` (`DescriptionFK` INTEGER, `ListOrder` INTEGER, `ListPK` INTEGER)
+CREATE TABLE `Product` (`ProductPK` INTEGER, `Name` VARCHAR(255), `ProductOrder` INTEGER, `DeveloperOrder` INTEGER, `Developer` VARCHAR(255), `NameOrder` INTEGER, `SummaryOrder` INTEGER, `Summary` VARCHAR(255))
+CREATE TABLE `Para` (`ParaPK` INTEGER, `DescriptionFK` INTEGER, `ParaOrder` INTEGER)
+CREATE TABLE `Description` (`ProductFK` INTEGER, `DescriptionOrder` INTEGER, `DescriptionPK` INTEGER)
+CREATE TABLE `ItemPCDATA` (`ItemPCDATA` VARCHAR(255), `ItemFK` INTEGER, `ItemPCDATAOrder` INTEGER)
+CREATE TABLE `ParaPCDATA` (`ParaFK` INTEGER, `ParaPCDATA` VARCHAR(255), `ParaPCDATAOrder` INTEGER)

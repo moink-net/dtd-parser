@@ -1,0 +1,14 @@
+<!ELEMENT Product (Name, Developer?, Summary?, Description?)>
+<!ELEMENT Name (#PCDATA)>
+<!ELEMENT Developer (#PCDATA)>
+<!ELEMENT Summary (#PCDATA)>
+<!ELEMENT Description (Para | List)+>
+<!ELEMENT Para (#PCDATA | Link)*>
+<!ELEMENT List (Item+)>
+<!ELEMENT Item (#PCDATA | Link)*>
+<!ELEMENT Link (#PCDATA)>
+<!ATTLIST Link 
+          URL CDATA #REQUIRED>
+
+
+

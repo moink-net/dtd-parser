@@ -1,0 +1,29 @@
+<!DOCTYPE Product SYSTEM "file:///c:/java/xmldbms101/samples/product.dtd">
+
+<Product>
+
+<Name>XML-DBMS</Name>
+
+<Developer>Ronald Bourret, Technical University of Darmstadt</Developer>
+
+<Summary>Java packages for transferring data between
+XML documents and relational databases</Summary>
+
+<Description>
+
+<Para>XML-DBMS is a set of Java packages for transferring data between XML documents and relational databases. It views the XML document as a tree of objects in which element types are generally viewed as classes and attributes and PCDATA as properties of those classes. It then uses an object-relational mapping to map these objects to the database. An XML-based mapping language is used to define the view and map it to the database.</Para>
+
+<Para>You can:</Para>
+
+<List>
+<Item><Link URL="readme.html">Read more about XML-DBMS</Link></Item>
+<Item><Link URL="XMLAndDatabases.htm">Read more about databases and XML</Link></Item>
+<Item><Link URL="xmldbms.dtd">View the mapping language DTD</Link></Item>
+<Item><Link URL="xmldbms.zip">Download XML-DBMS</Link></Item>
+</List>
+
+<Para>XML-DBMS, along with its source code, is freely available for use in both commercial and non-commercial settings.</Para>
+
+</Description>
+
+</Product>

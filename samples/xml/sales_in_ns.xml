@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<Orders xmlns="http://www.bar.org">
+   <SalesOrder SONumber="123">
+      <Customer CustNumber = "543">
+         <CustName>ABC Industries</CustName>
+         <Street>123 Main St.</Street>
+         <City>Chicago</City>
+         <State>IL</State>
+         <PostCode>60609</PostCode>
+      </Customer>
+      <OrderDate>02.01.99</OrderDate>
+      <Line LineNumber="1">
+         <Part PartNumber="123">
+            <Description>
+               <P><B>Turkey wrench</B><BR />
+               Stainless steel, one-piece construction,
+               lifetime guarantee.</P>
+            </Description>
+            <Price>9.95</Price>
+         </Part>
+         <Quantity>10</Quantity>
+      </Line>
+      <Line LineNumber="2">
+         <Part PartNumber="ab-c">
+            <Description>
+               <P><B>Stuffing separator</B><BR />
+               Aluminum, one-year guarantee.</P>
+            </Description>
+            <Price>13.27</Price>
+         </Part>
+         <Quantity>5</Quantity>
+      </Line>
+   </SalesOrder>
+</Orders>
