@@ -28,8 +28,17 @@ import java.sql.*;
  * except getImportedKeys, getExportedKeys and getPrimaryKeys. These methods are
  * implemented directly on top of the Microsoft Access system tables.</p>
  *
- * <p>Note that catalog and schema names are not supported and wild card
- * characters in table names are treated as literals.</p> 
+ * <p>Notes:</p>
+ *
+ * <ul>
+ * <li><p>Before the getPrimaryKeys method can be used, the user must create a
+ * table named USysPrimaryKeys and store data about all primary keys in
+ * the database. This table is required by MapFactory_Database. For more details,
+ * see getPrimaryKeys.</p></li>
+ *
+ * <li><p>Schema names are ignored.</p></li>
+ *
+ * </ul>
  *
  * @author Ronald Bourret
  * @version 2.0
@@ -43,15 +52,17 @@ public class MSAccessDBMetaData implements DatabaseMetaData
 
    private Connection conn;
    private DatabaseMetaData meta;
+   private String catalog;
 
    //**************************************************************************
    // Constructors
    //**************************************************************************
 
-   MSAccessDBMetaData(Connection conn, DatabaseMetaData meta)
+   MSAccessDBMetaData(Connection conn, DatabaseMetaData meta, String catalog)
    {
       this.conn = conn;
       this.meta = meta;
+      this.catalog = catalog;
    }
 
    //**************************************************************************
@@ -386,33 +397,54 @@ public class MSAccessDBMetaData implements DatabaseMetaData
    /**
     * Implements DatabaseMetaData.getPrimaryKeys
     *
-    * <p>This method requires there to be a table named USysPrimaryKeys with three
-    * columns -- TABLE_NAME, COLUMN_NAME, and KEY_SEQ -- which contains primary key
-    * information for all tables. KEY_SEQ is 1-based.</p>
+    * <p>This method is called by MapFactory_Database, so users of that class must
+    * create the table described below before generating a map from a Microsoft
+    * Access database.</p>
     *
-    * @param catalog Must be null or empty.
-    * @param schema Must be null or empty.
-    * @param table The table.
+    * <p>For unknown reasons, Microsoft Access does not have a system table
+    * describing primary keys. Therefore, before calling this method, the user
+    * must create a primary key table and store data in it about the primary keys
+    * in the database.</p>
+    *
+    * <p>The primary key table is named USysPrimaryKeys and has the following columns:
+    * TABLE_CAT, TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, KEY_SEQ, and PK_NAME. TABLE_CAT
+    * is the full path of the Microsoft Access file without the file extension; for
+    * example, c:\mydatabases\sales. TABLE_SCHEM is always null. KEY_SEQ is 1-based
+    * and gives the position of the column in the key. PK_NAME is the name of the
+    * primary key. For more information, see java.sql.DatabaseMetaData.getPrimaryKeys().</p>
+    *
+    * @param catalog The full path of the Microsoft Access file without the file extension.
+    * @param schema Not supported by USysPrimaryKeys. Must be null.
+    * @param table Table name.
     * @return See the JDBC spec.
     */
    public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException
    {
+      String    str;
       Statement stmt;
 
-      if (catalog != null)
-         if (catalog.length() > 0) throw new IllegalArgumentException("Catalog arguments not supported.");
       if (schema != null)
-         if (schema.length() > 0) throw new IllegalArgumentException("Schema arguments not supported.");
+         if (schema.length() != 0)
+            throw new SQLException("[XML-DBMS Microsoft Access Driver] Schemas not supported.");
+
+      // Build the SELECT statement.
+
+      str = "SELECT NULL AS TABLE_CAT, NULL AS TABLE_SCHEM, TABLE_NAME, " +
+                    "COLUMN_NAME, KEY_SEQ, PK_NAME " +
+            "FROM USysPrimaryKeys WHERE TABLE_NAME = '" + table + "'";
+
+      if (catalog != null)
+      {
+         if (catalog.length() != 0)
+         {
+            str = str + " AND TABLE_CAT = '" + catalog + "'";
+         }
+      }
+
+      // Execute it.
 
       stmt = conn.createStatement();
-      return stmt.executeQuery("SELECT NULL AS TABLE_CAT, " +
-                               "NULL AS TABLE_SCHEM, " +
-                               "TABLE_NAME, " +
-                               "COLUMN_NAME, " +
-                               "KEY_SEQ, " +
-                               "NULL AS PK_NAME " +
-                               "FROM USysPrimaryKeys " +
-                               "WHERE TABLE_NAME = '" + table + "'");
+      return stmt.executeQuery(str);
    }
 
    public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable) throws SQLException
@@ -429,82 +461,106 @@ public class MSAccessDBMetaData implements DatabaseMetaData
     * Implements DatabaseMetaData.getImportedKeys
     *
     * <p>This method uses the MSysRelationships system table. It returns NULL for
-    * catalog and schema names, as well as primary key names. It always returns
+    * schema names, as well as primary key names. It always returns
     * importedKeyNoAction for UPDATE_RULE, importedKeyNoAction for DELETE_RULE, and
     * importedKeyNotDeferrable for DEFERRABILITY. These columns are therefore useless.</p>
     *
-    * @param catalog Must be null or empty.
-    * @param schema Must be null or empty.
-    * @param table The table.
+    * @param catalog The full path of the Microsoft Access file without the file extension.
+    * @param schema Not supported by USysPrimaryKeys. Must be null.
+    * @param table Table name.
     * @return See the JDBC spec.
     */
    public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException
    {
+      boolean   haveCatalog;
+      String    str;
       Statement stmt;
 
-      if (catalog != null)
-         if (catalog.length() > 0) throw new IllegalArgumentException("Catalog arguments not supported.");
+      haveCatalog = (catalog == null) ? false : (catalog.length() > 0);
+
+      if (haveCatalog)
+         if (!catalog.equals(this.catalog))
+            throw new SQLException("[XML-DBMS Microsoft Access Driver] Catalog name passed to getImportedKeys (" + catalog + ") does not match catalog name specified in URL (" + this.catalog + ").");
+
       if (schema != null)
-         if (schema.length() > 0) throw new IllegalArgumentException("Schema arguments not supported.");
+         if (schema.length() != 0)
+            throw new SQLException("[XML-DBMS Microsoft Access Driver] Schemas not supported.");
+
+      str = "SELECT ";
+      str = (haveCatalog) ? str + "'" + catalog + "'" : str + "NULL ";
+      str = str + " AS PKTABLE_CAT, " +
+                  "NULL AS PKTABLE_SCHEM, " +
+                  "szReferencedObject AS PKTABLE_NAME, " +
+                  "szReferencedColumn AS PKCOLUMN_NAME, ";
+      str = (haveCatalog) ? str + "'" + catalog + "'" : str + "NULL ";
+      str = str + " AS FKTABLE_CAT, " +
+                  "NULL AS FKTABLE_SCHEM, " +
+                  "szObject AS FKTABLE_NAME, " +
+                  "szColumn AS FKCOLUMN_NAME, " +
+                  "icolumn + 1 AS KEY_SEQ, " +
+                  DatabaseMetaData.importedKeyNoAction + " AS UPDATE_RULE, " +
+                  DatabaseMetaData.importedKeyNoAction + " AS DELETE_RULE, " +
+                  "szRelationship AS FK_NAME, " +
+                  "NULL AS PK_NAME, " +
+                  DatabaseMetaData.importedKeyNotDeferrable + " AS DEFERRABILITY " +
+                  "FROM MSysRelationships " +
+                  "WHERE szObject = '" + table + "'";
 
       stmt = conn.createStatement();
-      return stmt.executeQuery("SELECT NULL AS PKTABLE_CAT, " +
-                               "NULL AS PKTABLE_SCHEM, " +
-                               "szReferencedObject AS PKTABLE_NAME, " +
-                               "szReferencedColumn AS PKCOLUMN_NAME, " +
-                               "NULL AS FKTABLE_CAT, " +
-                               "NULL AS FKTABLE_SCHEM, " +
-                               "szObject AS FKTABLE_NAME, " +
-                               "szColumn AS FKCOLUMN_NAME, " +
-                               "icolumn + 1 AS KEY_SEQ, " +
-                               DatabaseMetaData.importedKeyNoAction + " AS UPDATE_RULE, " +
-                               DatabaseMetaData.importedKeyNoAction + " AS DELETE_RULE, " +
-                               "szRelationship AS FK_NAME, " +
-                               "NULL AS PK_NAME, " +
-                               DatabaseMetaData.importedKeyNotDeferrable + " AS DEFERRABILITY " +
-                               "FROM MSysRelationships " +
-                               "WHERE szObject = '" + table + "'");
+      return stmt.executeQuery(str);
    }
 
    /**
     * Implements DatabaseMetaData.getExportedKeys
     *
     * <p>This method uses the MSysRelationships system table. It returns NULL for
-    * catalog and schema names, as well as primary key names. It always returns
+    * schema names, as well as primary key names. It always returns
     * importedKeyNoAction for UPDATE_RULE, importedKeyNoAction for DELETE_RULE, and
     * importedKeyNotDeferrable for DEFERRABILITY. These columns are therefore useless.</p>
     *
-    * @param catalog Must be null or empty.
-    * @param schema Must be null or empty.
-    * @param table The table.
+    * @param catalog The full path of the Microsoft Access file without the file extension.
+    * @param schema Not supported by USysPrimaryKeys. Must be null.
+    * @param table Table name
     * @return See the JDBC spec.
     */
    public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException
    {
+      boolean   haveCatalog;
+      String    str;
       Statement stmt;
 
-      if (catalog != null)
-         if (catalog.length() > 0) throw new IllegalArgumentException("Catalog arguments not supported.");
+      haveCatalog = (catalog == null) ? false : (catalog.length() > 0);
+
+      if (haveCatalog)
+         if (!catalog.equals(this.catalog))
+            throw new SQLException("[XML-DBMS Microsoft Access Driver] Catalog name passed to getExportedKeys (" + catalog + ") does not match catalog name specified in URL (" + this.catalog + ").");
+
       if (schema != null)
-         if (schema.length() > 0) throw new IllegalArgumentException("Schema arguments not supported.");
+         if (schema.length() != 0)
+            throw new SQLException("[XML-DBMS Microsoft Access Driver] Schemas not supported.");
+
+      str = "SELECT ";
+      str = (haveCatalog) ? str + "'" + catalog + "'" : str + "NULL ";
+      str = str + " AS PKTABLE_CAT, " +
+                  "NULL AS PKTABLE_SCHEM, " +
+                  "szReferencedObject AS PKTABLE_NAME, " +
+                  "szReferencedColumn AS PKCOLUMN_NAME, ";
+      str = (haveCatalog) ? str + "'" + catalog + "'" : str + "NULL ";
+      str = str + " AS FKTABLE_CAT, " +
+                  "NULL AS FKTABLE_SCHEM, " +
+                  "szObject AS FKTABLE_NAME, " +
+                  "szColumn AS FKCOLUMN_NAME, " +
+                  "icolumn + 1 AS KEY_SEQ, " +
+                  DatabaseMetaData.importedKeyNoAction + " AS UPDATE_RULE, " +
+                  DatabaseMetaData.importedKeyNoAction + " AS DELETE_RULE, " +
+                  "szRelationship AS FK_NAME, " +
+                  "NULL AS PK_NAME, " +
+                  DatabaseMetaData.importedKeyNotDeferrable + " AS DEFERRABILITY " +
+                  "FROM MSysRelationships " +
+                  "WHERE szReferencedObject = '" + table + "'";
 
       stmt = conn.createStatement();
-      return stmt.executeQuery("SELECT NULL AS PKTABLE_CAT, " +
-                               "NULL AS PKTABLE_SCHEM, " +
-                               "szReferencedObject AS PKTABLE_NAME, " +
-                               "szReferencedColumn AS PKCOLUMN_NAME, " +
-                               "NULL AS FKTABLE_CAT, " +
-                               "NULL AS FKTABLE_SCHEM, " +
-                               "szObject AS FKTABLE_NAME, " +
-                               "szColumn AS FKCOLUMN_NAME, " +
-                               "icolumn + 1 AS KEY_SEQ, " +
-                               DatabaseMetaData.importedKeyNoAction + " AS UPDATE_RULE, " +
-                               DatabaseMetaData.importedKeyNoAction + " AS DELETE_RULE, " +
-                               "szRelationship AS FK_NAME, " +
-                               "NULL AS PK_NAME, " +
-                               DatabaseMetaData.importedKeyNotDeferrable + " AS DEFERRABILITY " +
-                               "FROM MSysRelationships " +
-                               "WHERE szReferencedObject = '" + table + "'");
+      return stmt.executeQuery(str);
    }
 
    public ResultSet getCrossReference(String primaryCatalog, String primarySchema, String primaryTable, String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException

@@ -32,21 +32,31 @@ import java.util.*;
  * results in a "driver not capable" error. This driver implements the missing
  * functionality directly on top of the Microsoft Access system tables.</p>
  *
+ * <p>The driver requires you to create a system table (USysPrimaryKeys) and enter
+ * information about your primary keys. For more information, see the MSAccessDBMetaData
+ * class.</p>
+ *
  * <p>This driver uses a URL of the form:</p>
  *
  * <pre>
- *   jdbc:xmlmiddleware-access:&lt;bridge-URL>
+ *   jdbc:xmlmiddleware-access:&lt;catalog>;&lt;bridge-URL>
  * </pre>
  *
- * <p>where &lt;bridge-URL> is the connection string used by the JDBC-ODBC Bridge. For
- * example, to use this driver with the ODBC data source named sales, you would
- * use the following URL:</p>
+ * <p>where:</p>
+ *
+ * <ul>
+ * <li>&lt;catalog> is the catalog name. This is the full path of the Microsoft
+ *    Access file without the file extension.</li>
+ * <li>&lt;bridge-URL> is the connection string used by the JDBC-ODBC Bridge.</li>
+ * </ul>
+ * <p>For example, to use this driver with the file c:\databases\sales.mdb and the
+ * ODBC data source named sales, you would use the following URL:</p>
  *
  * <pre>
- *   jdbc:xmlmiddleware-access:jdbc:odbc:sales
+ *   jdbc:xmlmiddleware-access:c:\databases\sales\;jdbc:odbc:sales
  * </pre>
  *
- * <p>since the URL for the JDBC-ODBC bridge in this case is jdbc:odbc:sales.</p>
+ * <p>Note that the URL for the JDBC-ODBC bridge in this case is jdbc:odbc:sales.</p>
  *
  * <p>This driver has been tested with Microsoft Access 97.</p>
  *
@@ -56,6 +66,12 @@ import java.util.*;
 
 public class MSAccessDriver implements Driver
 {
+   //**************************************************************************
+   // Constants
+   //**************************************************************************
+
+   private static String URLSTART = "jdbc:xmlmiddleware-access:";
+
    //**************************************************************************
    // Static section
    //**************************************************************************
@@ -67,10 +83,12 @@ public class MSAccessDriver implements Driver
 
       try
       {
-         Driver d1 = new MSAccessDriver();
-         DriverManager.registerDriver(d1);
+         Driver driver = new MSAccessDriver();
+         DriverManager.registerDriver(driver);
       }
-      catch (Exception e){}
+      catch (Exception e)
+      {
+      }
    }
 
    //**************************************************************************
@@ -91,36 +109,46 @@ public class MSAccessDriver implements Driver
    /**
     * Connect to the database.
     *
-    * @param url Must be of the form jdbc:xmlmiddleware-access:&lt;bridge-URL>
+    * @param url Must be of the form jdbc:xmlmiddleware-access:&lt;catalog>;&lt;bridge-URL>
     * @param info Ignored.
     * @return The Connection.
     */
    public Connection connect(String url, Properties info) throws SQLException
    {
-      // Remove the "jdbc:xmlmiddleware-access:" prefix.
+      String     realURL, catalog;
+      int        semicolon;
+      Driver     bridge;
+      Connection conn;
 
-      String realURL = url.substring(26);
+      // Remove the "jdbc:xmlmiddleware-access:" prefix and get the catalog name and real URL.
+
+      realURL = url.substring(URLSTART.length());
+      semicolon = realURL.indexOf(';');
+      if (semicolon == -1)
+         throw new SQLException("XML-DBMS Microsoft Access Driver] Invalid URL. Must be of the form jdbc:xmlmiddleware-access:<catalog>;<bridge-URL>.");
+      catalog = realURL.substring(0, semicolon);
+      realURL = realURL.substring(semicolon + 1);
 
       // Instantiate the bridge driver and get a connection.
 
-      Driver bridge = new sun.jdbc.odbc.JdbcOdbcDriver();
-      Connection conn = bridge.connect(realURL, info);
+      bridge = new sun.jdbc.odbc.JdbcOdbcDriver();
+      conn = bridge.connect(realURL, info);
 
       // Return a connection that encapsulates the bridge driver's connection
 
-      return new MSAccessConnection(conn);
+      return new MSAccessConnection(conn, catalog);
    }
 
    /**
     * Whether the driver accepts a URL.
     *
     * @param url The URL
-    * @return True if the URL is of the form jdbc:xmlmiddleware-access:&lt;bridge-URL>.
+    * @return True if the URL is of the form jdbc:xmlmiddleware-access:.
     *    Otherwise false.
     */
    public boolean acceptsURL(String url) throws SQLException
    {
-      return url.startsWith("jdbc:xmlmiddleware-access:jdbc:odbc:");
+      return url.startsWith(URLSTART);
    }
 
    public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException

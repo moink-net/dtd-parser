@@ -36,6 +36,7 @@ public class MSAccessConnection implements Connection
    //**************************************************************************
 
    Connection conn = null;
+   String     catalog = null;
 
    //**************************************************************************
    // Constructors
@@ -45,11 +46,14 @@ public class MSAccessConnection implements Connection
     * Create a new MSAccessConnection.
     *
     * @param conn A JDBC-ODBC Bridge Connection object.
+    * @param catalog The catalog name. This is the full path of the Microsoft
+    *    Access file, without the file extension.
     * @return The MSAccessConnection.
     */
-   public MSAccessConnection(Connection conn)
+   MSAccessConnection(Connection conn, String catalog)
    {
       this.conn = conn;
+      this.catalog = catalog;
    }
 
    public void finalize() throws Throwable
@@ -82,7 +86,7 @@ public class MSAccessConnection implements Connection
    public DatabaseMetaData getMetaData() throws SQLException
    {
       DatabaseMetaData meta = conn.getMetaData();
-      return new MSAccessDBMetaData(conn, meta);
+      return new MSAccessDBMetaData(conn, meta, catalog);
    }
 
    public boolean getAutoCommit() throws SQLException
