@@ -22,7 +22,7 @@
 // * All conversion code moved to conversions package
 // * Added new methods and arguments
 
-package org.xmlmiddleware.xmldbms;
+package org.xmlmiddleware.xmldbms.helpers;
 
 import org.xmlmiddleware.conversions.ByteArray;
 import org.xmlmiddleware.conversions.ConversionException;

@@ -99,7 +99,7 @@ public class DMLGenerator
       // Create the INSERT statement.
       
       insert.append(INSERT);
-      appendTableName(insert, t);
+      insert.append(makeTableName(t));
 
       insert.append(OPENPAREN);
 
@@ -205,7 +205,7 @@ public class DMLGenerator
       update.append(UPDATE);
 
       // Add table name.
-      appendTableName(update, t);
+      update.append(makeTableName(t));
 
       update.append(SET);
       
@@ -257,7 +257,7 @@ public class DMLGenerator
       delete.append(FROM);
 
       // Add table name.
-      appendTableName(delete, t);
+      delete.append(makeTableName(t));
 
       delete.append(makeWhereLink(key.getColumns()));
       
@@ -286,7 +286,7 @@ public class DMLGenerator
       // Add table name.
       
       select.append(FROM);
-      appendTableName(select, t);
+      select.append(makeTableName(t));
       
       if(whereLink != null)
          select.append(whereLink);
@@ -345,9 +345,10 @@ public class DMLGenerator
         return str;
    }
 
-   private void appendTableName(StringBuffer sb, Table table)
+   String makeTableName(Table table)
    {
       String catalog = null, schema;
+      String s = new String();
 
       // 6/9/00, Ruben Lainez, Ronald Bourret
       // Use the identifier m_quote character for the table name.
@@ -357,8 +358,8 @@ public class DMLGenerator
          catalog = table.getCatalogName();
          if((catalog != null) && (m_isCatalogAtStart))
          {
-            sb.append(makeQuotedName(catalog));
-            sb.append(m_catalogSeparator);
+            s.concat(makeQuotedName(catalog));
+            s.concat(m_catalogSeparator);
          }
       }
  
@@ -367,23 +368,26 @@ public class DMLGenerator
          schema = table.getSchemaName();
          if(schema != null)
          {
-            sb.append(makeQuotedName(schema));
-            sb.append(PERIOD);
+            s.concat(makeQuotedName(schema));
+            s.concat(PERIOD);
          }
       }
  
-      sb.append(makeQuotedName(table.getTableName()));
+      s.concat(makeQuotedName(table.getTableName()));
  
       if(m_useCatalog)
       {
          if((catalog != null) && (!m_isCatalogAtStart))
          {
-            sb.append(m_catalogSeparator);
-            sb.append(makeQuotedName(catalog));
+            s.concat(m_catalogSeparator);
+            s.concat(makeQuotedName(catalog));
          }
       }
+
+      return s;
    }
- 
+
+
    private String makeQuotedName(String name)
    {
       return m_quote + name + m_quote;

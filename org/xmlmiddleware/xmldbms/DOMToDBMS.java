@@ -1,5 +1,20 @@
+// This software is in the public domain.
+//
+// The software is provided "as is", without warranty of any kind,
+// express or implied, including but not limited to the warranties
+// of merchantability, fitness for a particular purpose, and
+// noninfringement. In no event shall the author(s) be liable for any
+// claim, damages, or other liability, whether in an action of
+// contract, tort, or otherwise, arising from, out of, or in connection
+// with the software or the use or other dealings in the software.
+//
+// Parts of this software were originally developed in the Database
+// and Distributed Systems Group at the Technical University of
+// Darmstadt, Germany:
+//
+//    http://www.informatik.tu-darmstadt.de/DVS1/
 
-// Author: Sean Walter
+// Version 2.0
 
 package org.xmlmiddleware.xmldbms;
 
@@ -8,6 +23,7 @@ import java.io.*;
 import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Stack;
+import java.util.Vector;
 import java.util.StringTokenizer;
 import java.sql.*;
 import javax.sql.*;
@@ -16,20 +32,45 @@ import org.w3c.dom.*;
 
 import org.xmlmiddleware.xmldbms.maps.*;
 import org.xmlmiddleware.domutils.*;
+import org.xmlmiddleware.utils.*;
+import org.xmlmiddleware.conversions.*;
+
+/**
+ * Transfers data from the database to a DOM tree.
+ *
+ * <P>DOMToDBMS transfers data to the database from a DOM tree according
+ * to a particular Map. The caller must provide a TransferInfo object
+ * (which contains the map and database handlers specific to certain 
+ * databases), a DOM Element or Document, and one or more actions to be
+ * taken when storing this data in the database.</P>
+ *
+ * <P>For example, the following code transfers data from a DOM tree to 
+ * the a generic database, using the specified map:</P>
+ *
+ * TODO: Make an example.
+ *
+ * TODO: Any more docs here
+ * 
+ * @author Sean Walter
+ * @version 2.0
+ */
 
 public class DOMToDBMS
 {
-    // The transfer info used for a session of storeDocument
-    // TODO: We may have to remove this and make this entire thing
-    // reentrant
+    // ************************************************************************
+    // Private variables
+    // ************************************************************************
+
+    // The transfer info used for a session of processDocument
     private TransferInfo m_transInfo;
 
-    // The commit mode
+    // The commit mode (see processRoot)
     private int m_commitMode;
 
-    // Stop on Database errors
+    // Stop on Database errors (see processClassRow)
     private boolean m_stopDBError;
-    
+
+    // Stored Exceptions and Warnings (see getExceptions and getWarnings)
     private SQLWarning m_sqlWarnings;
     private SQLException m_sqlExceptions;
 
@@ -39,26 +80,34 @@ public class DOMToDBMS
     // Hash table of key generators
     private Hashtable m_keyGenerators;
 
+    // Cached objects. These are here for efficiency (see getAllPropertyMaps)
+    private Hashtable m_classAllProperties;
 
-
+    // ************************************************************************
+    // Constructors
+    // ************************************************************************
 
     /**
      * Create a DOMToDBMS object. 
-     * Defaults:
-     * Commit mode: COMMIT_AFTERINSERT.
-     * Stop on DB Errors: true.
      */
     public DOMToDBMS()
     {
         m_keyGenerators = new Hashtable();
-        m_commitMode = COMMIT_AFTERINSERT;
+        m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
         m_stopDBError = true;
+
+        m_classAllProperties = new Hashtable();
     }
 
 
 
+    // ************************************************************************
+    // Public methods
+    // ************************************************************************
+
     /** 
      * Set the commit mode.
+     *
      * @param commitMode The mode.
      */
     public void setCommitMode(int commitMode)
@@ -68,6 +117,7 @@ public class DOMToDBMS
 
     /** 
      * Get the commit mode.
+     *
      * @return The mode.
      */
     public int getCommitMode()
@@ -79,6 +129,7 @@ public class DOMToDBMS
 
     /**
      * Associate a KeyGenerator with a name for later use.
+     *
      * @param name The name of the KeyGenenerator.
      * @param generator The KeyGenerator.
      */
@@ -89,6 +140,7 @@ public class DOMToDBMS
 
     /**
      * Remove a previously associated KeyGenerator.
+     *
      * @param name The name of the KeyGenenerator.
      */
     public void removeKeyGenerator(String name)
@@ -98,6 +150,7 @@ public class DOMToDBMS
 
     /**
      * Clear all key generators.
+     *
      * @param name The name of the KeyGenenerator.
      */
     public void removeAllKeyGenerators()
@@ -106,18 +159,19 @@ public class DOMToDBMS
     }
 
 
-
     /** 
      * Defines how SQLExceptions are handled. If set to false
      * then these are stored in a list (retrieved by getExceptions)
-     * and processing of the document continues.
-     *
+     * and processing of the document continues at the next class.
      * When set to true then processing stops at first exception.
+     *
+     * @param stopOnError Stop or not.
      */
     public void setDBErrorHandling(boolean stopOnError)
     {
         m_stopDBError = stopOnError;
     }
+
 
     /**
      * Returns a chain of all SQLWarnings issued during process
@@ -138,28 +192,59 @@ public class DOMToDBMS
         return m_sqlExceptions;
     }
 
-
+    /**
+     * Store DOM tree in the database. Processing will begin at nodes mapped to classes
+     * in the map.
+     *
+     * @param transInfo TransferInfo object containing map and DataHandler's.
+     * @param doc The DOM document to process.
+     * @param action Action to take on the document.
+     */
     public DocumentInfo processDocument(TransferInfo transInfo, Document doc, int action)
         throws SQLException, MapException, KeyException
     {
         return processDocument(transInfo, doc.getDocumentElement(), action);
     }
 
-    processDocument(TransferInfo transInfo, Document doc, Actions actions)
+    /**
+     * Store DOM tree in the database. Processing will begin at nodes mapped to classes
+     * in the map.
+     *
+     * @param transInfo TransferInfo object containing map and DataHandler's.
+     * @param doc The DOM document to process.
+     * @param action Actions to take on various elements of the document.
+     */
+    public DocumentInfo processDocument(TransferInfo transInfo, Document doc, Actions actions)
         throws SQLException, MapException, KeyException
     {
         return processDocument(transInfo, doc.getDocumentElement(), actions);
     }
 
+    /**
+     * Store DOM tree in the database. Processing will begin at nodes mapped to classes
+     * in the map.
+     *
+     * @param transInfo TransferInfo object containing map and DataHandler's.
+     * @param el Root of DOM tree to process.
+     * @param action Action to take on the tree.
+     */
     public DocumentInfo processDocument(TransferInfo transInfo, Element el, int action)
         throws SQLException, MapException, KeyException
     {
-        Actions actions = new Actions();
-        actions.setDefault(action);
+        Actions actions = new Actions(transInfo.map);
+        actions.setDefault(action); // TODO: Need this method
 
         return processDocument(transInfo, el, actions);
     }
 
+    /**
+     * Store DOM tree in the database. Processing will begin at nodes mapped to classes
+     * in the map.
+     *
+     * @param transInfo TransferInfo object containing map and DataHandler's.
+     * @param el Root of DOM tree to process.
+     * @param action Actions to take on various elements of the tree.
+     */
     public DocumentInfo processDocument(TransferInfo transInfo, Element el, Actions actions)
         throws SQLException, MapException, KeyException
     {
@@ -174,18 +259,18 @@ public class DOMToDBMS
 
 
         // Call startDocument here
-        Enumeration e = transInfo.dbActions.elements(); 
+        Enumeration e = transInfo.dataHandlers.elements(); 
         while(e.hasMoreElements())
-            ((DBAction)e.nextElement()).startDocument(m_commitMode);
+            ((DataHandler)e.nextElement()).startDocument(m_commitMode);
 
         
         processRoot(docInfo, el, 1);
 
 
         // Call endDocument here
-        Enumeration e = transInfo.dbActions.elements(); 
+        e = transInfo.dataHandlers.elements(); 
         while(e.hasMoreElements())
-            ((DBAction)e.nextElement()).endDocument();
+            ((DataHandler)e.nextElement()).endDocument();
    
 
         // TODO: Do we have to do this?
@@ -196,18 +281,23 @@ public class DOMToDBMS
 
 
 
+    // ************************************************************************
+    // Main Processing Methods
+    // ************************************************************************
+
     /**
      * Processes the nodes from the root of the DOM Document that are not mapped.
      * The tree is searched until a node is found that is mapped.
      *
+     * @param docInfo DocumentInfo to add root elements to.
      * @param el The node to recusively process.
+     * @param orderInParent Position of this element in parent
      */
     private void processRoot(DocumentInfo docInfo, Element el, int orderInParent)
         throws SQLException, MapException, KeyException
     {
         // Get the default action (see note in processClassRow)
-        // TODO: getDefault method not implemented
-        Action action = m_actions.getDefault();
+        Action action = m_actions.getDefault(); // TODO: getDefault method not implemented
 
         // Check if the node is mapped
         ClassMap classMap = m_transInfo.map.getClassMap(el.getNamespaceURI(), el.getLocalName());
@@ -215,14 +305,14 @@ public class DOMToDBMS
         if(classMap != null)
         {
             // Process the node
-            Row row = processClassRow(null, classMap, null, (Node)el, orderInParent, action);
+            Row row = processClassRow(null, classMap, null, el, orderInParent, action);
 
             // Add this row to the DocumentInfo
-            Table table = classMap.getTable()
+            Table table = classMap.getTable();
             Key priKey = table.getPrimaryKey();
 
             // TODO: What is the ordercolumn?
-            docInfo.addInfo(table, priKey, row.getColumnValues(priKey.getColumns()), null);
+            docInfo.addInfo(table, priKey.getColumns(), row.getColumnValues(priKey.getColumns())/*, null*/);
         }
 
         // Otherwise treat like a pass through element
@@ -255,6 +345,7 @@ public class DOMToDBMS
      * @param relMap Relation between this class and it's parent. May be null if root.
      * @param classNode The node with data for this class.
      * @param orderInParent The order of this node within it's parent.
+     * @param parentAction Action to inherit if this node does not specify own action.
      */
     private Row processClassRow(Row parentRow, ClassMap classMap, RelatedClassMap relMap, 
                                 Element classNode, int orderInParent, Action parentAction)
@@ -283,38 +374,47 @@ public class DOMToDBMS
         if(relMap != null)
             linkInfo = relMap.getLinkInfo();
 
+        // Get the action for the node
+        Action action = getActionFor(classNode);
+        if(action == null)
+        {
+            // Copy the parent action. This is because
+            // we don't want to move over UpdateProperties
+
+            action = new Action(XMLName.create(classNode.getNamespaceURI(), 
+                                               classNode.getLocalName()), classMap);
+            action.setAction(parentAction.getAction());
+        }
+
+        Vector useProps = getUseProps(classMap, action);
+
+        // This creates a row object, clears it, and sets/generates keys
+        Row classRow = createRow(table, parentRow, linkInfo, useProps);
+
+
         try
         {
-
-            // This creates a row object and sets/generates keys
-            Row classRow = createRow(table, parentRow, linkInfo);
-
             // Generate the order
             // TODO: How would we generate order on root elements?
             if(relMap != null)
 	            generateOrder(classRow, relMap.getOrderInfo(), orderInParent);
 
-            // Get the action for the node
-            Action action = getActionFor(classNode);
-            if(action == null)
-            {
-                // Copy the parent action. This is because
-                // we don't want to move over UpdateProperties
-
-                action = new Action(XMLName.create(classNode.getNamespaceURI(), 
-                                                   classNode.getLocalName()), classMap);
-                action.setAction(parentActon.getAction)
-            }
 
             // Okay work on all the children. Children to be processed later
             // (due to key constraints) are put in the fkChildren stack.
 	        processChildren(classRow, classMap, classNode, fkChildren, action);
 
-            // Do the actual row insertion/update
-	        storeRow(table, classRow, action);
 
-            // Process children left till later
-            processFKNodes(classRow, fkChildren, action);
+            // Do the actual row insertion/update
+	        storeRow(table, classRow, action.getAction());
+
+
+            // Now delete all out-of-table properties
+            clearNonTableProps(classRow, useProps);
+
+            
+            // Process children left till later 
+            processFKNodes(classRow, fkChildren, action, useProps);
 
         }
         catch(SQLException e)
@@ -349,27 +449,25 @@ public class DOMToDBMS
         LinkInfo linkInfo = propMap.getLinkInfo();
 
         // Create the row object and set/generate keys
-        Row propRow = createRow(table, parentRow, linkInfo);
+        Row propRow = createRow(table, parentRow, linkInfo, null);
 
         // Generate the order if necessary
 	    generateOrder(propRow, propMap.getOrderInfo(), orderInParent);
 
         // Set the value
-	    setPropertyColumn(propRow, propMap.getColumn(), propNode);
+	    setPropertyColumn(propRow, propMap.getColumn(), propNode, true);
 	  
         // Do actual row insertion/update
-
-        // TODO: These properties need special care here
-        // Implement DELETE/INSERT instead of UPDATE!
-        storeRow(table, propRow, action);
+        storeRow(table, propRow, action.getAction());
 
         return propRow;
     }
 
+
     /**
      * Creates row object and does set up on keys for that row. 
      */
-    private Row createRow(Table table, Row parentRow, LinkInfo linkInfo)
+    private Row createRow(Table table, Row parentRow, LinkInfo linkInfo, Vector useProps)
         throws KeyException
     {
         // NOTE: Called from processClassRow and processPropRow
@@ -391,7 +489,19 @@ public class DOMToDBMS
 
 
         // Create the actual row
-	    Row row = new Row(table);
+	    Row row = new Row();
+
+
+        if(useProps != null)
+        {
+            // Set all in-table property columns to null
+            for(int i = 0; i < useProps.size(); i++)
+            {
+                PropertyMap propMap = (PropertyMap)useProps.elementAt(i);
+                if(propMap.getTable() == null)
+                    row.setColumnValue(propMap.getColumn(), null);
+            }
+        }
 
 
         // Check the primary keys on the table 
@@ -430,10 +540,36 @@ public class DOMToDBMS
 
 
     /**
+     * Clears out-of-table properties' rows.
+     */
+    private void clearNonTableProps(Row classRow, Vector useProps)
+        throws SQLException, MapException, KeyException
+    {
+        for(int i = 0; i < useProps.size(); i++)
+        {
+            PropertyMap propMap = (PropertyMap)useProps.elementAt(i);
+
+            Table table = propMap.getTable();
+            if(table != null)
+            {
+                // NOTE: We assume here than the parent key in the link is unique. 
+                // This should be correct.
+
+                // This should create the row and copy the keys from parent row
+                Row row = createRow(table, classRow, propMap.getLinkInfo(), null);
+
+                // Delete it!
+                storeRow(table, row, Action.SOFTDELETE);
+            }
+        }
+    }
+
+
+    /**
      * Processes rows that were left till later because of key constraints on
      * the parent table.
      */
-    private void processFKNodes(Row parentRow, Stack fkNodes, Action action)
+    private void processFKNodes(Row parentRow, Stack fkNodes, Action action, Vector useProps)
         throws SQLException, MapException, KeyException
     {
         // NOTE: Called from processClassRow and processPropRow
@@ -443,8 +579,13 @@ public class DOMToDBMS
 	    while(!fkNodes.empty())
 	    {
 		    fkNode = (FKNode)fkNodes.pop();
+
+            // Only process if this property is being used (useProps)
+            if(!useProps.contains(fkNode.map))
+                continue;
+
             processRow(parentRow, fkNode.map, fkNode.node, fkNode.orderInParent, action);
-	    }
+        }
     }   
 
     
@@ -478,7 +619,7 @@ public class DOMToDBMS
                 break;
 
             case Node.ATTRIBUTE_NODE:
-                childMap = parentMap.getAttributeMap(m_nameQual.getQualifiedName(child));
+                childMap = parentMap.getAttributeMap(child.getNamespaceURI(), child.getLocalName());
                 break;
 		    }
 
@@ -529,7 +670,7 @@ public class DOMToDBMS
         // NOTE: Called from processChildren
 
         // Generate the order column
-        generateOrder(parentRow, propMap.getOrderInfo(), orderInParent);
+        generateOrder(parentRow, propMap.getOrderInfo(), order);
 
         if(propMap.isTokenList())
         {
@@ -571,7 +712,7 @@ public class DOMToDBMS
                     break;
                 };
              
-                if(node != null)
+                if(tokenNode != null)
                 {
                     tokenNode.setNodeValue(s.nextToken());
 
@@ -593,14 +734,14 @@ public class DOMToDBMS
             if(propMap.getTable() == null)
             {
                 // And insert the value
-			    setPropertyColumn(parentRow, propMap.getColumn(), propNode);
+			    setPropertyColumn(parentRow, propMap.getColumn(), propNode, false);
             }
 
             else 
             {
                 // Otherwise it's a property from another table, so send for other processing
                 processChild(parentRow, propMap, propMap.getLinkInfo(), propNode, 
-                             orderInParent, fkNodes, action);
+                             order, fkNodes, action);
 	        }
         }
     }
@@ -623,7 +764,12 @@ public class DOMToDBMS
             // Generate parent key if if necessary
             Key key = linkInfo.getChildKey();
             if(key.getKeyGeneration() == Key.XMLDBMS)
-                generateKey(row, key);
+            {
+                // Check if parent already generated (by another 
+                // multi-valued property for instance)
+                if(!parentRow.haveColumns(key.getColumns()))
+                    generateKey(parentRow, key);
+            }
 
             // Key copied to child row later (in createRow)
 
@@ -632,10 +778,10 @@ public class DOMToDBMS
         }
         else
         {
-            // Otherwise the child key is unique and we must copy the key
-            // back to the parentRow. So go ahead and process
-
+            // Otherwise the child key is unique 
             Row childRow = processRow(parentRow, map, node, orderInParent, action);
+
+            // In this case We must copy the key back to the parent
             setParentKey(parentRow, childRow, linkInfo);
         }
     }
@@ -652,23 +798,83 @@ public class DOMToDBMS
         // NOTE: Called from processChild and processFKNodes
 
         if(map instanceof PropertyMap)
-			return processPropRow(parentRow, (PropertyMap)map, node, orderInParent, action);
-
+        {
+            return processPropRow(parentRow, (PropertyMap)map, node, orderInParent, action);
+        }
         else // if (fkNode.map instanceof RelatedClassMap)
         {
             RelatedClassMap relMap = (RelatedClassMap)map;
 
             // The action here is used as the parentAction
-    	    return processClassRow(parentRow, relMap.getClassMap(), relMap, node, 
+            return processClassRow(parentRow, relMap.getClassMap(), relMap, (Element)node, 
                                    orderInParent, action);
         }
     }
 
 
 
+    // ************************************************************************
+    // Helper methods
+    // ************************************************************************
+
+    /**
+     * Get the changeable properties for a ClassMap/Action combination.
+     */
+    private Vector getUseProps(ClassMap classMap, Action action)
+    {
+        if(action.getAction() == Action.UPDATE)
+            return action.getUpdateXXXX(); // TODO: Need this method.
+
+        else
+            return getAllPropertyMaps(classMap);
+    }
 
 
-    public static Action getActionFor(Element el)
+    /**
+     * Gets all properties for a ClassMap.
+     */
+    private Vector getAllPropertyMaps(ClassMap classMap)
+    {
+        // TODO: Test if caching this is worth it!
+        if(m_classAllProperties.contains(classMap))
+            return (Vector)m_classAllProperties.get(classMap);
+
+
+        // Q: Could this be moved to ClassMap for efficiency?
+        // A: Nope, it can't because ClassMap needs to be threadsafe. 
+        Vector v = new Vector();
+        PropertyMap propMap;
+
+        // PCDATAMap
+        propMap = classMap.getPCDATAMap();
+        if(propMap != null)
+            v.addElement(propMap);
+
+        // Attributes
+        Enumeration e = classMap.getAttributeMaps();
+        while(e.hasMoreElements())
+            v.addElement(e.nextElement());
+
+        // Child Elements
+        e = classMap.getChildMaps();
+        while(e.hasMoreElements())
+        {
+            Object map = e.nextElement();
+            if(map instanceof PropertyMap)
+                v.addElement(map);
+        }
+
+        // Cache
+        m_classAllProperties.put(classMap, v);
+
+        return v;
+    }
+
+
+    /**
+     * Gets the action for a given element.
+     */
+    private Action getActionFor(Element el)
         throws MapException
     {
         // TODO: When action: attributes are implemented put code here
@@ -677,7 +883,9 @@ public class DOMToDBMS
     }
 
 
-
+    /**
+     * Get (maybe serialized) value for a node.
+     */
     private String getNodeValue(Node propNode)
     {
 	    String s;
@@ -708,20 +916,36 @@ public class DOMToDBMS
     }
 
 
-    private void setPropertyColumn(Row row, Column column, Node node)
+    /** 
+     * Set the value for column
+     */
+    private void setPropertyColumn(Row row, Column column, Node node, boolean force)
     {
+        // Get the value and format.
         StringFormatter formatter = column.getFormatter();
-        String val = getNodeValue(node);
-        row.setColumnValue(column, formatter.parse(val, column.getType()));
+        Object val = formatter.parse(getNodeValue(node), column.getType());
+
+        // Only set the row if we already have a value for it. 
+        // These initial values (NULL) are set in createRow.
+        // Passing in true for force will override this check
+        if(force || row.haveColumn(column))
+            row.setColumnValue(column, val);
     }
     
 
+    /**
+     * Copy the child key to parent row.
+     */
     private void setParentKey(Row parentRow, Row childRow, LinkInfo l)
     {
 	    parentRow.setColumnValues(l.getParentKey().getColumns(),
 								  childRow.getColumnValues(l.getChildKey().getColumns()));
     }
 
+
+    /**
+     * Copy the parent key to a child row.
+     */
     private void setChildKey(Row parentRow, Row childRow, LinkInfo l)
     {
 	    childRow.setColumnValues(l.getChildKey().getColumns(),
@@ -729,6 +953,9 @@ public class DOMToDBMS
     }
 
 
+    /**
+     * Use a KeyGenerator to generate a key.
+     */
     private void generateKey(Row row, Key key)
         throws KeyException
     {
@@ -737,7 +964,7 @@ public class DOMToDBMS
         if(keyGen == null)
             throw new KeyException("Invalid key generator: " + key.getKeyGeneratorName());
     
-        Columns[] columns = key.getColumns();
+        Column[] columns = key.getColumns();
         Object[] values = keyGen.generateKey();
 
         if(columns.length != values.length)
@@ -746,34 +973,42 @@ public class DOMToDBMS
         for(int i = 0; i < columns.length; i++)
         {
             // loop for each generated key column value
-            row.setColumnValue(columns[i], ConvertJDBCObject.toObject(values[i], columns[i].getType()));
+            row.setColumnValue(columns[i], ConvertObject.convertObject(values[i], columns[i].getType()));
         }
     }
 
-    private void generateOrder(Row row, OrderInfo o, int orderInParent)
+    /** 
+     * Put the order value in a row.
+     */
+    private void generateOrder(Row row, OrderInfo o, int orderValue)
     {
 	    if(o != null && !o.orderValueIsFixed() && o.generateOrder())
-            row.setColumnValue(column, ConvertJDBCObject.toObject(new Integer(orderValue), column.getType());
+        {
+            Column col = o.getOrderColumn();
+            row.setColumnValue(col, ConvertObject.convertObject(new Integer(orderValue), col.getType()));
+        }
     }   
 
 
-    private void storeRow(Table table, Row row, Action action)
+    /**
+     * Send a row to a DataHandler for processing.
+     */
+    private void storeRow(Table table, Row row, int action)
 	    throws SQLException, MapException
     {
         
-        int act = action.getAction();
         boolean soft = false;
 
         // Get the database 
         // TODO: (What about the 'null' or default database?)
-        DBAction dbAct = m_transInfo.getDBAction(table.getDatabaseName());
+        DataHandler dataHandler = m_transInfo.getDataHandler(table.getDatabaseName());
 
-        if(dbAct == null)
+        if(dataHandler == null)
             throw new MapException("Database '" + table.getDatabaseName() + "' not set.");
 
         try
         {
-            switch(act)
+            switch(action)
             {
             case Action.NONE:
                 break;
@@ -781,35 +1016,44 @@ public class DOMToDBMS
             case Action.SOFTINSERT:
                 soft = true;
             case Action.INSERT:
-                dbAct.insert(table, row);
+                dataHandler.insert(table, row);
                 break;
 
             case Action.UPDATEORINSERT:
-                dbAct.updateOrInsert(table, row);
+                dataHandler.updateOrInsert(table, row);
                 break;
 
             case Action.UPDATE:
-                dbAct.update(table, row);
+                // NOTE: We only set the appropriate columns in the row anyway
+                // so there's no need to pass in a set of columns to update
+                dataHandler.update(table, row, null);
                 break;
 
             case Action.SOFTDELETE:
                 soft = true;
             case Action.DELETE:
-                dbAct.delete(table, row);
+                dataHandler.delete(table, row);
                 break;
+
+            default:
+                throw new MapException("Invalid action in storeRow.");
+            };
         }
         catch(SQLException e)
         {
             if(soft)
-                pushWarning(new SQLWarning(e.getMessage(), e.getSQLState());
+                pushWarning(new SQLWarning(e.getMessage(), e.getSQLState()));
             else
                 throw e;
         }
             
     }
 
-
-    public void pushException(SQLException e)
+    
+    /**
+     * Adds an SQLException to the chain (returned from getExceptions)
+     */
+    private void pushException(SQLException e)
     {
         // TODO: What order do we chain the exceptions?
 
@@ -820,6 +1064,9 @@ public class DOMToDBMS
     }
 
 
+    /** 
+     * Adds an SQLWarning to the chain (returned from getWarnings)
+     */
     public void pushWarning(SQLWarning w)
     {
         // TODO: What order do we chain the warnings?

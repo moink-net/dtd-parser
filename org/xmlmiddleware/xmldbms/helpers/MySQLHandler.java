@@ -9,7 +9,24 @@ import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 
-class MySQLHandler
+/**
+ * <p>DataHandler implementation for the MySQL database.</p>
+ *
+ * <p>Database generated key values are retrieved using the LAST_INSERT
+ * value for the connection. This is the value of an AUTO_INCREMENT column
+ * during the last INSERT statement executed on this connection.</p>
+ *
+ * <p>Because of this database generated keys are only supported on tables
+ * with an AUTO_INCREMENT column. This is not as limiting as it seems. As
+ * of the current version an AUTO_INCREMENT column is the only way to have
+ * the database generate a key.</p>
+ *
+ * <p>Tested with MySQL V3.22</p>
+ *
+ * @author Sean Walter
+ * @version 2.0
+ */
+ class MySQLHandler
     extends DataHandlerBase
 {
     /** 
@@ -19,7 +36,7 @@ class MySQLHandler
      * @param user Login name for dataSource.
      * @param password Password for dataSource.
      */
-    MySQLHandler(DataSource dataSource, String user, String password)
+    public MySQLHandler(DataSource dataSource, String user, String password)
         throws SQLException
     {
         super(dataSource, user, password);
@@ -42,7 +59,9 @@ class MySQLHandler
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();
 
-        Column[] refreshCols = getRefreshCols(table, row);
+        executedStatement();
+
+        Column[] refreshCols = getRefreshCols(table);
 
         if(refreshCols.length > 0)
         {
@@ -102,7 +121,7 @@ class MySQLHandler
         // TODO: More efficient way to do this?
 
         // We create a MySQL statement to get the table definition
-        String sql = MYSQL_COLUMN_SQL + m_dml.getTableName(table) + ";";
+        String sql = MYSQL_COLUMN_SQL + m_dml.makeTableName(table) + ";";
 
         // Execute it
         Statement stmt = m_connection.createStatement();

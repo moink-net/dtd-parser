@@ -7,7 +7,14 @@ import javax.sql.*;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
-
+/**
+ * <p>DataHandler implementation for Postgres using the default JDBC drivers.</p>
+ *
+ * <p>Database generated keys are retrieved using the the row oid.</p>
+ *
+ * @author Sean Walter
+ * @version 2.0
+ */
 class PostgresHandler
     extends DataHandlerBase
 {
@@ -20,7 +27,7 @@ class PostgresHandler
      * @param user Login name for dataSource.
      * @param password Password for dataSource.
      */
-    PostgresHandler(DataSource dataSource, String user, String password)
+    public PostgresHandler(DataSource dataSource, String user, String password)
         throws SQLException
     {
         super(dataSource, user, password);
@@ -43,7 +50,9 @@ class PostgresHandler
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();
 
-        Column[] refreshCols = getRefreshCols(table, row);
+        executedStatement();
+
+        Column[] refreshCols = getRefreshCols(table);
 
         if(refreshCols.length > 0)
         {

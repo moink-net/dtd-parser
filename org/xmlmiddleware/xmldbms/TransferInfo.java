@@ -27,9 +27,9 @@ import java.util.Hashtable;
  * Contains information needed to transfer data between an XML document and
  * the database.
  *
- * <p>A TransferInfo object encapsulates the mapping metadata and DBAction objects
+ * <p>A TransferInfo object encapsulates the mapping metadata and DataHandler objects
  * needed to transfer data between an XML document and the database(s) according
- * to a particular map. It contains a single Map object and one DBAction object per
+ * to a particular map. It contains a single Map object and one DataHandler object per
  * database and is roughly equivalent to a Map object in XML-DBMS version 1.0.
  * Applications that use more than one map -- that is, that transfer data to/from
  * more than one class of XML documents -- should use one TransferInfo object per map.</p>
@@ -45,7 +45,7 @@ import java.util.Hashtable;
  *
  * @author Ronald Bourret
  * @version 2.0
- * @see DBAction
+ * @see DataHandler
  */
 
 public class TransferInfo
@@ -61,7 +61,7 @@ public class TransferInfo
    //**************************************************************************
 
    Map       map;
-   Hashtable dbActions = new Hashtable();
+   Hashtable dataHandlers = new Hashtable();
 
    //**************************************************************************
    // Public methods
@@ -80,7 +80,7 @@ public class TransferInfo
    }
 
    /**
-    * Create a new TransferInfo object and set the DBAction.
+    * Create a new TransferInfo object and set the DataHandler.
     *
     * <p>This is a convenience constructor for applications that use a
     * single database.</p>
@@ -88,20 +88,20 @@ public class TransferInfo
     * @param map The Map object to which the TransferInfo object applies
     * @param dbName The name of the database as it appears in the map. If this
     *    is null, the name "Default" is used.
-    * @param dbAction An implementation of DBAction for the database.
+    * @param dataHandler An implementation of DataHandler for the database.
     */
-   public TransferInfo(Map map, String dbName, DBAction dbAction)
+   public TransferInfo(Map map, String dbName, DataHandler dataHandler)
    {
       if (map == null)
          throw new IllegalArgumentException("map argument must not be null.");
-      if (dbAction == null)
-         throw new IllegalArgumentException("dbAction argument must not be null.");
+      if (dataHandler == null)
+         throw new IllegalArgumentException("dataHandler argument must not be null.");
       this.map = map;
       if (dbName == null)
       {
          dbName = DEFAULT;
       }
-      dbActions.put(dbName, dbAction);
+      dataHandlers.put(dbName, dataHandler);
    }
 
    //**************************************************************************
@@ -119,33 +119,33 @@ public class TransferInfo
    }
 
    /**
-    * Add a new DBAction.
+    * Add a new DataHandler.
     *
     * @param dbName The name of the database as it appears in the map. If this
     *    is null, the name "Default" is used.
-    * @param dbAction An implementation of DBAction for the database.
+    * @param dataHandler An implementation of DataHandler for the database.
     */
-   public void addDBAction(String dbName, DBAction dbAction)
+   public void addDataHandler(String dbName, DataHandler dataHandler)
    {
-      if (dbAction == null)
-         throw new IllegalArgumentException("dbAction argument must not be null.");
-      if (getDBAction(dbName) != null)
-         throw new IllegalArgumentException("DBAction for " + dbName + " already exists.");
+      if (dataHandler == null)
+         throw new IllegalArgumentException("dataHandler argument must not be null.");
+      if (getDataHandler(dbName) != null)
+         throw new IllegalArgumentException("DataHandler for " + dbName + " already exists.");
       if (dbName == null)
       {
          dbName = DEFAULT;
       }
-      dbActions.put(dbName, dbAction);
+      dataHandlers.put(dbName, dataHandler);
    }
 
    /**
-    * Get a DBAction.
+    * Get a DataHandler.
     *
-    * @param dbName The name of the database for which to get the DBAction. May not be null.
-    * @return An implementation of DBAction. This is null if no DBAction is found.
+    * @param dbName The name of the database for which to get the DataHandler. May not be null.
+    * @return An implementation of DataHandler. This is null if no DataHandler is found.
     */
-   public final DBAction getDBAction(String dbName)
+   public final DataHandler getDataHandler(String dbName)
    {
-      return (DBAction)dbActions.get(dbName);
+      return (DataHandler)dataHandlers.get(dbName);
    }
 }

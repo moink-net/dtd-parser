@@ -9,6 +9,15 @@ import org.xmlmiddleware.xmldbms.maps.*;
 
 import org.sourceforge.jxdbcon.postgresql.PGPreparedStatement;
 
+/**
+ * <p>DataHandler implementation for Postgres using the JDBXCon drivers
+ * (http://jxdbcon.sourceforge.net/).</p>
+ *
+ * <p>Database generated keys are retrieved using the the row oid.</p>
+ *
+ * @author Sean Walter
+ * @version 2.0
+ */
 class PostgresJDBXHandler
     extends DataHandlerBase
 {
@@ -21,7 +30,7 @@ class PostgresJDBXHandler
      * @param user Login name for dataSource.
      * @param password Password for dataSource.
      */
-    PostgresJDBXHandler(DataSource dataSource, String user, String password)
+    public PostgresJDBXHandler(DataSource dataSource, String user, String password)
         throws SQLException
     {
         super(dataSource, user, password);
@@ -43,7 +52,9 @@ class PostgresJDBXHandler
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();
 
-        Column[] refreshCols = getRefreshCols(table, row);
+        executedStatement();
+
+        Column[] refreshCols = getRefreshCols(table);
 
         if(refreshCols.length > 0)
         {

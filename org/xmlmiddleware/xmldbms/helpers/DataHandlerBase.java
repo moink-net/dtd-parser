@@ -8,29 +8,78 @@ import javax.sql.*;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
+/**
+ * Implements basic support for The DataHandler interface. The insert(...) 
+ * is implemented by child classes.
+ *
+ * @author Sean Walter
+ * @version 2.0
+ */
 abstract class DataHandlerBase
     implements DataHandler
 {
+    // ************************************************************************
+    // Variables used by this and child classes
+    // ************************************************************************
+
+    // The connection used 
     protected Connection m_connection;
+
+    // Used to generate SQL statements
     protected DMLGenerator m_dml;
-    protected int m_commitMode;
+    // TODO: Is SQLStrings really necessary?
+    protected SQLStrings m_strings;
+
+
+
+
+    // ************************************************************************
+    // Private variables
+    // ************************************************************************
+
+    // Does the connection need a commit?
+    private boolean m_dirtyConnection;
+
+    // The current Commit mode
+    private int m_commitMode;
+
+
+    // ************************************************************************
+    // Constructor
+    // ************************************************************************
 
     /**
      * Creates a DataHandlerBase
+     *
+     * @param dataSource The DataSource to get Connection's from.
+     * @param user User to connect to the database as.
+     * @param password Password to connect to the database with.
      */
-
-    DataHandlerBase(DataSource dataSource, String user, String password)
+    protected DataHandlerBase(DataSource dataSource, String user, String password)
         throws SQLException
     {
+        // Get the connection
         m_connection = dataSource.getConnection(user, password);
-        m_dml = new DMLGenerator(m_connection.getMetaData());
 
-        // TODO: Shouldn't the commit modes be moved to another class?
-        m_commitMode = COMMIT_AFTERSTATEMENT;
+        // And DML generator
+        m_dml = new DMLGenerator(m_connection.getMetaData());
+        m_strings = new SQLStrings(m_dml);
+
+        m_commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
+        m_dirtyConnection = false;
     }
 
 
+    // ************************************************************************
+    // Public Methods
+    // ************************************************************************
 
+    /**
+     * Is called when a document begins processing using this
+     * DataHandler
+     *
+     * @param commitMode Commit mode for the current document.
+     */
     public void startDocument(int commitMode)
         throws SQLException
     {
@@ -40,52 +89,80 @@ abstract class DataHandlerBase
             m_connection.setAutoCommit(true);
 
         // TODO: Do we need to do this for COMMIT_NONE?
-        // It should have already been done!
+        // It should have already been done, by the time we get this connection, no?
         else if(m_commitMode == COMMIT_AFTERDOCUMENT || 
                 m_commitMode == COMMIT_NONE)
             m_connection.setAutoCommit(false);   
 
-
+        m_dirtyConnection = false;
     }
 
+
+    /**
+     * Is called when a document has completed processing using
+     * this DataHandler. Commits if necessary. 
+     */
     public void endDocument()
         throws SQLException
     {
-        if(m_commitMode == COMMIT_AFTERDOCUMENT)
+        if(m_dirtyConnection && m_commitMode == COMMIT_AFTERDOCUMENT)
+        {
             m_connection.commit();
+            m_dirtyConnection = false;
+        }
 
-        // TODO: If there's an error in the document do we rollback?
-        // My guess is that, if the connection is closed without commit 
-        // then it's automatically rolled back
+        // TODO: How do errors/commit/rollback interact?
     }
 
 
-
+    /** 
+     * Implemented in child classes
+     *
+     * @param table Table to insert into.
+     * @param row Row with values to insert.
+     */
     public abstract void insert(Table table, Row row)
         throws SQLException; 
 
 
+    /**
+     * Update a row in a table.
+     * 
+     * @param table Table to update.
+     * @param row Row with values to update.
+     * @param cols Columns to update. If null then all values present in 'row' will be updated.
+     */
     public void update(Table table, Row row, Column[] cols)
         throws SQLException
     {
         PreparedStatement stmt = makeUpdate(table, row, cols);
         int numRows = stmt.executeUpdate();
 
+        executedStatement();
+
         if(numRows == 0)
             throw new SQLException("[xmldbms] Row to be updated is not present in table.");
         else if(numRows > 1)
             throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
 
-        // TODO: Do we need to refresh values here? I think not as any changes 
-        // should have been done by us, and updating keys is already suspect.
+        // TODO: Do we need to refresh values here? I think not. Any changes 
+        // should have been done by us, and updating keys is suspect.
     }
 
 
+    /** 
+     * Update a row in a table if present. If not present then insert.
+     *
+     * @param table Table to modify.
+     * @param row Row with values.
+     */
     public void updateOrInsert(Table table, Row row)
         throws SQLException
     {
         PreparedStatement stmt = makeUpdate(table, row, null);  
         int numRows = stmt.executeUpdate();
+
+        executedStatement();
 
         if(numRows == 0)
             insert(table, row);
@@ -94,11 +171,19 @@ abstract class DataHandlerBase
     }
 
 
+    /**
+     * Delete a row from a table.
+     *
+     * @param table Table to delete from.
+     * @param row Row with key values to delete.
+     */
     public void delete(Table table, Row row)
         throws SQLException
     {
         PreparedStatement stmt = makeDelete(table, row);
         int numRows = stmt.executeUpdate();
+
+        executedStatement();
 
         if(numRows == 0)
             throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
@@ -106,6 +191,14 @@ abstract class DataHandlerBase
             throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
     }
 
+
+    /** 
+     * Select rows from a given table.
+     * 
+     * @param table Table to retrieve from.
+     * @param key Primary key values.
+     * @param orderInfo Ordering info for query.
+     */
     public ResultSet select(Table table, Object[] key, OrderInfo orderInfo)
         throws SQLException
     {
@@ -115,16 +208,38 @@ abstract class DataHandlerBase
 
        
 
+    // ************************************************************************
+    // Helper methods. Also used by base classes
+    // ************************************************************************
 
 
+    /** 
+     * To be called after a statement that modifies the database
+     * has been executed.
+     */
+    protected void executedStatement()
+    {
+        if(m_commitMode == COMMIT_AFTERDOCUMENT)
+        {
+            m_dirtyConnection = true;
+        }
 
+        // For COMMIT_AFTERSTATEMENT we use auto commit
+    }
+
+
+    /**
+     * Makes a SELECT statement
+     */
     protected PreparedStatement makeSelect(Table table, Object[] key, OrderInfo orderInfo)
         throws SQLException
     {
         Key priKey = table.getPrimaryKey();
 
+        // These can be cached. Use SQLStrings
+        String sql = m_strings.getSelect(table, priKey, orderInfo);
+
         // Make the SELECT statement
-        String sql = m_dml.getSelect(table, priKey, orderInfo);
         PreparedStatement stmt = m_connection.prepareStatement(sql);
 
         // Set the paremeters
@@ -133,9 +248,16 @@ abstract class DataHandlerBase
         return stmt;
     }
 
+
+    /**
+     * Makes an INSERT statement
+     */
     protected PreparedStatement makeInsert(Table table, Row row)
         throws SQLException
     {
+        // NOTE: The PreparedStatements returned cannot be cached, as the row
+        // may have a different amount of valid values each time.
+
         Column[] cols = row.getColumnsFor(table);
 
         // Make the INSERT statement
@@ -148,9 +270,16 @@ abstract class DataHandlerBase
         return stmt;
     }
 
+    /**
+     * Makes an UPDATE statement.
+     */
     protected PreparedStatement makeUpdate(Table table, Row row, Column[] cols)
         throws SQLException
     { 
+        // NOTE: The PreparedStatements returned cannot be cached, as the row
+        // may have a different amount of valid values each time, or cols may be
+        // different.
+
         Column[] priCols = table.getPrimaryKey().getColumns();
 
         if(cols == null)
@@ -198,14 +327,18 @@ abstract class DataHandlerBase
         return stmt;
     }
 
-
+    /**
+     * Makes a DELETE statement.
+     */
     protected PreparedStatement makeDelete(Table table, Row row)
         throws SQLException
     {
         Key priKey = table.getPrimaryKey();
 
+        // These can be cached so use SQLStrings
+        String sql = m_strings.getDelete(t, priKey);
+
         // Make the DELETE statement
-        String sql = m_dml.getDelete(table, priKey);
         PreparedStatement stmt = m_connection.prepareStatement(sql);
 
         Column[] cols = priKey.getColumns();
@@ -217,10 +350,10 @@ abstract class DataHandlerBase
     }
 
 
-
-
-
-    protected Column[] getRefreshCols(Table table, Row row)
+    /**
+     * Get the columns in a table that need refreshing
+     */
+    protected Column[] getRefreshCols(Table table)
     {
         Vector colVec = new Vector();
 
@@ -249,6 +382,10 @@ abstract class DataHandlerBase
         return (Column[])colVec.toArray();    
     }
 
+
+    /** 
+     * Creates a key for a single column.
+     */
     protected Key createColumnKey(String colName, int type)
     {
         Column[] keyCols = { Column.create(colName) };
@@ -260,4 +397,5 @@ abstract class DataHandlerBase
 
         return key;
     }        
+       
 }

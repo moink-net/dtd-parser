@@ -17,10 +17,10 @@
 // Version 2.0
 // Changes from version 1.01: New in version 2.0
 
-package org.xmlmiddleware.xmldbms;
+package org.xmlmiddleware.xmldbms.helpers;
 
 import org.xmlmiddleware.xmldbms.maps.*;
-import org.xmlmiddleware.xmldbms.maps.utils.DMLGenerator;
+import org.xmlmiddleware.xmldbms.helpers.DMLGenerator;
 import java.lang.*;
 import java.sql.*;
 import java.util.*;
@@ -43,7 +43,7 @@ public class SQLStrings
    //**************************************************************************
 
    /**
-    * Construct a new DMLGenerator.
+    * Construct a new SQLStrings.
     *
     * @param conn A database connection. This is used to get database metadata.
     */
@@ -55,6 +55,18 @@ public class SQLStrings
 
       m_strings = new Hashtable();
    }
+
+   /**
+    * Construct a new SQLStrings.
+    *
+    * @param dml A DMLGenerator.
+    */
+   public SQLStrings(DMLGenerator dml)
+   {
+      m_dml = dml;
+      m_strings = new Hashtable();
+   }
+
 
    //**************************************************************************
    // Public methods
@@ -69,12 +81,7 @@ public class SQLStrings
    public String getInsert(Table t)
       throws SQLException
    {
-      /* Possible alternative id implementation:
-         
       String id = "INSERT_" + t.getUniversalName();
-      */
-
-      String id = "INSERT_" + Integer.toString(t.hashCode(), 16);
 
       if(!m_strings.containsKey(id))
          m_strings.put(id, m_dml.getInsert(t));
@@ -94,15 +101,8 @@ public class SQLStrings
    public String getSelectRow(Table t, Key key, OrderInfo order)
       throws SQLException
    {
-      /* Possible alternative id implementation:
-         
       String id = "SELECTROW_" + t.getUniversalName() + key.getName() + 
                            order.getOrderColumn().getName();
-      */
-
-      String id = "SELECTROW_" + Integer.toString(t.hashCode(), 16) + ":" +
-                           Integer.toString(key.hashCode(), 16) + ":" +
-                           Integer.toString(order.hashCode(), 16);
       
       if(!m_strings.containsKey(id))
          m_strings.put(id, m_dml.getSelect(t, key, order));
@@ -120,13 +120,7 @@ public class SQLStrings
    public String getSelectKey(Table t, Key key)
       throws SQLException
    {
-      /* Possible alternative id implementation:
-         
       String id = "SELECTKEY_" + t.getUniversalName() + key.getName();
-      */
-
-      String id = "SELECTKEY_" + Integer.toString(t.hashCode(), 16) + ":" +
-                           Integer.toString(key.hashCode(), 16);
       
       if(!m_strings.containsKey(id))
          m_strings.put(id, m_dml.getSelect(t, key));
@@ -145,6 +139,7 @@ public class SQLStrings
    public String getUpdate(Table t, Key key, Column[] cols)
       throws SQLException
    {
+      // TODO: We may want to remove this column
       // We don't do caching for this one because chances are
       // the columns are different every time
       return m_dml.getUpdate(t, key, cols);
@@ -159,14 +154,9 @@ public class SQLStrings
     */
    public String getDelete(Table t, Key key)
       throws SQLException
-   {
-      /* Possible alternative id implementation:
-         
+   {        
       String id = "DELETE_" + t.getUniversalName() + key.getName();
-      */
 
-      String id = "DELETE_" + Integer.toString(t.hashCode(), 16) + ":" +
-                        Integer.toString(key.hashCode(), 16);
       
       if(!m_strings.containsKey(id))
          m_strings.put(id, m_dml.getDelete(t, key));

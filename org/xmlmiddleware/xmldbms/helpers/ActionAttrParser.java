@@ -3,7 +3,9 @@ package org.xmlmiddleware.xmldbms.helpers;
 
 import java.lang.*;
 import org.w3c.dom.*;
+
 import org.xmlmiddleware.xmldbms.*;
+import org.xmlmiddleware.utils.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 
@@ -27,7 +29,7 @@ class ActionAttrParser
     protected static final String ATTR_ACTION_SOFTDELETE    = "SoftDelete";
 
 
-    public static Action getAction(Element el)
+    public static Action getAction(Element el, ClassMap classMap)
         throws MapException
     {
         Attr attrAction = el.getAttributeNodeNS(NS_ACTIONS, ATTR_ACTION);
@@ -41,19 +43,19 @@ class ActionAttrParser
             String s = attrAction.getValue();
             int act;
 
-            if(s.equals(ActionConst.ATTR_ACTION_NONE))
+            if(s.equals(ATTR_ACTION_NONE))
                 act = Action.NONE;
-            else if(s.equals(ActionConst.ATTR_ACTION_INSERT))
+            else if(s.equals(ATTR_ACTION_INSERT))
                 act = Action.INSERT;
-            else if(s.equals(ActionConst.ATTR_ACTION_SOFTINSERT))
+            else if(s.equals(ATTR_ACTION_SOFTINSERT))
                 act = Action.SOFTINSERT;
-            else if(s.equals(ActionConst.ATTR_ACTION_INSORUPDATE))
-                act = Action.INSERTORUPDATE;
-            else if(s.equals(ActionConst.ATTR_ACTION_UPDATE))
+            else if(s.equals(ATTR_ACTION_INSORUPDATE))
+                act = Action.UPDATEORINSERT;
+            else if(s.equals(ATTR_ACTION_UPDATE))
                 act = Action.UPDATE;
-            else if(s.equals(ActionConst.ATTR_ACTION_DELETE))
+            else if(s.equals(ATTR_ACTION_DELETE))
                 act = Action.DELETE;
-            else if(s.equals(ActionConst.ATTR_ACTION_SOFTDELETE))
+            else if(s.equals(ATTR_ACTION_SOFTDELETE))
                 act = Action.SOFTDELETE;
             else
             {   
@@ -61,7 +63,7 @@ class ActionAttrParser
                 throw new MapException("xmldbms: Invalid action specified on element.");
             }
             
-            Action action = new Action(el.getNamespaceURI(), el.getLocalName());
+            Action action = new Action(XMLName.create(el.getNamespaceURI(), el.getLocalName()), classMap);
             action.setAction(act);
 
             return action;

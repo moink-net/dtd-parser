@@ -44,7 +44,7 @@ public class DocumentInfo
    private Vector tables = new Vector();        // Contains TableInfo's.
    private Vector keyColumns = new Vector();    // Contains String[]'s.
    private Vector keys = new Vector();          // Contains Object[]'s.
-   private Vector orderColumns = new Vector();  // Contains Strings.
+/*   private Vector orderColumns = new Vector(); */ // Contains Strings.
 
    // ********************************************************************
    // Constructors
@@ -68,9 +68,9 @@ public class DocumentInfo
 	*  which the data values are to be retrieved. Null if there is no order
 	*  column.
 	*/
-   public DocumentInfo(Table table, Column[] keyColumns, Object[] key, Column orderColumn)
+   public DocumentInfo(Table table, Column[] keyColumns, Object[] key/*, Column orderColumn*/)
    {
-	  addInfo(table, keyColumns, key, orderColumn);
+	  addInfo(table, keyColumns, key/*, orderColumn*/);
    }   
 
    /**
@@ -85,9 +85,9 @@ public class DocumentInfo
 	*  column.
 	*/
    public DocumentInfo(String dbName, String catName, String schName, String tableName, 
-                       String[] keyColumnNames, Object[] key, String orderColumnName)
+                       String[] keyColumnNames, Object[] key/*, String orderColumnName*/)
    {
-	  addInfo(dbName, catName, schName, tableName, keyColumnNames, key, orderColumnName);
+	  addInfo(dbName, catName, schName, tableName, keyColumnNames, key/*, orderColumnName*/);
    }   
 
    // ********************************************************************
@@ -100,6 +100,39 @@ public class DocumentInfo
    public int size()
    {
 	  return keys.size();
+   }  
+   
+   /**
+	* Get the database of the ith table.
+	*
+	* @param num Table number.
+	* @return Name of the database.
+	*/
+   public String getDatabaseName(int num)
+   {
+	  return ((TableInfo)tables.elementAt(num)).database;
+   }   
+
+   /**
+	* Get the catalog of the ith table.
+	*
+	* @param num Table number.
+	* @return Name of the catalog.
+	*/
+   public String getCatalogName(int num)
+   {
+	  return ((TableInfo)tables.elementAt(num)).catalog;
+   }   
+
+   /**
+	* Get the schema of the ith table.
+	*
+	* @param num Table number.
+	* @return Name of the schema.
+	*/
+   public String getSchemaName(int num)
+   {
+	  return ((TableInfo)tables.elementAt(num)).schema;
    }   
 
    /**
@@ -110,7 +143,7 @@ public class DocumentInfo
 	*/
    public String getTableName(int num)
    {
-	  return (String) tables.elementAt(num);
+	  return ((TableInfo)tables.elementAt(num)).table;
    }   
 
    /**
@@ -141,10 +174,10 @@ public class DocumentInfo
 	* @param num Table number.
 	* @return Name of the order column. Null if there is no order column.
 	*/
-   public String getOrderColumnName(int num)
+/*   public String getOrderColumnName(int num)
    {
 	  return (String)orderColumns.elementAt(num);
-   }   
+   }   */
 
    /**
 	* Add a set of values to the DocumentInfo object using Table and
@@ -157,10 +190,10 @@ public class DocumentInfo
 	*  which the data values are to be retrieved. Null if there is no order
 	*  column.
 	*/
-   public void addInfo(Table table, Column[] keyColumns, Object[] key, Column orderColumn)
+   public void addInfo(Table table, Column[] keyColumns, Object[] key/*, Column orderColumn*/)
    {
 	  String[] keyColumnNames = null;
-	  String   orderColumnName;
+/*	  String   orderColumnName;*/
 
 	  if (keyColumns != null)
 	  {
@@ -170,10 +203,10 @@ public class DocumentInfo
 			keyColumnNames[i] = keyColumns[i].getName();
 		 }
 	  }
-	  orderColumnName = (orderColumn == null) ? null : orderColumn.getName();
+/*	  orderColumnName = (orderColumn == null) ? null : orderColumn.getName();*/
 
-      // TODO: Should we be using getUniversalName here or just normal?
-	  addInfo(table.getUniversalName(), keyColumnNames, key, orderColumnName);
+	  addInfo(table.getDatabaseName(), table.getCatalogName(), table.getSchemaName(),
+              table.getTableName(), keyColumnNames, key/*, orderColumnName*/);
    }   
 
    /**
@@ -187,12 +220,13 @@ public class DocumentInfo
 	*  which the data values are to be retrieved. Null if there is no order
 	*  column.
 	*/
-   public void addInfo(String tableName, String[] keyColumnNames, Object[] key, String orderColumnName)
+   public void addInfo(String dbName, String catName, String schName, String tableName, 
+                       String[] keyColumnNames, Object[] key/*, String orderColumnName*/)
    {
-	  tables.addElement(tableName);
+	  tables.addElement(new TableInfo(dbName, catName, schName, tableName));
 	  keyColumns.addElement(keyColumnNames);
 	  keys.addElement(key);
-	  orderColumns.addElement(orderColumnName);
+/*	  orderColumns.addElement(orderColumnName);*/
    }   
 
 
@@ -210,5 +244,6 @@ public class DocumentInfo
             schema = sch;
             table = tbl;
         }
+
     };
 }

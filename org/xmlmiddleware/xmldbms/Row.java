@@ -6,20 +6,16 @@ import java.util.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
 /**
- * Caches data for a single row.
+ * Caches data for a single row. For internal use.
  */
 
 public class Row
 {
-    class Null
-    {
-
-    };
-
     // ********************************************************************
     // Variables
     // ********************************************************************
     private Hashtable m_columnValues;
+
 
     // ********************************************************************
     // Constructors
@@ -53,8 +49,9 @@ public class Row
             m_columnValues.put(column, new Null());
         else
 	        m_columnValues.put(column, value);
-    }   
+    }
 
+    
     /**
 	 * Get a column value.
 	 *
@@ -125,7 +122,13 @@ public class Row
     }
 
     
-
+    /**
+     * Returns the columns in this row that apply to a given
+     * table. Only returns columns that have values (including
+     * null).
+     *
+     * @param table The table.
+     */
     public Vector getColumnVectorFor(Table table)
     {
         Vector cols = new Vector();
@@ -141,6 +144,13 @@ public class Row
         return cols;
     }
 
+    /**
+     * Returns the columns in this row that apply to a given
+     * table. Only returns columns that have values (including
+     * null).
+     *
+     * @param table The table.
+     */
     public Column[] getColumnsFor(Table table)
     {
         Vector cols = getColumnVectorFor(table);
@@ -150,10 +160,10 @@ public class Row
     }
 
     /**
-	 * Whether a column is null.
+	 * Whether a column has a value (including null).
 	 *
 	 * @param column Column to test.
-	 * @return Whether the column is null.
+	 * @return Whether the column has a value.
 	 */
     boolean haveColumn(Column column)
     {
@@ -162,15 +172,16 @@ public class Row
 
 
     /**
-	 * Whether any column in a set of columns is null.
+	 * Whether all of a set of columns have values
+     * (including null).
 	 *
 	 * @param columns Columns to test.
-	 * @return Whether any column is null.
+	 * @return Whether all column have values.
 	 */
     boolean haveColumns(Column[] columns)
     {
 	    // Generally, this is used with an assumption that if any columns
-	    // in a key are null, the key has not been set.
+	    // in a key are emtpy, the key has not been set.
 	    for(int i = 0; i < columns.length; i++)
         {
             if(!haveColumn(columns[i]))
@@ -179,5 +190,18 @@ public class Row
 
         return true;
     }  
-    
+ 
+
+    // ********************************************************************
+    // Variables
+    // ********************************************************************
+
+    /**
+     * Denotes a null value in the row.
+     */
+    class Null
+    {
+
+    };
+
 }

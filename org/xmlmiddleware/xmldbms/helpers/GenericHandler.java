@@ -1,3 +1,4 @@
+
 package org.xmlmiddleware.xmldbms.helpers;
 
 import java.lang.*;
@@ -8,23 +9,50 @@ import javax.sql.*;
 import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
 
+/**
+ * <p>DataHandler implementation for databases not directly supported. This 
+ * includes the JDBC-ODBC bridge. </p>
+ *
+ * <p>The key values of inserted rows are retrieved by using all other (non key) 
+ * values in the table in the WHERE clause of a SELECT statement. This is
+ * touchy and may not always work. Caution is called for when using this 
+ * DataHandler with keys generated from the database.</p>
+ *
+ * @author Sean Walter
+ * @version 2.0
+ */
 class GenericHandler
     extends DataHandlerBase
 {
-    GenericHandler(DataSource dataSource, String user, String password)
+    /** 
+     * Creates a GenericHandler.
+     *
+     * @param dataSource The Datasource to retrive connections from.
+     * @param user Login name for dataSource.
+     * @param password Password for dataSource.
+     */
+    public GenericHandler(DataSource dataSource, String user, String password)
         throws SQLException
     {
         super(dataSource, user, password);
     }
 
-
+    /**
+     * Inserts a row into the table. Refreshes any key columns needed. Does this
+     * by selecting all other values against the table. 
+     *
+     * @param table Table to insert into.
+     * @param row Row to insert.
+     */
 	public void insert(Table table, Row row)
         throws SQLException
     {     
         PreparedStatement stmt = makeInsert(table, row);
         int numRows = stmt.executeUpdate();
 
-        Column[] refreshCols = getRefreshCols(table, row);
+        executedStatement();
+
+        Column[] refreshCols = getRefreshCols(table);
 
         if(refreshCols.length > 0)
         {
@@ -57,6 +85,7 @@ class GenericHandler
             // Execute it 
             ResultSet rs = selStmt.executeQuery();
 
+            // Make sure at least 1 row.
             if(!rs.next())
                 throw new SQLException("[xmldbms] Couldn't retrieve inserted row due to changed values.");
 
@@ -64,6 +93,7 @@ class GenericHandler
             for(int i = 0; i < refreshCols.length; i++)
                 row.setColumnValue(refreshCols[i], rs.getObject(refreshCols[i].getName()));
 
+            // If more than one row then error.
             if(rs.next())
                 throw new SQLException("[xmldbms] Couldn't retrieve inserted row due to multiple rows with identical values.");
         }
