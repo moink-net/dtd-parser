@@ -28,8 +28,8 @@ import javax.sql.*;
 /**
  * Wraps a pooled statement.
  *
- * <p><b>NOTE:</b> To compile against JDBC 2.0, uncomment the methods
- * used by the 2.0 version of PreparedStatement and Statement.</p>
+ * <p><b>NOTE:</b> To compile against JDK 1.2 or greater, uncomment the methods
+ * used by the corresponding version of PreparedStatement and Statement.</p>
  *
  * @author Sean Walter, 2001
  * @author Ronald Bourret, 2001
@@ -431,7 +431,8 @@ public class SPPreparedStatement
    // JDBC 2.0 PreparedStatement methods
    //**************************************************************************
 
-   // Comment these methods to compile with JDBC 2.0
+   // Uncomment these methods to compile with JDK 1.2 or greater
+
 /*
    public void addBatch() throws SQLException
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
@@ -464,6 +465,19 @@ public class SPPreparedStatement
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
 
    public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException
+      { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
+*/
+
+   // Uncomment these methods to compile with JDK 1.4 or greater
+
+/*
+
+   public void setURL(int parameterIndex, java.net.URL x)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
+
+   public ParameterMetaData getParameterMetaData()
+      throws SQLException
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
 */
 

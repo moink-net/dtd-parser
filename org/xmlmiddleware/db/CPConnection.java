@@ -28,8 +28,8 @@ import javax.sql.*;
 /**
  * Wraps a pooled connection and its associated statement pool.
  *
- * <p><b>NOTE:</b> To compile against JDBC 2.0, uncomment the methods
- * used by the 2.0 version of Connection.</p>
+ * <p><b>NOTE:</b> To compile against JDK 1.2 or greater, uncomment the methods
+ * used by the corresponding version of Connection.</p>
  *
  * @author Sean Walter, 2001
  * @author Ronald Bourret, 2001
@@ -369,8 +369,9 @@ public class CPConnection
    // JDBC 2.0 Connection methods
    //**************************************************************************
 
-   // Comment these methods to compile with JDBC 2.0
-/**
+   // Uncomment these methods to compile with JDK 1.2 or greater
+
+/*
    public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
 
@@ -385,7 +386,55 @@ public class CPConnection
 
    public void setTypeMap(Map map) throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
-**/
+*/
+
+   // Uncomment these methods to compile with JDK 1.4 or greater
+
+/*
+   public void setHoldability(int holdability)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public int getHoldability()
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public Savepoint setSavepoint()
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public void rollback(Savepoint savepoint)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public void releaseSavepoint(Savepoint savepoint)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public PreparedStatement prepareStatement(String sql, int flag)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+
+   public PreparedStatement prepareStatement(String sql, String[] columnNames)
+      throws SQLException
+      { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
+*/
 
    //**************************************************************************
    // CPConnectionEventSource methods
