@@ -1,0 +1,1937 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+   <title>XML-DBMS, Version 1.1</title>
+</head>
+<body>
+
+<center>
+<h1>XML-DBMS, Version 1.1</h1>
+<h2>Java Packages for Transferring Data between<br />XML Documents and Relational Databases</h2>
+</center>
+
+<h2>Contents</h2>
+
+<p>
+<a href="#Intro"/>1.0 Introduction</a><br />
+<a href="#GettingStarted"/>2.0 Getting Started</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Requirements"/>2.1 System Requirements</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Install"/>2.2 Downloading and Installing XML-DBMS</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Using"/>2.3 Using XML-DBMS</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Docs"/>2.4 XML-DBMS Documentation</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#SourceCode"/>2.5 XML-DBMS Source Code</a><br />
+<a href="#ObjectView"/>3.0 An Object View of an XML Document</a><br />
+<a href="#Maps"/>4.0 Mapping XML Documents to the Database</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Lang"/>4.1 The XML-DBMS Mapping Language</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapDocs"/>4.2 Creating Map Documents</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Identifiers"/>4.3 Table and Column Names</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangClass"/>4.4 Mapping Classes (Element Types) to Tables</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangProp"/>4.5 Mapping Properties (Attributes and Element Types) to Columns</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangRel"/>4.6 Mapping Inter-Class Relationships (Element Hierarchy)</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangElim"/>4.7 Eliminating Unwanted Root Elements</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangMixedI"/>4.8 Mapping Mixed Content, Part I</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangMixedII"/>4.9 Mapping Mixed Content, Part II</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangResult"/>4.10 Mapping Classes (Element Types) to Result Sets</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangNS"/>4.11 Using Namespaces</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Nulls"/>4.12 Handling Null Values</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangDateTime"/>4.13 Date, Time, and Timestamp Formats</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#LangQuery"/>4.14 The XML-DBMS Mapping Language as a Query Language</a><br />
+<a href="#UsingCmd"/>5.0 Transferring Data from the Command Line</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropFiles"/>5.1 Using Property Files</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropFinePrint"/>5.2 Properties: The Fine Print</a><br />
+<a href="#UsingProg"/>6.0 Transferring Data Programmatically</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ProgProps"/>6.1 Calling XML-DBMS with Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ProgHigh"/>6.2 Calling XML-DBMS through the High-Level API</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ProgLow"/>6.3 Calling XML-DBMS through the Low-Level API</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapObjects"/>6.3.1 Map Objects</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapFactory_MapDocument"/>6.3.2 MapFactory_MapDocument</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#MapFactory_DTD"/>6.3.3 MapFactory_DTD</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ToDBMS"/>6.3.4 Transferring Data from an XML Document to the Database</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ToXML"/>6.3.5 Transferring Data from the Database to an XML Document</a><br />
+<a href="#Additional"/>7.0 Additional Programming Considerations</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Namespaces"/>7.1 XML Namespaces</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ParserUtils"/>7.2 Parser Utilities</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#KeyGenerators"/>7.3 Key (Object ID) Generators</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#XSLT"/>7.4 XSLT Processors</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#JMS"/>7.5 Using JMS and XML-DBMS</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Tips"/>7.6 Tips and Tricks</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#NotForUse"/>7.7 Classes Not for General Use</a><br />
+<a href="#LandS"/>8.0 Licensing and Support</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#License"/>8.1 Licensing</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Support"/>8.2 Support</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Help"/>8.3 How can I help?</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Thanks"/>8.4 Thanks</a><br />
+<a href="#Properties"/>Appendix A: Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropsDBMS"/>A.1 Database Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropsParser"/>A.2 Parser Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropsCommon"/>A.3 Common Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropsTransfer"/>A.4 Transfer Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropsKey"/>A.5 Key Generator Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropsGenMap"/>A.6 GenerateMap Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropsGenProp"/>A.7 GeneratePropFile Properties</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#PropsJMS"/>A.8 JMSWrapper Properties</a><br />
+<a href="#SampleData"/>Appendix B: Sample Documents and Tables</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#SalesSample"/>B.1 Sales Sample</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#SalesSampleDoc"/>B.1.1 Sample Sales Document</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#SalesSampleTables"/>B.1.2 Tables for Sales Sample</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#DocSample"/>B.2 Product Description Sample</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ProdSampleDoc"/>B.2.1 Sample Product Description Document</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#ProdSampleTables"/>B.2.2 Tables for Product Description Sample</a><br />
+</p>
+
+<h2><a name="Intro"/>1.0 Introduction</h2>
+
+<p>XML-DBMS is a set of Java packages for transferring data between XML documents and relational databases. You can use XML-DBMS in three different ways: from a GUI, from a command line, and from your own application. The first two ways are easiest; the last gives you the most flexibility and control.</p>
+
+<p>XML-DBMS is based on an object-relational mapping from the XML document to the database. This preserves the elements, attributes, data (character data and attribute values), and hierarchical structure of an XML document. It optionally preserves the order in which the children (elements and PCDATA) of a given parent occur. (For many data-centric applications, such order is not important and the code runs faster without it.)</p>
+
+<p>Because XML-DBMS seeks to transfer data, not documents, it does not preserve document type declarations, comments, processing instructions, etc., nor does it preserve physical structure such as entity use, CDATA sections, or document encodings.</p>
+
+<p><b>IMPORTANT:</b> The object-relational mapping used by XML-DBMS is extremely inefficient for document-centric languages such as XHTML. Because of this, and because XML-DBMS does not preserve many of the things that are important to document-centric documents, you should think hard before using XML-DBMS as a way to store documents (as opposed to data) in a relational database. In many cases, you would be better off using a native XML database for this purpose.</p>
+
+<p>For a general discussion of XML and databases, including XML-enabled databases such as Oracle and Microsoft SQL Server, middleware such as XML-DBMS, and native XML databases, see <a href="http://www.rpbourret.com/xml/XMLAndDatabases.htm">XML and Databases</a>. For a discussion of the object-relational mapping used by XML-DBMS, see <a href="http://www.xml.com/pub/a/2001/05/09/dtdtodbs.html">Mapping DTDs to Databases</a>.</p>
+
+<h2><a name="GettingStarted"/>2.0 Getting Started</h2>
+
+<h3><a name="Requirements"/>2.1 System Requirements</h3>
+
+<p>To run XML-DBMS, you need the following software:</p>
+
+<ul>
+<li>
+<b>XML-DBMS</b>
+<br /><br />
+Download: <a href="http://www.rpbourret.com/xmldbms/index.htm">http://www.rpbourret.com/xmldbms/index.htm</a>
+<br /><br />
+</li>
+
+<li>
+<b>JDK (Java Development Kit) 1.1.x or 1.2.x</b>
+<br /><br />
+Download: <a href="http://java.sun.com/products/jdk/1.1/index.html">http://java.sun.com/products/jdk/1.1/index.html</a>
+<br /><br />
+</li>
+
+<li>
+<b>Java Swing Components</b>
+<br /><br />
+<b>Note:</b> You need Swing only if you want to use the GUI interface for XML-DBMS. If you only want to use XML-DBMS programmatically, you do not need Swing.<br /><br />
+Download: <a href="http://java.sun.com/products/jfc/download.html">http://java.sun.com/products/jfc/download.html</a>
+<br /><br />
+</li>
+
+<li>
+<b>A relational database such as Oracle, DB2, Informix, MS Access, or MySQL</b>
+<br /><br />
+You will need to buy this on your own or find a free relational database on the Web. Note that if you are thinking about using XML-DBMS, you probably already have a relational database.
+<br /><br />
+</li>
+
+<li>
+<b>A JDBC driver for your database</b>
+<br /><br />
+Most relational databases are shipped with JDBC and ODBC drivers. If you have an ODBC driver but not a JDBC driver, you can use an JDBC-ODBC bridge as your JDBC driver. This converts JDBC calls to ODBC calls. An experimental (and therefore somewhat buggy) JDBC-ODBC bridge is shipped with the JDK; JDBC-ODBC bridges are available from other companies as well. Note that the quality of JDBC drivers varies considerably, so if one JDBC driver does not work, you can try another. For a list of available JDBC drivers, see:
+<br /><br />
+<a href="http://industry.java.sun.com/products/jdbc/drivers">http://industry.java.sun.com/products/jdbc/drivers</a>
+<br /><br />
+</li>
+
+<li>
+<b>An XML parser written in Java</b>
+<br /><br />
+XML parsers are available from many companies, such as Oracle, Sun, IBM, and Microsoft (DataChannel). In addition, Open Source parsers are available from many organizations and individuals, such as James Clark, OpenXML, and Apache. For a partial list of available parsers, see:
+<br /><br />
+<a href="http://www.xmlsoftware.com/parsers/">http://www.xmlsoftware.com/parsers/</a>
+<br /><br />
+</li>
+
+<li>
+<b>A DOM level 1 implementation written in Java</b>
+<br /><br />
+Most XML parsers include an implementation of the DOM (Document Object Model). Thus, if your parser already supports the DOM, you don't need to download a separate DOM implementation. If your parser does not support the DOM, you can download a separate DOM implementation, such as that from Docuverse:
+<br /><br />
+<a href="http://www.docuverse.com/">http://www.docuverse.com/</a>
+<br /><br />
+</li>
+
+<li>
+<b>SAX (Simple API for XML) version 1</b>
+<br /><br />
+SAX is an event-based parser API. Virtually all parsers include an implementation of SAX; if yours doesn't, you should get a parser that does. For more information about SAX, see:
+<br /><br />
+<a href="http://www.megginson.com/SAX/index.html">http://www.megginson.com/SAX/index.html</a>
+<br /><br />
+</li>
+
+<li>
+<b>An XSLT processor written in Java (optional)</b>
+<br /><br />
+Most XSLT processors are Open Source, the most popular being Xalan from Apache. For a partial list of available parsers, see:<br /><br />
+<a href="http://www.xmlsoftware.com/xslt/">http://www.xmlsoftware.com/xslt/</a>
+<br /><br />
+</li>
+
+<li>
+<b>A JMS server (optional)</b>
+<br /><br />
+</li>
+
+</ul>
+
+<p>XML-DBMS has been run with products from numerous companies, including the following. Note that inclusion on this list does not imply full testing -- simply that some part of XML-DBMS has been run successfully with the product. Similarly, products not on the list should still be useable by XML-DBMS. This is because XML-DBMS rarely strays from the core features of Java, SAX, DOM, and JDBC and therefore should work with most implementations of these specifications.</p>
+
+<ul>
+<li>JDK: 1.1.7, 1.1.8, 1.2.1, 1.3[1]</li>
+<li>XML Parsers: DataChannel, IBM, OpenXML, Oracle (versions 1 and 2), Sun, Xerces</li>
+<li>JDBC Drivers: Sun JDBC-ODBC Bridge, Easysoft JDBC-ODBC Bridge, JDBC Driver from Oracle</li>
+<li>Databases: Microsoft Access, Oracle, Microsoft SQL Server[2], Sybase SQL Server[2], MySQL, PrimeBase, Postgres</li>
+</ul>
+
+<p>[1] See the bug "<a href="http://sourceforge.net/tracker/?group_id=13613&atid=113613&func=detail&aid=408901">Result sets closed twice/JDK 1.3</a>" in the <a href="http://sourceforge.net/tracker/?group_id=13613&atid=113613">XML-DBMS Bug Database</a>.<br />
+[2] See the bug "<a href="http://sourceforge.net/tracker/index.php?func=detail&aid=408891&group_id=13613&atid=113613">Error retrieving data from SQL Server</a> in the <a href="http://sourceforge.net/tracker/?group_id=13613&atid=113613">XML-DBMS Bug Database</a>.</p>
+
+<h3><a name="Install"/>2.2 Downloading and Installing XML-DBMS</h3>
+
+<p>To download the current version of XML-DBMS, see:</p>
+
+<ul>
+<li><a href="http://www.rpbourret.com/xmldbms/index.htm">http://www.rpbourret.com/xmldbms/index.htm</a></li>
+</ul>
+
+<p>To install XML-DBMS version 1.01 from a .zip file:</p>
+
+<ol>
+<li>Unzip the downloaded file with a tool such as jar or WinZip.</li>
+<li>Add xmldbms.jar to your CLASSPATH. For example:
+<br /><br />
+<pre>
+   c:\java\xmldbms\xmldbms.jar;c:\java\jdk1.2.1\bin;c:\java\xerces-1_1_1\xerces.jar;.\
+</pre>
+</ol>
+
+<p>To install XML-DBMS version 1.1 from CVS:</p>
+
+<ol>
+<li>Use the CVS checkout command to get the <a href="http://sourceforge.net/cvs/?group_id=13613">latest version of XML-DBMS from Source Forge</a>. Version 1.1 code is in the de module. Sample data is in the samples module.</li>
+<li>Add the de subdirectory directory to your CLASSPATH. For example:
+<br /><br />
+<pre>
+   [<i>installation path</i>]\de;c:\java\jdk1.2.1\bin;c:\java\xerces-1_1_1\xerces.jar;.\
+</pre>
+<li>Compile the .java files. Unless you are using the schema conversion tools, it should be sufficient to compile the XMLDBMS (GUI), Transfer, and GenerateMap tools, as well as the <a href="#Namespaces">NameQualifier</a> and <a href="#ParserUtils">ParserUtils</a> classes for your parser. For example, if you are using the Xerces parser and you installed the code in the c:\java\de directory, use the following commands:
+<br /><br />
+<pre>
+   c:> cd c:\java\de\tudarmstadt\ito\xmldbms\gui
+   c:> javac XMLDBMS.java
+   c:> cd ..\tools
+   c:> javac Transfer.java
+   c:> javac GenerateMap.java
+   c:> cd ..\..\domutils
+   c:> javac ParserUtilsXerces.java
+   c:> javac NQ_DOM2.java
+</pre>
+</ol>
+
+<h3><a name="Using"/>2.3 Using XML-DBMS</h3>
+
+<p>Before you can use XML-DBMS to transfer data between XML documents and the database, you must:</p>
+
+<ul>
+<li><p>Create a map document for each set of XML documents you want to use -- that is, each group of XML documents that match a given DTD (XML Schema, etc.). If you want, you can use the sample maps shipped with the product; for more information, see Appendix B, "<a href="#SampleData">Sample Documents and Data</a>". For information about creating your own map documents, see section 4.2, "<a href="#MapDocs">Creating Map Documents</a>".</p></li>
+
+<li><p>Create the tables in the database that will store the data from the XML documents, assuming they don't already exist. If you are using the sample data, see the table schemas in Appendix B, "<a href="#SampleData">Sample Documents and Data</a>". For information about creating your own tables, see section 4.2, "<a href="#MapDocs">Creating Map Documents</a>".</p></li>
+
+<li><p>Create and initialize the XMLDBMSKey table if your map tells XML-DBMS to generate keys for you. If you are using the sample maps, the sales order maps do not require this, while the product description maps do. For more information, see section 7.3, "<a href="#KeyGenerators">Key (Object ID) Generators</a>".</p></li>
+</ul>
+
+<p>After you have set up your database and map documents, you are ready to transfer data between XML documents and your database. You can use XML-DBMS in three different ways:</p>
+
+<ul>
+<li><p><b>XML-DBMS GUI.</b> This is the simplest way to use XML-DBMS. To run the XML-DBMS GUI, use the following command at the command line:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.gui.XMLDBMS
+</pre>
+</li>
+
+<li><p><b>Command line.</b> You pass the actions to be taken in property/value pairs. For example, to transfer data from the sales.xml document to the database according to the sales.map map document, you might use the following command:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.Transfer
+                 File=xerces.props File=mydb.props Password=ronpwd
+                 Action=StoreDocument MapFile=sales.map XMLFile=sales.xml
+</pre>
+
+<p>For more information, see section 5.0, <a href="#UsingCmd">Transferring Data from the Command Line</a>.</p></li>
+
+<li><p><b>Programmatically.</b> You have three choices, depending on how much control you want and how much work you want to do:</p>
+<ul>
+<li><p><b>Properties-driven interface.</b> Your application calls the Transfer class programmatically and passes it the same properties you would have passed on the command line. This is the easiest way to use XML-DBMS programmatically. For more information, see section 6.1, <a href="#ProgProps">Calling XML-DBMS with Properties</a>.</p></li>
+<li><p><b>High-level API.</b> Your application calls the TransferEngine class directly. Currently, the TransferEngine API mimics the properties found in Transfer, so this really isn't any different from calling the properties-driven interface. However, this will probably change in the future. For more information, see section 6.2, <a href="#ProgHigh">Calling XML-DBMS through the High-Level API</a>.</p></li>
+<li><p><b>Low-level API.</b> Your application calls the low-level classes DOMToDBMS and DBMSToDOM directly. This gives you the most control. For more information, see section 6.3, <a href="#ProgLow">Calling XML-DBMS through the Low-Level API</a>.</p></li>
+</ul>
+</li>
+</ul>
+
+<h3><a name="Docs"/>2.4 XML-DBMS Documentation</h3>
+
+<p>XML-DBMS comes with a complete set of documentation. Beginners should start with the following sections of this document:</p>
+
+<ul>
+<li><a href="#Requirements">System Requirements</a></li>
+<li><a href="#Install">Downloading and Installing XML-DBMS</a></li>
+<li><a href="#ObjectView">An Object View of an XML Document</a></li>
+<li>The XML-DBMS Mapping Language (sections <a href="#Lang">4.1</a> and <a href="#Identifiers">4.3</a> to <a href="#LangMixedII">4.9</a> only)</li>
+<li><a href="#MapDocs">Creating Map Documents</a></li>
+<li><a href="#UsingCmd">Transferring Data from the Command Line</a></li>
+<li>The <a href="#SampleData">sample data</a></li>
+</ul>
+
+<p>Intermediate users should read the following:</p>
+
+<ul>
+<li>The XML-DBMS Mapping Language</a> (sections <a href="#LangNS">4.11</a> to <a href="#LangDateTime">4.13</a>)</li>
+<li><a href=#ProgProps">Calling XML-DBMS with Properties</a></li>
+<li><a href="#Additional">Additional Programming Considerations</a> (sections <a href="#Namespaces">7.1</a> to <a href="#XSLT">7.4</a>)</li>
+<li>The comments in the <a href="xmldbms.dtd">XML-DBMS mapping language DTD</a></li>
+<li><a href="http://www.xml.com/pub/a/2001/05/09/dtdtodbs.html">Mapping DTDs to Databases</a>. Section 3, Object-Relational Mappings, describes the mapping model used by XML-DBMS. Section 4.1, Generating Relational Schema from DTDs, describes the algorithm used by the GenerateMap tool.</li>
+</ul>
+
+<p>Advanced users should read the following:</p>
+
+<ul>
+<li>The XML-DBMS Mapping Language</a> (sections <a href="#LangResult">4.10</a> and <a href="#LangQuery">4.14</a>)</li>
+<li><a href=#ProgHigh">Calling XML-DBMS through the High-Level API</a></li>
+<li><a href=#ProgLow">Calling XML-DBMS through the Low-Level API</a></li>
+<li><a href="#Additional">Additional Programming Considerations</a> (sections <a href="#JMS">7.5</a> to <a href="#NotForUse">7.7</a>)</li>
+<li>The code in TransferEngine.</li>
+<li>Comments in the code. (See <a href="sourcecode.zip">sourcecode.zip</a>)</li>
+<li><a href="docs/packages.html">XML-DBMS API documentation</a></li>
+</ul>
+
+<h3><a name="SourceCode"/>2.5 XML-DBMS Source Code</h3>
+
+<p>The source code for XML-DBMS is shipped with the product. You can find it in the sourcecode.zip file in the directory you installed XML-DBMS in. You can also get the latest version of the source code from the <a href="http://sourceforge.net/cvs/?group_id=13613">XML-DBMS CVS tree</a> on Source Forge. XML-DBMS version 1.1 is in the de module. XML-DBMS version 2.0 (not yet complete) is in the org module.</p>
+
+<h2><a name="ObjectView"/>3.0 An Object View of an XML Document</h2>
+
+<p>XML-DBMS views an XML document as a tree of objects and then uses an object-relational mapping to map these objects to a relational database. In this view, element types generally correspond to classes and attributes and PCDATA correspond to properties. Child element types are generally viewed as pointed-to classes; that is, an interclass relationship exists between the classes corresponding to parent and child element types.</p>
+
+<p>For example, consider the following XML document:</p>
+
+<pre>
+   &lt;SalesOrder SONumber="12345"&gt;
+      &lt;Customer CustNumber="543"&gt;
+         &lt;CustName&gt;ABC Industries&lt;/CustName&gt;
+         &lt;Street&gt;123 Main St.&lt;/Street&gt;
+         &lt;City&gt;Chicago&lt;/City&gt;
+         &lt;State&gt;IL&lt;/State&gt;
+         &lt;PostCode&gt;60609&lt;/PostCode&gt;
+      &lt;/Customer&gt;
+      &lt;OrderDate&gt;981215&lt;/OrderDate&gt;
+      &lt;Line LineNumber="1"&gt;
+         &lt;Part PartNumber="123"&gt;
+            &lt;Description&gt;
+               &lt;P&gt;&lt;B&gt;Turkey wrench:&lt;/B&gt;&lt;BR /&gt;
+               Stainless steel, one-piece construction,
+               lifetime guarantee.&lt;/P&gt;
+            &lt;/Description&gt;
+            &lt;Price&gt;9.95&lt;/Price&gt;
+         &lt;/Part&gt;
+         &lt;Quantity&gt;10&lt;/Quantity&gt;
+      &lt;/Line&gt;
+      &lt;Line LineNumber="2"&gt;
+         &lt;Part PartNumber="456"&gt;
+            &lt;Description&gt;
+               &lt;P&gt;&lt;B&gt;Stuffing separator:&lt;B&gt;&lt;BR /&gt;
+               Aluminum, one-year guarantee.&lt;/P&gt;
+            &lt;/Description&gt;
+            &lt;Price&gt;13.27&lt;/Price&gt;
+         &lt;/Part&gt;
+         &lt;Quantity&gt;5&lt;/Quantity&gt;
+      &lt;/Line&gt;
+   &lt;/SalesOrder&gt;
+</pre>
+
+<p>This could be viewed as a tree of objects from four classes -- SalesOrder, Customer, Line, and Part -- as shown in the following diagram:</p>
+
+<pre>
+                     SalesOrder
+                    /    |    \
+             Customer   Line   Line
+                         |      |
+                        Part   Part
+</pre>
+
+<p>It is important to understand that the tree of objects is not the Document Object Model (DOM). The reason for this is that the DOM models the document itself and not the data in the document. For example, the above XML document would form the following DOM tree:</p>
+
+<pre>
+                      Element
+                _____/  / \  \_____
+               /       /   \       \
+            Attr  Element Element  Element
+
+                        etc.
+</pre>
+
+<p>The view of element types as classes is not absolute: element types can also be viewed as properties of their parent element type-as-class. This is most useful when an element type contains only PCDATA. For example, the OrderDate element is best viewed as a property of the SalesOrder class.</p>
+
+<p>However, it is useful in other cases as well. For example, consider the Description element type, which contains a description written in XHTML. Although this description has subelements such as &lt;B&gt; and &lt;P&gt;, these subelements cannot be meaningfully interpreted on their own. Therefore, it makes more sense to view the element type as a single value (property) of the Part class rather than as a separate class.</p>
+
+<p>For a more complete introduction to the object-relational mapping used by XML-DBMS, see the "Object-Relational Mapping" section in <a href="http://www.xml.com/pub/a/2001/05/09/dtdtodbs.html">"Mapping DTDs to Databases"</a>.</p>
+
+<h2><a name="Maps"/>4.0 Mapping XML Documents to the Database</h2>
+
+<p>As part of setting up XML-DBMS on your system, you need to specify how element types, attributes, and PCDATA are viewed, as well as how to map this view to the database. The most common way to specify the mapping is to create a map document using the <a href="#Lang">XML-DBMS mapping language</a>. Internally, this is "compiled" into a <a href="#MapObjects">Map object</a> by a <a href="#MapFactory_MapDocument">map factory</a>.</p>
+
+<p>If you are using XML-DBMS from the GUI or from the command line, or if you are using XML-DBMS programmatically by passing properties to the Transfer class or calling the TransferEngine API, you don't need to worry about map objects or map factories. All you need to do is create a map document and pass its name to XML-DBMS using the appropriate property or method.</p>
+
+<p>If you are using XML-DBMS programmatically and writing directly to the low-level API, you will have to do more work. Specifically, you need to call a map factory to get a Map object and then pass this Map object to the classes that transfer data. One advantage of this is that you can reuse the Map object, thus saving you from having to recompile the map document each time you want to transfer the data in a particular class of documents.</p>
+
+<h3><a name="Lang"/>4.1 The XML-DBMS Mapping Language</h3>
+
+<p>The XML-DBMS mapping language is a simple, XML-based language that describes both how to construct an object view for an XML document and how to map this view to a relational schema.</p>
+
+<p>We will introduce the main parts of the language in a series of examples. These use the XML documents and tables described in sections B.1, "<a href="#SalesSample">Sales Sample</a>" and B.2, "<a href="#ProdSample">Product Description Sample</a>". For complete information about the XML-DBMS mapping language, see the <a href="xmldbms.dtd">mapping language DTD</a>.</p>
+
+<h3><a name="MapDocs"/>4.2 Creating Map Documents</h3>
+
+<p>You generally need to create map documents by hand. The reason for this is that mapping an XML document to a database is an art, not a science, and any algorithm that generates a map automatically is necessarily inexact.</p>
+
+<p>If you have a DTD or <a href="http://www.w3.org/TR/NOTE-ddml">DDML (Data Definition Markup Language)</a> file, you can use the GenerateMap tool to help you get started. This creates a map document and a list of CREATE TABLE statements for tables in which to store your data. You then generally need to modify this to get a useful map document and tables; see below for details.</p>
+
+<p>For example, the following command uses GenerateMap with the Xerces parser, the ODBC data source named xmldbms, and the catalog.dtd file:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.GenerateMap
+         File=xerces.props File=mydb.props Password=ronpwd
+         Action=CreateMapFromDTD SchemaFile=catalog.dtd OrderColumns=No
+</pre>
+
+<p>For a list of the properties you can use with GenerateMap, see section A.6, <a href="#PropsGenMap">GenerateMap Properties</a>. For more information about using properties, see section 5.1, <a href="#PropFiles">Using Property Files</a> and section 5.2, <a href="#PropFinePrint">Properties: The Fine Print</a>.</p>
+
+<p>The map document and CREATE TABLE statements generated by GenerateMap are less than perfect and in almost all cases you will need to modify them by hand. For example, GenerateMap:</p>
+
+<ul>
+<li>Often generates table and column names that use the a href="#Identifiers">wrong case</a> and need to be changed.</li>
+<li>Cannot identify elements or attributes that contain a primary key and therefore assumes that the primary key is always generated by XML-DBMS.</li>
+<li>Always assumes the unique (candidate) key used to link two tables is in the table of the parent element type. This is not always true.</li>
+<li>Does not add (NOT) NULL, PRIMARY KEY, or FOREIGN KEY constraints to its CREATE TABLE statements. Of these, NULL constraints are crucial, as optional elements and attributes are represented by nullable columns and the lack of a NULL constraint will cause an insert error.</li>
+<li>Either always generates or never generates order columns. You might want to use order columns only some of the time.</li>
+</ul>
+
+<p>A larger problem is the use of <i>wrapper</i> elements in XML. These elements serve only to group children in an XML document and do not represent data structures per se. While wrapper elements makes sense in XML, they result in inefficient storage in the database in the form of intermediate tables that do nothing more than link two other tables.</p>
+
+<p>Part of creating a map document is deciding what XML element types constitute classes in your data model (and therefore tables in the database) and what element types are merely markup (and therefore should be removed by XSLT before transferring data to the database and inserted by XSLT after transferring data from the database). For more information about this problem, see the discussion of wrapper elements at the end of Section 5, "Generating DTDs from Relational Schema and Vice Versa" in <a href="http://www.rpbourret.com/xml/XMLAndDatabases.htm#generating">XML and Databases</a>.
+
+<h3><a name="Identifiers"/>4.3 Table and Column Names</h3>
+
+<p><b>IMPORTANT:</b> Table and column names in the map document must <b>exactly match</b> the names stored in the database. A frequent mistake is to use a different case in the map document than is used in the database. This happens because some databases (notably Oracle) convert table and column names in a CREATE TABLE statement to all upper or all lower case.</p>
+
+<p>For example, suppose you use the name Sales in a CREATE TABLE statement. The database might store this name as SALES, in which case you must use the name SALES in your map document. If you use the name Sales, you will get an error similar to the following:</p>
+
+<pre>
+de.tudarmstadt.ito.xmldbms.InvalidMapException: Table not found: Sales
+         at de.tudarmstadt.ito.xmldbms.Map.addColumnMetadata(Map.java:1711)
+         at de.tudarmstadt.ito.xmldbms.Map.getTableMetadata(Map.java:1587)
+         at de.tudarmstadt.ito.xmldbms.Map.initColumnMetadata(Map.java:229)
+         at de.tudarmstadt.ito.xmldbms.mapfactories.MapFactory_MapDocument.createMap(MapFactory_MapDocument.java:335)
+         at Transfer.createMap(Transfer.java:186)
+         at Transfer.toDBMS(Transfer.java:124)
+         at Transfer.main(Transfer.java:91)
+</pre>
+
+<p>To find out how your database stores names, see the documentation for your database.</p>
+
+<h3><a name="LangClass"/>4.4 Mapping Classes (Element Types) to Tables</h3>
+
+<p>Element types with element content are usually viewed as classes and mapped to a table. For example, the following declares the SalesOrder element type to be a class and maps it to the Sales table:</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Sales"/&gt;
+      &lt;/ToClassTable&gt;
+      ...property maps...
+      ...related class maps...
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>The ClassMap element contains all of the information needed to map a single class (element type), including the table to which the class is mapped, the maps for each property in the class, a list of related classes, and a list of passed-through child classes.</p>
+
+<p>The ElementType element identifies the element type (class) being mapped and the ToClassTable element gives the name of the table to which the class is mapped.</p>
+
+<h3><a name="LangProp"/>4.5 Mapping Properties (Attributes and Element Types) to Columns</h3>
+
+<p>Single-valued attributes and element types with PCDATA-only content are usually viewed as properties and mapped to columns. For example, the following declares the SONumber attribute and the OrderDate element type (when SalesOrder is its parent) to be properties and maps them to the Number and Date columns, respectively. These maps are nested inside the class map for SalesOrder.</p>
+
+<pre>
+   &lt;PropertyMap&gt;
+      &lt;Attribute Name="SONumber"/&gt;
+      &lt;ToColumn&gt;
+         &lt;Column Name="Number"/&gt;
+      &lt;/ToColumn&gt;
+   &lt;/PropertyMap&gt;
+
+   &lt;PropertyMap&gt;
+      &lt;ElementType Name="OrderDate"/&gt;
+      &lt;ToColumn&gt;
+         &lt;Column Name="Date"/&gt;
+      &lt;/ToColumn&gt;
+   &lt;/PropertyMap&gt;
+</pre>
+
+<p>The Attribute and ElementType elements identify the properties being mapped and the ToColumn elements state that they are being mapped to columns. These columns are understood to be in the table to which the class (SalesOrder) is mapped.</p>
+
+<h3><a name="LangRel"/>4.6 Mapping Inter-Class Relationships (Element Hierarchy)</h3>
+
+<p>When a child element type is viewed as a class, its relationship with its parent element type must be stated in the map of the parent class. For example, the following declares that Line is related to the SalesOrder class. This map is nested inside the class map for SalesOrder; the actual mapping of the Line class (element type) is separate.</p>
+
+<pre>
+   &lt;RelatedClass KeyInParentTable="Candidate"&gt;
+      &lt;ElementType Name="Line"/&gt;
+      &lt;CandidateKey Generate="No"&gt;
+         &lt;Column Name="Number"/&gt;
+      &lt;CandidateKey/&gt;
+      &lt;ForeignKey&gt;
+         &lt;Column Name="SONumber"/&gt;
+      &lt;/ForeignKey&gt;
+      &lt;OrderColumn Name="Number" Generate="No"/&gt;
+   &lt;/RelatedClass&gt;
+</pre>
+
+<p>The ElementType element gives the name of the related class and the KeyInParentTable attribute states that the candidate key used to join the tables is in the parent (Sales) table. CandidateKey and ForeignKey give the columns in these keys, which must match in number and type. The Generate attribute of CandidateKey tells the system whether to generate the key. This allows us to preserve keys that have business meaning and generate object identifiers when no such keys exist. In this case, we do not generate the key because we have mapped the SONumber attribute of the SalesOrder element type to the candidate key column (Sales.Number).</p>
+
+<p>The (optional) OrderColumn element gives the name of the column that contains information about the order in which Line elements appear in the SalesOrder element. Because this column must appear in the table on the "many" side of the relationship, Number refers to the Lines.Number column, not the Sales.Number column. The Generate attribute of the OrderColumn element tells the system whether to generate the order value. In this case, we do not generate the order value because we will separately map the LineNumber attribute of the Line element type to the order column (Lines.Number).</p>
+
+<h3><a name="LangElim"/>4.7 Eliminating Unwanted Root Elements</h3>
+
+<p>Root elements sometimes exist only because XML requires a single root element. For example, in our sales order language, we would like to store multiple sales orders in a single document. To do this, we need the Orders element to encapsulate multiple SalesOrder elements. However, there is no structure in the database corresponding to the Orders element and we would like to eliminate it. For example, the following states that the Orders element type is to be ignored.</p>
+
+<pre>
+   &lt;IgnoreRoot&gt;
+      &lt;ElementType Name="Orders"/&gt;
+      &lt;PseudoRoot&gt;
+         &lt;ElementType Name="SalesOrder"/&gt;
+         &lt;CandidateKey Generate="No"&gt;
+            &lt;Column Name="Number"/&gt;
+         &lt;/CandidateKey&gt;
+      &lt;/PseudoRoot&gt;
+   &lt;/IgnoreRoot&gt;
+</pre>
+
+<p>The first ElementType element gives the element type to be ignored. The PseudoRoot element introduces an element type (SalesOrder) to serve as a root in its place; there can be multiple pseudo-roots. The (optional) CandidateKey element gives the key to be used when retrieving data from the database; not shown is an option OrderColumn element that gives the order in which the SalesOrder elements are to be retrieved.</p>
+
+<p>Ignored root elements are reconstructed when retrieving data from the database.</p>
+
+<h3><a name="LangMixedI"/>4.8 Mapping Mixed Content, Part I</h3>
+
+<p>Mixed content consists of both PCDATA and elements, such as in our document language. The order in which the PCDATA and elements appear is usually important, so we usually need to keep order information for the PCDATA as well as each element. For example, the following maps the Name element type to the Name column in the Product table and stores system-generated order information in the NameOrder column; this map is nested inside the class map for the Product element type.</p>
+
+<pre>
+   &lt;PropertyMap&gt;
+      &lt;ElementType Name="Name"/&gt;
+      &lt;ToColumn&gt;
+         &lt;Column Name="Name"/&gt;
+      &lt;/ToColumn&gt;
+      &lt;OrderColumn Name="NameOrder" Generate="Yes"/&gt;
+   &lt;/PropertyMap&gt;
+</pre>
+
+<p>Because PCDATA can occur multiple times in mixed content, it is usually mapped to a separate table. For example, the following maps the PCDATA from the Para element type to the ParaPCDATA table; this map is nested inside the class map for the Para element type.</p>
+
+<pre>
+   &lt;PropertyMap&gt;
+      &lt;PCDATA/&gt;
+      &lt;ToPropertyTable KeyInParentTable="Candidate"&gt;
+         &lt;Table Name="ParaPCDATA"/&gt;
+         &lt;CandidateKey Generate="Yes"&gt;
+            &lt;Column Name="ParaID"/&gt;
+         &lt;/CandidateKey&gt;
+         &lt;ForeignKey&gt;
+            &lt;Column Name="ParaID"/&gt;
+         &lt;/ForeignKey&gt;
+         &lt;Column Name="ParaPCDATA"/&gt;
+         &lt;OrderColumn Name="ParaPCDATAOrder" Generate="Yes"/&gt;
+      &lt;/ToPropertyTable&gt;
+   &lt;/PropertyMap&gt;
+</pre>
+
+<p>The ToPropertyTable element states that the table contains only property values, not a class. In addition to giving the candidate and foreign keys needed to retrieve PCDATA values from the table, we give the names of the columns (ParaPCDATA and ParaPCDATAOrder) in which the PCDATA and order information are stored. Notice that we ask the system to generate both the candidate key (ParaID) and the order information; this is because the document does not contain this information. For more information about generating keys, see section 7.3, "<a href="#KeyGenerators">Key (Object ID) Generators</a>".</p>
+
+<h3><a name="LangMixedII"/>4.9 Mapping Mixed Content, Part II</h3>
+
+<p>As you may have noticed, the product description document requires many more tables and more columns per property than the sales order document. This is because the product description document is an example of a <i>document-centric</i> document, while the sales order document is an example of a <i>data-centric</i> document.</p>
+
+<p>Document-centric documents, such as books, email, advertisements, and many XHTML documents, are designed for human consumption. They are characterized by less predictable structures, coarser-grained data (the smallest independent unit of data is usually at the level of document fragments or the whole document), and large amounts of mixed content and the order in which sibling elements and PCDATA occurs is usually significant. Because order is usually signficant and element types-as-properties and PCDATA generally can occur multiple times in their parent (thus requiring storage in separate tables), document-centric documents require a more complex structure in the database.</p>
+
+<p>Data-centric documents tend to describe discrete pieces of data and are typically used to transfer data between applications and data stores. They are characterized by fairly regular structure, fine-grained data (the smallest independent unit of data is usually at the attribute or PCDATA-only element level), and little or no mixed content. The order in which sibling elements and PCDATA occurs is usually not significant. Because of their regular structure and the unimportance of order, data-centric documents require a less complex structure in the database.</p>
+
+</p>XML-DBMS and the object-relational mapping it uses are designed for use with data-centric documents. Although it can be used with document-centric documents, the mapping is inefficient and unlikely to provide good performance. If you have document-centric documents, you have three choices:</p>
+
+<ul>
+<li>Use a native XML database instead of XML-DBMS. For more information, see section 6.2 in <a href="http://www.rpbourret.com/xml/XMLAndDatabases.htm#nativedb">XML and Databases</a>.</li>
+<li>Map your documents as described in the previous section and accept the slow performance.</li>
+<li>Map element types with element-only content as classes and element types with mixed content as properties.</li>
+</ul>
+
+<p> The last choice is useful for documents that contain a mixture of data-centric and document-centric content. For example, the sales order document contains a Description element that contains mixed content; the rest of the sales order document contains element-only content. Because the Description element only makes sense as a whole -- that is, its individual pieces do not make sense when examined separately -- it is reasonable to store it in a single column. (This is a data-centric view of the Description element.)</p>
+
+<p>To do this, we simply view the Description element as a property and map it with a PropertyMap element:</p>
+
+<pre>
+   &lt;PropertyMap&gt;
+      &lt;ElementType Name="Description"/&gt;
+      &lt;ToColumn&gt;
+         &lt;Column Name="Description"/&gt;
+      &lt;/ToColumn&gt;
+   &lt;/PropertyMap&gt;
+</pre>
+
+<p>When a Description element is stored in the database, its content is serialized as XML. For example, the following Description element:</p>
+
+<pre>
+   &lt;Description&gt;
+      &lt;P&gt;&lt;B&gt;Turkey wrench:&lt;/B&gt;&lt;BR /&gt;
+      Stainless steel, one-piece construction,
+      lifetime guarantee.&lt;/P&gt;
+   &lt;/Description&gt;
+</pre>
+
+<p>is stored in the Description column as:</p>
+
+<pre>
+      &lt;P&gt;&lt;B&gt;Turkey wrench:&lt;/B&gt;&lt;BR /&gt;
+      Stainless steel, one-piece construction,
+      lifetime guarantee.&lt;/P&gt;
+</pre>
+
+<h3><a name="LangResult"/>4.10 Mapping Classes (Element Types) to Result Sets</h3>
+
+<p>Normally, when you retrieve data from the database, you specify the key values of the rows in the root table that you want to include in the XML document. XML-DBMS also allows you to create an XML document from a result set. This might be a result set over a table that you have already mapped. For example, rather than creating an XML document from sales orders with specific numbers, you want to create an XML document from all the sales orders with a certain customer number. It might also be a result set you have created for some other purpose and want to serialize as XML.</p>
+
+<p>For example, the following fragment of the <a href="#SalesSample">sales_rs1.map</a> sample map could be used to retrieve data just from a result set built over the Sales table, such as with the statement SELECT * FROM Sales. Note that it does not contain any RelatedClass elements.</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Result Set"/&gt;
+      &lt;/ToClassTable&gt;
+      ...property maps...
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>Now suppose you wanted to retrieve data from a result set created by joining two tables, such as the following:</p>
+
+<pre>
+   SELECT Sales.CustNumber,
+          Sales.Number,
+          Sales.Date,
+          Lines.SONumber,
+          Lines.Part,
+          Lines.Number AS LineNumber
+   FROM Sales JOIN Lines ON Sales.Number = Lines.SONumber
+</pre>
+
+<p>The following fragment of the <a href="#SalesSample">sales_rs2.map</a> sample map maps this to an XML document:</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Result Set"/&gt;
+      &lt;/ToClassTable&gt;
+      &lt;PropertyMap&gt;
+         &lt;Attribute Name="Line"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="LineNumber"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+      &lt;PropertyMap&gt;
+         &lt;ElementType Name="Customer"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="CustNumber"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+      &lt;PropertyMap&gt;
+         &lt;Attribute Name="SONumber"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="Number"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+      &lt;PropertyMap&gt;
+         &lt;ElementType Name="OrderDate"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="Date"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+      &lt;PropertyMap&gt;
+         &lt;ElementType Name="PartNumber"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="Part"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>There are two important things to notice here. First, column names in the map file are the column names in the result set. Thus, while the Lines.Part column has a column name of Part, the Lines.Number column has a column name of LineNumber due to the use of an AS clause in the select list. LineNumber is used in the map.</p>
+
+<p>Second, because the relationship between the Sales and Lines tables is one to many, the Sales.CustNumber, Sales.Number, Sales.Date, and Lines.SONumber columns will be repeated in the result set and therefore will be repeated in the XML document. That is, XML-DBMS treats a result set like any other table and creates one element, containing all child elements and attributes, for each row in the result set. It does not attempt to nest data that is repeated from row to row due to a join.</p>
+
+<p>Since this is unlikely to be what you want, the solution is to only map the Sales table as a result set, then let XML-DBMS join it to other tables based on the information in the map. For example, suppose you wanted to retrieve all sales orders for customer number 543. You could create a result set from the following SELECT statement:</p>
+
+<pre>
+   SELECT * FROM Sales WHERE CustNumber='543'
+</pre>
+
+<p>and map it with the <a href="#SalesSample">sales_rs3.map</a> sample map. This map is identical to the sales.map sample map, except that it uses the table name "Result Set" instead of Sales, as shown in the following fragment:</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Result Set"/&gt;
+      &lt;/ToClassTable&gt;
+      ... property maps for the Number and Date columns ...
+      ... related class maps for the Lines and Customers tables ...
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>Note that while this strategy allows you to specify a WHERE clause over the root table, it does not allow you to similarly restrict the rows in other tables in the hierarchy. The long term solution for this is probably an implementation of XPath or other XML query language in XML-DBMS. Do not expect to see this any time soon.</p>
+
+<h3><a name="LangNS"/>4.11 Using Namespaces</h3>
+
+<p>Namespaces are supported through Namespace elements, which declare the prefixes and URIs used in the Name attributes of ElementType and Attribute elements. (Note that these prefixes are separate from those declared with xmlns attributes.) For example, suppose the sales order language has a namespace URI of http://ito.tu-darmstadt.de/xmldbms/sales. The map document might contain the following Namespace element, which states that the sales prefix is used in the map document to identify element types and attributes from this namespace.</p>
+
+<pre>
+   &lt;Namespace Prefix="sales" URI="http://ito.tu-darmstadt.de/xmldbms/sales"/&gt;
+</pre>
+
+<p>Thus, when mapping the SalesOrder element type, the following reference is used:</p>
+
+<pre>
+   &lt;ElementType Name="sales:SalesOrder"/&gt;
+</pre>
+
+<p>As with namespaces in XML documents, unprefixed attribute names referenced in the Name attribute of the Attribute element type do not belong to any XML namespace. (For those of you who are confused by this statement, remember that such attribute names must be unique within their element type; this is a requirement imposed by the XML specification and has nothing to do with XML namespaces.) For example, in the following class map, the SONumber attribute is assumed to belong to the SalesOrder element type; it does not belong to any XML namespace.</p>
+
+<pre>
+   &lt;ClassMap&gt;
+      &lt;ElementType Name="sales:SalesOrder"/&gt;
+      &lt;ToClassTable&gt;
+         &lt;Table Name="Sales"/&gt;
+      &lt;/ToClassTable&gt;
+      &lt;PropertyMap&gt;
+         &lt;Attribute Name="SONumber"/&gt;
+         &lt;ToColumn&gt;
+            &lt;Column Name="Number"/&gt;
+         &lt;/ToColumn&gt;
+      &lt;/PropertyMap&gt;
+   &lt;/ClassMap&gt;
+</pre>
+
+<p>Prefixes used in the map document do not need to match those used in instance documents. All that is important is that the namespace URIs are the same. Currently, Namespace elements do not support empty prefixes; that is, you cannot declare a namespace URI that will be associated with unprefixed element type and attribute names in the map document.</p>
+
+<p>Whether a document using namespaces can actually be processed depends on the DOM implementation being used. For more information, see section 7.1, "<a href="#Namespaces">XML Namespaces</a>".</p>
+
+<h3><a name="Nulls"/>4.12 Handling Null Values</h3>
+
+<p>A null value is a value that simply isn't there. This is very different from a value of 0 (for numbers) or zero length (for a string). For example, suppose you have data collected from a weather station. If the thermometer isn't working, a null value is stored in the database rather than a 0, which would mean something different altogether.</p>
+
+<p>XML also supports the concept of null data through optional element types and attributes. If the value of an optional element type or attribute is null, it simply isn't included in the document. As with databases, empty elements or attributes containing zero length strings are not null: their value is a zero-length string.</p>
+
+<p>In spite of this definition of null values, it is quite likely that XML documents will use empty (zero-length) strings to represent null values. Because of this, the EmptyStringIsNull element can be used to state how empty strings are treated. If it is present, empty strings are treated in the same way as null values. If it is absent, empty strings are treated as strings. For example, the following states that empty strings should be treated as nulls.
+
+<pre>
+   &lt;EmptyStringIsNull/&gt;
+</pre>
+
+<p>The EmptyStringIsNull element is nested inside the Options element. Note that it applies only to element types and attributes mapped as propertys. An empty element-as-class with no attributes results in a row of all NULLs in the database.</p>
+
+<h3><a name="LangDateTime"/>4.13 Date, Time, and Timestamp Formats</h3>
+
+<p>Because XML documents are international, it is likely that you will encounter a variety of date, time, and timestamp formats. You can specify the formats to use with the DateTimeFormats element, which contains an optional Locale element and a Patterns element that specifies the actual formatting patterns to use. For example, the following specifies that dates use the "dd.MM.yy" format (e.g. 29.10.58), times use the "HH:mm" format (e.g. 18:37), and timestamps use the "MMM d, yyyy h:mm a" (e.g. February 9, 1962 6:35 AM).
+
+<pre>
+   &lt;DateTimeFormats&gt;
+      &lt;Patterns Date="HH:mm" Time="HH:mm" Timestamp="MMM d, yyyy h:mm"/&gt;
+   &lt;/DateTimeFormats&gt;
+</pre>
+
+<p>Like EmptyStringIsNull, the DateTimeFormats element is nested inside the Options element. The formats used are defined in the java.text.DateFormat and java.text.SimpleDateFormat classes.</p>
+
+<h3><a name="LangQuery"/>4.14 The XML-DBMS Mapping Language as a Query Language</h3>
+
+<p>The XML-DBMS mapping language can be thought of as a very simplistic query language. That is, when inserting data into the database, it is equivalent to a parameterized INSERT statement, with "parameter" values coming from the XML document. When retrieving data from the database, it is equivalent to a SELECT statement, with RelatedClass elements equivalent to joins.</p>
+
+<p>Thinking of the mapping language as a query language is useful, since it demonstrates that there can be multiple mappings between XML documents and a given table hierarchy in the database. This is less important when inserting data. The reason is that documents are not required to contain all of the elements and attributes mapped in a given map document. Like parameters in an INSERT statement for which there is no data, elements and attributes mapped in the map document but for which no data is provided in the XML document simply result in NULL values in the database, or no values at all, if an entire row would be NULL.</p>
+
+<p>Viewing the mapping language as a query language is more important when retrieving data from the database. This is because each element or attribute mapped in the map document results in an element or attribute in the XML document, just as columns and tables in a SELECT statement result in values in the result set.</p>
+
+<p>As a result, a single map document can be used to insert data from all XML documents that match a given DTD. (Remember that any element type in a DTD can be the root element type.) On the other hand, each different "view" of the data in a given table hierarchy requires a different map document.</p>
+
+<p>For example, consider the sample sales order document. This can be inserted and retrieved by a single map document. Now suppose that the Description element was optional. An XML document that did not contain a Description element could be inserted using a map document that maps the Description element. However, the converse is not true. Constructing an XML document that did not contain a Description element would require a map document that did not map the Description element.</p>
+
+<h2><a name="UsingCmd"/>5.0 Transferring Data from the Command Line</h2>
+
+<p>The easiest way to transfer data is from the command line. To do this, you call the Transfer tool and pass it a set of property/value pairs. For example, the following command transfers data from the sales_in.xml file to the database. Note that on an actual system, this would be entered on a single line.</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.Transfer
+         Driver=sun.jdbc.odbc.JdbcOdbcDriver URL=jdbc:odbc:xmldbms User=ron Password=ronpwd
+         NameQualifierClass=de.tudarmstadt.ito.domutils.NQ_DOM2
+         ParserUtilsClass=de.tudarmstadt.ito.domutils.ParserUtilsXerces
+         Action=StoreDocument MapFile=sales.map XMLFile=sales_in.xml
+</pre>
+
+<p>As another example, the following command transfers data for sales order number 123 from the database to the sales_out.xml file:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.Transfer
+         Driver=sun.jdbc.odbc.JdbcOdbcDriver URL=jdbc:odbc:xmldbms User=ron Password=ronpwd
+         ParserUtilsClass=de.tudarmstadt.ito.domutils.ParserUtilsXerces
+         Action=RetrieveDocumentByKey MapFile=sales.map XMLFile=sales_in.xml Table=Orders Key=123
+</pre>
+
+<p>For a list of the properties used by the Transfer tool, see section A.4, <a href="#PropsTransfer">Transfer Properties</a>.</p>
+
+<h3><a name="PropFiles"/>5.1 Using Property Files</h3>
+
+<p>As is quite obvious from the previous section, the list of properties in a command line can be quite long. To solve this problem, you can store property/value pairs in a Java properties file, then use the special property name File on the command line. This allows you to group commonly used property/value pairs, such as parser properties and database properties, in a single file.</p>
+
+<p> For example, suppose you put the property/value pairs for the Xerces parser (NameQualifierClass, ParserUtilsClass) in the xerces.props file and the property/value pairs for your database (Driver, URL, and User) in the mydb.props file. The command line from the previous section is now:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.Transfer File=xerces.props File=mydb.props
+         Password=ronpwd Action=StoreDocument MapFile=sales.map XMLFile=sales_in.xml
+</pre>
+
+<p>(Notice that the password is still on the command line. This is because placing the password in an unencrypted properties file is a security risk, although having it on the command line is not much better.)</p>
+
+<p>You can create properties files by hand or use the GeneratePropFile utility. The GeneratePropFile utility accepts a set of property/value pairs and writes them to the file specified by the OutputFile property. For example, to create the xerces.prop file, you could use the command:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.GeneratePropFile
+         OutputFile=xerces.prop
+         NameQualifierClass=de.tudarmstadt.ito.domutils.NQ_DOM2
+         ParserUtilsClass=de.tudarmstadt.ito.domutils.ParserUtilsXerces
+</pre>
+
+<p>For a list of the properties that can be used with GeneratePropFile, see section A.7, <a href="#PropsGenProp">GeneratePropFile Properties</a>.
+
+<h3><a name="PropFinePrint"/>5.2 Properties: The Fine Print</h3>
+
+<p>Properties are read from left to right. If a property appears more than once, the last value read is the one that is used. This is useful when properties are stored in files and you want to override a value in a file. To do this, you place the file in the command line before the value that overrides the value in the property. For example, if the mydb.props file contains the user name ron, the following command overrides this and uses adam instead:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.Transfer File=xerces.props
+         File=mydb.props User=adam Password=adampwd
+         Action=StoreDocument MapFile=sales.map XMLFile=sales_in.xml
+</pre>
+
+<p>No spaces are allowed in property/value pairs, even around the equals sign. For example, the following returns an error:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.Transfer Driver = invalid.property.value.Pair ...
+</pre>
+
+<p>If a property includes a space, enclose the entire property value pair in quotes. For example:
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.Transfer "Password=password with spaces" ...
+</pre>
+
+<h2><a name="UsingProg"/>6.0 Transferring Data Programmatically</h2>
+
+<p>XML-DBMS is middleware. That is, it sits between an application and the database and is used by the application to transfer data between an XML document and the database. You have already seen one example of an XML-DBMS application: the Transfer tool. This application accepts property/value pairs on the command line and calls lower-level XML-DBMS classes to transfer data according to those properties.</p>
+
+<p>In this section, we will look at how you can use XML-DBMS to transfer data in your own applications. XML-DBMS can be used programmatically at three different levels: a properties-driven interface, a high-level API, and a low-level API. These are layered on top of each other as follows:</p>
+
+<pre>
+              GUI, command line, or other application
+                                |            <========= Properties-driven interface
+                            Transfer
+                                |            <========= High-level API
+                          TransferEngine
+                         /      |       \    <========= Low-level API
+   MapFactory_MapDocument   DOMToDBMS   DBMSToDOM
+</pre>
+
+<p>Since the bottom layer actually transfers data, you can use any of the three APIs. Obviously, the lower you go, the more work you have to do and the more control you get for your efforts. For many (most?) applications, calling Transfer </p>
+
+<h3><a name="ProgProps"/>6.1 Calling XML-DBMS with Properties</h3>
+
+<p>In addition to having a command line interface, Transfer has a programmatic interface. This consists of a single method, dispatch, to which an application can pass a Java Properties object directly. For example, the following code is equivalent to the command line shown in section 5.0:</p>
+
+<pre>
+   Transfer   t = new Transfer();
+   Properties p = new Properties();
+
+   p.put(XMLDBMSConst.DRIVER, "sun.jdbc.odbc.JdbcOdbcDriver");
+   p.put(XMLDBMSConst.URL, "jdbc:odbc:xmldbms");
+   p.put(XMLDBMSConst.USER, "ron");
+   p.put(XMLDBMSConst.PASSWORD, "ronpwd");
+   p.put(XMLDBMSConst.NAMEQUALIFIERCLASS, "de.tudarmstadt.ito.domutils.NQ_DOM2");
+   p.put(XMLDBMSConst.PARSERUTILSCLASS, "de.tudarmstadt.ito.domutils.ParserUtilsXerces");
+   p.put(XMLDBMSConst.ACTION, "StoreDocument");
+   p.put(XMLDBMSConst.MAPFILE, "sales.map");
+   p.put(XMLDBMSConst.XMLFILE, "sales_in.xml");
+
+   t.dispatch(p);
+</pre>
+
+<p>As is the case when command lines are used, you can also use documents stored in property files. For example, the following code is equivalent to the command line shown in section 5.1:</p>
+
+<pre>
+   Transfer   t = new Transfer();
+   Properties p = new Properties();
+
+   p.load(new FileInputStream("xerces.props"));
+   p.load(new FileInputStream("mydb.props"));
+   p.put(XMLDBMSConst.PASSWORD, "ronpwd");
+   p.put(XMLDBMSConst.ACTION, "StoreDocument");
+   p.put(XMLDBMSConst.MAPFILE, "sales.map");
+   p.put(XMLDBMSConst.XMLFILE, "sales_in.xml");
+
+   t.dispatch(p);
+</pre>
+
+<p>Note that your code must load any property files directly. That is, it can't pass the File property to Transfer and expect Transfer to get the properties from the file. This is because Transfer only processes the File property when it is in the command line. (This is arguably a design bug and will probably be changed.)</p>
+
+<p>In many cases, it is useful to keep an XML document in your application as a string, rather than always storing it in a file. If you already have an XML document it string form, you can store it in the database using the XMLString property. If you want to retrieve a document as a string, call Transfer.dispatch_s(Properties) instead of Transfer.dispatch(Properties). For code examples, see section 7.4, <a href="#XSLT">XSLT Processors</a>.</p>
+
+<p>For a list of the properties used by the Transfer class, see section A.4, <a href="#PropsTransfer">Transfer Properties</a>.</p>
+
+<h3><a name="ProgHigh"/>6.2 Calling XML-DBMS through the High-Level API</h3>
+
+<p>The next level of programmatic API is to call the TransferEngine class. For example, the following code is equivalent to the code in the previous section:</p>
+
+<pre>
+   TransferEngine te = new TransferEngine();
+   Properties     p = new Properties();
+
+   p.load(new FileInputStream("mydb.props"));
+   te.setDatabaseProperties(p);
+   te.setUserInfo("ron", "ronpwd");
+
+   p.load(new FileInputStream("xerces.props"));
+   te.setDatabaseProperties(p);
+
+   te.storeDocument("sales.map", "sales_in.xml", DOMToDBMS.COMMIT_AFTERDOCUMENT, null, null);
+</pre>
+
+<p>Currently, the TransferEngine API mimics the values of the Action property that apply to transferring data. Therefore, it isn't really any different from calling Transfer.dispatch(Properties). However, this will undoubtedly change in the future.</p>
+
+<p>For an example of an application that uses the TransferEngine API, see the Transfer tool.</p>
+
+<h3><a name="ProgLow"/>6.3 Calling XML-DBMS through the Low-Level API</h3>
+
+<p>If you want the most control over XML-DBMS, you can call the low-level classes directly. This allows you to do things like reuse connections and Map objects. As a starting point for your application, you might want to use the TransferEngine class, which performs most of the common operations XML-DBMS is capable of.</p>
+
+<p>(Note that as XML-DBMS evolves, much of this disadvantage will disappear, as things like connection pooling and Map object caching will be added to TransferEngine. Since this document is relatively static and the code is not, check the code for TransferEngine to see what has been added already.)</p>
+
+<h4><a name="MapObjects"/>6.3.1 Map Objects</h4>
+
+<p>A Map object describes the object view of the element types, attributes, and PCDATA in an XML document and how to map this view to the database. Map objects are opaque -- you can think of them as the compiled form of a map document.<p>
+
+<p>To use a Map object, you first construct it with a map factory and then pass it to one of the data transfer classes (DOMToDBMS or DBMSToDOM). For most uses, you never need to call any of the methods on a Map object. For example, the following code calls a user-defined function to create a Map from a map document and passes it to a DOMToDBMS object. Later, when the DOMToDBMS.storeDocument() method is called, the data will be transferred according to this Map.</p>
+
+<pre>
+   // Use a user-defined function that calls a map
+   // factory to create a map. (See section 4.2.)
+   map = createMap("sales.map", conn1);
+
+   // Set the Map on the DOMToDBMS object.
+   domToDBMS.setMap(map);
+</pre>
+
+<p>A Map object can be used multiple times. For example, suppose that a program expects to store four different types of XML documents in the database. It can create the Maps for each of these documents at start-up, then, as it receives documents to process, pass the appropriate Map to the DOMToDBMS object.</p>
+
+<p><b>Warning:</b> If it is possible for multiple threads to share the same object -- I don't know how multi-threading works in Java, so this may not be relevant -- then multiple threads should not share the same Map object. The reason for this is that a Map contains a reference to a Connection object and the data transfer classes (DBMSToDOM and DOMToDBMS) commit transactions on this object. Since Connection.commit() commits all statements open on a given Connection, a commit executed in one data transfer object will commit statements being used by all other data transfer objects sharing the same Map/Connection. This is unlikely to be the desired behavior.</p>
+
+<h4><a name="MapFactory_MapDocument"/>6.3.2 MapFactory_MapDocument</h4>
+
+<p>A <i>map factory</i> is a class that creates a map document. Currently, XML-DBMS has a two map factories: one to create Map objects from map documents and one to create Map objects from DTDs and schema documents.</p>
+
+<p>The MapFactory_MapDocument class creates Map objects from map documents -- you can think of it as a compiler for map documents. It is the most commonly used map factory. For example, the following code creates a Map object from the sales.map map document:</p>
+
+<pre>
+   // Instantiate a new map factory from a database connection
+   // and a SAX parser.
+   factory = new MapFactory_MapDocument(conn, parser);
+
+   // Create a Map from sales.map.
+   map = factory.createMap(new InputSource(new FileReader("sales.map")));
+</pre>
+
+<p>For an example of code that creates a Map object with MapFactory_MapDocument, see the TransferEngine class.</p>
+
+<h4><a name="MapFactory_DTD"/>6.3.3 MapFactory_DTD</h4>
+
+<p>The MapFactory_DTD class creates Map objects from DTDs and XML schema documents. This factory is designed primarily for use as a tool to help build mapping documents. Applications that transfer data between XML documents and the database probably won't ever use it. For example, the following code creates a Map object from product.dtd and then serializes that Map object to a file.</p>
+
+<pre>
+   // Instantiate a new map factory and create a map.
+   factory = new MapFactory_DTD();
+   src = new InputSource("file://c:/java/de/tudarmstadt/ito/xmldbms/samples/product.dtd");
+   map = factory.createMapFromDTD(src, MapFactory_DTD.DTD_EXTERNAL, true, null);<br />
+
+   // Open a FileOutputStream and serialize the Map to that stream.
+   mapFile = new FileOutputStream("c:\java\de\tudarmstadt\ito\xmldbms\samples\product.map");
+   map.serialize(mapFile);
+   mapFile.close();
+</pre>
+
+<p>MapFactory_DTD supports DTDs in two forms: either an external subset -- that is, a stand-alone DTD file -- or an XML document containing an internal subset, reference to an external subset, or both. It also supports XML schemas written in <a href="http://www.w3.org/TR/NOTE-ddml">DDML (Data Definition Markup Language)</a>. If you need to use another schema language, such as the <a href="http://www.w3.org/TR/xmlschema-1/">W3C's XML Schema language</a>, <a href="http://www.w3.org/TR/NOTE-dcd">DCD (Document Content Description for XML)</a>, <a href="http://www.w3.org/TR/NOTE-SOX/">SOX (Schema for Object-Oriented XML)</a>, or <a href="http://www.ltg.ed.ac.uk/~ht/XMLData-Reduced.htm">XML-Data Reduced</a>, you will need to write a conversion module similar to de.tudarmstadt.ito.schemas.converters.DDMLToDTD.</p>
+
+<p>For an example of code that creates a Map object with MapFactory_DTD, see the MapEngine class.</p>
+
+<h4><a name="ToDBMS"/>6.3.4 Transferring Data from an XML Document to the Database</h4>
+
+<p>XML-DBMS has two classes for transferring data between XML documents and the database: DOMToDBMS transfers data from XML documents to the database and DBMSToDOM transfers data in the opposite direction. Both classes use DOM trees as intermediate forms of the XML document. (SAXToDBMS and DBMSToSAX classes are planned for a future release of XML-DBMS. These should help solve some of the scalability problems encountered by using DOM trees.)</p>
+
+<p>The DOMToDBMS class transfers data from a DOM tree to the database according to a given Map. For example, the following code transfers data from the sales_in.xml document to the database according to the Map object created from sales.map:</p>
+
+<pre>
+   // Use a user-defined function to create a map.
+   map = createMap("sales.map", conn1);
+
+   // Use a ParserUtils function to create a DOM tree over sales_in.xml
+   doc = parserUtils.openDocument("sales_in.xml");
+
+   // Create a new DOMToDBMS object and store the data.
+   domToDBMS = new DOMToDBMS(map);
+   docInfo = domToDBMS.storeDocument(doc);
+</pre>
+
+<p>Information about how to retrieve the data at a later point in time is returned in a DocumentInfo object, which is just a list of table names, key column names, key values, and order column names.</p>
+
+<p>For an example of code that transfers data with DOMToDBMS, see the TransferEngine class.</p>
+
+<h4><a name="ToXML"/>6.3.5 Transferring Data from the Database to an XML Document</h4>
+
+<p>The DBMSToDOM class transfers data from the database to a DOM tree according to a given Map. For example, the following code transfers data for sales order number 123 from the Sales table to the sales_out.xml document according to the Map object created from sales.map:</p>
+
+<pre>
+   // Use a user-defined function to create a map.
+   map = createMap("sales.map", conn);
+
+   // Create a new DBMSToDOM object.
+   dbmsToDOM = new DBMSToDOM(map, new ParserUtilsXerces());
+
+   // Create a key and retrieve the data.
+   key = {new Integer(123)};
+   doc = dbmsToDOM.retrieveDocument("Sales", key);
+</pre>
+
+<p>Note that the DBMSToDOM object is created with a ParserUtils class for the Xerces parser (ParserUtilsXerces). The ParserUtils interface encapsulates a number of common methods not supported by standard methods, such as creating a new DOM Document and getting a SAX parser. For more information, see section 7.2, "<a href="#ParserUtils">Parser Utilities</a>".
+
+<p>The DBMSToDOM class has four different retrieveDocument methods. In addition to the method shown above, there are methods that accept arrays of tables and keys, a DocumentInfo object, and a JDBC ResultSet object as arguments. For information about the last of these methods, see section 4.10, <a href="#ResultSet">Mapping Classes (Element Types) to Result Sets</a>.</p>
+
+<p>If the data specified by the parameters of a retrieveDocument method contains more than one row, the Map object must specify an <a href="#LangElim">ignored root type</a>. Otherwise, DBMSToDOM will attempt to add more than one root element to the document, resulting in a DOMException. (Note that this does not include rows of data retrieved from subordinate tables.)</p>
+
+<p>For an example of code that transfers data with DBMSToDOM, see the TransferEngine class.</p>
+
+<h2><a name="Additional"/>7.0 Additional Programming Considerations</h2>
+
+<h3><a name="Namespaces"/>7.1 XML Namespaces</h3>
+
+<p>The DOM specification level 1, which was the only level available when XML-DBMS was written, does not define how namespaces are supported. Thus, some DOM implementations defined methods for retrieving various information about the namespace used by a given Node. The NameQualifier interface encapsulates a subset of this information. It uses the following definitions:</p>
+
+<dl>
+  <dt>Local name</dt>
+  <dd>The unprefixed name of a node.<dd>
+  <dt>Prefixed name</dt>
+  <dd>The prefixed name of a node. If there is no namespace URI, the prefixed name is the same as the local name.<dd>
+  <dt>Qualified name</dt>
+  <dd>The namespace URI, plus a caret (^), plus the local name. If there is no namespace URI, the qualified name is the same as the local name.</dd>
+</dl>
+
+<p>For example:</p>
+
+<pre>
+   &lt;foo:element1 xmlns="http://foo">
+   Local name: "element1"
+   Prefixed name: "foo:element1"
+   Qualified name: "http://foo^element1"
+
+   &lt;element2>
+   Local name: "element2"
+   Prefixed name: "element2"
+   Qualified name: "element2"
+</pre>
+
+<p>To use namespaces, the DOM implementation must support namespaces and the Map object must declare the namespace URI (if any) of each mapped element type and attribute (see section 4.11, "<a href="#LangNS"/>Using Namespaces</a>"). If a DOM implementation does not support namespaces, then the element type and attribute names in the Map object must exactly match the names returned by the DOM's implementation Node.getNodeName(). Usually, this will be the prefixed name.</p>
+
+<p>When transferring data from an XML document to the database, the caller must pass an object that implements the NameQualifier interface to the DOMToDBMS object. For example, the following code passes a NameQualifier for Oracle's DOM implementation:</p>
+
+<pre>
+   domToDBMS.setNameQualifier(new NQ_Oracle());
+</pre>
+
+<p>The NameQualifier may also be set in the constructor and no NameQualifier is needed if neither the XML document nor the Map uses namespaces. The de.tudarmstadt.ito.domutils package includes implementations of NameQualifier for DataChannel (Microsoft), IBM, Oracle (versions 1 and 2), and Sun, as well as a generic implementation of NameQualifier for all DOM implementations that support level 2 of the specification. As of this writing, Docuverse and OpenXML do not support namespaces. However, you should check whether a newer version of either implemenation does; implementing NameQualifier yourself is trivial.</p>
+
+<p>When transferring data from the database to an XML document, the caller must choose how namespaces will be used. DOM level 1 does not support setting the namespace or prefix of an element or attribute. Thus, the caller can choose whether element and attribute names are prefixed according to the namespace prefixes in the Map or no prefixes are used at all.</p>
+
+<p>Prefixing the element and attribute names in the returned DOM tree is useful if the DOM tree is to be serialized as XML. However, it will probably cause problems if the DOM tree is to be used directly. The reason for this is that the DOM implementation will not correctly recognize and return the unprefixed name, the namespace URI, or the qualified name. By default, prefixes are not used. The following code shows how to request that prefixes be used:</p>
+
+<pre>
+   dbmsToDOM.usePrefixes(true);
+</pre>
+
+<p>(DOM level 2 does support setting namespaces on elements or attributes; support for this will probably be added in the future.)</p>
+
+<h3><a name="ParserUtils"/>7.2 Parser Utilities</h3>
+
+<p>Various XML specifications omit certain crucial methods. For example, there is no standard way to create a new DOM Document, serialize a DOM document, or get a SAX parser. Thus, we have encapsulated this functionality in the de.tudarmstadt.ito.domutils.ParserUtils interface and included implementations of this interface for a number of popular parsers. (If there is no implementation for your parser, you can implement the ParserUtils interface yourself. Doing so is relatively easy.)</p>
+
+<p>The methods in the ParserUtils interface are used primarily by the TransferEngine and MapEngine classes. Applications that use those classes must therefore pass an object that implements ParserUtils to those classes as part of initializing them. (Since TransferEngine and MapEngine are used by the Transfer and GenerateMap tools, respectively, the name of a class implementing ParserUtils is one of the properties required by these tools.)</p>
+
+<p>The ParserUtils interface is also used by DBMSToDOM, which uses it to create a new (empty) DOM document. An object that implements ParserUtils must therefore be passed to DBMSToDOM (either through the setDocumentFactory method or on the constructor) before calling retrieveDocument. For example, the following code uses the ParserUtils for Xerces:</p>
+
+<pre>
+   dbmsToDOM.setDocumentFactory(new ParserUtilsXerces());
+</pre>
+
+<h3><a name="KeyGenerators"/>7.3 Key (Object ID) Generators</h3>
+
+<p>If DOMToDBMS needs to generate key values, such as when <a href="#LangMixed">mapping mixed content to the database</a>, the calling application must provide an object that implements the <a href="docs/de.tudarmstadt.ito.xmldbms.KeyGenerator.html">KeyGenerator</a> interface. DOMToDBMS calls a method on this object to get unique key values (object IDs). You can write your own object to implement KeyGenerator -- for example, you might write a key generator that generates GUIDs (UUIDs) or timestamps -- or you can use <a href="docs/de.tudarmstadt.ito.xmldbms.helpers.KeyGeneratorHighLow.html">KeyGeneratorHighLow</a>, which is a sample implementation of KeyGenerator.</p>
+
+<p>KeyGeneratorHighLow generates unique 4-byte integers based on a value stored in a special table. Before you use KeyGeneratorHighLow, you must:</p>
+
+<ul>
+<li>Create a table named XMLDBMSKey with a single INTEGER column named HighKey.</li>
+<li>Add a single row to this table with HighKey set to 0.</li>
+</ul>
+
+<p>The following command line shows how you can use KeyGeneratorHighLow with the Transfer tool:</p>
+
+<pre>
+   c:> java de.tudarmstadt.ito.xmldbms.tools.Transfer File=xerces.props
+         File=mydb.props Password=ronpwd
+         Action=StoreDocument MapFile=sales.map XMLFile=sales_in.xml
+         KeyGeneratorClass=de.tudarmstadt.ito.xmldbms.helpers.KeyGeneratorHighLow
+</pre>
+
+<p>KeyGeneratorHighLow uses the values of the Driver, URL, User, and Password properties to initialize a connection to the database. (Note that this requires the XMLDBMSKey table to be in the same database as the data.)</p>
+
+<p>The following code shows how an application using the low-level interface to XML-DBMS uses KeyGeneratorHighLow.</p>
+
+<pre>
+   // Use a user-defined function to create a map.
+   Map map = createMap("document.map", conn);
+
+   // Use a ParserUtils function to create a DOM tree over document_in.xml
+   doc = parserUtils.openDocument("document_in.xml");
+
+   // Instantiate KeyGeneratorHighLow and initialize it with connection information.
+   KeyGeneratorHighLow keyGenerator = new KeyGeneratorHighLow();
+
+   Properties props = new Properties();
+   props.put(XMLDBMSProps.DRIVER, "sun.jdbc.odbc.JdbcOdbcDriver");
+   props.put(XMLDBMSProps.URL, "jdbc:odbc:xmldbms");
+   props.put(XMLDBMSProps.USER, "ron");
+   props.put(XMLDBMSProps.PASSWORD, "ronpwd");
+   keyGenerator.initialize(props);
+
+   // Create a new DOMToDBMS object and set the KeyGenerator.
+   domToDBMS = new DOMToDBMS(map);
+   domToDBMS.setKeyGenerator(keyGenerator);
+
+   // Store the data.
+   docInfo = domToDBMS.storeDocument(doc);
+</pre>
+
+<p>For a list of properties used to initialize KeyGeneratorHighLow, see section A.5, <a href="#PropsKey">Key Generator Properties</a>.</p>
+
+<h3><a name="XSLT"/>7.4 XSLT Processors</h3>
+
+<p>It is often necessary to transform XML documents before storing their data in the database or after retrieving their data from the database. The reason for this is that the object model suggested by the database might differ from the object model suggested by the XML document. (For a complete discussion, see the end of section 5.5, "Generating DTDs from Relational Schema and Vice Versa", in <a href="http://www.rpbourret.com/xml/XMLAndDatabases.htm#generating">XML and Databases</a>.)</p>
+
+<p>Such transformations are generally done with XSLT. Although XSLT transformations are not yet directly supported by XML-DBMS, such support is expected in the (near?) future. To prepare for this, as well as to provide XML-DBMS applications a standard interface with which to perform XSLT transformations, XML-DBMS includes a simple interface that encapsulates XSLT transformations: ProcessXSLT. (Such an interface is necessary because there does not appear to be a standard interface for XSLT processors, especially since it is not clear what is going on with TrAX -- Transformation API for XML.)</p>
+
+<p>If you want to use a class that implements ProcessXSLT, you can either instantiate it directly or pass the name of it to the XSLTLoader class with the XSLTClass property. To transform a document, call one of the transformation methods. For example, to transform a document before passing it to XML:</p>
+
+<pre>
+   // Get a class that implements ProcessXSLT
+
+   props.put(XMLDBMSProps.XSLTCLASS, "de.tudarmstadt.ito.utils.xslt.ProcessXSLTXalan2");
+   loader = new XSLTLoader();
+   xsltProcessor = loader.load(props);
+
+   // Transform the XML document
+
+   xmlString = xsltProcessor.transformFile("MyDataFile.xml", "MyXSLScript.xsl");
+
+   // Store the transformed document in the database.
+
+   props.clear();
+   props.put(XMLDBMSProps.ACTION, XMLDBMSProps.STOREDOCUMENT);
+   props.put(XMLDBMSProps.MAPFILE, "MyMapFile.map");
+   props.put(XMLDBMSProps.XMLString, xmlString);
+   transfer.dispatch(props);
+</pre>
+
+<p>For example, to transform a document after retrieving it from XML:</p>
+
+<pre>
+   // Retrieve an XML document as a string.
+
+   props.put(XMLDBMSProps.ACTION, XMLDBMSProps.RETRIEVEDOCUMENTBYSQL);
+   props.put(XMLDBMSProps.MAPFILE, "MyMapFile.map");
+   props.put(XMLDBMSProps.SELECT, "SELECT * FROM MyTable");
+   xmlString = transfer.dispatch_s(props);
+
+   // Get a class that implements ProcessXSLT
+
+   props.clear();
+   props.put(XMLDBMSProps.XSLTCLASS, "de.tudarmstadt.ito.utils.xslt.ProcessXSLTXalan2");
+   loader = new XSLTLoader();
+   xsltProcessor = loader.load(props);
+
+   // Transform the XML string
+
+   xmlString = xsltProcessor.transformString(xmlString, "MyXSLScript.xsl");
+</pre>
+
+<p>XML-DBMS version 1.1 is shipped with implementations of ProcessXSLT for the Xalan XSLT processor, versions 1 and 2. If you want to use another XSLT processor, you can implement ProcessXSLT yourself. This should not be difficult.</p>
+
+<h3><a name="JMS"/>7.5 Using JMS with XML-DBMS</h3>
+
+<p>If you are using JMS and are using XML documents as messages, you can integrate this into your application with the JMSWrapper class. JMSWrapper should work with most JMS servers, including Sonic MQ, which doesn't use an initial context. For more information, see the Java Docs for JMSWrapper and section A.8, <a href="#PropsJMS">JMSWrapper Properties</a>.</p>
+
+<h3><a name="Tips"/>7.6 Tips and Tricks</h3>
+
+<p>Here is a short list of ways that might help your code run faster:</p>
+
+<ul>
+
+<li>Reuse Map objects if you need to transfer data from multiple documents to the database or vice versa. For details, see section 6.3.1, "<a href="#MapObjects">Map Objects</a>".</li>
+
+<li>Use a pool of SELECT statements when transferring data from the database to an XML file. For details, see the comments in the code for Map.checkInSelectStatement.</li>
+
+<li>Close your prepared statements before discarding a Map object. For details, see Map.closeStatements().</li>
+
+</ul>
+
+<h3><a name="NotForUse"/>7.7 Classes Not for General Use</h3>
+
+<p>The de.tudarmstadt.ito.xmldbms package contains a number of public classes that are not for general use. That is, programmers using XML-DBMS do not need to instantiate or call methods on these classes. These classes are used to map XML document structures to database structures and are public so that they can be used by map factories, which are in a different package.</p>
+
+<p>The not-for-general-use mapping classes are:</p>
+
+<pre>
+   ClassMap
+   Column
+   ColumnMap
+   LinkInfo
+   MapOptions
+   OrderInfo
+   PropertyMap
+   RelatedClassMap
+   RootClassMap
+   RootTableMap
+   Table
+   TableMap
+</pre>
+
+<p>A special case is the Map class. For programmers using XML-DBMS, this is generally treated as an opaque object. That is, the programmer gets a Map object from a map factory and passes it to DOMToDBMS or DBMSToDOM (usually) without calling any methods on it. In spite of this, the Map object does have public methods that some (but not all) XML-DBMS programmers use, such as methods to serialize the map to an OutputStream and to get CREATE TABLE statements. Although many variables in the Map class are public, programmers should never need to access them.</p>
+
+<p>It is possible for programmers to directly create objects in the mapping classes, but it is strongly recommended that a map factory be used instead. Note that DOMToDBMS and DBMSToDOM largely assume that the objects in these classes have been created correctly, so using incorrectly constructed objects has unpredictable results. However, should a programmer be brave (foolish?) enough to construct these objects by hand, a slightly simplified hierarchy of them is as follows:</p>
+
+<pre>
+   Map
+      Table (array of)
+      TableMap (array of)
+      RootClassMap (hashtable of)
+         ClassMap
+            PropertyMap (hashtable of)
+            RelatedClassMap (hashtable of)
+               ClassMap...
+               LinkInfo
+               OrderInfo
+         LinkInfo
+         OrderInfo
+      RootTableMap (hashtable of)
+         TableMap
+            Table
+               Column (array of)
+            ColumnMap (array of)
+               Column
+            TableMap... (array of)
+</pre>
+
+<h2><a name="LandS"/>8.0 Licensing and Support</h2>
+
+<h3><a name="License"/>8.1 Licensing</h3>
+
+<p>XML-DBMS, along with its source code, is freely available for use in both commercial and non-commercial settings. It is not copyrighted and has <b>absolutely no warranty</b>. Use it as you will.</p>
+
+<h3><a name="Support"/>8.2 Support</h3>
+
+<p>If you have questions about how to use XML-DBMS, the first thing you should do is <a href="#Docs">read the documentation</a> and look at the sample programs. If you want to check for known bugs, you have three options. First, check the <a href="http://sourceforge.net/tracker/?group_id=13613&atid=113613">XML-DBMS bug database</a> on SourceForge. Second, look at the list of <a href="BugsEnhancements.htm">known bugs and proposed enhancements</a> shipped with the product. Third, look at the archives of the XML-DBMS mailing list (see below), which lists many known bugs and frequently asked questions.</p>
+
+<p>If you still have a question, you can send email to the mailing list at <a href="mailto:xml-dbms@yahoogroups.com">xml-dbms@yahoogroups.com</a>. Although you must be a member of the mailing list to post messages, anyone can read the messages in the archives. You can join the mailing list and read the archives at:</p>
+
+<p>&nbsp;&nbsp;&nbsp;<a href="http://groups.yahoo.com/group/xml-dbms">http://groups.yahoo.com/group/xml-dbms</a></p>
+
+<p>You can also join the XML-DBMS newsgroup at:
+
+<p>&nbsp;&nbsp;&nbsp;<a href="news://news.barkto.com/homeless.xml.xml-dbms">news://news.barkto.com/homeless.xml.xml-dbms</a></p>
+
+<p>And no matter where you post them, bug reports and comments are always welcome.</p>
+
+<h3><a name="Help"/>8.3 How can I help?</h3>
+
+<p>XML-DBMS is an ongoing, Open Source project and depends on users for feedback, bug reports, and new code. The best way to help out is to join the mailing list and actively participate in discussions, find and fix bugs, suggest new features, and submit changes you have made for inclusion in future releases. For the latest news, check the XML-DBMS home page at:</p>
+
+<p>&nbsp;&nbsp;&nbsp;<a href="http://www.rpbourret.com/xmldbms/index.htm">http://www.rpbourret.com/xmldbms/index.htm</a></p>
+
+<p>or the XML-DBMS project page on SourceForge:</p>
+
+<p>&nbsp;&nbsp;&nbsp;<a href="https://sourceforge.net/projects/xmldbms/">https://sourceforge.net/projects/xmldbms/</a></p>
+
+<h3><a name="Thanks"/>8.4 Thanks</h3>
+
+<p>Thanks to all those who have sent comments, suggestions for new features, bug reports, and code.</p>
+
+<p>First, two people deserve special mention. <b>Nick Semenov</b> single-handedly wrote the PERL version of XML-DBMS and has done an excellent job maintaining and supporting it. <b>Adam Flinton</b> designed and wrote almost all of the new code in version 1.1 -- a tremendous effort -- and has been instrumental in keeping me on track for version 2.0.</p>
+
+<p> Special thanks also to the following, who have made many helpful suggestions and comments, as well as contributing code and support on the mailing list. My apologies to anyone whose name I have missed.</p>
+
+<ul>
+<li>Alf Hogemark</li>
+<li>Brian Pendleton</li>
+<li>Emmanuel Clarke</li>
+<li>Himanshu G</li>
+<li>Ivana Tzenova</li>
+<li>Iztok Kucan</li>
+<li>Jiri Zoth</li>
+<li>Josep Miquel Garcia Rodriguez</li>
+<li>Laurent Foret</li>
+<li>Marc Lohmann</li>
+<li>Matthias Pfisterer</li>
+<li>Michael Angerman</li>
+<li>Omar López Ruiz</li>
+<li>Peter Adolphs</li>
+<li>Phil Friedman</li>
+<li>Ravi Kumar</li>
+<li>Richard Sullivan</li>
+<li>Roland Stengel</li>
+<li>Ruben Lainez</li>
+<li>Tobias Schilgen</li>
+</ul>
+
+<p>Finally, thanks to <a href="http://groups.yahoo.com/">Yahoo Groups</a> for providing a mailing list and archives, which have proved invaluable, <a href="http://sourceforge.net">Source Forge</a> for their development support, and the folks at news.barkto.com for hosting the news group.</p>
+
+<h2><a name="Properties"/>Appendix A: Properties</h2>
+
+<p>This appendix lists the properties that can be used with the Transfer, GenerateMap, and GeneratePropFile tools, as well with classes such as KeyGeneratorHighLow. If you are using XML-DBMS programmatically, you can find Java constants (static final Strings) for property names and values in the de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps class. </p>
+
+<h3><a name="PropsDBMS"/>A.1 Database Properties</h3>
+
+<p>The following properties provide information about connecting to the database, as well as what JDBC version to use. They are used by the Transfer and GenerateMap tools and by KeyGeneratorHighLow.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">Driver</td><td valign="top">JDBC driver class name.<br /><br />Required if you are using JDBC 1.0; otherwise ignored.</td><td valign="top">See your JDBC driver's documentation</td></tr>
+
+<tr><td valign="top">URL</td><td valign="top">URL used to by the JDBC driver to connect to the database.<br /><br />Required if you are using JDBC 1.0; otherwise ignored.</td><td valign="top">See your JDBC driver's documentation</td></tr>
+
+<tr><td valign="top">User</td><td valign="top">The user name used to connect to the database.<br /><br />Whether this is required depends on your database.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Password</td><td valign="top">The password for the user specified with the User property.<br /><br />Whether this is required depend on your database.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">JDBCLevel</td><td valign="top">Whether you want to use JDBC 1.0 (a JDBC driver and a database URL) or JDBC 2.0 (a JDBC DataSource and a JNDI Context) to connect to the database.<br /><br />Required if you want to use JDBC 2.0.</td><td valign="top">1 or 2. The default is 1.</td></tr>
+
+<tr><td valign="top">DataSource</td><td valign="top">The name of your JDBC data source.<br /><br />Required if you are using JDBC 2.0; otherwise ignored.</td><td valign="top">See your JDBC driver's documentation.</td></tr>
+
+<tr><td valign="top">DBInitialContext</td><td valign="top">The (name of the?) JNDI Context in which to create the JDBC 2.0 DataSource.<br /><br />Required if you are using JDBC 2.0; otherwise ignored.</td><td valign="top">See your JDBC driver's documentation.</td></tr>
+
+</table>
+
+<h3><a name="PropsParser"/>A.2 Parser Properties</h3>
+
+<p>The following properties provide information about the parser / DOM implementation you are using. They are used by the Transfer and GenerateMap tools.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">NameQualifierClass</td><td valign="top">The name of the class that implements the <a href="Namespaces">NameQualifier</a> interface for your parser.<br /><br />Required if you are transferring data from an XML document to the database; otherwise ignored.</td><td valign="top">de.tudarmstadt.ito.domutils.NQ_DataChannel, de.tudarmstadt.ito.domutils.NQ_DOM2, de.tudarmstadt.ito.domutils.NQ_IBM, de.tudarmstadt.ito.domutils.NQ_Oracle, de.tudarmstadt.ito.domutils.NQ_Oracle2, de.tudarmstadt.ito.domutils.NQ_Sun,<br />or a class you have written.<br /><br />The Xerces parser uses de.tudarmstadt.ito.domutils.NQ_DOM2.</td></tr>
+
+<tr><td valign="top">ParserUtilsClass</td><td valign="top">The name of the class that implements the <a href="ParserUtils">ParserUtils</a> interface for your parser.<br /><br />Required by the Transfer and GenerateMap tools.</td><td valign="top">de.tudarmstadt.ito.domutils.ParserUtilsIBM, de.tudarmstadt.ito.domutils.ParserUtilsJAXP, de.tudarmstadt.ito.domutils.ParserUtilsOracle2, de.tudarmstadt.ito.domutils.ParserUtilsSun, de.tudarmstadt.ito.domutils.ParserUtilsXerces,<br />or a class you have written</td></tr>
+
+</table>
+
+<h3><a name="PropsCommon"/>A.3 Common Properties</h3>
+
+<p>The following properties are common to most classes that process properties.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">File</td><td valign="top">Name of a file containing other properties. Used by Transfer, GenerateMap, and GeneratePropFile. Applies only when properties are passed on the command line; does not apply when properties are passed programatically.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">DocRoot</td><td valign="top">A string (usually a document path) to prepend to the XSLTScript and MapFile values. Applies only when properties are passed on the command line; does not apply when properties are passed programmatically.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">UseDocRoot</td><td valign="top">Whether to use the DocRoot property.</td><td valign="top">Yes, No<br /><br />The default is No.</td></tr>
+
+</table>
+
+<h3><a name="PropsTransfer"/>A.4 Transfer Properties</h3>
+
+<p>The following properties are used by the Transfer tool to transfer data from an XML document to the database.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">Database properties</td><td valign="top">See section A.1, <a href="#PropsDB">Database Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Parser properties</td><td valign="top">See section A.2, <a href="#PropsParser">Parser Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Common properties</td><td valign="top">See section A.3, <a href="#PropsCommon">Common Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Action</td><td valign="top">The action for Transfer to take. To transfer data from an XML document to the database, this must be StoreDocument. Required.</td><td valign="top">StoreDocument</td></tr>
+
+<tr><td valign="top">MapFile</td><td valign="top">The name of the map document to use. Required.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">XMLFile</td><td valign="top">The name of the XML document from which to transfer data. Required.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">CommitMode</td><td valign="top">When to commit INSERT statements.</td><td valign="top">AfterInsert, AfterDocument.<br /><br />The default is AfterInsert.</td></tr>
+
+<tr><td valign="top">KeyGeneratorClass</td><td valign="top">Name of the class used to generate keys. Required if the map document instructs XML-DBMS to generate keys.</td><td valign="top">de.tudarmstadt.ito.xmldbms.helpers.KeyGeneratorHighLow,<br />or a class you have written</td></tr>
+
+<tr><td valign="top">Key generator properties</td><td valign="top">See section A.1, <a href="#PropsDB">Key Generator Properties</a>. Used only if KeyGeneratorClass is KeyGeneratorHighLow.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">XSLTClass</td><td valign="top">Name of a class that implements the ProcessXSLT interface. Not yet implemented?</td><td valign="top">de.tudarmstadt.ito.xmldbms.xslt.ProcessXSLT1, de.tudarmstadt.ito.xmldbms.xslt.ProcessXSLT2,<br />or a class you have written<br /><br />Xalan 1 uses ProcessXSLT1. Xalan 2 uses ProcessXSLT2.</td></tr>
+
+<tr><td valign="top">XSLTScript</td><td valign="top">Name of the XSLT stylesheet. This transforms the document in XMLFile before data is transferred to the database. Required if XSLTClass is present. Not yet implemented?</td><td valign="top">--</td></tr>
+
+</table>
+
+<p>The following properties are used by the Transfer tool to transfer data from the database to an XML document.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">Database properties</td><td valign="top">See section A.1, <a href="#PropsDB">Database Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Parser properties</td><td valign="top">See section A.2, <a href="#PropsParser">Parser Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Common properties</td><td valign="top">See section A.3, <a href="#PropsCommon">Common Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Action</td><td valign="top">The action for Transfer to take. Required.<br /><br />RetrieveDocumentBySQL uses the Select property.<br /><br />RetrieveDocumentByKey uses the Table and Key1, Key2, ... properties.<br /><br />RetrieveDocumentByKeys uses the Table1, Table2, ... and Key1_1, Key1_2 ... properties.</td><td valign="top">RetrieveDocumentBySQL, RetrieveDocumentByKey, RetrieveDocumentByKeys</td></tr>
+
+<tr><td valign="top">Select</td><td valign="top">The SELECT statement to use when Action is RetrieveDocumentBySQL. For more information, see section 4.10, <a href="#LangResult">Mapping Classes (Element Types) to Result Sets</a></td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Table, Table1, Table2, ...</td><td valign="top">Name of the root table(s).<br /><br />Table is used when Action is RetrieveDocumentByKey.<br /><br />Table1, Table2, ... are used when Action is RetrieveDocumentByKeys.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Key1, Key2, ..., Key1_1, Key1_2, ...</td><td valign="top">Key values of the rows in the root table to retrieve.<br /><br />Key1, Key2, ... are used when Action is RetrieveDocumentByKey. Each property contains the value of a column in the key.<br /><br />Key1_1, Key1_2, ... Key2_1, Key2_2, ... are used when Action is RetrieveDocumentByKeys. The Key1_x properties contain the values of the columns in the key for Table1, and so on.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">MapFile</td><td valign="top">The name of the map document to use. Required.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">XMLFile</td><td valign="top">The name of the XML document to which to transfer data. Required.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">XSLTClass</td><td valign="top">Name of a class that implements the ProcessXSLT interface. Not yet implemented?</td><td valign="top">de.tudarmstadt.ito.xmldbms.xslt.ProcessXSLT1, de.tudarmstadt.ito.xmldbms.xslt.ProcessXSLT2,<br />or a class you have written<br /><br />Xalan 1 uses ProcessXSLT1. Xalan 2 uses ProcessXSLT2.</td></tr>
+
+<tr><td valign="top">XSLTScript</td><td valign="top">Name of the XSLT stylesheet. This transforms the document in XMLFile after data is transferred from the database. Required if XSLTClass is present. Not yet implemented?</td><td valign="top">--</td></tr>
+
+</table>
+
+<h3><a name="PropsKey"/>A.5 Key Generator Properties</h3>
+
+<p>The following properties are used to initialize the KeyGeneratorHighLow class.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">Database properties</td><td valign="top">See section A.1, <a href="#PropsDB">Database Properties</a>. Currently, JDBC 2.0 connections are not supported.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">KeyGenCat</td><td valign="top">Name of the catalog containing the table used by KeyGeneratorHighLow. The default is the current catalog.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">KeyGenSchema</td><td valign="top">Name of the schema containing the table used by KeyGeneratorHighLow. The default is the current schema.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">KeyGenTable</td><td valign="top">Name of the table used by KeyGeneratorHighLow. The default is XMLDBMSKey.</td><td valign="top">--</td></tr>
+
+</table>
+
+<h3><a name="PropsGenMap"/>A.6 GenerateMap Properties</h3>
+
+<p>The following properties are used by the GenerateMap tool.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">Database properties</td><td valign="top">See section A.1, <a href="#PropsDB">Database Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Parser properties</td><td valign="top">See section A.2, <a href="#PropsParser">Parser Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Common properties</td><td valign="top">See section A.3, <a href="#PropsCommon">Common Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Action</td><td valign="top">The action for GenerateMap to take. Required.</td><td valign="top">CreateMapFromDTD, CreateMapFromXMLSchema</td></tr>
+
+<tr><td valign="top">SchemaFile</td><td valign="top">Name of the DTD file (when Action is CreateMapFromDTD) or DDML file (when Action is CreateMapFromXMLSchema). Required.<br /><br />In spite of the name CreateMapFromXMLSchema, the only XML schema language supported is DDML. W3C XML Schemas are not yet supported.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">Prefix1, Prefix2, ...</td><td valign="top">Namespace prefixes (if any) used in the DTD when Action is CreateMapFromDTD.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">NamespaceURI1, NamespaceURI2, ...</td><td valign="top">Namespace URIs (if any) used in the DTD when Action is CreateMapFromDTD.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">OrderColumns</td><td valign="top">Whether to generate columns to hold order information. As a general rule, document-centric documents require order columns and data-centric documents do not. Required.</td><td valign="top">Yes, No</td></tr>
+
+<tr><td valign="top">SQLSeparator</td><td valign="top">Character used to separate CREATE TABLE statements. NOT YET IMPLEMENTED.</td><td valign="top">Default is ";"</td></tr>
+
+</table>
+
+<h3><a name="PropsGenProp"/>A.7 GeneratePropFile Properties</h3>
+
+<p>The following properties are used by the GeneratePropFile tool.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">Common properties</td><td valign="top">See section A.3, <a href="#PropsCommon">Common Properties</a>.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">OutputFile</td><td valign="top">Name of the property file to generate. The property file contains all properties except File (whose properties are used) and OutputFile.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top"><i>Any</i></td><td valign="top">The properties to store in the property file.</td><td valign="top">--</td></tr>
+
+</table>
+
+<h3><a name="PropsJMS"/>A.8 JMSWrapper Properties</h3>
+
+<p>The following properties are used by the JMSWrapper class.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th align="left">Property Name</th><th align="left">Description</th><th align="left">Legal Values</th></tr>
+
+<tr><td valign="top">JMSContext</td><td valign="top">The JMS context. Required.</td><td valign="top">See your JMS documentation.</td></tr>
+
+<tr><td valign="top">JMSUser</td><td valign="top">JMS user name. Required if your JMS server is set up to use user names and passwords.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">JMSPassword</td><td valign="top">JMS password. Required if your JMS server is set up to use user names and passwords.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">JMSProviderURL</td><td valign="top">The provider URL of your JMS server. Required.</td><td valign="top">See your JMS documentation.</td></tr>
+
+<tr><td valign="top">JMSTCF</td><td valign="top">The name of the JMS TopicConnectionFactory to use.</td><td valign="top">See your JMS documentation.</td></tr>
+
+<tr><td valign="top">JMSTopic</td><td valign="top">The JMS Topic to use. Required.</td><td valign="top">--</td></tr>
+
+<tr><td valign="top">JMSAckMode</td><td valign="top">The JMS acknowledgement mode.</td>AUTO_ACKNOWLEDGE, CLIENT_ACKNOWLEDGE, DUPS_OK_ACKNOWLEDGE<td valign="top">--</td></tr>
+
+</table>
+
+<h2><a name="SampleData"/>Appendix B: Sample Documents and Tables</h2>
+
+<p>XML-DBMS comes with two sets of sample XML documents: a <a href="#SalesSample">sales order</a> and a <a href="#DocSample">product description</a>. The sample documents and the tables needed to store these documents according to the shipped map documents are described in this section.</p>
+
+<h3><a name="SalesSample"/>B.1 Sales Sample</h3>
+
+<p>The sales sample shows a simple sales order written as an XML document. This is an example of a data-centric document. (For more information about data-centric documents, see section 4.1 of <a href="http://www.rpbourret.com/xml/XMLAndDatabases.htm#datacentric">XML and Databases</a>.) The sample comes with several different map documents:</p>
+
+<ul>
+<li><a href="samples/sales.map">sales.map</a> maps the sales_in.xml document</li>
+<li><a href="samples/sales_ns.map">sales_ns.map</a> maps the sales_in_ns.xml document, which uses XML namespaces</li>
+<li><a href="samples/sales_rs1.map">sales_rs1.map</a> maps a result set over the Sales table</li>
+<li><a href="samples/sales_rs2.map">sales_rs2.map</a> maps a join of the Sales and Lines tables</li>
+<li><a href="samples/sales_rs3.map">sales_rs3.map</a> maps a result set over the Sales table and joins it to all child tables for nested output</li>
+</ul>
+
+<h4><a name="SalesSampleDoc"/>B.1.1 Sample Sales Document</h4>
+
+<p>The sales sample comes with two forms of the sales order document: <a href="samples/sales_in.xml">sales_in.xml</a>, which does not use XML namespaces, and <a href="samples/sales_in_ns.xml">sales_in_ns.xml</a>, which does use XML namespaces. sales_in.xml is shown below.</p>
+
+<pre>
+   &lt;Orders&gt;
+      &lt;SalesOrder SONumber="12345"&gt;
+         &lt;Customer CustNumber="543"&gt;
+            &lt;CustName&gt;ABC Industries&lt;/CustName&gt;
+            &lt;Street&gt;123 Main St.&lt;/Street&gt;
+            &lt;City&gt;Chicago&lt;/City&gt;
+            &lt;State&gt;IL&lt;/State&gt;
+            &lt;PostCode&gt;60609&lt;/PostCode&gt;
+         &lt;/Customer&gt;
+         &lt;OrderDate&gt;981215&lt;/OrderDate&gt;
+         &lt;Line LineNumber="1"&gt;
+            &lt;Part PartNumber="123"&gt;
+               &lt;Description&gt;
+                  &lt;P&gt;&lt;B&gt;Turkey wrench:&lt;/B&gt;&lt;BR /&gt;
+                  Stainless steel, one-piece construction,
+                  lifetime guarantee.&lt;/P&gt;
+               &lt;/Description&gt;
+               &lt;Price&gt;9.95&lt;/Price&gt;
+            &lt;/Part&gt;
+            &lt;Quantity&gt;10&lt;/Quantity&gt;
+         &lt;/Line&gt;
+         &lt;Line LineNumber="2"&gt;
+            &lt;Part PartNumber="456"&gt;
+               &lt;Description&gt;
+                  &lt;P&gt;&lt;B&gt;Stuffing separator:&lt;B&gt;&lt;BR /&gt;
+                  Aluminum, one-year guarantee.&lt;/P&gt;
+               &lt;/Description&gt;
+               &lt;Price&gt;13.27&lt;/Price&gt;
+            &lt;/Part&gt;
+            &lt;Quantity&gt;5&lt;/Quantity&gt;
+         &lt;/Line&gt;
+      &lt;/SalesOrder&gt;
+   &lt;/Orders&gt;
+</pre>
+
+<h4><a name="SalesSampleTables"/>B.1.2 Tables for Sales Sample</h4>
+
+<p>The following tables are needed to store the sales_in.xml document, as it is mapped with sales.map.</p>
+
+<table>
+  <tr>
+   <th width="10"></th>
+   <th align="left" width="100">Sales</th>
+   <th width="100"></th>
+   <th width="40"></th>
+   <th align="left" width="100">Lines</th>
+   <th width="100"></th>
+  </tr>
+  <tr>
+   <td></td>
+   <td>Number</td>
+   <td>VARCHAR(10)</td>
+   <td></td>
+   <td>SONumber</td>
+   <td>VARCHAR(10)</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>CustNumber</td>
+   <td>VARCHAR(10)</td>
+   <td></td>
+   <td>Number</td>
+   <td>INTEGER</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>Date</td>
+   <td>DATE</td>
+   <td></td>
+   <td>Part</td>
+   <td>VARCHAR(10)</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td></td>
+   <td></td>
+   <td></td>
+   <td>Quantity</td>
+   <td>INTEGER</td>
+  </tr>
+</table>
+
+<p></p>
+
+<table>
+  <tr>
+   <th width="10"></th>
+   <th align="left" width="100">Customers</th>
+   <th width="100"></th>
+   <th width="40"></th>
+   <th align="left" width="100">Parts</th>
+   <th width="100"></th>
+  </tr>
+  <tr>
+   <td></td>
+   <td>Number</td>
+   <td>VARCHAR(10)</td>
+   <td></td>
+   <td>Number</td>
+   <td>VARCHAR(10)</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>Name</td>
+   <td>VARCHAR(40)</td>
+   <td></td>
+   <td>Description</td>
+   <td>VARCHAR(255)</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>Street/td>
+   <td>VARCHAR(50)</td>
+   <td></td>
+   <td>Price</td>
+   <td>DOUBLE</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>City</td>
+   <td>VARCHAR(50)</td>
+   <td></td>
+   <td></td>
+   <td></td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>State</td>
+   <td>VARCHAR(2)</td>
+   <td></td>
+   <td></td>
+   <td></td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>PostalCode</td>
+   <td>VARCHAR(10)</td>
+   <td></td>
+   <td></td>
+   <td></td>
+  </tr>
+</table>
+
+<h3><a name="DocSample"/>B.2 Product Description Sample</h3>
+
+<p>The document sample shows a simple product description written in XML. This is an example of a document-centric document. (For more information about document-centric documents, see section 4.2 of <a href="http://www.rpbourret.com/xml/XMLAndDatabases.htm#doccentric">XML and Databases</a>.) The sample comes with a single map document (<a href="samples/product.map">product.map</a>), as well as a DTD (<a href="samples/product.dtd">product.dtd</a>). The latter can be used with the <a href="#MapDocs">GenerateMap</a> tool.</p>
+
+<h4><a name="ProdSampleDoc"/>B.2.1 Sample Product Description Document</h4>
+
+<p>There is a single form of the product description document (<a href="samples/product_in.xml">product_in.xml</a>), which is shown below.</p>
+
+<pre>
+   &lt;!DOCTYPE Product SYSTEM "product.dtd"&gt;
+
+   &lt;Product&gt;
+
+   &lt;Name&gt;XML-DBMS&lt;/Name&gt;
+
+   &lt;Developer&gt;Ronald Bourret, Technical University of Darmstadt&lt;/Developer&gt;
+
+   &lt;Summary&gt;Java packages for transferring data between
+   XML documents and relational databases&lt;/Summary&gt;
+
+   &lt;Description&gt;
+
+   &lt;Para&gt;XML-DBMS is a set of Java packages for transferring data between
+   XML documents and relational databases. It views the XML document as a tree
+   of objects in which element types are generally viewed as classes and
+   attributes and PCDATA as properties of those classes. It then uses an object-
+   relational mapping to map these objects to the database. An XML-based mapping
+   language is used to define the view and map it to the database.&lt;/Para&gt;
+   
+   &lt;Para&gt;You can:&lt;/Para&gt;
+   
+   &lt;List&gt;
+   &lt;Item&gt;&lt;Link URL="readme.html"&gt;Read more about XML-DBMS&lt;/Link&gt;&lt;/Item&gt;
+   &lt;Item&gt;&lt;Link URL="XMLAndDatabases.htm"&gt;Read more about databases and XML&lt;/Link&gt;&lt;/Item&gt;
+   &lt;Item&gt;&lt;Link URL="xmldbms.dtd"&gt;View the mapping language DTD&lt;/Link&gt;&lt;/Item&gt;
+   &lt;Item&gt;&lt;Link URL="xmldbms.zip"&gt;Download XML-DBMS&lt;/Link&gt;&lt;/Item&gt;
+   &lt;/List&gt;
+   
+   &lt;Para&gt;XML-DBMS, along with its source code, is freely available for use
+   in both commercial and non-commercial settings.&lt;/Para&gt;
+   
+   &lt;/Description&gt;
+   
+</pre>
+
+<h4><a name="ProdSampleTables"/>B.2.2 Tables for Product Description Sample</h4>
+
+<p>The following tables are needed to store the product_in.xml document, as it is mapped with product.map.</p>
+
+<table>
+  <tr>
+   <th width="10"></th>
+   <th align="left" width="150">Product</th>
+   <th width="100"></th>
+   <th width="20"></th>
+   <th align="left" width="150">Link</th>
+   <th width="100"></th>
+  </tr>
+  <tr>
+   <td></td>
+   <td>ProductPK</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ParaFK</td>
+   <td>INTEGER</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>ProductOrder</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ItemFK</td>
+   <td>INTEGER</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>Name</td>
+   <td>VARCHAR(50)</td>
+   <td></td>
+   <td>LinkOrder</td>
+   <td>INTEGER</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>NameOrder</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>URL</td>
+   <td>VARCHAR(255)</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>Developer</td>
+   <td>VARCHAR(100)</td>
+   <td></td>
+   <td>LinkPCDATA</td>
+   <td>VARCHAR(255)</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>DeveloperOrder</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td></td>
+   <td></td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>Summary</td>
+   <td>VARCHAR(255)</td>
+   <td></td>
+   <td></td>
+   <td></td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>SummaryOrder</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td></td>
+   <td></td>
+  </tr>
+</table>
+
+<p></p>
+
+<table>
+  <tr>
+   <th width="10"></th>
+   <th align="left" width="150">Description</th>
+   <th width="100"></th>
+   <th width="20"></th>
+   <th align="left" width="150">List</th>
+   <th width="100"></th>
+  </tr>
+  <tr>
+   <td></td>
+   <td>ProductFK</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>DescriptionFK</td>
+   <td>INTEGER</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>DescriptionPK</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ListPK</td>
+   <td>INTEGER</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>DescriptionOrder</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ListOrder</td>
+   <td>INTEGER</td>
+  </tr>
+</table>
+
+<p></p>
+
+<table>
+  <tr>
+   <th width="10"></th>
+   <th align="left" width="150">Para</th>
+   <th width="100"></th>
+   <th width="20"></th>
+   <th align="left" width="150">ParaPCDATA</th>
+   <th width="100"></th>
+  </tr>
+  <tr>
+   <td></td>
+   <td>DescriptionFK</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ParaFK</td>
+   <td>INTEGER</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>ParaPK</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ParaPCDATA</td>
+   <td>VARCHAR(1023) or LONGVARCHAR</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>ParaOrder</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ParaPCDATAOrder</td>
+   <td>INTEGER</td>
+  </tr>
+</table>
+
+<p></p>
+
+<table>
+  <tr>
+   <th width="10"></th>
+   <th align="left" width="150">Item</th>
+   <th width="100"></th>
+   <th width="20"></th>
+   <th align="left" width="150">ItemPCDATA</th>
+   <th width="100"></th>
+  </tr>
+  <tr>
+   <td></td>
+   <td>ListFK</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ItemFK</td>
+   <td>INTEGER</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>ItemPK</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ItemPCDATA</td>
+   <td>VARCHAR(255)</td>
+  </tr>
+  <tr>
+   <td></td>
+   <td>ItemOrder</td>
+   <td>INTEGER</td>
+   <td></td>
+   <td>ItemPCDATAOrder</td>
+   <td>INTEGER</td>
+  </tr>
+</table>
+
+</body>
+</html>
+
