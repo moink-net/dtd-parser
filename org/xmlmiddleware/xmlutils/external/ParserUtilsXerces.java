@@ -17,7 +17,6 @@
 // Version 2.0
 // Changes from version 1.01: New in 1.1
 // Changes from version 1.1:
-// * Moved to xmlutils.helpers package
 
 package org.xmlmiddleware.xmlutils.external;
 
@@ -32,15 +31,19 @@ import java.io.*;
 // Imports for the Xerces parser
 
 import org.apache.xerces.dom.DOMImplementationImpl;
-import org.apache.xerces.parsers.DOMParser;
-import org.apache.xerces.parsers.SAXParser;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.SAXParserFactory;
 
 /**
- * Implements ParserUtils for the Xerces parser, version 1.4.
+ * Implements ParserUtils for the Xerces parser.
+ *
+ * <p>Supports any(?) version of Xerces that supports JAXP.</p>
  *
  * @author Adam Flinton
+ * @author Paul Gubbay
  * @version 2.0
  */
 
@@ -62,22 +65,35 @@ public class ParserUtilsXerces implements ParserUtils
    // ***********************************************************************
 
    /**
-    * Get a SAX 2.0 XMLReader.
+    * Return an object that wraps an XMLReader.  The XMLReader is wrapped
+    * within the SAXParser.
     *
-    * @return An object that implements XMLReader.
-    * @exception XMLMiddlewareException Thrown if an error occurs instantiating the XMLReader.
+    * @return  XMLReader wrapped within a SAXParser
+    * @exception  XMLMiddlewareException thrown when the SAXParserFactory encounters
+    *          a problem creating a new SAXParser
     */
    public XMLReader getXMLReader()
       throws XMLMiddlewareException
    {
-      return new SAXParser();
+      // Instantiate a SAXParser using the SAXParserFactory.
+      // This process ensures compatability across multiple version of Xerces
+
+      SAXParserFactory factory = SAXParserFactory.newInstance();
+      try
+      {
+         // Return the XMLReader that is wrapped by the SAXParser
+         return factory.newSAXParser().getXMLReader();
+      }
+      catch (Exception e)
+      {
+         throw new XMLMiddlewareException(e);
+      }
    }
 
    /**
     * Get a DOMImplementation object.
     *
     * @return The DOMImplementation object
-    * @exception XMLMiddlewareException Thrown if an error occurs instantiating the DOMImplementation.
     */
    public DOMImplementation getDOMImplementation()
       throws XMLMiddlewareException
@@ -93,34 +109,31 @@ public class ParserUtilsXerces implements ParserUtils
    }
 
    /**
-    * Open an InputSource and create a DOM Document.
+    * Open an InputSource and create a DOM Document
     *
-    * @param src A SAX InputSource
-    *
-    * @return An object that implements Document.
-    * @exception XMLMiddlewareException Thrown if an error occurs creating the DOM Document.
+    * @param   src SAX InputSource to be parsed into a Document
+    * @return  Document containing a DOM representation of InputSource
+    * @exception  XMLMiddlewareException if there is a problem parsing the
+    *          InputSource
     */
    public Document openDocument(InputSource src)
       throws XMLMiddlewareException
    {
-      DOMParser parser;
+      // Instantiate a DocumentBuilder parser using the DocumentBuilderFactory.
+      // This process ensures compatability across multiple version of Xerces
 
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      factory.setNamespaceAware(true);
       try
       {
-         // Instantiate the parser and set various options.
-         parser = new DOMParser();
-         parser.setFeature("http://xml.org/sax/features/namespaces", true);
-
-         // Parse the input file
-         parser.parse(src);
+         DocumentBuilder builder = factory.newDocumentBuilder();
+         // Return the DOM tree
+         return builder.parse(src);
       }
       catch (Exception e)
       {
          throw new XMLMiddlewareException(e);
       }
-
-      // Return the DOM tree
-      return parser.getDocument();
    }
 
    /**
@@ -130,7 +143,6 @@ public class ParserUtilsXerces implements ParserUtils
     * @param xmlFilename The name of the XML file.
     * @param encoding The output encoding to use. If this is null, the default
     *    encoding is used.
-    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
     */
    public void writeDocument(Document doc, String xmlFilename, String encoding)
       throws XMLMiddlewareException
@@ -165,7 +177,6 @@ public class ParserUtilsXerces implements ParserUtils
     * @param doc The DOM Document.
     *
     * @return The XML string.
-    * @exception XMLMiddlewareException Thrown if an error occurs writing the DOM Document.
     */
    public String writeDocument(Document doc)
       throws XMLMiddlewareException
