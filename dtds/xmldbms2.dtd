@@ -150,26 +150,78 @@ following throws an exception if B is inlined:
 
 This is necessary for reconstructing the inlined element. -->
 
+<!-- ************************************************************* -->
+<!--                         Namespace entities                    -->
+<!-- ************************************************************* -->
+
+<!-- These entities allow the DTD to be used with namespaces. If a
+     non-null prefix is used, the p and s entities must be declared
+     in the internal subset of the map document. The p entity provides
+     the prefix used in element type names and the s entity provides
+     the suffix used in the namespace declaration.
+
+     For example, suppose you want to use the prefix "xmldbms".
+     Declare the following entities in the internal subset of your
+     map document; notice that the p entity ends in a colon (:)
+     and the s entity starts with a colon (:)
+
+        <DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" [
+           <!ENTITY % p "xmldbms:">
+           <!ENTITY % s ":xmldbms">
+        ]>
+        <xmldbms:XMLToDBMS Version="2.0"
+                 xmlns:xmldbms="http://www.xmlmiddleware.org/xmldbms/v2">
+           <xmldbms:Options>
+              ...
+
+     If you do not declare the p and s entities in the internal subset
+     of your map document, then declare the XML-DBMS v2 namespace as
+     the default namespace. For example:
+
+        <DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd">
+        <XMLToDBMS Version="2.0"
+                 xmlns:="http://www.xmlmiddleware.org/xmldbms/v2">
+           <Options>
+              ...
+
+     If you are using a parser that reads the external subset, such
+     as a validating parser, you do not need to declare the namespace.
+     This is because it is declared in the DTD. However, this is
+     considered poor practice, as there is no guarantee other users
+     of the map document will use a parser that reads the external
+     subset.
+
+     WARNING: For a map document to validate against this DTD, it
+     must use the same prefix for the XML-DBMS v2 namespace throughout
+     the entire document. For details, see:
+
+        http://www.rpbourret.com/xml/NamespacesFAQ.htm#s7
+-->
+
+<!ENTITY % p "" >
+<!ENTITY % s "" >
+<!ENTITY % nsdecl "xmlns%s;" >
 
 <!-- ************************************************************* -->
 <!--                         Root element                          -->
 <!-- ************************************************************* -->
 
-<!ELEMENT XMLToDBMS (Options?, Databases, Maps)>
-<!ATTLIST XMLToDBMS
-          Version CDATA #FIXED "2.0">
+<!ELEMENT %p;XMLToDBMS (%p;Options?, %p;Databases, %p;Maps)>
+<!ATTLIST %p;XMLToDBMS
+          Version CDATA #FIXED "2.0"
+          %nsdecl; CDATA "http://www.xmlmiddleware.org/xmldbms/v2">
 
 <!-- ************************************************************* -->
 <!--                         Options                               -->
 <!-- ************************************************************* -->
 
-<!ELEMENT Options (EmptyStringIsNull?,
-                   (DateFormat | TimeFormat | DateTimeFormat | NumberFormat)*,
-                   Namespace*)>
+<!ELEMENT %p;Options (%p;EmptyStringIsNull?,
+                      (%p;DateFormat | %p;TimeFormat | %p;DateTimeFormat | %p;NumberFormat)*,
+                      %p;Namespace*)>
 
 <!-- ****************** Null handling    ************************* -->
 
-<!ELEMENT EmptyStringIsNull EMPTY>
+<!ELEMENT %p;EmptyStringIsNull EMPTY>
 
 <!-- ****************** Date, time, and number formatting  ************************* -->
 
@@ -179,24 +231,24 @@ This is necessary for reconstructing the inlined element. -->
      for a given type, use the name DefaultXxxx, where Xxxx is Date,
      Time, DateTime, or Number. -->
 
-<!ELEMENT DateFormat (Locale?, Pattern)>
-<!ATTLIST DateFormat
+<!ELEMENT %p;DateFormat (%p;Locale?, %p;Pattern)>
+<!ATTLIST %p;DateFormat
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT TimeFormat (Locale?, Pattern)>
-<!ATTLIST TimeFormat
+<!ELEMENT %p;TimeFormat (%p;Locale?, %p;Pattern)>
+<!ATTLIST %p;TimeFormat
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT DateTimeFormat (Locale?, Pattern)>
-<!ATTLIST DateTimeFormat
+<!ELEMENT %p;DateTimeFormat (%p;Locale?, %p;Pattern)>
+<!ATTLIST %p;DateTimeFormat
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT NumberFormat (Locale | Pattern)>
-<!ATTLIST NumberFormat
+<!ELEMENT %p;NumberFormat (%p;Locale | %p;Pattern)>
+<!ATTLIST %p;NumberFormat
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT Locale EMPTY>
-<!ATTLIST Locale
+<!ELEMENT %p;Locale EMPTY>
+<!ATTLIST %p;Locale
           Language NMTOKEN #REQUIRED
           Country NMTOKEN #REQUIRED>
 
@@ -205,14 +257,14 @@ pattern or "FULL", "LONG", "MEDIUM", or "SHORT" (see DateFormat).
 For number formats, use a pattern from DecimalFormat (in which case
 Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 
-<!ELEMENT Pattern EMPTY>
-<!ATTLIST Pattern
+<!ELEMENT %p;Pattern EMPTY>
+<!ATTLIST %p;Pattern
           Value CDATA #REQUIRED>
 
 <!-- ****************** Namespaces ************************* -->
 
-<!ELEMENT Namespace EMPTY>
-<!ATTLIST Namespace
+<!ELEMENT %p;Namespace EMPTY>
+<!ATTLIST %p;Namespace
           Prefix NMTOKEN #REQUIRED
           URI CDATA #REQUIRED>
 
@@ -220,26 +272,26 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 <!--                      Database Elements                        -->
 <!-- ************************************************************* -->
 
-<!ELEMENT Databases (Database+)>
+<!ELEMENT %p;Databases (%p;Database+)>
 
-<!ELEMENT Database (Catalog+)>
-<!ATTLIST Database
+<!ELEMENT %p;Database (%p;Catalog+)>
+<!ATTLIST %p;Database
           Name CDATA "Default"
           QuoteIdentifiers (Yes | No) "Yes">
 
 <!-- If the catalog and schema name are missing, XML-DBMS will
      not use catalog or schema names. -->
 
-<!ELEMENT Catalog (Schema+)>
-<!ATTLIST Catalog
+<!ELEMENT %p;Catalog (Schema+)>
+<!ATTLIST %p;Catalog
           Name CDATA #IMPLIED>
 
-<!ELEMENT Schema (Table+)>
-<!ATTLIST Schema
+<!ELEMENT %p;Schema (%p;Table+)>
+<!ATTLIST %p;Schema
           Name CDATA #IMPLIED>
 
-<!ELEMENT Table (Column+, PrimaryKey?, UniqueKey*, ForeignKey*)>
-<!ATTLIST Table
+<!ELEMENT %p;Table (%p;Column+, %p;PrimaryKey?, %p;UniqueKey*, %p;ForeignKey*)>
+<!ATTLIST %p;Table
           Name CDATA #REQUIRED>
 
 <!-- If no format is specified, the default format for the default
@@ -249,8 +301,8 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 <!-- DataType must be the name of a JDBC datatype constant, as
      specified in the java.sql.Types class. -->
 
-<!ELEMENT Column EMPTY>
-<!ATTLIST Column
+<!ELEMENT %p;Column EMPTY>
+<!ATTLIST %p;Column
           Name CDATA #REQUIRED
           Length NMTOKEN #IMPLIED
           Nullable (Yes | No | Unknown) "Unknown"
@@ -286,46 +338,46 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
        the KeyGenerator, which is passed in at run time.
 -->
 
-<!ELEMENT PrimaryKey (UseColumn+)>
-<!ATTLIST PrimaryKey
+<!ELEMENT %p;PrimaryKey (%p;UseColumn+)>
+<!ATTLIST %p;PrimaryKey
           KeyGenerator NMTOKEN #IMPLIED>
 
-<!ELEMENT UniqueKey (UseColumn+)>
-<!ATTLIST UniqueKey
+<!ELEMENT %p;UniqueKey (%p;UseColumn+)>
+<!ATTLIST %p;UniqueKey
           Name CDATA #REQUIRED>
 
-<!ELEMENT ForeignKey (UseColumn+)>
-<!ATTLIST ForeignKey
+<!ELEMENT %p;ForeignKey (%p;UseColumn+)>
+<!ATTLIST %p;ForeignKey
           Name CDATA #REQUIRED>
 
 <!-- ************************************************************* -->
 <!--                    Database Reference Elements                -->
 <!-- ************************************************************* -->
 
-<!ELEMENT UseColumn EMPTY>
-<!ATTLIST UseColumn
+<!ELEMENT %p;UseColumn EMPTY>
+<!ATTLIST %p;UseColumn
           Name CDATA #REQUIRED>
 
-<!ELEMENT UseUniqueKey EMPTY>
-<!ATTLIST UseUniqueKey
+<!ELEMENT %p;UseUniqueKey EMPTY>
+<!ATTLIST %p;UseUniqueKey
           Name CDATA "Primary Key">
 
-<!ELEMENT UseForeignKey EMPTY>
-<!ATTLIST UseForeignKey
+<!ELEMENT %p;UseForeignKey EMPTY>
+<!ATTLIST %p;UseForeignKey
           Name CDATA #REQUIRED>
 
 <!-- ************************************************************* -->
 <!--                           Maps                                -->
 <!-- ************************************************************* -->
 
-<!ELEMENT Maps (ClassMap+)>
+<!ELEMENT %p;Maps (%p;ClassMap+)>
 
 <!-- ****************** Class maps ************************* -->
 
-<!ELEMENT ClassMap (ElementType,
-                    ((Extends?, ToClassTable,
-                     PropertyMap*, InlineMap*, RelatedClass*) |
-                    UseClassMap))>
+<!ELEMENT %p;ClassMap (%p;ElementType,
+                       ((%p;Extends?, %p;ToClassTable,
+                        %p;PropertyMap*, %p;InlineMap*, %p;RelatedClass*) |
+                       %p;UseClassMap))>
 
 <!-- 
      The UseClassMap element implements complex types (as found in
@@ -556,8 +608,8 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
      condition, but that it does not do so now.
 -->
 
-<!ELEMENT UseClassMap EMPTY>
-<!ATTLIST UseClassMap
+<!ELEMENT %p;UseClassMap EMPTY>
+<!ATTLIST %p;UseClassMap
           ElementType NMTOKEN #REQUIRED>
 
 <!-- The Extends element implements inheritance. It says that the
@@ -602,16 +654,16 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
         (A, B, C) => (A, D, B, C)
 -->
 
-<!ELEMENT Extends (UseBaseTable?)>
-<!ATTLIST Extends
+<!ELEMENT %p;Extends (%p;UseBaseTable?)>
+<!ATTLIST %p;Extends
           ElementType NMTOKEN #REQUIRED>
 
-<!ELEMENT UseBaseTable (UseUniqueKey, UseForeignKey)>
-<!ATTLIST UseBaseTable
+<!ELEMENT %p;UseBaseTable (%p;UseUniqueKey, %p;UseForeignKey)>
+<!ATTLIST %p;UseBaseTable
           KeyInBaseTable (Unique | Foreign) #REQUIRED>
 
-<!ELEMENT ToClassTable EMPTY>
-<!ATTLIST ToClassTable
+<!ELEMENT %p;ToClassTable EMPTY>
+<!ATTLIST %p;ToClassTable
           Database CDATA "Default"
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
@@ -619,9 +671,9 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 
 <!-- ****************** Property maps ************************* -->
 
-<!ELEMENT PropertyMap ((ElementType | Attribute | PCDATA),
-                       ToPropertyTable?, ToColumn,
-                       Order?)>
+<!ELEMENT %p;PropertyMap ((%p;ElementType | %p;Attribute | %p;PCDATA),
+                          %p;ToPropertyTable?, %p;ToColumn,
+                          %p;Order?)>
 
 <!--
      Unlike in version 1.0, two different properties from two
@@ -635,56 +687,56 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
      the future.
 -->
 
-<!ELEMENT ToPropertyTable (UseUniqueKey, UseForeignKey)>
-<!ATTLIST ToPropertyTable
+<!ELEMENT %p;ToPropertyTable (%p;UseUniqueKey, %p;UseForeignKey)>
+<!ATTLIST %p;ToPropertyTable
           Database CDATA "Default"
           Catalog CDATA #IMPLIED
           Schema CDATA #IMPLIED
           Name CDATA #REQUIRED
           KeyInParentTable (Unique | Foreign) #REQUIRED>
 
-<!ELEMENT ToColumn EMPTY>
-<!ATTLIST ToColumn
+<!ELEMENT %p;ToColumn EMPTY>
+<!ATTLIST %p;ToColumn
           Name CDATA #REQUIRED>
 
 <!-- ****************** Inline ************************* -->
 
-<!ELEMENT InlineMap (ElementType,
-                     PropertyMap*, InlineMap*, RelatedClass*,
-                     Order?)>
+<!ELEMENT %p;InlineMap (%p;ElementType,
+                        %p;PropertyMap*, %p;InlineMap*, %p;RelatedClass*,
+                        %p;Order?)>
 
 <!-- ****************** Related classes ************************* -->
 
-<!ELEMENT RelatedClass (ElementType,
-                        UseClassMap?,
-                        UseUniqueKey, UseForeignKey,
-                        Order?)>
-<!ATTLIST RelatedClass
+<!ELEMENT %p;RelatedClass (%p;ElementType,
+                           %p;UseClassMap?,
+                           %p;UseUniqueKey, %p;UseForeignKey,
+                           %p;Order?)>
+<!ATTLIST %p;RelatedClass
           KeyInParentTable (Unique | Foreign) #REQUIRED>
 
 <!-- ****************** Order ************************* -->
 
-<!ELEMENT Order ((UseColumn, Generate?) | FixedOrder)>
-<!ATTLIST Order
+<!ELEMENT %p;Order ((%p;UseColumn, %p;Generate?) | %p;FixedOrder)>
+<!ATTLIST %p;Order
           Direction (Ascending | Descending) "Ascending">
 
-<!ELEMENT Generate EMPTY>
+<!ELEMENT %p;Generate EMPTY>
 
-<!ELEMENT FixedOrder EMPTY>
-<!ATTLIST FixedOrder
+<!ELEMENT %p;FixedOrder EMPTY>
+<!ATTLIST %p;FixedOrder
           Value NMTOKEN #REQUIRED>
 
 <!-- ************************************************************* -->
 <!--                           XML Elements                        -->
 <!-- ************************************************************* -->
 
-<!ELEMENT ElementType EMPTY>
-<!ATTLIST ElementType
+<!ELEMENT %p;ElementType EMPTY>
+<!ATTLIST %p;ElementType
           Name NMTOKEN #REQUIRED>
 
-<!ELEMENT Attribute EMPTY>
-<!ATTLIST Attribute
+<!ELEMENT %p;Attribute EMPTY>
+<!ATTLIST %p;Attribute
           Name NMTOKEN #REQUIRED
           MultiValued (Yes | No) "No">
 
-<!ELEMENT PCDATA EMPTY>
+<!ELEMENT %p;PCDATA EMPTY>
