@@ -844,11 +844,15 @@ public class MapSerializer extends XMLWriter
    private void writePrimaryKey(Key key)
       throws IOException
    {
-      String keyGeneratorName = null;
+      String keyName, keyGeneratorName = null;
       int    count = 0, keyGeneration;
 
       if (key != null)
       {
+         keyName = key.getName();
+         attrs[count] = MapConst.ATTR_NAME;
+         values[count++] = keyName;
+
          keyGeneration = key.getKeyGeneration();
          if (keyGeneration == Key.DATABASE)
          {
@@ -864,6 +868,7 @@ public class MapSerializer extends XMLWriter
             attrs[count] = MapConst.ATTR_KEYGENERATOR;
             values[count++] = keyGeneratorName;
          }
+
          writeElementStart(MapConst.ELEM_PRIMARYKEY, count, false);
          writeUseColumns(key.getColumns());
          writeElementEnd(MapConst.ELEM_PRIMARYKEY);
