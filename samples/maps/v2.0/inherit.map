@@ -47,6 +47,8 @@
                      <UseColumn Name="AuthorID"/>
                   </PrimaryKey>
                   <ForeignKey Name="Person_FK">
+                     <UseTable Name="People" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="PersonID"/>
                   </ForeignKey>
                </Table>
@@ -58,6 +60,8 @@
                      <UseColumn Name="ThingieID"/>
                   </PrimaryKey>
                   <ForeignKey Name="Author_FK">
+                     <UseTable Name="Authors" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="AuthorID"/>
                   </ForeignKey>
                </Table>
@@ -75,7 +79,7 @@
          </PropertyMap>
          <RelatedClass KeyInParentTable="Foreign">
             <ElementType Name="Author"/>
-            <UseUniqueKey Name="Primary Key"/>
+            <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="Author_FK"/>
          </RelatedClass>
       </ClassMap>
@@ -107,7 +111,7 @@
          <ElementType Name="Author"/>
          <Extends ElementType="Person">
             <UseBaseTable KeyInBaseTable="Unique">
-               <UseUniqueKey Name="Primary Key"/>
+               <UseUniqueKey Name="PrimaryKey"/>
                <UseForeignKey Name="Person_FK"/>
             </UseBaseTable>
          </Extends>

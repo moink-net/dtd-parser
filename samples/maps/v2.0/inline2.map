@@ -46,6 +46,8 @@
                      <UseColumn Name="c5"/>
                   </PrimaryKey>
                   <ForeignKey Name="t1_fk">
+                     <UseTable Name="t1" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="c6"/>
                   </ForeignKey>
                </Table>
@@ -76,7 +78,7 @@
                   <ElementType Name="i4"/>
                   <RelatedClass KeyInParentTable="Unique">
                      <ElementType Name="t2"/>
-                     <UseUniqueKey Name="Primary Key"/>
+                     <UseUniqueKey Name="PrimaryKey"/>
                      <UseForeignKey Name="t1_fk"/>
                   </RelatedClass>
                </InlineMap>

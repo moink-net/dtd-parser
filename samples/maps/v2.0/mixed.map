@@ -38,6 +38,8 @@
                   <Column Name="PCDATA" DataType="LONGVARCHAR" Nullable="No"/>
                   <Column Name="PCDATAOrder" DataType="INTEGER" Nullable="No"/>
                   <ForeignKey Name="Review_FK">
+                     <UseTable Name="BookReviews" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="ReviewID"/>
                   </ForeignKey>
                </Table>
@@ -46,6 +48,8 @@
                   <Column Name="b" DataType="LONGVARCHAR" Nullable="No"/>
                   <Column Name="bOrder" DataType="INTEGER" Nullable="No"/>
                   <ForeignKey Name="Review_FK">
+                     <UseTable Name="BookReviews" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="ReviewID"/>
                   </ForeignKey>
                </Table>
@@ -55,6 +59,8 @@
                   <Column Name="aOrder" DataType="INTEGER" Nullable="No"/>
                   <Column Name="href" DataType="VARCHAR" Length="1024" Nullable="No"/>
                   <ForeignKey Name="Review_FK">
+                     <UseTable Name="BookReviews" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="ReviewID"/>
                   </ForeignKey>
                </Table>
@@ -77,7 +83,7 @@
          <PropertyMap>
             <PCDATA/>
             <ToPropertyTable Name="PCDATA" KeyInParentTable="Unique">
-               <UseUniqueKey Name="Primary Key" />
+               <UseUniqueKey Name="PrimaryKey" />
                <UseForeignKey Name="Review_FK" />
             </ToPropertyTable>
             <ToColumn Name="PCDATA"/>
@@ -89,7 +95,7 @@
          <PropertyMap>
             <ElementType Name="b"/>
             <ToPropertyTable Name="b" KeyInParentTable="Unique">
-               <UseUniqueKey Name="Primary Key" />
+               <UseUniqueKey Name="PrimaryKey" />
                <UseForeignKey Name="Review_FK" />
             </ToPropertyTable>
             <ToColumn Name="b"/>
@@ -100,7 +106,7 @@
          </PropertyMap>
          <RelatedClass KeyInParentTable="Unique">
             <ElementType Name="a"/>
-            <UseUniqueKey Name="Primary Key"/>
+            <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="Review_FK"/>
             <Order>
                <UseColumn Name="aOrder" />

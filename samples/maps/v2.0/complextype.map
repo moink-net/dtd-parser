@@ -38,6 +38,8 @@
                      <UseColumn Name="WritingID"/>
                   </PrimaryKey>
                   <ForeignKey Name="Author_FK">
+                     <UseTable Name = "Authors" />
+                     <UseUniqueKey Name= "PrimaryKey" />
                      <UseColumn Name="AuthorID"/>
                   </ForeignKey>
                </Table>
@@ -76,13 +78,13 @@
          <RelatedClass KeyInParentTable="Unique">
             <ElementType Name="Book"/>
             <UseClassMap ElementType="Writing" />
-            <UseUniqueKey Name="Primary Key"/>
+            <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="Author_FK"/>
          </RelatedClass>
          <RelatedClass KeyInParentTable="Unique">
             <ElementType Name="Essay"/>
             <UseClassMap ElementType="Writing" />
-            <UseUniqueKey Name="Primary Key"/>
+            <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="Author_FK"/>
          </RelatedClass>
       </ClassMap>

@@ -272,6 +272,33 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 <!--                      Database Elements                        -->
 <!-- ************************************************************* -->
 
+<!--
+     If you have multiple maps over the same set of tables, a useful
+     trick is to declare your Database elements in a separate map file,
+     then reference this from each map as an external general entity.
+     For example, suppose the Database elements are in the tables.dbms
+     file. Each map file would look as follows:
+
+        <!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" [
+           <!ENTITY tables SYSTEM "tables.dbms">
+        ]>
+        <XMLToDBMS>
+           <Options>
+              ...
+           </Options>
+           <Databases>
+              &tables;
+           </Databases>
+           <Maps>
+              ...
+           </Maps>
+        </XMLToDBMS>
+
+     Note that there is no requirement that all of the tables that are
+     declared be used. Thus, you can declare all related tables in one
+     file even if some maps only map some of the tables.
+-->
+
 <!ELEMENT %p;Databases (%p;Database+)>
 
 <!ELEMENT %p;Database (%p;Catalog+)>
@@ -340,13 +367,14 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 
 <!ELEMENT %p;PrimaryKey (%p;UseColumn+)>
 <!ATTLIST %p;PrimaryKey
+          Name CDATA "PrimaryKey"
           KeyGenerator NMTOKEN #IMPLIED>
 
 <!ELEMENT %p;UniqueKey (%p;UseColumn+)>
 <!ATTLIST %p;UniqueKey
           Name CDATA #REQUIRED>
 
-<!ELEMENT %p;ForeignKey (%p;UseColumn+)>
+<!ELEMENT %p;ForeignKey (%p;UseTable, %p;UseUniqueKey, %p;UseColumn+)>
 <!ATTLIST %p;ForeignKey
           Name CDATA #REQUIRED>
 
@@ -354,13 +382,20 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
 <!--                    Database Reference Elements                -->
 <!-- ************************************************************* -->
 
+<!ELEMENT %p;UseTable EMPTY>
+<!ATTLIST %p;UseTable
+          Database CDATA "Default"
+          Catalog CDATA #IMPLIED
+          Schema CDATA #IMPLIED
+          Name CDATA #REQUIRED>
+
 <!ELEMENT %p;UseColumn EMPTY>
 <!ATTLIST %p;UseColumn
           Name CDATA #REQUIRED>
 
 <!ELEMENT %p;UseUniqueKey EMPTY>
 <!ATTLIST %p;UseUniqueKey
-          Name CDATA "Primary Key">
+          Name CDATA "PrimaryKey">
 
 <!ELEMENT %p;UseForeignKey EMPTY>
 <!ATTLIST %p;UseForeignKey
@@ -484,16 +519,20 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
      element is equivalent to having a UseClassMap element that points
      to the ClassMap for the element type being mapped. That is:
 
-        <RelatedClass KeyInParentTable="A" />
-           <ElementType Name="Author" />
+        <ClassMap>
+           <ElementType Name="B" />
            ...
-        </RelatedClass>
+           <RelatedClass KeyInParentTable="Unique" />
+              <ElementType Name="Author" />
+              ...
+           </RelatedClass>
+        </ClassMap>
 
      is equivalent to:
 
-        <RelatedClass KeyInParentTable="A" />
+        <RelatedClass KeyInParentTable="Unique" />
            <ElementType Name="Author" />
-           <UseClassMap ElementType="A" />
+           <UseClassMap ElementType="Author" />
            ...
         </RelatedClass>
 
@@ -706,6 +745,10 @@ Locale is ignored) or a Locale (in which case Pattern is ignored). -->
                         %p;Order?)>
 
 <!-- ****************** Related classes ************************* -->
+
+<!-- Technically, we could leave UseUniqueKey out of the content model,
+     since UseForeignKey points to a table and a unique key. However,
+     we leave UseUniqueKey in the content model for clarity. -->
 
 <!ELEMENT %p;RelatedClass (%p;ElementType,
                            %p;UseClassMap?,

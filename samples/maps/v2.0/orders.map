@@ -32,9 +32,13 @@
                      <UseColumn Name="Number"/>
                   </PrimaryKey>
                   <ForeignKey Name="Part_FK">
+                     <UseTable Name="Parts" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="Part"/>
                   </ForeignKey>
                   <ForeignKey Name="SO_FK">
+                     <UseTable Name="Orders" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="SONumber"/>
                   </ForeignKey>
                </Table>
@@ -46,6 +50,8 @@
                      <UseColumn Name="Number"/>
                   </PrimaryKey>
                   <ForeignKey Name="Cust_FK">
+                     <UseTable Name="Customers" />
+                     <UseUniqueKey Name="PrimaryKey" />
                      <UseColumn Name="CustNumber"/>
                   </ForeignKey>
                </Table>
@@ -75,7 +81,7 @@
          </PropertyMap>
          <RelatedClass KeyInParentTable="Foreign">
             <ElementType Name="Part"/>
-            <UseUniqueKey Name="Primary Key"/>
+            <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="Part_FK"/>
          </RelatedClass>
       </ClassMap>
@@ -136,12 +142,12 @@
          </PropertyMap>
          <RelatedClass KeyInParentTable="Foreign">
             <ElementType Name="Customer"/>
-            <UseUniqueKey Name="Primary Key"/>
+            <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="Cust_FK"/>
          </RelatedClass>
          <RelatedClass KeyInParentTable="Unique">
             <ElementType Name="Item"/>
-            <UseUniqueKey Name="Primary Key"/>
+            <UseUniqueKey Name="PrimaryKey"/>
             <UseForeignKey Name="SO_FK"/>
             <Order Direction="Ascending">
                <UseColumn Name="Number"/>
