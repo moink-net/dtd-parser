@@ -58,7 +58,7 @@ public interface StringFormatter
     * DECIMAL, NUMERIC:                  BigDecimal<br />
     * DOUBLE, FLOAT:                     Double<br />
     * REAL:                              Float<br />
-    * BINARY, VARBINARY, LONGVARBINARY:  byte[]??????????<br />
+    * BINARY, VARBINARY, LONGVARBINARY:  org.xmlmiddleware.conversions.ByteArray<br />
     * BIT:                               Boolean<br />
     * </pre>
     *
