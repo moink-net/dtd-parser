@@ -595,8 +595,9 @@ public class DOMToDBMS
 
 	    while(!fkNodes.empty())
 	    {
-		    fkNode = (FKNode)fkNodes.removeElementAt(0);
+            fkNode = (FKNode)fkNodes.elementAt(0);
             processRow(parentRow, fkNode.map, fkNode.node, fkNode.orderInParent, action);
+		    fkNodes.removeElement(fkNode);
         }
     }   
 
