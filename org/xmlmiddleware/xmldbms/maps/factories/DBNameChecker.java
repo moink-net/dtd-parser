@@ -19,77 +19,236 @@
 
 package org.xmlmiddleware.xmldbms.maps.factories;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.xmlmiddleware.utils.*;
+
+import java.sql.*;
+import java.util.*;
+
+/**
+ * Checks if names conform to the rules of a particular database.
+ *
+ * <p>DBNameChecker checks that table and column names conform to the naming rules
+ * of a particular database. It also checks that they do not collide with any table
+ * or column names currently in the database or created in the current session. Names
+ * are modified as follows:</p>
+ *
+ * <ol>
+ * <li>Any characters not supported by the database are discarded.</li>
+ * <li>The name is truncated to the maximum length allowed by the database.</li>
+ * <li>The case is changed to the case used by the database.</li>
+ * <li>Table names are checked against table names currently in the database, as
+ *     well as table names that have been created in the current session. Column
+ *     names are checked against the names in the current table. If any collisions
+ *     are found, a number (starting with 1) is appended to the name and the
+ *     result is re-checked until a non-colliding name is found.</li>
+ * </ol>
+ *
+ * <p>If no database is specified, the legal character set is assumed to be a-z,
+ * A-Z, 0-9, and _; the maximum length is assumed to be 30, the case used by
+ * the database is assumed to be upper case, and the maximum number of columns
+ * in a table is assumed to be 100.</p>
+ *
+ * @author Ronald Bourret
+ * @version 2.0
+ */
 
 public class DBNameChecker
 {
-   // Class variables
-   private Connection       conn;
-   private boolean          initialized = false;
+   //**************************************************************************
+   // Variables
+   //**************************************************************************
+
    private DatabaseMetaData meta;
    private String           extraChars;
    private int              maxColumnNameLen,
                             maxColumnsInTable,
                             maxTableNameLen;
    private boolean          mixedCase, lowerCase, upperCase;
+   private Hashtable        catalogNames = new Hashtable();
 
+   //**************************************************************************
+   // Constants
+   //**************************************************************************
 
-   // Constructor
+   private static final String str = new String();
 
+   //**************************************************************************
+   // Constructors
+   //**************************************************************************
+
+   /**
+    * Construct a new DBNameChecker.
+    */
+   public DBNameChecker()
+   {
+      initialize();
+   }
+
+   /**
+    * Construct a new DBNameChecker and set the database connection.
+    *
+    * @param conn The Connection
+    * @exception SQLException Thrown if an error occurs initializing the database
+    *    metadata.
+    */
    public DBNameChecker(Connection conn)
+      throws SQLException
    {
-      this.conn = conn;
+      if (conn == null)
+         throw new IllegalArgumentException("conn argument must not be null.");
+      initialize(conn);
    }
 
+   //**************************************************************************
    // Public methods
+   //**************************************************************************
 
-   public String getTableName(String catalogName, String schemaName,
-String inputTableName, String[] newTableNames)
+   /**
+    * Sets the database connection.
+    *
+    * @param conn The Connection. May be null.
+    * @exception SQLException Thrown if an error occurs initializing the database
+    *    metadata.
+    */
+   public void setConnection(Connection conn)
       throws SQLException
    {
-      // Constructs a name from the tableName argument that is legal
-      // and doesn't conflict with any names in the specified catalog
-      // or schema or with any of the names listed in newTableNames. The
-      // latter names are those currently being constructed by the map
-      // factory.
-
-      String tableName = inputTableName;
-
-      if (!initialized) initialize();
-
-      tableName = fixCharacters(tableName);
-      tableName = fixLength(tableName, maxTableNameLen);
-      tableName = fixCase(tableName);
-      tableName = fixTableNameCollisions(catalogName, schemaName, tableName, newTableNames);
-      return tableName;
+      if (conn == null)
+      {
+         initialize();
+      }
+      else
+      {
+         initialize(conn);
+      }
    }
 
-   public String getColumnName(String inputColumnName, String[]
-newColumnNames)
-      throws SQLException
+   /**
+    * Start a new name-checking session.
+    *
+    * <p>This method removes all names from the lists of table and column names
+    * created during the previous session. Thus, names are checked for collisions
+    * only against names created after this call and before the next call to
+    * startNewSession().</p>
+    */
+   public void startNewSession()
    {
-      // Constructs a name from the columnName argument that is legal and
-      // doesn't conflict with any of the names listed in newColumnNames.
-      // newColumnNames lists the names of columns that already exist in
-      // the target table.
-
-      String columnName = inputColumnName;
-
-      if (!initialized) initialize();
-
-      columnName = fixCharacters(columnName);
-      columnName = fixLength(columnName, maxColumnNameLen);
-      columnName = fixCase(columnName);
-      columnName = fixColumnNameCollisions(columnName, newColumnNames);
-      return columnName;
+      catalogNames.clear();
    }
 
+   /**
+    * Checks a table name.
+    *
+    * <p>If necessary, this method modifies the input table name to meet the naming criteria
+    * of the current database.</p>
+    *
+    * @param catalogName Name of the catalog in which to check for collisions. May be null.
+    * @param schemaName Name of the schema in which to check for collisions. May be null.
+    * @param tableName Table name to check.
+    * @return The modified table name.
+    * @exception SQLException Thrown if an error occurs accessing the database.
+    * @exception XMLMiddlewareException Thrown if an error occurs constructing a name.
+    */
+   public String checkTableName(String catalogName, String schemaName,
+String tableName)
+      throws SQLException, XMLMiddlewareException
+   {
+      // Constructs a table name that is legal and doesn't collide with
+      // any table names that have been constructed in this session or
+      // are already in the database.
+
+      String    name;
+      Hashtable tableNames;
+
+      if (tableName == null)
+         throw new IllegalArgumentException("tableName argument must not be null.");
+
+      // Check the characters, length, and case of the table name.
+
+      name = tableName;
+      name = checkCharacters(name);
+      name = checkLength(name, maxTableNameLen);
+      name = checkCase(name);
+
+      // Get the Hashtable of table names that have been checked for this catalog
+      // and schema, then check if the new table name collides against any of these
+      // names or any names in the database.
+
+      tableNames = getTableNames(catalogName, schemaName);
+      name = checkTableNameCollisions(catalogName, schemaName, name, tableNames);
+
+      // Return the table name.
+
+      return name;
+   }
+
+   /**
+    * Checks a column name.
+    *
+    * <p>If necessary, this method modifies the input column name to meet the naming criteria
+    * of the current database.</p>
+    *
+    * @param catalogName Name of the catalog in which to check for collisions. May be null.
+    * @param schemaName Name of the schema in which to check for collisions. May be null.
+    * @param tableName Name of the table in which to check for collisions. The table name must
+    *    have been used in a call to checkTableName in this session.
+    * @param columnName Column name to check.
+    * @return The modified column name.
+    * @exception XMLMiddlewareException Thrown if an error occurs constructing a name.
+    */
+   public String checkColumnName(String catalogName, String schemaName, String tableName, String columnName)
+      throws XMLMiddlewareException
+   {
+      // Constructs a column name that is legal and doesn't collide with
+      // any column names that have been constructed for this table.
+
+      String    name;
+      Hashtable tableNames, columnNames;
+
+      if (tableName == null)
+         throw new IllegalArgumentException("tableName argument must not be null.");
+      if (columnName == null)
+         throw new IllegalArgumentException("columnName argument must not be null.");
+
+      // Verify that the table name has already been checked in this session.
+
+      tableNames = getTableNames(catalogName, schemaName);
+      columnNames = (Hashtable)tableNames.get(tableName);
+      if (columnNames == null)
+         throw new IllegalArgumentException("tableName has not been used in a call to checkTableName in this session.");
+
+      // Check the characters, length, and case of the table name, then check that
+      // it doesn't collide with any column names already in the table.
+
+      name = columnName;
+      name = checkCharacters(name);
+      name = checkLength(name, maxColumnNameLen);
+      name = checkCase(name);
+      name = checkColumnNameCollisions(name, columnNames);
+
+      // Return the column name.
+
+      return name;
+   }
+
+   //**************************************************************************
    // Private methods
+   //**************************************************************************
 
-   private void initialize() throws SQLException
+   private void initialize()
+   {
+      meta = null;
+      extraChars = new String();
+      maxColumnNameLen = 30;
+      maxColumnsInTable = 32;
+      maxTableNameLen = 30;
+      mixedCase = false;
+      lowerCase = false;
+      upperCase = true;
+   }
+
+   private void initialize(Connection conn)
+      throws SQLException
    {
       meta = conn.getMetaData();
       extraChars = meta.getExtraNameCharacters();
@@ -100,17 +259,50 @@ newColumnNames)
                   meta.storesMixedCaseQuotedIdentifiers();
       lowerCase = meta.storesLowerCaseQuotedIdentifiers();
       upperCase = meta.storesUpperCaseQuotedIdentifiers();
-      initialized = true;
    }
 
-   private String fixCharacters(String name)
+   private Hashtable getTableNames(String catalogName, String schemaName)
    {
-      char[] newName, oldName;
+      Hashtable schemaNames, tableNames;
+
+      // Use a static empty string to represent a null catalog or schema name.
+
+      if (catalogName == null) catalogName = str;
+      if (schemaName == null) schemaName = str;
+
+      // Get the Hashtable of schema names for this catalog. If it doesn't exist,
+      // create it now.
+
+      schemaNames = (Hashtable)catalogNames.get(catalogName);
+      if (schemaNames == null)
+      {
+         schemaNames = new Hashtable();
+         catalogNames.put(catalogName, schemaNames);
+      }
+
+      // Get the Hashtable of table names for this schema. If it doesn't exist,
+      // create it now.
+
+      tableNames = (Hashtable)schemaNames.get(schemaName);
+      if (tableNames == null)
+      {
+         tableNames = new Hashtable();
+         schemaNames.put(schemaName, tableNames);
+      }
+
+      // Return the Hashtable of table names.
+
+      return tableNames;
+   }
+
+   private String checkCharacters(String name)
+   {
+      char[] oldName, newName;
       int    position = 0;
       char   character;
 
-      newName = new char[name.length()];
       oldName = name.toCharArray();
+      newName = new char[oldName.length];
 
       for (int i = 0; i < oldName.length; i++)
       {
@@ -136,7 +328,7 @@ newColumnNames)
       return new String(newName, 0, position);
    }
 
-   private String fixLength(String name, int maxLength)
+   private String checkLength(String name, int maxLength)
    {
       // Truncate the string to maxLength characters.
 
@@ -150,7 +342,7 @@ newColumnNames)
       }
    }
 
-   private String fixCase(String name)
+   private String checkCase(String name)
    {
       // Change the case to the case used by the database
 
@@ -168,81 +360,80 @@ newColumnNames)
       }
    }
 
-   private String fixTableNameCollisions(String catalogName, String schemaName, String inputTableName, String[] newTableNames)
-      throws SQLException
+   private String checkTableNameCollisions(String catalogName, String schemaName, String inputTableName, Hashtable tableNames)
+      throws SQLException, XMLMiddlewareException
    {
-      String tableName, listTableName, dbTableName;
+      String tableName, sessionUniqueName, dbUniqueName;
       int    suffixNum = 1;
 
-      // Initialize the variables:
-      //  tableName: name we are currently checking
-      //  listTableName: name that has been checked against the list
-      //  dbTableName: name that has been checked against the database
-
       tableName = inputTableName;
-      listTableName = null;
-      dbTableName = null;
+      sessionUniqueName = null;
+      dbUniqueName = null;
 
-      while (!tableName.equals(listTableName))
+      // We need to create a name that is unique in both the session and the
+      // database. We set sessionUniqueName when we have a name that is unique
+      // in the session. We set dbUniqueName when we have a name that is unique
+      // in the database. We keep our current value in tableName. We are done
+      // when tableName equals both sessionUniqueName and dbUniqueName.
+
+      while (!tableName.equals(sessionUniqueName))
       {
          // Get a table name that doesn't collide with any names
-         // in the list of new table names. Save this so the loop
-         // can check if this gets changed while checking the table
-         // name against the database.
+         // in the hashtable of new table names. Save this so we
+         // can check that tableName doesn't change while we are
+         // testing it against the database.
 
-         while (nameInList(tableName, newTableNames))
+         while (tableNames.get(tableName) != null)
          {
             tableName = getSuffixedName(inputTableName, suffixNum, maxTableNameLen);
             suffixNum++;
          }
-         listTableName = tableName;
+         sessionUniqueName = tableName;
 
          // Get a table name that doesn't collide with any names in
-         // the database. Note that we don't do this check if the
-         // name has already been checked against the database. This
-         // happens if we change the name on the first time through
-         // the while loop and the name is not in the list.
+         // the database. Save this so we can check that tableName
+         // doesn't change while we are testing it against the
+         // session table names.
 
-         if (!tableName.equals(dbTableName))
+         if (!tableName.equals(dbUniqueName))
          {
             while (tableNameInDB(catalogName, schemaName, tableName))
             {
                tableName = getSuffixedName(inputTableName, suffixNum, maxTableNameLen);
                suffixNum++;
             }
-            dbTableName = tableName;
+            dbUniqueName = tableName;
          }
       }
 
+      // Now that we know we have a unique table name, add it to the list of table
+      // names we have created in this session and create a new Hashtable to hold
+      // the names of the columns in the table.
+
+      tableNames.put(tableName, new Hashtable());
       return tableName;
    }
 
-   private String fixColumnNameCollisions(String inputColumnName, String[] newColumnNames)
-      throws SQLException
+   private String checkColumnNameCollisions(String inputColumnName, Hashtable columnNames)
+      throws XMLMiddlewareException
    {
-      // Check if the column name is in the list of new column names.
-      // If it is, append a number and check again.
-
       String columnName = inputColumnName;
       int    suffixNum = 1;
 
-      while (nameInList(columnName, newColumnNames))
+      // Check if the column name is in the list of new column names.
+      // If it is, append a number and check again.
+
+      while (columnNames.get(columnName) != null)
       {
          columnName = getSuffixedName(inputColumnName, suffixNum, maxColumnNameLen);
          suffixNum++;
       }
+
+      // When we have a unique column name, store an object in the columnNames hash
+      // table to guard the name against future collisions.
+
+      columnNames.put(columnName, str);
       return columnName;
-   }
-
-   private boolean nameInList(String name, String[] nameList)
-   {
-      // Check if a name is in a list of names
-
-      for (int i = 0; i < nameList.length; i++)
-      {
-         if (nameList[i].equals(name)) return true;
-      }
-      return false;
    }
 
    private boolean tableNameInDB(String catalogName, String schemaName, String tableName)
@@ -253,18 +444,22 @@ newColumnNames)
       ResultSet rs;
       boolean   tableFound;
 
-      rs = meta.getTables(catalogName, schemaName, tableName, null);
+      // If no database connection is set, just return false.
 
+      if (meta == null) return false;
+
+      // Get the row for the specified catalog, schema, and table, if any.
       // If the result set contains any rows, then the table is
       // already in the database.
 
+      rs = meta.getTables(catalogName, schemaName, tableName, null);
       tableFound = rs.next();
       rs.close();
       return tableFound;
    }
 
    private String getSuffixedName(String inputName, int suffixNum, int maxLength)
-      throws SQLException
+      throws XMLMiddlewareException
    {
       String baseName, suffix;
       int    newLength;
@@ -281,7 +476,7 @@ newColumnNames)
       {
          newLength = maxLength - (baseName.length() + suffix.length() - maxLength);
          if (newLength <= 0)
-            throw new SQLException("Cannot construct a unique name from " + baseName);
+            throw new XMLMiddlewareException("Cannot construct a unique name from " + baseName);
          baseName = baseName.substring(0, newLength);
       }
       return baseName + suffix;
