@@ -433,7 +433,7 @@ public class SPPreparedStatement
    //**************************************************************************
 
    // Comment these methods to compile with JDBC 2.0
-/**/
+/*
    public void addBatch() throws SQLException
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
 
@@ -466,7 +466,7 @@ public class SPPreparedStatement
 
    public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException
       { throw new SQLException("[XML-DBMS][SPreparedStatement] Not implemented.", "HY000"); }
-/**/
+*/
 
    //**************************************************************************
    // Statement methods

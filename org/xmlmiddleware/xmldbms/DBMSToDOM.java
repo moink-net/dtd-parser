@@ -123,6 +123,7 @@ public class DBMSToDOM
    private static String SPACE = " ";
    private static String FAKESTARTTAG = "<fake>";
    private static String FAKEENDTAG = "</fake>";
+   private static String XMLNS = "xmlns:";
 
    private static final XMLName PCDATA = XMLName.create(null, "#PCDATA");
 
@@ -185,6 +186,7 @@ public class DBMSToDOM
       // Build and return the Document.
 
       retrieveRootTableData(rootNode, databaseName, catalogName, schemaName, tableName, key);
+      addNamespaceDecls(doc.getDocumentElement());
       return doc;
    }
 
@@ -226,6 +228,7 @@ public class DBMSToDOM
       {
          retrieveRootTableData(rootNode, databaseName, catalogName, schemaName, tableName, key[i]);
       }
+      addNamespaceDecls(doc.getDocumentElement());
       return doc;
    }
 
@@ -274,6 +277,7 @@ public class DBMSToDOM
          schemaName = (schemaNames == null) ? null : schemaNames[i];
          retrieveRootTableData(rootNode, databaseName, catalogName, schemaName, tableNames[i], keys[i]);
       }
+      addNamespaceDecls(doc.getDocumentElement());
       return doc;
    }
 
@@ -315,6 +319,7 @@ public class DBMSToDOM
       // Build and return the Document.
 
       processClassResultSet(rootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
+      addNamespaceDecls(doc.getDocumentElement());
       return doc;
    }
 
@@ -390,7 +395,7 @@ public class DBMSToDOM
    // Helper methods for getting started
    // ************************************************************************
 
-   private void retrieveRootTableData(OrderedNode rootNode, String databaseName, String catalogName, String schemaName, String tableName, Object[] key)
+   private void retrieveRootTableData(OrderedNode rootNode, String databaseName, String catalogName, String schemaName, String tableName, Object[] keyValue)
       throws ParserUtilsException, SQLException, MapException
    {
       ClassTableMap rootTableMap;
@@ -406,7 +411,7 @@ public class DBMSToDOM
 
       dataHandler = transferInfo.getDataHandler(rootTable.getDatabaseName());
 
-      rs = dataHandler.select(rootTable, key, null);
+      rs = dataHandler.select(rootTable, rootTable.getPrimaryKey(), keyValue, null);
       processClassResultSet(rootNode, rs, rootTableMap.getElementTypeName(), null, rootTableMap);
       rs.close();
    }
@@ -591,10 +596,11 @@ public class DBMSToDOM
       throws SQLException, MapException
    {
       OrderedNode   parentNode;
-      ClassTableMap classTableMap;
-      Table         table;
-      Column[]      keyColumns;
-      Object[]      keyValues;
+      ClassTableMap childClassTableMap;
+      Table         childTable;
+      LinkInfo      linkInfo;
+      Object[]      keyValue;
+      Key           childKey;
       DataHandler   dataHandler;
       OrderInfo     orderInfo;
       ResultSet     rs;
@@ -604,26 +610,27 @@ public class DBMSToDOM
 
       parentNode = addInlinedElements(classNode, classRow, relatedClassTableMap.getElementInsertionList());
 
-      // Get the key
+      // Get the key values
 
-      keyColumns = relatedClassTableMap.getLinkInfo().getParentKey().getColumns();
-      keyValues = classRow.getColumnValues(keyColumns);
+      linkInfo = relatedClassTableMap.getLinkInfo();
+      keyValue = classRow.getColumnValues(linkInfo.getParentKey().getColumns());
+      childKey = linkInfo.getChildKey();
 
       // Get the DataHandler used by the table
 
-      classTableMap = relatedClassTableMap.getClassTableMap();
-      table = classTableMap.getTable();
-      dataHandler = transferInfo.getDataHandler(table.getDatabaseName());
+      childClassTableMap = relatedClassTableMap.getClassTableMap();
+      childTable = childClassTableMap.getTable();
+      dataHandler = transferInfo.getDataHandler(childTable.getDatabaseName());
 
       // Get the result set over the related class table and process it.
 
       orderInfo = relatedClassTableMap.getOrderInfo();
-      rs = dataHandler.select(table, keyValues, orderInfo);
+      rs = dataHandler.select(childTable, childKey, keyValue, orderInfo);
       processClassResultSet(classNode,
                             rs,
                             relatedClassTableMap.getElementTypeName(),
                             orderInfo,
-                            classTableMap);
+                            childClassTableMap);
       rs.close();
    }
 
@@ -631,9 +638,10 @@ public class DBMSToDOM
       throws SQLException, MapException
    {
       OrderedNode parentNode;
-      Table       table;
-      Column[]    keyColumns;
-      Object[]    keyValues;
+      Table       propTable;
+      LinkInfo    linkInfo;
+      Object[]    keyValue;
+      Key         propTableKey;
       DataHandler dataHandler;
       OrderInfo   rsOrderInfo;
       ResultSet   rs;
@@ -644,13 +652,14 @@ public class DBMSToDOM
 
       // Get the key
 
-      keyColumns = propTableMap.getLinkInfo().getParentKey().getColumns();
-      keyValues = classRow.getColumnValues(keyColumns);
+      linkInfo = propTableMap.getLinkInfo();
+      keyValue = classRow.getColumnValues(linkInfo.getParentKey().getColumns());
+      propTableKey = linkInfo.getChildKey();
 
       // Get the DataHandler used by the table
 
-      table = propTableMap.getTable();
-      dataHandler = transferInfo.getDataHandler(table.getDatabaseName());
+      propTable = propTableMap.getTable();
+      dataHandler = transferInfo.getDataHandler(propTable.getDatabaseName());
 
       // Get the result set over the property table and process it. Note that
       // how we sort the result set depends on whether we are processing a list
@@ -660,7 +669,7 @@ public class DBMSToDOM
 
       rsOrderInfo = (propTableMap.isTokenList()) ? propTableMap.getTokenListOrderInfo() :
                                                    propTableMap.getOrderInfo();
-      rs = dataHandler.select(table, keyValues, rsOrderInfo);
+      rs = dataHandler.select(propTable, propTableKey, keyValue, rsOrderInfo);
       processPropResultSet(parentNode, rs, propTableMap);
       rs.close();
    }
@@ -698,11 +707,32 @@ public class DBMSToDOM
 
       doc = utils.createDocument();
 
-      // Add the wrapper elements, if any, and return an ordered node that will
-      // serve as the root for the retrieved data.
+      // Add the wrapper elements, if any.
 
       realRoot = addWrapperElements(wrapperURIs, wrapperNames);
+
+      // Return an ordered node that will serve as the root for the retrieved data.
+
       return new OrderedNode(realRoot, OrderInfo.UNORDERED, null);
+   }
+
+   private void addNamespaceDecls(Element root)
+      throws MapException
+   {
+      Enumeration prefixes;
+      String      prefix, uri;
+
+      // Loop through the namespaces used in the map and add xlmns attributes for
+      // them. Note that we are safe doing this on the root element because the
+      // map allows exactly one prefix per URI.
+
+      prefixes = map.getNamespacePrefixes().keys();
+      while (prefixes.hasMoreElements())
+      {
+         prefix = (String)prefixes.nextElement();
+         uri = map.getNamespaceURI(prefix);
+         root.setAttributeNS(uri, XMLNS + prefix, uri);
+      }
    }
 
    // ************************************************************************
@@ -998,8 +1028,8 @@ public class DBMSToDOM
          if (orderValue == null) return OrderInfo.UNORDERED;
 
          // 8/13/01, from Bryan Pendleton
-         // Cast the returned value as Number, not Integer. This is necessary
-         // because Oracle doesn't directly support the INTEGER SQL type and
+         // Cast the returned value as a Number. This is necessary because
+         // Oracle doesn't directly support the INTEGER SQL type and
          // returns integers as BigDecimals.
 
          return ((Number)orderValue).longValue();
@@ -1181,7 +1211,7 @@ public class DBMSToDOM
          {
             savedChild.previousSibling = newChild;
          }
-         if (lastOrderedChild == null)
+         if (savedChild == firstUnorderedChild)
          {
             lastOrderedChild = newChild;
          }

@@ -67,7 +67,7 @@ public class GenericHandler
             Vector colVec = row.getColumnVectorFor(table);
 
             for(int i = 0; i < refreshCols.length; i++)
-                colVec.remove(refreshCols[i]);
+                colVec.removeElement(refreshCols[i]);
 
             Column[] selCols = new Column[colVec.size()];
             colVec.copyInto(selCols);

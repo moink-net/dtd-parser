@@ -208,17 +208,16 @@ abstract class DataHandlerBase
      * Select rows from a given table.
      * 
      * @param table Table to retrieve from.
-     * @param key Primary key values.
+     * @param key Key to use in WHERE clause.
+     * @param keyValue Key value.
      * @param orderInfo Ordering info for query.
      */
-    public ResultSet select(Table table, Object[] key, OrderInfo orderInfo)
+    public ResultSet select(Table table, Key key, Object[] keyValue, OrderInfo orderInfo)
         throws SQLException
     {
-        PreparedStatement stmt = makeSelect(table, key, orderInfo);
+        PreparedStatement stmt = makeSelect(table, key, keyValue, orderInfo);
         return stmt.executeQuery();
     }
-
-       
 
     // ************************************************************************
     // Helper methods. Also used by base classes
@@ -243,23 +242,20 @@ abstract class DataHandlerBase
     /**
      * Makes a SELECT statement
      */
-    protected PreparedStatement makeSelect(Table table, Object[] key, OrderInfo orderInfo)
+    protected PreparedStatement makeSelect(Table table, Key key, Object[] keyValue, OrderInfo orderInfo)
         throws SQLException
     {
-        Key priKey = table.getPrimaryKey();
-
         // These can be cached. Use SQLStrings
-        String sql = m_strings.getSelectRow(table, priKey, orderInfo);
+        String sql = m_strings.getSelectRow(table, key, orderInfo);
 
         // Make the SELECT statement
         PreparedStatement stmt = m_connection.prepareStatement(sql);
 
         // Set the paremeters
-        Parameters.setParameters(stmt, 0, priKey.getColumns(), key);
+        Parameters.setParameters(stmt, 0, key.getColumns(), keyValue);
 
         return stmt;
     }
-
 
     /**
      * Makes an INSERT statement
@@ -281,7 +277,7 @@ abstract class DataHandlerBase
             if(colVec.contains(refreshCols[i]) &&
                row.getColumnValue(refreshCols[i]) == null)
             {
-                colVec.remove(refreshCols[i]);
+                colVec.removeElement(refreshCols[i]);
             }
         }
 
@@ -321,7 +317,7 @@ abstract class DataHandlerBase
                 if(!colVec.contains(priCols[i]))
                     throw new SQLException("[xmldbms] Primary key value not supplied for UPDATE.");
             
-                colVec.remove(priCols[i]);
+                colVec.removeElement(priCols[i]);
             }
 
             // Remove unique key columns. These should not be updated
@@ -331,7 +327,7 @@ abstract class DataHandlerBase
                 Column[] keyCols = ((Key)e.nextElement()).getColumns();
                 for(int i = 0; i < keyCols.length; i++)
                 {
-                    colVec.remove(keyCols[i]);
+                    colVec.removeElement(keyCols[i]);
                 }
             }
 

@@ -78,7 +78,8 @@ public class Parameters
    /**
     * Set parameters from an array of values.
     *
-    * <p>Parameter values must be of the default object type for the column type.</p>
+    * <p>For best performance, parameter values should be of the default object type
+    * for the parameter type.</p>
     *
     * @param p Prepared SQL statement
     * @param offset Offset into the list of parameters in the prepared statement.
@@ -94,27 +95,31 @@ public class Parameters
    {
      for (int i = 0; i < values.length; i++)
      {
-       setParameter(p, i + offset + 1, columns[i].getType(), values[i]);
+       setParameter(p, i + offset + 1, columns[i], values[i]);
      }
    }
 
    /**
     * Set a single parameter.
     *
-    * <p>The parameter value must be of the default object type for the column type.</p>
+    * <p>For best performance, parameter values should be of the default object type
+    * for the parameter type.</p>
     *
     * @param p Prepared SQL statement
     * @param number The parameter number (1-based)
-    * @param type The parameter type
-    * @param value The parameter value.
+    * @param column The column corresponding to the parameter
+    * @param value The parameter value
     * @exception SQLException A database error occurred while setting
     *  the parameter.
    */
-   public static void setParameter(PreparedStatement p, int number, int type, Object value)
+   public static void setParameter(PreparedStatement p, int number, Column column, Object value)
      throws SQLException
    {
       byte[]      b;
       InputStream stream;
+      int         type;
+
+      type = column.getType();
 
       if (value == null)
       {
@@ -227,7 +232,14 @@ public class Parameters
       }
       catch (ClassCastException c)
       {
-         throw new SQLException("[XML-DBMS] Programming error. Parameter value is wrong object type.");
+         // If the value is not the expected type, then try to convert it to the
+         // correct type. Note that convertAndSetParameter calls back into this
+         // method. However, an infinite loop cannot occur because either (a)
+         // convertAndSetParameter fails the conversion and an exception is thrown,
+         // or (b) convertAndSetParameter succeeds in the conversion and this clause
+         // is not reached again.
+
+         convertAndSetParameter(p, number, column, value);
       }
    }
 
@@ -302,6 +314,6 @@ public class Parameters
       {
          throw new SQLException("[XML-DBMS] Conversion exception: " + c.getMessage());
       }
-      setParameter(p, number, type, o);
+      setParameter(p, number, column, o);
    }   
 }

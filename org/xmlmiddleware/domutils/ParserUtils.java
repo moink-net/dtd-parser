@@ -83,8 +83,10 @@ public interface ParserUtils
     *
     * @param doc The DOM Document.
     * @param xmlFilename The name of the XML file.
+    * @param encoding The output encoding to use. If this is null, the default
+    *    encoding is used.
     */
-   public void writeDocument(Document doc, String xmlFilename)
+   public void writeDocument(Document doc, String xmlFilename, String encoding)
       throws ParserUtilsException;
 
    /**

@@ -101,8 +101,13 @@ public class SQLStrings
    public String getSelectRow(Table t, Key key, OrderInfo order)
       throws SQLException
    {
-      String id = "SELECTROW_" + t.getUniversalName() + key.getName() + 
-                           order.getOrderColumn().getName();
+      String id;
+
+      id = "SELECTROW_" + t.getUniversalName() + key.getName();
+      if (order != null)
+      {
+         id += ";" + String.valueOf(order.hashCode());
+      }
       
       if(!m_strings.containsKey(id))
          m_strings.put(id, m_dml.getSelect(t, key, order));

@@ -59,6 +59,7 @@ public class FragmentBuilder implements ContentHandler
    Document         doc;
    DocumentFragment fragment;
    Node             current;
+   boolean          firstElement;
 
    // ************************************************************************
    // Constants
@@ -94,6 +95,7 @@ public class FragmentBuilder implements ContentHandler
       this.doc = doc;
       fragment = doc.createDocumentFragment();
       current = fragment;
+      firstElement = true;
       xmlReader.parse(new InputSource(new StringReader(xml)));
       return fragment;
    }
@@ -121,7 +123,11 @@ public class FragmentBuilder implements ContentHandler
 
       // Since we are constructing a fragment, ignore the root element.
 
-      if (current == fragment) return;
+      if (firstElement)
+      {
+         firstElement = false;
+         return;
+      }
 
       // Construct an element.
 

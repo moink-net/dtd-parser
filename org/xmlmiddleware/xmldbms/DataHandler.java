@@ -52,6 +52,6 @@ public interface DataHandler
     public void delete(Table table, Row row, Key key)
         throws SQLException;
 
-    public ResultSet select(Table table, Object[] key, OrderInfo orderInfo)
+    public ResultSet select(Table table, Key key, Object[] keyValue, OrderInfo orderInfo)
         throws SQLException;
 }

@@ -370,7 +370,7 @@ public class CPConnection
    //**************************************************************************
 
    // Comment these methods to compile with JDBC 2.0
-/**/
+/**
    public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
 
@@ -385,7 +385,7 @@ public class CPConnection
 
    public void setTypeMap(Map map) throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
-/**/
+**/
 
    //**************************************************************************
    // CPConnectionEventSource methods

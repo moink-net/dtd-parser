@@ -341,10 +341,7 @@ public class DMLGenerator
       if(whereLink != null)
          select.append(whereLink);
 
-      // Add ORDER BY clause. We sort in descending order because this
-      // gives us better performance in some cases. For more details,
-      // see DBMSToDOM.Order.insertChild, which really ought to be
-      // rewritten to use a binary search.
+      // Add ORDER BY clause.
       
       if(order != null)
          appendOrderBy(select, order);
