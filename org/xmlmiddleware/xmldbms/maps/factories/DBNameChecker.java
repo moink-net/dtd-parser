@@ -64,14 +64,14 @@ public class DBNameChecker
                             maxColumnsInTable,
                             maxTableNameLen;
    private boolean          mixedCase, lowerCase, upperCase, useCatalogs, useSchemas;
-   private Hashtable        catalogNames = new Hashtable();
+   private Hashtable        catalogNames = new Hashtable(), constraintNames = new Hashtable();
    private char[]           escape;
 
    //**************************************************************************
    // Constants
    //**************************************************************************
 
-   private static final String str = new String();
+   private static final String emptyString = new String();
 
    //**************************************************************************
    // Constructors
@@ -135,6 +135,7 @@ public class DBNameChecker
    public void startNewSession()
    {
       catalogNames.clear();
+      constraintNames.clear();
    }
 
    /**
@@ -146,7 +147,7 @@ public class DBNameChecker
     * @param catalogName Name of the catalog in which to check for collisions. May be null.
     * @param schemaName Name of the schema in which to check for collisions. May be null.
     * @param tableName Table name to check.
-    * @return The modified table name.
+    * @return The checked and possibly modified table name.
     * @exception SQLException Thrown if an error occurs accessing the database.
     * @exception XMLMiddlewareException Thrown if an error occurs constructing a name.
     */
@@ -194,7 +195,7 @@ String tableName)
     * @param tableName Name of the table in which to check for collisions. The table name must
     *    have been used in a call to checkTableName in this session.
     * @param columnName Column name to check.
-    * @return The modified column name.
+    * @return The checked and possibly modified column name.
     * @exception XMLMiddlewareException Thrown if an error occurs constructing a name.
     */
    public String checkColumnName(String catalogName, String schemaName, String tableName, String columnName)
@@ -228,6 +229,44 @@ String tableName)
       name = checkColumnNameCollisions(name, columnNames);
 
       // Return the column name.
+
+      return name;
+   }
+
+   /**
+    * Checks a constraint name.
+    *
+    * <p>If necessary, this method modifies the input constraint name to meet the
+    * naming criteria of the current database.</p>
+    *
+    * @param constraintName Name of the constraint name to check for collisions.
+    * @return The checked and possibly modified constraint name.
+    * @exception XMLMiddlewareException Thrown if an error occurs constructing a name.
+    */
+   public String checkConstraintName(String constraintName)
+      throws XMLMiddlewareException
+   {
+      // Constructs a constraint name that is legal and doesn't collide with
+      // any table names that have been constructed in this session.
+
+      String    name;
+      Hashtable tableNames;
+
+      if (constraintName == null)
+         throw new IllegalArgumentException("constraintName argument must not be null.");
+
+      // Check the characters and case of the constraint name.
+
+      name = constraintName;
+      name = checkCharacters(name);
+      name = checkCase(name);
+
+      // Check if the new constraint name collides against any of the constraints
+      // constructed in this session.
+
+      name = checkConstraintNameCollisions(name);
+
+      // Return the constraint name.
 
       return name;
    }
@@ -274,8 +313,8 @@ String tableName)
 
       // Use a static empty string to represent a null catalog or schema name.
 
-      if (catalogName == null) catalogName = str;
-      if (schemaName == null) schemaName = str;
+      if (catalogName == null) catalogName = emptyString;
+      if (schemaName == null) schemaName = emptyString;
 
       // Get the Hashtable of schema names for this catalog. If it doesn't exist,
       // create it now.
@@ -439,8 +478,30 @@ String tableName)
       // When we have a unique column name, store an object in the columnNames hash
       // table to guard the name against future collisions.
 
-      columnNames.put(columnName, str);
+      columnNames.put(columnName, emptyString);
       return columnName;
+   }
+
+   private String checkConstraintNameCollisions(String inputConstraintName)
+      throws XMLMiddlewareException
+   {
+      String constraintName = inputConstraintName;
+      int    suffixNum = 1;
+
+      // Check if the constraint name is in the list of new constraint names.
+      // If it is, append a number and check again.
+
+      while (constraintNames.get(constraintName) != null)
+      {
+         constraintName = getSuffixedName(inputConstraintName, suffixNum, Integer.MAX_VALUE);
+         suffixNum++;
+      }
+
+      // When we have a unique constraint name, store an object in the constraintNames hash
+      // table to guard the name against future collisions.
+
+      constraintNames.put(constraintName, emptyString);
+      return constraintName;
    }
 
    private boolean tableNameInDB(String catalogName, String schemaName, String tableName)

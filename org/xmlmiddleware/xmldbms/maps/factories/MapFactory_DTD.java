@@ -786,7 +786,7 @@ public class MapFactory_DTD
       throws XMLMiddlewareException, SQLException
    {
       Table    table;
-      String   tableName;
+      String   tableName, pkName;
       Key      pk;
       Column[] pkColumns = new Column[1];
 
@@ -801,7 +801,8 @@ public class MapFactory_DTD
 
       // Create the primary key.
 
-      pk = table.createPrimaryKey(null);
+      pkName = checker.checkConstraintName(tableName + PK);
+      pk = table.createPrimaryKey(pkName);
       pkColumns[0] = createColumn(table, tableName + PK, Types.INTEGER, 0, DatabaseMetaData.columnNoNulls);
       pk.setColumns(pkColumns);
       pk.setKeyGeneration(Key.KEYGENERATOR, HIGHLOW);
@@ -839,7 +840,7 @@ public class MapFactory_DTD
    private LinkInfo createLinkInfo(Table pkTable, Table fkTable)
       throws XMLMiddlewareException
    {
-      String   pkTableName;
+      String   pkTableName, fkName;
       Key      pk, fk;
       Column[] fkColumns = new Column[1];
 
@@ -854,7 +855,8 @@ public class MapFactory_DTD
 
       // Create a foreign key in the FK table for the PK table.
 
-      fk = fkTable.createForeignKey(pkTableName + FK);
+      fkName = checker.checkConstraintName(pkTableName + FK);
+      fk = fkTable.createForeignKey(fkName);
       fkColumns[0] = createColumn(fkTable, pkTableName + FK, Types.INTEGER, 0, DatabaseMetaData.columnNoNulls);
       fk.setColumns(fkColumns);
       fk.setRemoteKey(pkTable, pk);
