@@ -59,12 +59,10 @@ import java.util.*;
  *    <br />
  *    dbmsDelete = new DBMSDelete(new ParserUtilsXerces());
  *    <br />
- *    // Create a data source and data handler for our database, then
- *    // bundle these into a TransferInfo object.
+ *    // Create a data source and build a database-enabled map.
  *    <br />
  *    ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
- *    handler = new GenericHandler(ds, null, null);
- *    ti = new TransferInfo(map, null, handler);
+ *    dbMap = new DBEnabledMap(map, null, ds, "ron", "passwd");
  *    <br />
  *    // Build the parameters hashtable.
  *    <br />
@@ -73,10 +71,10 @@ import java.util.*;
  *    <br />
  *    // Call deleteDocument to delete the data.
  *    <br />
- *    dbmsDelete.deleteDocument(ti, filterSet, params, actions);
+ *    dbmsDelete.deleteDocument(dbMap, filterSet, params, actions);
  * </pre>
  *
- * @author Tobias Schilgen (mail@tobias-schilgen.de)
+ * @author Tobias Schilgen
  * @author Ronald Bourret
  * @author Jiri Zoth
  * @version 2.0
@@ -90,7 +88,7 @@ public class DBMSDelete
 
    private int          commitMode = DataHandler.COMMIT_AFTERSTATEMENT;
    private XMLDBMSMap   map = null;
-   private TransferInfo transferInfo = null;
+   private DBEnabledMap dbMap = null;
    private Actions      actions;
    private FilterBase   filterBase;
 
@@ -142,7 +140,7 @@ public class DBMSDelete
     *
     * <p>The filter set must contain at least one root filter.</p>
     *
-    * @param transferInfo Map and connection information.
+    * @param dbMap A database-enabled map.
     * @param filterSet The filter set specifying the data to retrieve.
     * @param params A Hashtable containing the names (keys) and values (elements) of
     *    any parameters used in the filters. Null if there are no parameters.
@@ -151,7 +149,7 @@ public class DBMSDelete
     * @exception SQLException Thrown if a database error occurs deleting data
     * @exception XMLMiddlewareException Thrown if an XML-DBMS specific error occurs.
     */
-   public void deleteDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable params, int action)
+   public void deleteDocument(DBEnabledMap dbMap, FilterSet filterSet, Hashtable params, int action)
       throws SQLException, XMLMiddlewareException
    {
       Actions defaultActions;
@@ -162,14 +160,14 @@ public class DBMSDelete
 
       // Build a new Actions object with a single default action.
 
-      defaultActions = new Actions(transferInfo.getMap());
+      defaultActions = new Actions(dbMap.getMap());
       defaultAction = new Action();
       defaultAction.setAction(action);
       defaultActions.setDefaultAction(defaultAction);
 
       // Call the other version of deleteDocument.
 
-      deleteDocument(transferInfo, filterSet, params, defaultActions);
+      deleteDocument(dbMap, filterSet, params, defaultActions);
    }
 
    /**
@@ -177,7 +175,7 @@ public class DBMSDelete
     *
     * <p>The filter set must contain at least one root filter.</p>
     *
-    * @param transferInfo Map and connection information.
+    * @param dbMap A database-enabled map.
     * @param filterSet The filter set specifying the data to retrieve.
     * @param params A Hashtable containing the names (keys) and values (elements) of
     *    any parameters used in the filters. Null if there are no parameters.
@@ -187,14 +185,14 @@ public class DBMSDelete
     * @exception XMLMiddlewareException Thrown if an XML-DBMS specific error occurs.
     * @exception SQLException Thrown if a database error occurs deleting data
     */
-   public void deleteDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable params, Actions actions)
+   public void deleteDocument(DBEnabledMap dbMap, FilterSet filterSet, Hashtable params, Actions actions)
       throws SQLException, XMLMiddlewareException
    {
       Enumeration dataHandlers;
 
       // Initialize the globals
 
-      initGlobals(transferInfo, actions);
+      initGlobals(dbMap, actions);
 
       // Set the filter parameters. We do this here because the filters are optimized
       // for the parameters only being set once.
@@ -204,7 +202,7 @@ public class DBMSDelete
       // Call startDocument here. This allows data handlers to do any
       // necessary initialization.
 
-      dataHandlers = transferInfo.getDataHandlers(); 
+      dataHandlers = dbMap.getDataHandlers(); 
       while (dataHandlers.hasMoreElements())
       {
          ((DataHandler)dataHandlers.nextElement()).startDocument(commitMode);
@@ -221,7 +219,7 @@ public class DBMSDelete
          // If an exception occurs, notify the DataHandlers so they
          // can roll back the current transaction.
 
-         dataHandlers = transferInfo.getDataHandlers();
+         dataHandlers = dbMap.getDataHandlers();
          while(dataHandlers.hasMoreElements())
          {
             ((DataHandler)dataHandlers.nextElement()).recoverFromException();
@@ -247,7 +245,7 @@ public class DBMSDelete
       // Call endDocument here. This allows data handlers to do any
       // necessary finalization, such as committing transactions.
 
-      dataHandlers = transferInfo.getDataHandlers(); 
+      dataHandlers = dbMap.getDataHandlers(); 
       while (dataHandlers.hasMoreElements())
       {
          ((DataHandler)dataHandlers.nextElement()).endDocument();
@@ -615,10 +613,10 @@ public class DBMSDelete
       }
    }
 
-   private void initGlobals(TransferInfo transferInfo, Actions actions)
+   private void initGlobals(DBEnabledMap dbMap, Actions actions)
    {
-      this.transferInfo = transferInfo;
-      map = transferInfo.getMap();
+      this.dbMap = dbMap;
+      map = dbMap.getMap();
       this.actions = actions;
    }
 
@@ -627,7 +625,7 @@ public class DBMSDelete
       // Reset the globals so we don't hold any unnecessary references.
 
       map = null;
-      transferInfo = null;
+      dbMap = null;
       actions = null;
       filterBase = null;
    }
@@ -643,7 +641,7 @@ public class DBMSDelete
 
       // Get the DataHandler used by the table and delete the row
 
-      dataHandler = transferInfo.getDataHandler(r.table.getDatabaseName());
+      dataHandler = dbMap.getDataHandler(r.table.getDatabaseName());
       try
       {
          dataHandler.delete(r.table, r.key, r.keyValue, r.where, r.columns, r.params);
@@ -678,7 +676,7 @@ public class DBMSDelete
 
       // Get the DataHandler used by the table and get the result set
 
-      dataHandler = transferInfo.getDataHandler(r.table.getDatabaseName());
+      dataHandler = dbMap.getDataHandler(r.table.getDatabaseName());
       return dataHandler.select(r.table, r.key, r.keyValue, r.where, r.columns, r.params, null);
    }
 

@@ -69,12 +69,10 @@ import java.util.Vector;
  *    <br />
  *    dbmsToDOM = new DBMSToDOM(new ParserUtilsXerces());
  *    <br />
- *    // Create a data source and data handler for our database, then
- *    // bundle these into a TransferInfo object.
+ *    // Create a data source and build a database-enabled map.
  *    <br />
  *    ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
- *    handler = new GenericHandler(ds, null, null);
- *    ti = new TransferInfo(map, null, handler);
+ *    dbMap = new DBEnabledMap(map, null, ds, "ron", "passwd");
  *    <br />
  *    // Build the parameters hashtable.
  *    <br />
@@ -83,7 +81,7 @@ import java.util.Vector;
  *    <br />
  *    // Call retrieveDocument to transfer the data.
  *    <br />
- *    doc = dbmsToDOM.retrieveDocument(ti, filterSet, params, null);
+ *    doc = dbmsToDOM.retrieveDocument(dbMap, filterSet, params, null);
  * </pre>
  *
  * @author Ronald Bourret
@@ -101,7 +99,7 @@ public class DBMSToDOM
    private XMLDBMSMap   map;
    private FilterBase   filterBase;
    private Document     doc;
-   private TransferInfo    transferInfo;
+   private DBEnabledMap dbMap;
 
    // Truly global globals
 
@@ -170,7 +168,7 @@ public class DBMSToDOM
     *
     * <p>The filter set must contain at least one root filter.</p>
     *
-    * @param transferInfo Map and connection information.
+    * @param dbMap A database-enabled map.
     * @param filterSet The filter set specifying the data to retrieve.
     * @param params A Hashtable containing the names (keys) and values (elements) of
     *    any parameters used in the filters. Null if there are no parameters.
@@ -181,12 +179,12 @@ public class DBMSToDOM
     * @exception SQLException Thrown if a database error occurs retrieving data
     * @exception XMLMiddlewareException Thrown if an XML-DBMS error occurs retrieving data.
     */
-   public Document retrieveDocument(TransferInfo transferInfo, FilterSet filterSet, Hashtable params, Node rootNode)
+   public Document retrieveDocument(DBEnabledMap dbMap, FilterSet filterSet, Hashtable params, Node rootNode)
       throws SQLException, XMLMiddlewareException
    {
       Hashtable resultSets = new Hashtable();
 
-      return retrieveDocument(transferInfo, resultSets, filterSet, params, rootNode);
+      return retrieveDocument(dbMap, resultSets, filterSet, params, rootNode);
    }
 
    /**
@@ -194,7 +192,7 @@ public class DBMSToDOM
     *
     * <p>The filter set must contain exactly one result set filter.</p>
     *
-    * @param transferInfo Map and connection information.
+    * @param dbMap A database-enabled map.
     * @param rs The result set. The filter for the result set must use the name "Default".
     * @param filterSet The filter set specifying the data to retrieve.
     * @param params A Hashtable containing the names (keys) and values (elements) of
@@ -206,13 +204,13 @@ public class DBMSToDOM
     * @exception SQLException Thrown if a database error occurs retrieving data
     * @exception XMLMiddlewareException Thrown if an XML-DBMS error occurs retrieving data.
     */
-   public Document retrieveDocument(TransferInfo transferInfo, ResultSet rs, FilterSet filterSet, Hashtable params, Node rootNode)
+   public Document retrieveDocument(DBEnabledMap dbMap, ResultSet rs, FilterSet filterSet, Hashtable params, Node rootNode)
       throws SQLException, XMLMiddlewareException
    {
       Hashtable resultSets = new Hashtable();
 
       resultSets.put("Default", rs);
-      return retrieveDocument(transferInfo, resultSets, filterSet, params, rootNode);
+      return retrieveDocument(dbMap, resultSets, filterSet, params, rootNode);
    }
 
    /**
@@ -220,7 +218,7 @@ public class DBMSToDOM
     *
     * <p>The filter set must contain at least one root filter.</p>
     *
-    * @param transferInfo Map and connection information.
+    * @param dbMap A database-enabled map.
     * @param resultSets An hashtable containing result sets keyed by result set name.
     *    There must be one result set for each result set filter in the filter set.
     * @param filterSet The filter set specifying the data to retrieve.
@@ -233,7 +231,7 @@ public class DBMSToDOM
     * @exception SQLException Thrown if a database error occurs retrieving data
     * @exception XMLMiddlewareException Thrown if an XML-DBMS error occurs retrieving data.
     */
-   public Document retrieveDocument(TransferInfo transferInfo, Hashtable resultSets, FilterSet filterSet, Hashtable params, Node rootNode)
+   public Document retrieveDocument(DBEnabledMap dbMap, Hashtable resultSets, FilterSet filterSet, Hashtable params, Node rootNode)
       throws SQLException, XMLMiddlewareException
    {
       OrderedNode     orderedRootNode;
@@ -241,7 +239,7 @@ public class DBMSToDOM
 
       // Initialize the per-execution global variables.
 
-      initGlobals(transferInfo);
+      initGlobals(dbMap);
 
       // Check that we have at least one filter
 
@@ -339,7 +337,7 @@ public class DBMSToDOM
 
       // Get a DataHandler
 
-      dataHandler = transferInfo.getDataHandler(rootTable.getDatabaseName());
+      dataHandler = dbMap.getDataHandler(rootTable.getDatabaseName());
       where = rootConditions.getWhereCondition();
       columns = rootConditions.getColumns();
       params = rootConditions.getParameterValues();
@@ -584,7 +582,7 @@ public class DBMSToDOM
 
       childClassTableMap = relatedClassTableMap.getClassTableMap();
       childTable = childClassTableMap.getTable();
-      dataHandler = transferInfo.getDataHandler(childTable.getDatabaseName());
+      dataHandler = dbMap.getDataHandler(childTable.getDatabaseName());
 
       // Get the result set over the related class table and process it.
 
@@ -633,7 +631,7 @@ public class DBMSToDOM
       // Get the DataHandler used by the table
 
       propTable = propTableMap.getTable();
-      dataHandler = transferInfo.getDataHandler(propTable.getDatabaseName());
+      dataHandler = dbMap.getDataHandler(propTable.getDatabaseName());
 
       // Get the result set over the property table and process it. Note that
       // how we sort the result set depends on whether we are processing a list
@@ -673,12 +671,12 @@ public class DBMSToDOM
    // Helper methods -- initialization
    // ************************************************************************
 
-   private void initGlobals(TransferInfo transferInfo)
+   private void initGlobals(DBEnabledMap dbMap)
    {
       // Set up the global variables
 
-      this.transferInfo = transferInfo;
-      map = transferInfo.getMap();
+      this.dbMap = dbMap;
+      map = dbMap.getMap();
    }
 
    private void resetGlobals()
@@ -686,7 +684,7 @@ public class DBMSToDOM
       // Set the per-execution global variables to null so we don't hold
       // any unnecessary references.
 
-      transferInfo = null;
+      dbMap = null;
       map = null;
       filterBase = null;
    }

@@ -40,7 +40,7 @@ import org.w3c.dom.*;
  *
  * <p>DOMToDBMS transfers data from a DOM tree to the database according
  * to a particular XMLDBMSMap and Actions object. The caller must provide a
- * TransferInfo object, which contains the map and database handlers,
+ * DBEnabledMap object, which contains the map and database information,
  * a DOM Element or Document, and one or more actions to be taken when
  * storing this data in the database.</p>
  *
@@ -60,18 +60,16 @@ import org.w3c.dom.*;
  *    <br />
  *    domToDBMS = new DOMToDBMS();
  *    <br />
- *    // Create a data source and data handler for our database, then
- *    // bundle these into a TransferInfo object.
+ *    // Create a data source and build a database-enabled map.
  *    <br />
  *    ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
- *    handler = new GenericHandler(ds, null, null);
- *    ti = new TransferInfo(map, null, handler);
+ *    dbMap = new DBEnabledMap(map, null, ds, "ron", "passwd");
  *    <br />
  *    // Open the document and call storeDocument to transfer the data.
  *    <br />
  *    utils = new ParserUtilsXerces();
  *    doc = utils.openDocument(new InputSource(new FileInputStream("orders.xml")));
- *    domToDBMS.storeDocument(ti, doc, actions);
+ *    domToDBMS.storeDocument(dbMap, doc, actions);
  * </pre>
  *
  * <p>DOMToDBMS stores data starting with the first element it finds that is mapped
@@ -91,7 +89,7 @@ public class DOMToDBMS
 
    // The transfer info used for a session of storeDocument
 
-   private TransferInfo m_transInfo;
+   private DBEnabledMap m_dbMap;
 
    // The commit mode (see processRoot)
 
@@ -293,74 +291,74 @@ public class DOMToDBMS
    /**
     * Store a DOM tree in the database using a single action.
     *
-    * @param transInfo TransferInfo object containing the map and DataHandlers.
+    * @param dbMap A database-enabled map.
     * @param doc The DOM document to store.
     * @param action Action to take on the document.
     * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
     */
-   public FilterSet storeDocument(TransferInfo transInfo, Document doc, int action)
+   public FilterSet storeDocument(DBEnabledMap dbMap, Document doc, int action)
       throws SQLException, XMLMiddlewareException
    {
-      return storeDocument(transInfo, doc.getDocumentElement(), action);
+      return storeDocument(dbMap, doc.getDocumentElement(), action);
    }
 
    /**
     * Store a DOM tree in the database using a set of actions.
     *
-    * @param transInfo TransferInfo object containing the map and DataHandlers.
+    * @param dbMap A database-enabled map.
     * @param doc The DOM document to store.
     * @param action Actions to take on various elements of the document.
     * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
     */
-   public FilterSet storeDocument(TransferInfo transInfo, Document doc, Actions actions)
+   public FilterSet storeDocument(DBEnabledMap dbMap, Document doc, Actions actions)
       throws SQLException, XMLMiddlewareException
    {
-      return storeDocument(transInfo, doc.getDocumentElement(), actions);
+      return storeDocument(dbMap, doc.getDocumentElement(), actions);
    }
 
    /**
     * Store part of a document in the database using a single action.
     *
-    * @param transInfo TransferInfo object containing the map and DataHandlers.
+    * @param dbMap A database-enabled map.
     * @param el Element defining the part of the document to store.
     * @param action Action to take on the tree.
     * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
     */
-   public FilterSet storeDocument(TransferInfo transInfo, Element el, int action)
+   public FilterSet storeDocument(DBEnabledMap dbMap, Element el, int action)
       throws SQLException, XMLMiddlewareException
    {
       Action act = new Action();
       act.setAction(action);
 
-      Actions actions = new Actions(transInfo.getMap());
+      Actions actions = new Actions(dbMap.getMap());
       actions.setDefaultAction(act);
 
-      return storeDocument(transInfo, el, actions);
+      return storeDocument(dbMap, el, actions);
    }
 
    /**
     * Store part of a document in the database using a set of actions.
     *
-    * @param transInfo TransferInfo object containing the map and DataHandlers.
+    * @param dbMap A database-enabled map.
     * @param element Element defining the part of the document to store.
     * @param action Actions to take on various elements of the tree.
     * @return Null or a FilterSet describing the stored data. See setFilterSetReturned().
     */
-   public FilterSet storeDocument(TransferInfo transInfo, Element element, Actions actions)
+   public FilterSet storeDocument(DBEnabledMap dbMap, Element element, Actions actions)
       throws SQLException, XMLMiddlewareException
    {
-      FilterSet filterSet = (m_returnFilterSet) ? new FilterSet(transInfo.getMap()) : null;
+      FilterSet filterSet = (m_returnFilterSet) ? new FilterSet(dbMap.getMap()) : null;
 
       // TODO: Make this reentrant
 
-      m_transInfo = transInfo;
+      m_dbMap = dbMap;
       m_sqlExceptions = null;
       m_sqlWarnings = null;
       m_actions = actions;
 
       // Call startDocument here
 
-      Enumeration e = transInfo.getDataHandlers();
+      Enumeration e = dbMap.getDataHandlers();
       while(e.hasMoreElements())
       {
          ((DataHandler)e.nextElement()).startDocument(m_commitMode);
@@ -377,7 +375,7 @@ public class DOMToDBMS
          // If an exception occurs, notify the DataHandlers so they
          // can roll back the current transaction.
 
-         e = transInfo.getDataHandlers();
+         e = dbMap.getDataHandlers();
          while(e.hasMoreElements())
          {
             ((DataHandler)e.nextElement()).recoverFromException();
@@ -402,16 +400,16 @@ public class DOMToDBMS
 
       // Call endDocument here
 
-      e = transInfo.getDataHandlers();
+      e = dbMap.getDataHandlers();
       while(e.hasMoreElements())
       {
          ((DataHandler)e.nextElement()).endDocument();
       }
 
-      // Set the TransferInfo and Actions objects to null so we don't hold
+      // Set the DBEnabledMap and Actions objects to null so we don't hold
       // any unnecessary references, such as to connection objects, etc.
 
-      m_transInfo = null;
+      m_dbMap = null;
       m_actions = null;
 
       // Return the FilterSet.
@@ -478,7 +476,7 @@ public class DOMToDBMS
    {
       // Check if the node is mapped as a class
 
-      ClassMap classMap = m_transInfo.getMap().getClassMap(el.getNamespaceURI(), el.getLocalName());
+      ClassMap classMap = m_dbMap.getMap().getClassMap(el.getNamespaceURI(), el.getLocalName());
 
       if (classMap != null)
       {
@@ -541,9 +539,9 @@ public class DOMToDBMS
       Action   action;
       Vector   fkChildren = new Vector();
       Vector   useProps;
-      Table   table;
+      Table    table;
       LinkInfo linkInfo;
-      Row     classRow;
+      Row      classRow;
 
       // Get the action for the node
 
@@ -1119,7 +1117,7 @@ public class DOMToDBMS
       // the property value and, if it is 0, set the value to null, which
       // is later interpreted as NULL.
 
-      if (m_transInfo.getMap().emptyStringIsNull() && s.length() == 0)
+      if (m_dbMap.getMap().emptyStringIsNull() && s.length() == 0)
       {
          s = null;
       }
@@ -1219,7 +1217,9 @@ public class DOMToDBMS
 
       Enumeration e = classMapBase.getAttributeMaps();
       while(e.hasMoreElements())
+      {
          v.addElement(e.nextElement());
+      }
 
       // Child Elements
 
@@ -1375,7 +1375,7 @@ public class DOMToDBMS
 
       // Get the database
       // TODO: (What about the 'null' or default database?)
-      DataHandler dataHandler = m_transInfo.getDataHandler(table.getDatabaseName());
+      DataHandler dataHandler = m_dbMap.getDataHandler(table.getDatabaseName());
 
       if (dataHandler == null)
          throw new XMLMiddlewareException("DataHandler not set for the database named " + table.getDatabaseName());
@@ -1476,7 +1476,7 @@ public class DOMToDBMS
       // Get the DataHandler for the database
       // TODO: (What about the 'null' or default database?)
 
-      DataHandler dataHandler = m_transInfo.getDataHandler(table.getDatabaseName());
+      DataHandler dataHandler = m_dbMap.getDataHandler(table.getDatabaseName());
       if (dataHandler == null)
          throw new XMLMiddlewareException("Database '" + table.getDatabaseName() + "' not set.");
 

@@ -186,6 +186,11 @@ public class Action
       return (pcdataMap != null);
    }
 
+   /**
+    * Get a Vector of PropertyMaps for all properties to be updated.
+    *
+    * @return The Vector
+    */
    public final Vector getUpdatePropertyMaps()
    {
       Enumeration e;

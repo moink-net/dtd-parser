@@ -130,7 +130,7 @@ import javax.sql.*;
  * [3] Optional. If no database name is specified, "Default" is used.<br />
  * [4] Optional if there is only one result set, in which case "Default" is used.
  * Required if there is more than one result set. Result set names correspond to
- * result set names in the filter document./p>
+ * result set names in the filter document.</p>
  *
  * <p>The following table shows which configuration properties apply to each method.
  * Configuration properties are used by all three interfaces.</p>
@@ -261,7 +261,7 @@ public class Transfer extends PropertyProcessor
    ParserUtils utils;
    Hashtable   fileObjects = new Hashtable(),
                keyGenerators = new Hashtable(),
-               transferInfos = new Hashtable(),
+               dbMaps = new Hashtable(),
                dbInfos = new Hashtable(),
                dataHandlers = new Hashtable();
    Vector      conns = new Vector();
@@ -382,7 +382,7 @@ public class Transfer extends PropertyProcessor
       // Run the garbage collector so that any open database connections are forced
       // to be closed.
 
-      transferInfos.clear();
+      dbMaps.clear();
       dbInfos.clear();
       dataHandlers.clear();
       conns.removeAllElements();
@@ -654,7 +654,7 @@ public class Transfer extends PropertyProcessor
    {
       String       validate;
       XMLDBMSMap   map;
-      TransferInfo transferInfo;
+      DBEnabledMap dbMap;
       Actions      actions;
       FilterSet    filterSet;
 
@@ -662,7 +662,7 @@ public class Transfer extends PropertyProcessor
 
       validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
       map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
-      transferInfo = createTransferInfo(map);
+      dbMap = createDBEnabledMap(map);
       actions = createActions(map, actionFilename, (validate.indexOf(XMLDBMSProps.ACTIONTOKEN) != -1));
       filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
 
@@ -672,7 +672,7 @@ public class Transfer extends PropertyProcessor
 
       // Delete the document
 
-      dbmsDelete.deleteDocument(transferInfo, filterSet, params, actions);
+      dbmsDelete.deleteDocument(dbMap, filterSet, params, actions);
    }
 
    // ************************************************************************
@@ -821,7 +821,7 @@ public class Transfer extends PropertyProcessor
    {
       String       validate;
       XMLDBMSMap   map;
-      TransferInfo transferInfo;
+      DBEnabledMap dbMap;
       Actions      actions;
       Document     doc;
 
@@ -829,7 +829,7 @@ public class Transfer extends PropertyProcessor
 
       validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
       map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
-      transferInfo = createTransferInfo(map);
+      dbMap = createDBEnabledMap(map);
       actions = createActions(map, actionFilename, (validate.indexOf(XMLDBMSProps.ACTIONTOKEN) != -1));
 
       // Configure the DOMToDBMS object
@@ -839,7 +839,7 @@ public class Transfer extends PropertyProcessor
       // Open a DOM tree over the InputSource and store it in the database
 
       doc = utils.openDocument(src, (validate.indexOf(XMLDBMSProps.XMLTOKEN) != -1));
-      return domToDBMS.storeDocument(transferInfo, doc, actions);
+      return domToDBMS.storeDocument(dbMap, doc, actions);
    }
 
    private Document retrieveDocumentInternal(Properties configProps, String mapFilename, String filterFilename, Hashtable params)
@@ -847,14 +847,14 @@ public class Transfer extends PropertyProcessor
    {
       String       validate;
       XMLDBMSMap   map;
-      TransferInfo transferInfo;
+      DBEnabledMap dbMap;
       FilterSet    filterSet;
 
       // Create the various objects needed by DBMSToDOM.retrieveDocument.
 
       validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
       map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
-      transferInfo = createTransferInfo(map);
+      dbMap = createDBEnabledMap(map);
       filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
 
       // Configure the DBMSToDOM object
@@ -863,7 +863,7 @@ public class Transfer extends PropertyProcessor
 
       // Retrieve and return the document
 
-      return dbmsToDOM.retrieveDocument(transferInfo, filterSet, params, null);
+      return dbmsToDOM.retrieveDocument(dbMap, filterSet, params, null);
    }
 
    private Document retrieveDocumentInternal(Properties configProps, String mapFilename, Properties selects, String filterFilename, Hashtable params)
@@ -872,7 +872,7 @@ public class Transfer extends PropertyProcessor
       String       validate;
       XMLDBMSMap   map;
       Hashtable    resultSets;
-      TransferInfo transferInfo;
+      DBEnabledMap dbMap;
       FilterSet    filterSet;
       Document     doc;
 
@@ -881,7 +881,7 @@ public class Transfer extends PropertyProcessor
       validate = " " + configProps.getProperty(XMLDBMSProps.VALIDATE) + " ";
       map = createMap(mapFilename, (validate.indexOf(XMLDBMSProps.MAPTOKEN) != -1));
       resultSets = createResultSets(selects);
-      transferInfo = createTransferInfo(map);
+      dbMap = createDBEnabledMap(map);
       filterSet = createFilterSet(map, filterFilename, (validate.indexOf(XMLDBMSProps.FILTERTOKEN) != -1));
 
       // Configure the DBMSToDOM object
@@ -890,7 +890,7 @@ public class Transfer extends PropertyProcessor
 
       // Retrieve the document
 
-      doc = dbmsToDOM.retrieveDocument(transferInfo, resultSets, filterSet, params, null);
+      doc = dbmsToDOM.retrieveDocument(dbMap, resultSets, filterSet, params, null);
 
       // Close the result sets and the connections they use.
 
@@ -1439,38 +1439,38 @@ public class Transfer extends PropertyProcessor
       }
    }
 
-   private TransferInfo createTransferInfo(XMLDBMSMap map)
+   private DBEnabledMap createDBEnabledMap(XMLDBMSMap map)
    {
-      TransferInfo transferInfo;
+      DBEnabledMap dbMap;
       Enumeration  dbNames;
       String       dbName;
       DataHandler  dataHandler;
 
-      // Check if we have already created a TransferInfo object for this
+      // Check if we have already created a DBEnabledMap object for this
       // map. If so, use it. If not, create it now.
 
-      transferInfo = (TransferInfo)transferInfos.get(map);
-      if (transferInfo == null)
+      dbMap = (DBEnabledMap)dbMaps.get(map);
+      if (dbMap == null)
       {
-         // Create a new TransferInfo object and cache it.
+         // Create a new DBEnabledMap object and cache it.
 
-         transferInfo = new TransferInfo(map);
-         transferInfos.put(map, transferInfo);
+         dbMap = new DBEnabledMap(map);
+         dbMaps.put(map, dbMap);
 
-         // Add all current databases to the TransferInfo object.
+         // Add all current databases to the DBEnabledMap object.
 
          dbNames = dataHandlers.keys();
          while (dbNames.hasMoreElements())
          {
             dbName = (String)dbNames.nextElement();
             dataHandler = (DataHandler)dataHandlers.get(dbName);
-            transferInfo.addDataHandler(dbName, dataHandler);
+            dbMap.addDataHandler(dbName, dataHandler);
          }
       }
 
-      // Return the TransferInfo object.
+      // Return the DBEnabledMap object.
 
-      return transferInfo;
+      return dbMap;
    }
 
    private KeyGenerator createKeyGenerator(String name, String className, Properties configProps, int suffix)
