@@ -176,18 +176,21 @@ public class MapFactory_Database
    //**************************************************************************
 
    // General class variables
-   private Connection[] connections = null;
-   private String[]     databaseNames = null,
-                        namespaceURIs = null;
-   private boolean      useElementTypes = true,
-                        followPrimaryKeys = true, followForeignKeys = true;
-   private XMLDBMSMap   map = null;
-   private Hashtable    processedTables = new Hashtable(),
-                        elementTypeNames = new Hashtable(),
-                        conns = new Hashtable(),
-                        metas = new Hashtable(),
-                        uris = new Hashtable(),
-                        attributeHashes = new Hashtable();
+   private Connection[]   connections = null;
+   private String[]       databaseNames = null,
+                          namespaceURIs = null;
+   private boolean        useElementTypes = true,
+                          followPrimaryKeys = true, followForeignKeys = true;
+   private XMLDBMSMap     map = null;
+   private Hashtable      processedTables = new Hashtable(),
+                          conns = new Hashtable(),
+                          metas = new Hashtable(),
+                          uris = new Hashtable();
+   private XMLNameChecker checker = new XMLNameChecker();
+
+   //**************************************************************************
+   // Constants
+   //**************************************************************************
 
    // Static variables
    static private final Object    o = new Object();
@@ -225,9 +228,7 @@ public class MapFactory_Database
     */
    public MapFactory_Database(Connection conn)
    {
-      connections = new Connection[1];
-      connections[0] = conn;
-      databaseNames = new String[1];
+      setConnection(conn);
    }
 
    /**
@@ -613,7 +614,6 @@ public class MapFactory_Database
       DatabaseMetaData meta;
       Table            table;
       ClassTableMap    classTableMap;
-      XMLName          elementTypeName;
       Vector           remoteTables = new Vector(), remoteLinkInfos = new Vector();
 
       // Create a new Table. We use XMLDBMSMap.createTable because the Table might already
@@ -637,7 +637,7 @@ public class MapFactory_Database
 
       classTableMap = map.createClassTableMap(table);
 
-      // Get a DatabaseMetaData object for the connection used by the database and
+      // Get a DatabaseMetaData object for the conanection used by the database and
       // escape the _ and % characters in the schema name, as these are treated as wildcards.
 
       // It is not clear whether to set null catalog and schema names to null or an
@@ -662,8 +662,7 @@ public class MapFactory_Database
 
       if (classTableMap.getElementTypeName() == null)
       {
-         elementTypeName = getElementTypeName(table.getDatabaseName(), table.getCatalogName(), table.getSchemaName(), table.getTableName());
-         classTableMap.setElementTypeName(elementTypeName);
+         classTableMap.setElementTypeName(getElementTypeName(table));
       }
 
       // If we are following foreign keys, build the foreign keys in the current
@@ -708,7 +707,7 @@ public class MapFactory_Database
    }
 
    private void processColumns(DatabaseMetaData meta, ClassTableMap classTableMap, Table table, String databaseName, String catalogName, String schemaName, String tableName)
-      throws SQLException
+      throws SQLException, XMLMiddlewareException
    {
       Enumeration foreignKeys;
       Key         foreignKey;
@@ -719,13 +718,6 @@ public class MapFactory_Database
       Column      column;
       int         type;
       int         len;
-
-      // If we are converting to attributes, build a hashtable to hold the attribute names.
-
-      if (!useElementTypes)
-      {
-         attributeHashes.put(classTableMap.getElementTypeName().getUniversalName(), new Hashtable());
-      }
 
       // Build a hashtable of the foreign key column names. These columns won't
       // be mapped, since they will be mapped on the element of the table to which
@@ -797,10 +789,10 @@ public class MapFactory_Database
    }
 
    private void createColumnMap(ClassTableMap classTableMap, Table table, Column column)
+      throws XMLMiddlewareException
    {
       ColumnMap columnMap;
       XMLName   xmlName;
-      String    parentElementTypeName;
       int       type;
 
       // Create a ColumnMap for the column.
@@ -810,8 +802,14 @@ public class MapFactory_Database
       // Set the element or attribute name and type.
 
       type = (useElementTypes) ? ColumnMap.ELEMENTTYPE : ColumnMap.ATTRIBUTE;
-      parentElementTypeName = classTableMap.getElementTypeName().getUniversalName();
-      xmlName = getXMLName(table.getDatabaseName(), table.getCatalogName(), table.getSchemaName(), table.getTableName(), column.getName(), parentElementTypeName, type);
+      if (type == ColumnMap.ELEMENTTYPE)
+      {
+         xmlName = getElementTypeName(table, column);
+      }
+      else // if (type == ColumnMap.ATTRIBUTE)
+      {
+         xmlName = getAttributeName(table, column, classTableMap.getElementTypeName());
+      }
       columnMap.setXMLName(xmlName, type);
    }
 
@@ -855,7 +853,7 @@ public class MapFactory_Database
          elementTypeName = remoteCTM.getElementTypeName();
          if (elementTypeName == null)
          {
-            elementTypeName = getElementTypeName(remoteTable.getDatabaseName(), remoteTable.getCatalogName(), remoteTable.getSchemaName(), remoteTable.getTableName());
+            elementTypeName = getElementTypeName(remoteTable);
             remoteCTM.setElementTypeName(elementTypeName);
          }
          relatedClassTableMap.setElementTypeName(elementTypeName);
@@ -1224,87 +1222,56 @@ public class MapFactory_Database
    // Private methods -- name conversion
    //**************************************************************************
 
-   private XMLName getXMLName(String databaseName, String catalogName, String schemaName, String tableName, String columnName, String parentElementTypeName, int type)
+   private XMLName getElementTypeName(Table table, Column column)
+      throws XMLMiddlewareException
    {
-      String[] names = new String[5];
+      String[] prefixes = new String[4];
 
-      names[0] = columnName;
-      names[1] = tableName;
-      names[2] = schemaName;
-      names[3] = catalogName;
-      names[4] = databaseName;
+      // Use the table, schema, catalog, and database names as prefixes if needed.
 
-      if (type == ColumnMap.ELEMENTTYPE)
-      {
-         return getXMLName(names, elementTypeNames);
-      }
-      else // if (type == ColumnMap.ATTRIBUTE)
-      {
-         return getXMLName(names, (Hashtable)attributeHashes.get(parentElementTypeName));
-      }
+      prefixes[0] = table.getTableName();
+      prefixes[1] = table.getSchemaName();
+      prefixes[2] = table.getCatalogName();
+      prefixes[3] = table.getDatabaseName();
+
+      // Get an element type name for the column name, using the namespace URI of
+      // the table's database.
+
+      return checker.checkElementTypeName(prefixes, (String)uris.get(prefixes[3]), column.getName());
    }
 
-   private XMLName getElementTypeName(String databaseName, String catalogName, String schemaName, String tableName)
+   private XMLName getElementTypeName(Table table)
+      throws XMLMiddlewareException
    {
-      String[] names = new String[4];
+      String[] prefixes = new String[3];
 
-      names[0] = tableName;
-      names[1] = schemaName;
-      names[2] = catalogName;
-      names[3] = databaseName;
-      return getXMLName(names, elementTypeNames);
+      // Use the schema, catalog, and database names as prefixes if needed.
+
+      prefixes[0] = table.getSchemaName();
+      prefixes[1] = table.getCatalogName();
+      prefixes[2] = table.getDatabaseName();
+
+      // Get an element type name for the table name, using the namespace URI of
+      // the table's database.
+
+      return checker.checkElementTypeName(prefixes, (String)uris.get(prefixes[2]), table.getTableName());
    }
 
-   private XMLName getXMLName(String[] names, Hashtable uniqueNames)
+   private XMLName getAttributeName(Table table, Column column, XMLName elementTypeName)
+      throws XMLMiddlewareException
    {
-      // This method converts a table name to an element type name. It's very
-      // poorly designed, as it knows the contents of the names array.
+      String[] prefixes = new String[4];
 
-      XMLName xmlName;
-      String  saveLocalName, localName, uri;
+      // Use the table, schema, catalog, and database names as prefixes if needed.
 
-      // Convert the first name in the array (table or column name) to an XML 1.0 Name.
+      prefixes[0] = table.getTableName();
+      prefixes[1] = table.getSchemaName();
+      prefixes[2] = table.getCatalogName();
+      prefixes[3] = table.getDatabaseName();
 
-      saveLocalName = convertDBNameToLocalName(names[0]);
+      // Get an element type name for the column name, using a namespace URI of null.
 
-      // Construct an XMLName and see if it collides with an existing element
-      // type name. If not, we are done.
-
-      uri = (String)uris.get(names[names.length - 1]);
-      xmlName = XMLName.create(uri, saveLocalName);
-      if (uniqueNames.get(xmlName.getUniversalName()) == null) return xmlName;
-
-      // If we have a collision, try prepending the other names in the list to
-      // see if we can construct a unique name.
-
-      for (int i = 1; i < names.length; i++)
-      {
-         localName = convertDBNameToLocalName(names[i]) + PERIOD + xmlName.getLocalName();
-         xmlName = XMLName.create(uri, localName);
-         if (uniqueNames.get(xmlName.getUniversalName()) == null) return xmlName;
-      }
-
-      // If we still have a collision, go back to the converted table or column name
-      // and append 2, 3, 4, ... If we still have a collision, say mean things to the user.
-
-      for (int i = 2; i < Integer.MAX_VALUE; i++)
-      {
-         localName = saveLocalName + String.valueOf(i);
-         xmlName = XMLName.create(uri, localName);
-         if (uniqueNames.get(xmlName.getUniversalName()) == null) return xmlName;
-      }
-
-      throw new IllegalStateException("If you get this exception, there is either a bug in XML-DBMS or the state of your database is ludicrous. See the code in MapFactory_Database.getXMLName.");
-   }
-
-   private String convertDBNameToLocalName(String dbName)
-   {
-      // BUG! This method needs to check that the dbName is a legal XML Name
-      // and replace any illegal characters. To implement, break out the code
-      // from the DTD parser that checks for legal characters, then add code
-      // to replace illegal characters.
-
-      return dbName;
+      return checker.checkAttributeName(prefixes, elementTypeName, null, column.getName());
    }
 
    //**************************************************************************
@@ -1317,11 +1284,10 @@ public class MapFactory_Database
       setDefault(databaseNames, DEFAULT);
       map = new XMLDBMSMap();
       processedTables.clear();
-      elementTypeNames.clear();
-      attributeHashes.clear();
       metas.clear();
       buildHashtable(conns, databaseNames, connections);
       buildHashtable(uris, databaseNames, namespaceURIs);
+      checker.startNewSession();
    }
 
    private void checkState()

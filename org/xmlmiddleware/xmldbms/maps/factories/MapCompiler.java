@@ -1339,7 +1339,7 @@ public class MapCompiler
       }
       else
       {
-         generate = Key.XMLDBMS;
+         generate = Key.KEYGENERATOR;
       }
       key.setKeyGeneration(generate, keyGenerator);
    }

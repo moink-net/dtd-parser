@@ -843,7 +843,7 @@ public class MapSerializer extends XMLWriter
          {
             keyGeneratorName = MapConst.VALUE_DATABASE;
          }
-         else if (keyGeneration == Key.XMLDBMS)
+         else if (keyGeneration == Key.KEYGENERATOR)
          {
             keyGeneratorName = key.getKeyGeneratorName();
          }
