@@ -70,8 +70,8 @@
                   <Column Name="AuthorPostCode" DataType="VARCHAR" Length="30" Nullable="No"/>
                   <PrimaryKey>
                      <UseColumn Name="Title"/>
-                     <UseColumn Name="AuthorLastName"/>
-                     <UseColumn Name="AuthorFirstName"/>
+<!--                     <UseColumn Name="AuthorLastName"/>
+                     <UseColumn Name="AuthorFirstName"/> -->
                   </PrimaryKey>
                </Table>
             </Schema>
@@ -89,6 +89,7 @@
          </PropertyMap>
          <InlineMap>
             <ElementType Name="Author"/>
+            <FixedOrder Value="2" />
             <PropertyMap>
                <ElementType Name="FirstName"/>
                <ToColumn Name="AuthorFirstName"/>
@@ -101,6 +102,7 @@
             </PropertyMap>
             <InlineMap>
                <ElementType Name="Address"/>
+               <FixedOrder Value="3" />
                <PropertyMap>
                   <ElementType Name="Street"/>
                   <ToColumn Name="AuthorStreet"/>
@@ -120,9 +122,7 @@
                   <Attribute Name="PostCode"/>
                   <ToColumn Name="AuthorPostCode"/>
                </PropertyMap>
-               <FixedOrder Value="3" />
             </InlineMap>
-            <FixedOrder Value="2" />
          </InlineMap>
       </ClassMap>
    </Maps>

@@ -2,7 +2,7 @@
 // Written by Ronald Bourret, Technical University of Darmstadt, 1998-9
 
 import org.xmlmiddleware.xmldbms.maps.Map;
-import org.xmlmiddleware.xmldbms.maps.factories.MapFactory_MapDocument;
+import org.xmlmiddleware.xmldbms.maps.factories.MapCompiler;
 import org.xmlmiddleware.xmldbms.maps.utils.MapSerializer;
 
 import java.io.File;
@@ -63,8 +63,8 @@ public class MapTest
    static Map createMap(InputSource src, String filename)
       throws Exception
    {
-      MapFactory_MapDocument factory = new MapFactory_MapDocument(getSAXXMLReader());
-      return factory.createMap(src);
+      MapCompiler compiler = new MapCompiler(getSAXXMLReader());
+      return compiler.compile(src);
    }
 
    static void serializeMap(Map map, String basename)

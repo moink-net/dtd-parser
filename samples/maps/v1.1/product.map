@@ -1,5 +1,5 @@
 <?xml version='1.0' ?>
-<!DOCTYPE XMLToDBMS SYSTEM "file:///c:/java/xmldbms101/xmldbms.dtd" >
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms.dtd" >
 
 <XMLToDBMS Version="1.0">
    <Options>

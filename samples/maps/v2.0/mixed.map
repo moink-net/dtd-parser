@@ -3,7 +3,7 @@
      This sample shows how to map mixed content. A BookReview element
      has the following content:
 
-        <!ELEMENT BookReview (#PCDATA | b | a)>
+        <!ELEMENT BookReview (#PCDATA | b | a)*>
         <!ATTLIST BookReview
                   Title CDATA #REQUIRED
                   Author CDATA #IMPLIED>
@@ -28,13 +28,13 @@
                <Table Name="BookReviews">
                   <Column Name="Title" DataType="VARCHAR" Length="30" Nullable="No"/>
                   <Column Name="Author" DataType="VARCHAR" Length="30" Nullable="Yes"/>
-                  <Column Name="ID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="ID" DataType="INTEGER" Nullable="No"/>
                   <PrimaryKey KeyGenerator="Database">
                      <UseColumn Name="ID"/>
                   </PrimaryKey>
                </Table>
                <Table Name="PCDATA">
-                  <Column Name="ReviewID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="ReviewID" DataType="INTEGER" Nullable="No"/>
                   <Column Name="PCDATA" DataType="LONGVARCHAR" Nullable="No"/>
                   <Column Name="PCDATAOrder" DataType="INTEGER" Nullable="No"/>
                   <ForeignKey Name="Review_FK">
@@ -44,7 +44,7 @@
                   </ForeignKey>
                </Table>
                <Table Name="b">
-                  <Column Name="ReviewID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="ReviewID" DataType="INTEGER" Nullable="No"/>
                   <Column Name="b" DataType="LONGVARCHAR" Nullable="No"/>
                   <Column Name="bOrder" DataType="INTEGER" Nullable="No"/>
                   <ForeignKey Name="Review_FK">
@@ -54,7 +54,7 @@
                   </ForeignKey>
                </Table>
                <Table Name="a">
-                  <Column Name="ReviewID" DataType="BIGINT" Nullable="No"/>
+                  <Column Name="ReviewID" DataType="INTEGER" Nullable="No"/>
                   <Column Name="aPCDATA" DataType="LONGVARCHAR" Nullable="No"/>
                   <Column Name="aOrder" DataType="INTEGER" Nullable="No"/>
                   <Column Name="href" DataType="VARCHAR" Length="1024" Nullable="No"/>

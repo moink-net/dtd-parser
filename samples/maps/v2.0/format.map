@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="Cp1252" ?>
+<?xml version='1.0' ?>
 <!-- This map tests precision and scale -->
 
 <!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
@@ -24,26 +24,28 @@
       <DecimalFormat Pattern="###.###,##" Name="DF2">
          <Locale Language="de" Country="DE" />
       </DecimalFormat>
-      <FormatClass Name="FC1" DefaultForTypes="INTEGER CHAR VARBINARY" Class="org.xmlmiddleware.conversions.helpers.BooleanFormatter" />
+      <FormatClass Name="FC1" DefaultForTypes="BIT" Class="org.xmlmiddleware.conversions.helpers.BooleanFormatter" />
    </Options>
    <Databases>
       <Database Name="Default">
          <Catalog>
             <Schema>
                <Table Name="OneOfEach">
-                  <Column Name="Column1" DataType="DECIMAL" Precision="8" Scale="2"/>
+<!--                  <Column Name="Column1" DataType="DECIMAL" Precision="8" Scale="2"/>-->
+                  <Column Name="Column1" DataType="VARCHAR" Length="50" />
                   <Column Name="Column2" DataType="DATE"/>
-                  <Column Name="Column3" DataType="" Format=""/>
-                  <Column Name="Column4" DataType="TIMESTAMP" Format="DT"/>
-                  <Column Name="Column5" DataType="DATE" Format="SDF1"/>
-                  <Column Name="Column6" DataType="DATE" Format="SDF2"/>
-                  <Column Name="Column7" DataType="DATE" Format="SDF3"/>
-                  <Column Name="Column8" DataType="FLOAT" Format="DF1"/>
-                  <Column Name="Column9" DataType="FLOAT" Format="DF2"/>
-                  <Column Name="Column10" DataType="REAL" Format="DF2"/>
-                  <Column Name="Column11" DataType="REAL" Format="DF1"/>
-                  <Column Name="Column12" DataType="LONGVARCHAR" Format="FC1"/>
-
+                  <Column Name="Column3" DataType="TIMESTAMP" Format="DT"/>
+                  <Column Name="Column4" DataType="DATE" Format="SDF1"/>
+                  <Column Name="Column5" DataType="DATE" Format="SDF2"/>
+                  <Column Name="Column6" DataType="DATE" Format="SDF3"/>
+                  <Column Name="Column7" DataType="FLOAT" Format="DF1"/>
+                  <Column Name="Column8" DataType="FLOAT" Format="DF2"/>
+                  <Column Name="Column9" DataType="REAL" Format="DF2"/>
+                  <Column Name="Column10" DataType="REAL" Format="DF1"/>
+                  <Column Name="Column11" DataType="BIT"/>
+                  <PrimaryKey>
+                     <UseColumn Name="Column1"/>
+                  </PrimaryKey>
                </Table>
             </Schema>
          </Catalog>
@@ -70,7 +72,7 @@
             <ToColumn Name="Column4"/>
          </PropertyMap>
          <PropertyMap>
-            <Attribute Name="Column5"/>
+            <ElementType Name="Column5"/>
             <ToColumn Name="Column5"/>
          </PropertyMap>
          <PropertyMap>
@@ -94,12 +96,8 @@
             <ToColumn Name="Column10"/>
          </PropertyMap>
          <PropertyMap>
-            <ElementType Name="Column11"/>
-            <ToColumn Name="Column11"/>
-         </PropertyMap>
-         <PropertyMap>
             <PCDATA/>
-            <ToColumn Name="Column12"/>
+            <ToColumn Name="Column11"/>
          </PropertyMap>
       </ClassMap>
    </Maps>

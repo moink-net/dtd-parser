@@ -63,6 +63,7 @@
             <ElementType Name="i1"/>
             <InlineMap>
                <ElementType Name="i2"/>
+               <FixedOrder Value="1" />
                <PropertyMap>
                   <ElementType Name="c1"/>
                   <ToColumn Name="c1"/>
@@ -70,12 +71,15 @@
             </InlineMap>
             <InlineMap>
                <ElementType Name="i3"/>
+               <FixedOrder Value="2" />
                <PropertyMap>
                   <ElementType Name="c2"/>
                   <ToColumn Name="c2"/>
+                  <FixedOrder Value="3" />
                </PropertyMap>
                <InlineMap>
                   <ElementType Name="i4"/>
+                  <FixedOrder Value="1" />
                   <RelatedClass KeyInParentTable="Unique">
                      <ElementType Name="t2"/>
                      <UseUniqueKey Name="PrimaryKey"/>
@@ -84,13 +88,16 @@
                </InlineMap>
                <InlineMap>
                   <ElementType Name="i5"/>
+                  <FixedOrder Value="2" />
                   <PropertyMap>
                      <ElementType Name="c3"/>
                      <ToColumn Name="c3"/>
+                     <FixedOrder Value="1" />
                   </PropertyMap>
                   <PropertyMap>
                      <PCDATA/>
                      <ToColumn Name="c4"/>
+                     <FixedOrder Value="2" />
                   </PropertyMap>
                </InlineMap>
             </InlineMap>
@@ -102,15 +109,19 @@
          <PropertyMap>
             <ElementType Name="c5"/>
             <ToColumn Name="c5"/>
+            <FixedOrder Value="2" />
          </PropertyMap>
          <InlineMap>
             <ElementType Name="i6"/>
+            <FixedOrder Value="1" />
             <PropertyMap>
                <ElementType Name="c6"/>
                <ToColumn Name="c6"/>
+               <FixedOrder Value="1" />
             </PropertyMap>
             <InlineMap>
                <ElementType Name="i7"/>
+               <FixedOrder Value="2" />
                <PropertyMap>
                   <ElementType Name="c7"/>
                   <ToColumn Name="c7"/>

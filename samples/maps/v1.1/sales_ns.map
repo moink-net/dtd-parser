@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<!DOCTYPE XMLToDBMS SYSTEM "../xmldbms.dtd">
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms.dtd">
 
 <!-- This map document shows how to use a Namespace element
      to declare an XML namespace URI and associate a prefix

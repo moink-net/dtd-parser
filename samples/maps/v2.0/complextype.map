@@ -4,13 +4,13 @@
      round-trippable. (The use of complex types in inherit.map is
      not.)
 
-     There are two tables: Authors and Writings.
+     There are two tables: Customers and Addresses.
 
-     The complex type Writing is mapped to the table Writings. The
-     element types Book and Essay both derive from the Writing
-     complex type. Writing is mapped with a normal ClassMap, while
-     Book and Essay are mapped as related classes using UseClassMap
-     elements that point to the ClassMap for Writing.
+     The complex type Address is mapped to the table Addresses. The
+     element types ShipToAddress and BillToAddress both derive from
+     the Address complex type. Address is mapped with a normal ClassMap, while
+     ShipToAddress and BillToAddress are mapped as related classes
+     using UseClassMap elements that point to the ClassMap for Address.
 -->     
 
 <!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
@@ -20,28 +20,35 @@
       <Database Name="Default">
          <Catalog>
             <Schema>
-               <Table Name="Authors">
-                  <Column Name="AuthorID" DataType="BIGINT" Nullable="No"/>
-                  <Column Name="FirstName" DataType="VARCHAR" Length="30" Nullable="Yes"/>
-                  <Column Name="LastName" DataType="VARCHAR" Length="30" Nullable="No"/>
-                  <Column Name="DOB" DataType="DATE" Nullable="Yes" />
-                  <Column Name="Publisher" DataType="VARCHAR" Length="50" Nullable="Yes"/>
+               <Table Name="Customers">
+                  <Column Name="CustomerID" DataType="INTEGER" Nullable="No"/>
+                  <Column Name="Name" DataType="VARCHAR" Length="50" Nullable="No"/>
+                  <Column Name="DiscountRate" DataType="REAL" Nullable="No"/>
+                  <Column Name="ShipToAddress" DataType="INTEGER" Nullable="No"/>
+                  <Column Name="BillToAddress" DataType="INTEGER" Nullable="No"/>
                   <PrimaryKey KeyGenerator="Database">
-                     <UseColumn Name="AuthorID"/>
+                     <UseColumn Name="CustomerID"/>
                   </PrimaryKey>
-               </Table>
-               <Table Name="Writings">
-                  <Column Name="AuthorID" DataType="BIGINT" Nullable="No"/>
-                  <Column Name="WritingID" DataType="BIGINT" Nullable="No"/>
-                  <Column Name="Title" DataType="VARCHAR" Length="50" Nullable="Yes"/>
-                  <PrimaryKey KeyGenerator="Database">
-                     <UseColumn Name="WritingID"/>
-                  </PrimaryKey>
-                  <ForeignKey Name="Author_FK">
-                     <UseTable Name = "Authors" />
+                  <ForeignKey Name="ShipTo_FK">
+                     <UseTable Name = "Addresses" />
                      <UseUniqueKey Name= "PrimaryKey" />
-                     <UseColumn Name="AuthorID"/>
+                     <UseColumn Name="ShipToAddress"/>
                   </ForeignKey>
+                  <ForeignKey Name="BillTo_FK">
+                     <UseTable Name = "Addresses" />
+                     <UseUniqueKey Name= "PrimaryKey" />
+                     <UseColumn Name="BillToAddress"/>
+                  </ForeignKey>
+               </Table>
+               <Table Name="Addresses">
+                  <Column Name="AddressID" DataType="INTEGER" Nullable="No"/>
+                  <Column Name="Street" DataType="VARCHAR" Length="50" Nullable="Yes"/>
+                  <Column Name="City" DataType="VARCHAR" Length="30" Nullable="Yes"/>
+                  <Column Name="State" DataType="VARCHAR" Length="2" Nullable="Yes"/>
+                  <Column Name="PostCode" DataType="VARCHAR" Length="10" Nullable="Yes"/>
+                  <PrimaryKey KeyGenerator="Database">
+                     <UseColumn Name="AddressID"/>
+                  </PrimaryKey>
                </Table>
             </Schema>
          </Catalog>
@@ -49,44 +56,52 @@
    </Databases>
    <Maps>
       <ClassMap>
-         <ElementType Name="Writing"/>
-         <ToClassTable Name="Writings"/>
+         <ElementType Name="Customer"/>
+         <ToClassTable Name="Customers"/>
          <PropertyMap>
-            <ElementType Name="Title"/>
-            <ToColumn Name="Title"/>
+            <ElementType Name="Name"/>
+            <ToColumn Name="Name"/>
          </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="DiscountRate"/>
+            <ToColumn Name="DiscountRate"/>
+         </PropertyMap>
+         <RelatedClass KeyInParentTable="Foreign">
+            <ElementType Name="ShipToAddress"/>
+            <UseClassMap ElementType="Address" />
+            <UseUniqueKey Name="PrimaryKey"/>
+            <UseForeignKey Name="ShipTo_FK"/>
+         </RelatedClass>
+         <RelatedClass KeyInParentTable="Foreign">
+            <ElementType Name="BillToAddress"/>
+            <UseClassMap ElementType="Address" />
+            <UseUniqueKey Name="PrimaryKey"/>
+            <UseForeignKey Name="BillTo_FK"/>
+         </RelatedClass>
       </ClassMap>
       <ClassMap>
-         <ElementType Name="Author"/>
-         <ToClassTable Name="Authors"/>
+         <ElementType Name="Address"/>
+         <ToClassTable Name="Addresses"/>
          <PropertyMap>
-            <ElementType Name="FirstName"/>
-            <ToColumn Name="FirstName"/>
+            <ElementType Name="Street"/>
+            <ToColumn Name="Street"/>
+            <FixedOrder Value = "1" />
          </PropertyMap>
          <PropertyMap>
-            <ElementType Name="LastName"/>
-            <ToColumn Name="LastName"/>
+            <ElementType Name="City"/>
+            <ToColumn Name="City"/>
+            <FixedOrder Value = "2" />
          </PropertyMap>
          <PropertyMap>
-            <ElementType Name="Birthday"/>
-            <ToColumn Name="DOB"/>
+            <ElementType Name="State"/>
+            <ToColumn Name="State"/>
+            <FixedOrder Value = "3" />
          </PropertyMap>
          <PropertyMap>
-            <ElementType Name="Publisher"/>
-            <ToColumn Name="Publisher"/>
+            <ElementType Name="PostCode"/>
+            <ToColumn Name="PostCode"/>
+            <FixedOrder Value = "4" />
          </PropertyMap>
-         <RelatedClass KeyInParentTable="Unique">
-            <ElementType Name="Book"/>
-            <UseClassMap ElementType="Writing" />
-            <UseUniqueKey Name="PrimaryKey"/>
-            <UseForeignKey Name="Author_FK"/>
-         </RelatedClass>
-         <RelatedClass KeyInParentTable="Unique">
-            <ElementType Name="Essay"/>
-            <UseClassMap ElementType="Writing" />
-            <UseUniqueKey Name="PrimaryKey"/>
-            <UseForeignKey Name="Author_FK"/>
-         </RelatedClass>
       </ClassMap>
    </Maps>
 </XMLToDBMS>
