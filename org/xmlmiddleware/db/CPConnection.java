@@ -371,7 +371,7 @@ public class CPConnection
 
    // Uncomment these methods to compile with JDK 1.2 or greater
 
-/*
+
    public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
 
@@ -386,11 +386,11 @@ public class CPConnection
 
    public void setTypeMap(Map map) throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
-*/
+
 
    // Uncomment these methods to compile with JDK 1.4 or greater
 
-/*
+
    public void setHoldability(int holdability)
       throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
@@ -438,7 +438,7 @@ public class CPConnection
    public PreparedStatement prepareStatement(String sql, String[] columnNames)
       throws SQLException
       { throw new SQLException("[XML-DBMS][CPConnection] Not implemented.", "HY000"); }
-*/
+
 
    //**************************************************************************
    // CPConnectionEventSource methods

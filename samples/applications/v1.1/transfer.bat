@@ -1,1 +1,0 @@
-java de.tudarmstadt.ito.xmldbms.tools.Transfer File=db.props File=parser.props File=keygen.props File=transfer.props

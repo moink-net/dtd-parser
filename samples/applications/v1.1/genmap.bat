@@ -1,1 +1,0 @@
-java de.tudarmstadt.ito.xmldbms.tools.GenerateMap File=db.props File=parser.props File=genmap.props

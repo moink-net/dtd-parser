@@ -125,8 +125,8 @@ public class MySQLHandler
 
       if(dbGeneratedCols.size() > 0)
       {
-         org.gjt.mm.mysql.Statement mysqlStmt =
-               (org.gjt.mm.mysql.Statement)getRawStatement(stmt);
+		com.mysql.jdbc.Statement mysqlStmt =
+               (com.mysql.jdbc.Statement)getRawStatement(stmt);
 
          Long lastInsert = new Long(mysqlStmt.getLastInsertID());
 

@@ -1,6 +1,0 @@
-#Properties for XML-DBMS
-#Sat Oct 13 23:10:33 PDT 2001
-KeyGeneratorClass=de.tudarmstadt.ito.xmldbms.helpers.KeyGeneratorHighLow
-HighLowJDBCLevel=1
-HighLowDriver=sun.jdbc.odbc.JdbcOdbcDriver
-HighLowURL=jdbc:odbc:xmldbms

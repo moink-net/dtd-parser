@@ -1,6 +1,0 @@
-#Properties for XML-DBMS
-#Mon Aug 06 22:18:08 PDT 2001
-URL=jdbc:odbc:xmldbms
-#URL=jdbc:odbc:test
-Driver=sun.jdbc.odbc.JdbcOdbcDriver
-JDBCLevel=1
