@@ -20,7 +20,7 @@ class Row
     // Variables
     // ********************************************************************
 
-    Object[] columnValues;
+    private Object[] columnValues;
 
     // ********************************************************************
     // Constructors
@@ -64,7 +64,7 @@ class Row
      *
      * @param size Width of row
      */
-    void init(int size)
+    private void init(int size)
     {
         columnValues = new Object[size];
         while(size-- > 0)
