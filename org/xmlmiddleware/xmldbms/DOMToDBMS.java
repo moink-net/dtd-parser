@@ -389,6 +389,15 @@ public class DOMToDBMS
             throw (SQLException)ex;
          else if (ex instanceof XMLMiddlewareException)
             throw (XMLMiddlewareException)ex;
+         else
+         {
+            // Exit the program. We only get here if there is a programming
+            // error, so not exiting gracefully is tolerable.
+
+            System.out.println("XML-DBMS programming error");
+            ex.printStackTrace();
+            System.exit(1);
+         }
       }
 
       // Call endDocument here
@@ -417,44 +426,44 @@ public class DOMToDBMS
    // The processing flow is as follows. Note that property tables and columns
    // eventually result in leaf nodes, while related classes result in branch nodes.
    //
-   //            ----------
-   //            |        |
-   //            |    not mapped
-   //            v        |
+   //                ----------
+   //                |         |
+   //                |     not mapped
+   //                v         |
    //  START --> processRoot --
    //            |
    //         mapped
    //            |
    //            v
    //  ------> processClassRow ---------------------------------------
-   // |          |                 |                    |
-   // |          v                 v                    v
-   // |   --> processChildren       storeRow            processFKNodes
-   // |   | (attrs, elems, text)     (class row)                |
-   // |   |       |                                     |
-   // |   |       v                                     |
-   // |   |   processChild                                 |
-   // |   |   |   |    |                                 |
-   // |   | inline  |   related                              |
-   // |   |   |  prop   |                                 |
-   // |   ----    |     ------------------------               |
-   // |          |                       |              |
-   // |          v        prop table        v              |
-   // |   --> processProperty ------------> processRowChild         |
-   // |  |     |      |               |         |         |
-   // |  |   multi   single         PK in parent   PK in child   |
-   // |  |   value   value              |         |         |
-   // |  |     |      |               v         v         |
-   // |   ------      |              add to    processRow <----
-   // |             v             FK nodes    |      |
-   // |        setPropertyColumn              related  prop
-   // |                                    |      |
-   //  ------------------------------------------------      v
-   //                                        processPropRow
-   //                                            |
-   //                                            v
-   //                                          storeRow
-   //                                       (prop table row)
+   // |             |                    |                            |
+   // |             v                    v                            v
+   // |    --> processChildren         storeRow                 processFKNodes
+   // |   | (attrs, elems, text )     (class row)                     |
+   // |   |         |                                                 |
+   // |   |         v                                                 |
+   // |   |   processChild                                            |
+   // |   |   |     |    |                                            |
+   // |   | inline  |   related                                       |
+   // |   |   |   prop   |                                            |
+   // |   ----      |     ------------------------                    |
+   // |             |                             |                   |
+   // |             v          prop table         v                   |
+   // |   --> processProperty ------------> processRowChild           |
+   // |  |     |      |                       |         |             |
+   // |  |   multi   single           PK in parent   PK in child      |
+   // |  |   value   value                    |         |             |
+   // |  |     |      |                       v         v             |
+   // |   ------      |                     add to    processRow <----
+   // |               v                    FK nodes    |      |
+   // |        setPropertyColumn                    related  prop
+   // |                                                |      |
+   //  ------------------------------------------------       v
+   //                                                   processPropRow
+   //                                                         |
+   //                                                         v
+   //                                                      storeRow
+   //                                                 (prop table row)
 
    /**
     * Processes the nodes from the root of the DOM Document that are not mapped.
@@ -899,7 +908,7 @@ public class DOMToDBMS
 
          return processPropRow(parentRow, (PropertyMap)map, node, orderInParent, action);
       }
-      else // if (fkNode.map instanceof RelatedClassMap)
+      else // if (map instanceof RelatedClassMap)
       {
          // If the map is related class map, call processClassRow with the corresponding
          // class map. Note that we can safely cast the node as an Element in this case

@@ -233,6 +233,15 @@ public class DBMSDelete
             throw (SQLException)e;
          else if (e instanceof XMLMiddlewareException)
             throw (XMLMiddlewareException)e;
+         else
+         {
+            // Exit the program. We only get here if there is a programming
+            // error, so not exiting gracefully is tolerable.
+
+            System.out.println("XML-DBMS programming error");
+            e.printStackTrace();
+            System.exit(1);
+         }
       }
 
       // Call endDocument here. This allows data handlers to do any
