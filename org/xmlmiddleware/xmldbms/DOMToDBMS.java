@@ -88,6 +88,9 @@ public class DOMToDBMS
                          String user, String password)
         throws SQLException
     {
+        if(databaseName == null)
+            databaseName = "default";
+
         m_dataSources.put(databaseName, new DataInfo(dataSource, user, password));
     }
 
@@ -98,6 +101,9 @@ public class DOMToDBMS
      */
     public void removeDataSource(String databaseName)
     {
+        if(databaseName == null)
+            databaseName = "default";
+
         m_dataSources.remove(databaseName);
     }
 
@@ -109,6 +115,7 @@ public class DOMToDBMS
     {
         m_dataSources.clear();
     }
+
 
 
     public void addKeyGenerator(String name, KeyGenerator generator)
@@ -128,14 +135,15 @@ public class DOMToDBMS
 
 
 
-    // TODO: Needs to return a DocumentInfo
-    public /*DocumentInfo*/ void storeDocument(Map map, Element el)
+    public DocumentInfo void storeDocument(Map map, Element el)
         throws SQLException, MapException, KeyException
     {
+        DocumentInfo docInfo = new DocumentInfo();
+
         // TODO: Make this reentrant by passing map around
         m_map = map;
 
-        processRoot(el, 1);
+        processRoot(docInfo, el, 1);
 
         // TODO: Do we have to do this?
         m_map = null;
@@ -155,7 +163,7 @@ public class DOMToDBMS
             }
         }
                     
-        //TODO: Do the return value DocumentInfo thingy
+        return docInfo;
     }
 
 
@@ -165,7 +173,7 @@ public class DOMToDBMS
      *
      * @param el The node to recusively process.
      */
-    private void processRoot(Element el, int orderInParent)
+    private void processRoot(DocumentInfo docInfo, Element el, int orderInParent)
         throws SQLException, MapException, KeyException
     {
         // Check if the node is mapped
@@ -174,11 +182,14 @@ public class DOMToDBMS
         if(classMap != null)
         {
             // Process the node
-            processClassRow(null, classMap, null, (Node)el, orderInParent);
+            Row row = processClassRow(null, classMap, null, (Node)el, orderInParent);
 
-            // TODO: get the row and set up a document info
-            // TODO: We need to be able to handle a document info with 
-            // multiple root nodes
+            // Add this row to the DocumentInfo
+            Table table = classMap.getTable()
+            Key priKey = table.getPrimaryKey();
+
+            // TODO: What is the ordercolumn?
+            docInfo.addInfo(table, priKey, row.getColumnValues(priKey.getColumns()), null);
         }
 
         // Otherwise treat like a pass through element
@@ -193,7 +204,7 @@ public class DOMToDBMS
                 // this point.
                 if(children.item(i).getNodeType() == Node.ELEMENT_NODE)
                 {
-                    processRoot((Element)children.item(i), childOrder);
+                    processRoot(docInfo, (Element)children.item(i), childOrder);
                     childOrder++;
                 }
             }
@@ -307,13 +318,6 @@ public class DOMToDBMS
                 // Copy the parent key to this row
                 setChildKey(parentRow, row, linkInfo);
             }
-            else
-            {
-                // Generate a key, (it's copied back to the parent in processChild)
-                Key childKey = linkInfo.getChildKey();
-                if(childKey.getKeyGeneration() == Key.XMLDBMS)
-                    generateKey(row, childKey);
-            }
         }
 
         return row;
@@ -378,11 +382,13 @@ public class DOMToDBMS
 		    {
 			    if(childMap instanceof InlineClassMap)
                 {
+                    // Store the order of this inline element
+                    generateOrder(parentRow, ((InlineClassMap)childMap).getOrderInfo(), 
+                                  childOrder);
+                    
                     // For inline just recursively call this function with a 
                     // new parentNode, so as to process the grand-children just 
                     // like children
-
-                    // TODO: Work out order in this case!
                     processChildren(parentRow, parentMap, child, fkChildren);
                 }
                 else if(childMap instanceof PropertyMap)
@@ -405,13 +411,19 @@ public class DOMToDBMS
     }
 
 
+    private static final String DUMMY = "dummy";
+
     /**
-     * Preprocess a property. May split it if multi-valued.
+     * Adds a property to the class, or if in it's own row sends it for 
+     * processing in processChild.
      */
     private void processProperty(Row parentRow, PropertyMap propMap, Node propNode, int order, Stack fkNodes)
         throws KeyException, SQLException, MapException
     {
         // NOTE: Called from processChildren
+
+        // Generate the order column
+        generateOrder(parentRow, propMap.getOrderInfo(), orderInParent);
 
         if(propMap.isTokenList())
         {
@@ -424,69 +436,65 @@ public class DOMToDBMS
 
             StringTokenizer s = new StringTokenizer(getNodeValue(propNode), " ", false);
 
-            int attrOrder = 1;
+            int tokenOrder = 1;
+            Document doc = propNode.getOwnerDocument();
+
+            // Create a new property map and copy all needed attributes
+            PropertyMap tokenMap = PropertyMap.create(DUMMY, DUMMY, propMap.getType());
+
+            tokenMap.setTable(propMap.getTable(), propMap.getLinkInfo());
+            tokenMap.setColumn(propMap.getColumn());
+            tokenMap.setOrderInfo(propMap.getTokenListOrderInfo());
+            tokenMap.setIsTokenList(false);
+
 
 			while(s.hasMoreElements())
 			{
-                Node node = null;
-                Document doc = propNode.getOwnerDocument();
+                Node tokenNode = null;
 
                 switch(propNode.getNodeType())
                 {
                 case Node.ELEMENT_NODE:
-                    node = doc.createElement("fake");
+                    tokenNode = doc.createElement(DUMMY);
                     break;
                 case Node.ATTRIBUTE_NODE:
-                    node = doc.createAttribute("fake");
+                    tokenNode = doc.createAttribute(DUMMY);
                     break;
                 case Node.TEXT_NODE:
-                    node = doc.createTextNode("");
+                    tokenNode = doc.createTextNode("");
                     break;
                 };
-
-                // TODO: Token list order
-                
+             
                 if(node != null)
                 {
-                    node.setNodeValue(s.nextToken());
-                    processSingleProperty(parentRow, propMap, node, attrOrder, fkNodes);
-                    attrOrder++;
+                    tokenNode.setNodeValue(s.nextToken());
+
+                    // Now call ourselves with this property (no endless loop possible because
+                    // we clear the tokenList flag above)
+                    processProperty(parentRow, tokenMap, tokenNode, tokenOrder, fkNodes);
+
+                    tokenOrder++;
                 }
             }
         }
+
+
+        // Non token properties go here
         else
         {
-            // If not multivalued then just process it.
-            processSingleProperty(parentRow, propMap, propNode, order, fkNodes);
+            // If mapped to the current table
+            if(propMap.getTable() == null)
+            {
+                // And insert the value
+			    setPropertyColumn(parentRow, propMap.getColumn(), propNode);
+            }
+
+            else 
+            {
+                // Otherwise it's a property from another table, so send for other processing
+                processChild(parentRow, propMap, propMap.getLinkInfo(), propNode, orderInParent, fkNodes);
+	        }
         }
-    }
-            
-    
-    /**
-     * Adds a property to the class, or if in it's own row sends it for 
-     * processing in processChild.
-     */
-    private void processSingleProperty(Row parentRow, PropertyMap propMap, Node propNode, 
-                               int orderInParent, Stack fkNodes)
-        throws KeyException, SQLException, MapException
-    {
-        // NOTE: Called from processProperty
-
-        // If mapped to the current table
-        if(propMap.getTable() == null)
-        {
-            // Generate the order column
-            generateOrder(parentRow, propMap.getOrderInfo(), orderInParent);
-
-            // And insert the value
-			setPropertyColumn(parentRow, propMap.getColumn(), propNode);
-        }
-
-        else 
-        {
-            // Otherwise it's a property from another table, so send for other processing
-            processChild(parentRow, propMap, propMap.getLinkInfo(), propNode, orderInParent, fkNodes);
-	    }
     }
 
 
@@ -499,19 +507,12 @@ public class DOMToDBMS
     {
         // NOTE: This method is called before parentRow has been inserted into the
         // database
-        // Called from processChildren and processSingleProperty
+        // Called from processChildren and processProperty
 
 
         if(linkInfo.parentKeyIsUnique())
-        {
-            // If the parent key is the unique key then (possibly) generate it
-            Key parentKey = linkInfo.getParentKey();
-   
-            if(parentKey.getKeyGeneration() == Key.XMLDBMS)
-                generateKey(parentRow, parentKey);
-
-            
-            // and keep the node for later processing
+        {         
+            // keep the node for later processing
             fkNodes.push(new FKNode(node, map, orderInParent));
         }
         else
@@ -608,8 +609,14 @@ public class DOMToDBMS
     {
         KeyGenerator keyGen = (KeyGenerator)m_keyGenerators.get(key.getKeyGeneratorName());
 
-        // TODO: throw exception for any non-existant key generators
-        // TODO: what about invalid number of columns returned
+        if(keyGen == null)
+            throw new KeyException("Invalid key generator: " + key.getKeyGeneratorName());
+    
+        Columns[] columns = key.getColumns();
+        Object[] values = keyGen.generateKey();
+
+        if(columns.length != values.length)
+            throw new KeyException("Invalid number of columns generated key generator: " + key.getKeyGeneratorName());
 
         row.setColumnValues(key.getColumns(), keyGen.generateKey());
     }
@@ -617,9 +624,7 @@ public class DOMToDBMS
     private void generateOrder(Row row, OrderInfo o, int orderInParent)
     {
 	    if(o != null && !o.orderValueIsFixed() && o.generateOrder())
-	    {
 		    row.setColumnValue(o.getOrderColumn(), new Integer(orderInParent));
-	    }
     }   
 
 
