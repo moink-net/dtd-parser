@@ -7,9 +7,9 @@
      There are two tables: Authors and Writings.
 
      The complex type Writing is mapped to the table Writings. The
-     element types Book and Author both derive from the Writing
+     element types Book and Essay both derive from the Writing
      complex type. Writing is mapped with a normal ClassMap, while
-     Book and Author are mapped as related classes using UseClassMap
+     Book and Essay are mapped as related classes using UseClassMap
      elements that point to the ClassMap for Writing.
 -->     
 

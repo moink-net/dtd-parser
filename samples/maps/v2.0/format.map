@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding="Cp1252" ?>
+<!-- This map tests precision and scale -->
+
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
+
+<XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
+   <Options>
+      <DateFormat DateStyle="LONG" DefaultForTypes="DATE" />
+      <DateTimeFormat DateStyle="SHORT" TimeStyle="MEDIUM" Name="DT">
+         <Locale Language="en" Country="US" />
+      </DateTimeFormat>
+      <TimeFormat TimeStyle="FULL" DefaultForTypes="TIME"/>
+      <SimpleDateFormat Name="SDF1" Pattern="MMM d, yyyy" />
+      <SimpleDateFormat Name="SDF2" Pattern="MMM d, yyyy">
+         <Locale Language="en" Country="GB" />
+      </SimpleDateFormat>
+      <SimpleDateFormat Name="SDF3" Pattern="MMM d, yyyy">
+         <Locale Language="en" Country="US" />
+      </SimpleDateFormat>
+      <NumberFormat DefaultForTypes="FLOAT">
+         <Locale Language="fr" Country="FR" />
+      </NumberFormat>
+      <DecimalFormat Pattern="###,###.##" Name="DF1" DefaultForTypes="REAL" />
+      <DecimalFormat Pattern="###.###,##" Name="DF2">
+         <Locale Language="de" Country="DE" />
+      </DecimalFormat>
+      <FormatClass Name="FC1" DefaultForTypes="INTEGER CHAR VARBINARY" Class="org.xmlmiddleware.xmldbms.helpers.XMLFormatterBase" />
+   </Options>
+   <Databases>
+      <Database Name="Default">
+         <Catalog>
+            <Schema>
+               <Table Name="OneOfEach">
+                  <Column Name="Column1" DataType="DECIMAL" Precision="8" Scale="2"/>
+                  <Column Name="Column2" DataType="DATE"/>
+                  <Column Name="Column3" DataType="" Format=""/>
+                  <Column Name="Column4" DataType="TIMESTAMP" Format="DT"/>
+                  <Column Name="Column5" DataType="DATE" Format="SDF1"/>
+                  <Column Name="Column6" DataType="DATE" Format="SDF2"/>
+                  <Column Name="Column7" DataType="DATE" Format="SDF3"/>
+                  <Column Name="Column8" DataType="FLOAT" Format="DF1"/>
+                  <Column Name="Column9" DataType="FLOAT" Format="DF2"/>
+                  <Column Name="Column10" DataType="REAL" Format="DF2"/>
+                  <Column Name="Column11" DataType="REAL" Format="DF1"/>
+                  <Column Name="Column12" DataType="LONGVARCHAR" Format="FC1"/>
+
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+   </Databases>
+   <Maps>
+      <ClassMap>
+         <ElementType Name="OneOfEach"/>
+         <ToClassTable Name="OneOfEach"/>
+         <PropertyMap>
+            <Attribute Name="Column1"/>
+            <ToColumn Name="Column1"/>
+         </PropertyMap>
+         <PropertyMap>
+            <Attribute Name="Column2"/>
+            <ToColumn Name="Column2"/>
+         </PropertyMap>
+         <PropertyMap>
+            <Attribute Name="Column3"/>
+            <ToColumn Name="Column3"/>
+         </PropertyMap>
+         <PropertyMap>
+            <Attribute Name="Column4"/>
+            <ToColumn Name="Column4"/>
+         </PropertyMap>
+         <PropertyMap>
+            <Attribute Name="Column5"/>
+            <ToColumn Name="Column5"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Column6"/>
+            <ToColumn Name="Column6"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Column7"/>
+            <ToColumn Name="Column7"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Column8"/>
+            <ToColumn Name="Column8"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Column9"/>
+            <ToColumn Name="Column9"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Column10"/>
+            <ToColumn Name="Column10"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Column11"/>
+            <ToColumn Name="Column11"/>
+         </PropertyMap>
+         <PropertyMap>
+            <PCDATA/>
+            <ToColumn Name="Column12"/>
+         </PropertyMap>
+      </ClassMap>
+   </Maps>
+</XMLToDBMS>
