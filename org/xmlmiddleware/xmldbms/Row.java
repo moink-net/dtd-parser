@@ -28,7 +28,7 @@ class Row
     /** 
      * Construct a Row 
      */
-    Row()
+    public Row()
     {
         m_columnValues = new Hashtable();
     }
@@ -44,7 +44,7 @@ class Row
 	 * @param column Column for which to set the value.
 	 * @param value Value to set (null for a NULL value).
 	 */
-    void setColumnValue(Column column, Object value)
+    public void setColumnValue(Column column, Object value)
     {
         // Hashtable won't accept null objects, so we create
         // a placeholder for NULL
@@ -62,7 +62,7 @@ class Row
 	 * @return Returned value. Will return null if column not set or
      *         value is null. @see haveColumn.
 	 */
-    Object getColumnValue(Column column)
+    public Object getColumnValue(Column column)
     {
         Object val = m_columnValues.get(column);
 
@@ -78,7 +78,7 @@ class Row
      *
      * @param column Column to clear.
      */
-    void clearColumnValue(Column column)
+    public void clearColumnValue(Column column)
     {
         m_columnValues.remove(column);
     }
@@ -90,7 +90,7 @@ class Row
 	 * @param columns Columns for which to set values.
 	 * @param values Values to set.
 	 */
-    void setColumnValues(Column[] columns, Object[] values)
+    public void setColumnValues(Column[] columns, Object[] values)
     {
 	    // Typically, this is used to set a multi-column key value.
         for(int i = 0; i < columns.length; i++)
@@ -104,7 +104,7 @@ class Row
 	 * @param columns Columns for which to get values.
 	 * @return Returned values.
 	 */
-    Object[] getColumnValues(Column[] columns)
+    public Object[] getColumnValues(Column[] columns)
     {
 	    // Typically, this is used to get a multi-column key value.
 	    Object[] values = new Object[columns.length];
@@ -113,8 +113,29 @@ class Row
 		    values[i] = getColumnValue(columns[i]);
 
 	    return values;
-    }   
+    }
 
+    
+
+    public Vector getColumnVectorFor(Table table)
+    {
+        Vector cols = new Vector();
+        Enumeration e = table.getColumns();
+        
+        while(e.hasMoreElements())
+        {
+            Column col = (Column)e.nextElement();
+            if(haveColumn(col))
+                cols.add(col);
+        }
+
+        return cols;
+    }
+
+    public Column[] getColumnsFor(Table table)
+    {
+        return (Column[])getColumnVectorFor(table).toArray();
+    }
 
     /**
 	 * Whether a column is null.
@@ -145,5 +166,6 @@ class Row
         }
 
         return true;
-    }   
+    }  
+    
 }

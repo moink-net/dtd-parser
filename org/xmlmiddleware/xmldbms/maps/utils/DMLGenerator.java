@@ -81,6 +81,12 @@ public class DMLGenerator
    // Public methods
    //**************************************************************************
 
+   public String getInsert(Table t)
+      throws SQLException
+   {
+      return getInsert(t, null);
+   }
+    
    /**
     * Returns an INSERT SQL string for the given table.
     *
@@ -167,7 +173,7 @@ public class DMLGenerator
     * @param cols The columns to select.
     * @return The SELECT string.
     */
-   public String getSelect(Table t, Key key, Columns[] cols)
+   public String getSelect(Table t, Key key, Column[] cols)
    {
       return buildSelect(t, key.getColumns(), cols, null);
    }
@@ -253,8 +259,8 @@ public class DMLGenerator
    // Private/protected methods
    //**************************************************************************
 
-   protected String buildSelect(Table t, Columns[] keyColumns, 
-                                Columns[] valueColumns, OrderInfo order)
+   protected String buildSelect(Table t, Column[] keyColumns, 
+                                Column[] valueColumns, OrderInfo order)
    {
       StringBuffer select = new StringBuffer(1000);
       boolean first = true;
@@ -266,11 +272,7 @@ public class DMLGenerator
          // Add column names.
          for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
          {
-            if(first)
-               update.append(COMMA);
-
-            appendColumnName(update, (Column)e.nextElement(), false);
-            update.append(EQUALSPARAM);
+            appendColumnName(select, (Column)e.nextElement(), first);
             first = false;
          }
       }
@@ -303,7 +305,7 @@ public class DMLGenerator
       return select.toString();
    }
 
-   protected void appendWhereLink(StringBuffer stmt, Columns[] keyColumns)
+   protected void appendWhereLink(StringBuffer stmt, Column[] keyColumns)
    {
       // Add WHERE clause.
       boolean first = false;
