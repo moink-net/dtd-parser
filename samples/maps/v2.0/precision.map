@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding="Cp1252" ?>
+<!-- This map tests precision and scale -->
+
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
+
+<XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
+   <Databases>
+      <Database Name="Default" QuoteIdentifiers="Yes">
+         <Catalog>
+            <Schema>
+               <Table Name="Prec">
+                  <Column Name="Column1" DataType="DECIMAL" Precision="10" Scale="2" Nullable="Yes"/>
+                  <Column Name="Column2" DataType="NUMERIC" Precision="15" Scale="-3" Nullabe = "No"/>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+   </Databases>
+   <Maps>
+      <ClassMap>
+         <ElementType Name="PrecTest"/>
+         <ToClassTable Name="Prec"/>
+         <PropertyMap>
+            <Attribute Name="Decimal"/>
+            <ToColumn Name="Column1"/>
+         </PropertyMap>
+         <PropertyMap>
+            <ElementType Name="Numeric"/>
+            <ToColumn Name="Column2"/>
+         </PropertyMap>
+      </ClassMap>
+   </Maps>
+</XMLToDBMS>
