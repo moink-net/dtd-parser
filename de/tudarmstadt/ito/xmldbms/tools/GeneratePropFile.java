@@ -1,18 +1,13 @@
 // No copyright, no warranty; use as you will.
 // Written by Adam Flinton and Ronald Bourret, 2001
-
 // Version 1.1
 // Changes from version 1.01: New in 1.1
-
 package de.tudarmstadt.ito.xmldbms.tools;
-
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
-
 import java.io.File;
-
 /**
  * Utility for generating Java properties files.
  *
@@ -40,47 +35,40 @@ import java.io.File;
  * @author Ronald Bourret
  * @version 1.1
  */
-
 public class GeneratePropFile extends ProcessProperties
 {
-																			     // ************************************************************************
-   // Constructor
-   // ************************************************************************
-
-   /**
-	* Construct a GeneratePropFile object.
-	*/
-   public GeneratePropFile()
-   {
-	  super();
-   }   
-
-   // ************************************************************************
-   // Public methods
-   // ************************************************************************
-
-   /**
-	* Run GeneratePropFile from a command line.
-	*
-	* <p>See introduction for command line syntax.</p>
-	*
-	* @exception FileNotFoundException Thrown if an input file is not found.
-	* @exception IOException Thrown if an error occurs accessing an input
-	*                        or output file.
-	*/
-
-   public static void main(String[] args)
-	  throws Exception
-   {
-	  Properties props;
-	  GeneratePropFile gpf = new GeneratePropFile();
-
-	  if (args.length <= 0)
-	  {
-		 System.out.println("Usage: GeneratePropFile  <property>=<value> [<property>=<value>...]");
-		 return;
-	  }
-
-	  gpf.writeProps(gpf.getProperties(args, 0));
-   }                                                                                    
+    // ************************************************************************
+    // Constructor
+    // ************************************************************************
+    /**
+    	* Construct a GeneratePropFile object.
+    	*/
+    public GeneratePropFile()
+    {
+        super();
+    }
+    // ************************************************************************
+    // Public methods
+    // ************************************************************************
+    /**
+    	* Run GeneratePropFile from a command line.
+    	*
+    	* <p>See introduction for command line syntax.</p>
+    	*
+    	* @exception FileNotFoundException Thrown if an input file is not found.
+    	* @exception IOException Thrown if an error occurs accessing an input
+    	*                        or output file.
+    	*/
+    public static void main(String[] args) throws Exception
+    {
+        Properties props;
+        GeneratePropFile gpf = new GeneratePropFile();
+        if (args.length <= 0)
+            {
+            System.out.println(
+                "Usage: GeneratePropFile  <property>=<value> [<property>=<value>...]");
+            return;
+        }
+        gpf.writeProps(gpf.getProperties(args, 0));
+    }
 }

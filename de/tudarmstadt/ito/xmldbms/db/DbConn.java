@@ -1,23 +1,38 @@
+// No copyright, no warranty; use as you will.
+// Written by Adam Flinton, 2001
+//
+// Version 1.1
+// Changes from version 1.01: New in 1.1
+
 package de.tudarmstadt.ito.xmldbms.db;
 
-/**
- * Insert the type's description here.
- * Creation date: (08/04/01 22:43:38)
- * @author: Adam Flinton
- */
 import java.util.Properties;
- 
-public interface DbConn {
+import java.sql.Connection;
+import java.sql.SQLException;
+
 /**
- * Insert the method's description here.
- * Creation date: (08/04/01 22:44:19)
- * @return java.sql.Connection
+ * A generic interface for getting database connections.
+ *
+ * @author Adam Flinton
+ * @version 1.1
  */
-java.sql.Connection getConn() throws java.sql.SQLException;
-/**
- * Insert the method's description here.
- * Creation date: (08/04/01 22:45:02)
- * @param prop java.util.Properties
- */
-void setDB(java.util.Properties prop) throws java.lang.Exception;
+public interface DbConn
+{
+    /**
+     * Get a JDBC Connection.
+     *
+     * <p>setDB must be called before this method is called.</p>
+     *
+     * @return The Connection.
+     */
+    public Connection getConn() throws SQLException;
+
+    /**
+     * Specify the properties needed to get a connection.
+     *
+    	* <p>This method must be called before calling getConn().</p>
+      *
+    	* @param props A Properties object containing the necessary properties.
+     */
+    public void setDB(Properties prop) throws java.lang.Exception;
 }

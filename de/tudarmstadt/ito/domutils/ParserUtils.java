@@ -8,16 +8,19 @@ package de.tudarmstadt.ito.domutils;
 
 import org.xml.sax.Parser;
 import org.w3c.dom.Document;
- 
+
+import java.io.InputStream;
+
 /**
  * Interface for a class that generates implements parser-specific methods.
  *
  * <p>DOM and SAX do not cover all areas of functionality. This interface
  * encapsulates bootstrapping (creating a DOM Document and getting a SAX
- * parser) and serializing a DOM Document. Eventually, this will hopefully
- * go away through widespread implementation of JAXP and DOM level 3.</p>
+ * parser) and serializing a DOM Document to both a string and a file.
+ * Eventually, this should disappear through widespread implementation
+ * of JAXP and DOM level 3.</p>
  *
- * @author Adam Flinton  
+ * @author Adam Flinton
  * @author Ronald Bourret
  * @version 1.1
  */
@@ -25,53 +28,57 @@ import org.w3c.dom.Document;
 public interface ParserUtils
 {
    /**
-	* Get a SAX 1.0 Parser.
-	*
-	* @return An object that implements Parser.
-	*/
-   public Parser getSAXParser();   
+    * Get a SAX 1.0 Parser.
+    *
+    * @return An object that implements Parser.
+    */
+   public Parser getSAXParser()
+      throws ParserUtilsException;
 
    /**
-	* Open an XML file and create a DOM Document.
-	*
-	* @param xmlFilename The name of the XML file.
-	* @return An object that implements Document.
-	* @exception Exception An error occurred. Exception is used because
-	*            the possible errors are different for each implementation.
-	*/
-   public Document openDocument(String xmlFilename) throws Exception;   
+    * Create an empty Document.
+    *
+    * @return The Document
+    */
+   public Document createDocument()
+      throws ParserUtilsException;
 
    /**
-	* Write a DOM Document to a file.
-	*
-	* @param doc The DOM Document.
-	* @param xmlFilename The name of the XML file.
-	* @exception Exception An error occurred. Exception is used because
-	*            the possible errors are different for each implementation.
-	*/
-   public void writeDocument(Document doc, String xmlFilename) throws Exception;            
+    * Open an XML file and create a DOM Document.
+    *
+    * @param xmlFilename The name of the XML file.
+    *
+    * @return An object that implements Document.
+    */
+   public Document openDocument(String xmlFilename)
+      throws ParserUtilsException;
 
-/**
- * Insert the method's description here.
- * Creation date: (29/06/01 15:45:11)
- * @return org.w3c.dom.Document
- */
-public Document createDocument() throws ParserUtilsException;   
+   /**
+    * Open an InputStream and create a DOM Document.
+    *
+    * @param inputStream The InputStream.
+    *
+    * @return An object that implements Document.
+    */
+   public Document openDocument(InputStream inputStream)
+      throws ParserUtilsException;
 
-/**
- * Insert the method's description here.
- * Creation date: (10/04/01 12:28:22)
- * @return org.w3c.dom.Document
- * @param InputStream java.io.InputStream
- */
-public Document openDocument(java.io.InputStream InputStream) throws Exception;
+   /**
+    * Write a DOM Document to a file.
+    *
+    * @param doc The DOM Document.
+    * @param xmlFilename The name of the XML file.
+    */
+   public void writeDocument(Document doc, String xmlFilename)
+      throws ParserUtilsException;
 
-/**
- * Insert the method's description here.
- * Creation date: (19/04/01 14:24:36)
- * @return java.lang.String
- * @param Doc org.w3c.dom.Document
- * @param xmlfile java.lang.String
- */
-String returnString(Document toConvert) throws Exception;
+   /**
+    * Write a DOM Document to a String.
+    *
+    * @param doc The DOM Document.
+    *
+    * @return The XML string.
+    */
+   String writeDocument(Document doc)
+      throws ParserUtilsException;
 }

@@ -129,8 +129,8 @@ public class Map extends XMLOutputStream
    String     catalogSeparator = null;
    String     schemaSeparator = ".";
    boolean    catalogsSupported = false,
-              catalogAtStart = false,
-              schemasSupported = false;
+			  catalogAtStart = false,
+			  schemasSupported = false;
    Random     rnd = new Random();
    boolean    emptyStringIsNull = false,    // Are empty strings treated as
 											// NULLs? Idea from Richard Sullivan
@@ -182,7 +182,7 @@ public class Map extends XMLOutputStream
 	  this.dateFormatter = dateFormatter;
 	  this.timeFormatter = timeFormatter;
 	  this.timestampFormatter = timestampFormatter;
-   }   
+   }      
 
    //**************************************************************************
    // Public methods
@@ -214,7 +214,7 @@ public class Map extends XMLOutputStream
    {
 	  this.conn = conn;
 	  getDatabaseMetadata();
-   }   
+   }      
 
    /**
 	* Initialize the column metadata for the current Connection.
@@ -245,7 +245,7 @@ public class Map extends XMLOutputStream
 		 throw new IllegalStateException("Connection not set");
 	  this.mappedResultSet = mappedResultSet;
 	  getTableMetadata();
-   }   
+   }      
 
    /**
 	* Serialize a Map in the XML-DBMS mapping language to an OutputStream.
@@ -267,7 +267,7 @@ public class Map extends XMLOutputStream
 	  writeOptions();
 	  writeMaps();
 	  writeMapEnd();
-   }   
+   }      
 
    /**
 	* Close any open prepared statements.
@@ -335,7 +335,7 @@ public class Map extends XMLOutputStream
 			}
 		 }
 	  }
-   }   
+   }      
 
    /**
 	* Return an array of CREATE TABLE statements.
@@ -361,7 +361,7 @@ public class Map extends XMLOutputStream
 		 buildCreateTableStrings();
 	  }
 	  return createStrings;
-   }   
+   }      
 
    //**************************************************************************
    // Protected methods
@@ -374,7 +374,7 @@ public class Map extends XMLOutputStream
 	  {
 		 closeStatements();
 	  }
-   }   
+   }      
 
    //**************************************************************************
    // Package methods
@@ -413,7 +413,7 @@ public class Map extends XMLOutputStream
 		 // If prepared statements don't survive the commit, discard them now.
 		 closeStatements();
 	  }
-   }   
+   }      
 
    void setAutoCommit(boolean autoCommit) throws SQLException
    {
@@ -424,12 +424,12 @@ public class Map extends XMLOutputStream
 		 throw new IllegalStateException("Connection not set.");
 
 	  conn.setAutoCommit(autoCommit);
-   }   
+   }      
 
    RootClassMap getRootClassMap(String rootElementName)
    {
 	  return (RootClassMap)rootClassMaps.get(rootElementName);
-   }   
+   }      
 
    RootTableMap getRootTableMap(String rootTable) throws InvalidMapException
    {
@@ -437,14 +437,14 @@ public class Map extends XMLOutputStream
 
 	  rootTableMap = (RootTableMap)rootTableMaps.get(rootTable);
 
-        // 8/13/01, Ronald Bourret
-        // rootTableMap is null if the root table map is not found. Previously, this
-        // checked for rootTableMap.tableMap.elementType, which threw a NullPointerException.
+		// 8/13/01, Ronald Bourret
+		// rootTableMap is null if the root table map is not found. Previously, this
+		// checked for rootTableMap.tableMap.elementType, which threw a NullPointerException.
 
 	  if (rootTableMap == null)
 		 throw new InvalidMapException("Table not mapped as a root table: " + rootTable);
 	  return rootTableMap;
-   }               
+   }                  
 
    PreparedStatement checkOutInsertStmt(Table table) throws SQLException
    {
@@ -458,6 +458,11 @@ public class Map extends XMLOutputStream
 	  if (insertStrings == null)
 	  {
 		 buildInsertStrings();
+		// System.out.println("Building Insert Strings Table number = " +table.number);
+		// int y = insertStrings.length;
+		// System.out.println("Building Insert Strings Number of strings = " +y);
+		// for(int i =0;i<y;i++)
+		// {System.out.println("Building Insert Strings String " +i +" = " +insertStrings[i].toString());}
 	  }
 
 	  checkMaxActiveStmts();
@@ -494,7 +499,7 @@ public class Map extends XMLOutputStream
 			throw se;
 		 }
 	  }
-   }   
+   }                     
 
    void checkInInsertStmt(PreparedStatement p, Table table)
    {
@@ -505,7 +510,7 @@ public class Map extends XMLOutputStream
 	  // the statement on the stack.
 	  activeStmts --;
 	  insertStacks[table.number].push(p);
-   }   
+   }      
 
    PreparedStatement checkOutSelectStmt(int tableNum, int subtableNum)
 	  throws SQLException, InvalidMapException
@@ -553,7 +558,7 @@ public class Map extends XMLOutputStream
 			throw se;
 		 }
 	  }
-   }   
+   }      
 
    PreparedStatement checkOutSelectStmt(Table t,
 										Column[] whereColumns,
@@ -597,7 +602,7 @@ public class Map extends XMLOutputStream
 			throw se;
 		 }
 	  }
-   }   
+   }      
 
    void checkInSelectStmt(PreparedStatement p, int tableNum, int subtableNum)
 	  throws SQLException
@@ -640,7 +645,7 @@ public class Map extends XMLOutputStream
 	  activeStmts --;
 //      selectStacks[tableNum][subtableNum].push(p);
 	  p.close();
-   }   
+   }      
 
    void checkInSelectStmt(PreparedStatement p) throws SQLException
    {
@@ -653,7 +658,7 @@ public class Map extends XMLOutputStream
 	  // the count of active statements is decremented.
 	  activeStmts --;
 	  p.close();
-   }   
+   }      
 
    String getCreateTableString(Table table)
 	  throws InvalidMapException, SQLException
@@ -672,7 +677,7 @@ public class Map extends XMLOutputStream
 	  }
 
 	  return createStrings[table.number];
-   }   
+   }      
 
    //**************************************************************************
    // Private methods - build INSERT statements
@@ -687,7 +692,7 @@ public class Map extends XMLOutputStream
 		 insertStrings[i] = buildInsertString(tables[i]);
 		 insertStacks[i] = new Stack();
 	  }
-   }   
+   }      
 
    private String buildInsertString(Table t) throws SQLException
    {
@@ -700,12 +705,12 @@ public class Map extends XMLOutputStream
 	  // 6/9/00, Ruben Lainez, Ronald Bourret
 	  // Use the identifier quote character for the table name.
 
-        // 8/13/01, Ronald Bourret
-        // Parse the table name before quoting it. This is needed for table
-        // names that contain catalogs and/or schemas.
+		// 8/13/01, Ronald Bourret
+		// Parse the table name before quoting it. This is needed for table
+		// names that contain catalogs and/or schemas.
 
 	  istr.append(INSERT);
-        appendQuotedTableName(istr, t.name);
+		appendQuotedTableName(istr, t.name);
 
 	  istr.append(OPENPAREN);
 	  for (i = 0; i < t.columns.length; i++)
@@ -723,7 +728,7 @@ public class Map extends XMLOutputStream
 	  istr.append(CLOSEPAREN);
 	  
 	  return istr.toString();
-   }      
+   }         
    
    //**************************************************************************
    // Private methods - build CREATE TABLE statements
@@ -738,7 +743,7 @@ public class Map extends XMLOutputStream
 	  {
 		 createStrings[i] = buildCreateTableString(tables[i]);
 	  }
-   }   
+   }      
 
    private String buildCreateTableString(Table t)
 	  throws InvalidMapException, SQLException
@@ -748,12 +753,12 @@ public class Map extends XMLOutputStream
 	  // 6/9/00, Ruben Lainez, Ronald Bourret
 	  // Use the identifier quote character for the table name.
 	  
-        // 8/13/01, Ronald Bourret
-        // Parse the table name before quoting it. This is needed for table
-        // names that contain catalogs and/or schemas.
+		// 8/13/01, Ronald Bourret
+		// Parse the table name before quoting it. This is needed for table
+		// names that contain catalogs and/or schemas.
 
 	  cstr.append(CREATETABLE);
-        appendQuotedTableName(cstr, t.name);
+		appendQuotedTableName(cstr, t.name);
 	  cstr.append(OPENPAREN);
 	  
 	  // Add column definitions.
@@ -766,7 +771,7 @@ public class Map extends XMLOutputStream
 	  cstr.append(CLOSEPAREN);
 	  
 	  return cstr.toString();
-   }   
+   }      
    
    private void addColumnDef(StringBuffer cstr, Column column, boolean comma)
 	  throws InvalidMapException
@@ -774,7 +779,7 @@ public class Map extends XMLOutputStream
 	  addColumnName(cstr, column, comma);
 	  cstr.append(SPACE);
 	  cstr.append(getTypeName(column.type, column.length));
-   }   
+   }      
 
    private String getTypeName(int type, int length)
 	  throws InvalidMapException
@@ -866,7 +871,7 @@ public class Map extends XMLOutputStream
 		 throw new InvalidMapException("Unsupported data type: " + type);
 
 	  return name;
-   }   
+   }      
 
    private void initDataTypeNames()
    {
@@ -894,7 +899,7 @@ public class Map extends XMLOutputStream
 	  tinyintName = "TINYINT";
 	  varbinaryName = "VARBINARY(";
 	  varcharName = "VARCHAR(";
-   }   
+   }      
 
    //**************************************************************************
    // Private methods - build SELECT statements
@@ -915,7 +920,7 @@ public class Map extends XMLOutputStream
 			selectStacks[i][j] = new Stack();
 		 }
 	  }
-   }   
+   }      
 
    private String buildSelectString(TableMap tm, int relatedTable)
 	  throws InvalidMapException, SQLException
@@ -932,7 +937,7 @@ public class Map extends XMLOutputStream
 	  // on which Row (and probably a lot of other code) is built.
 
 	  return buildSelectString(tm.relatedTables[relatedTable].table, tm.childKeys[relatedTable], null);
-   }   
+   }      
 
    private String buildSelectString(Table t,
 									Column[] whereColumns,
@@ -956,12 +961,12 @@ public class Map extends XMLOutputStream
 	  // 6/9/00, Ruben Lainez, Ronald Bourret
 	  // Use the identifier quote character for the table name.
 	  
-        // 8/13/01, Ronald Bourret
-        // Parse the table name before quoting it. This is needed for table
-        // names that contain catalogs and/or schemas.
+		// 8/13/01, Ronald Bourret
+		// Parse the table name before quoting it. This is needed for table
+		// names that contain catalogs and/or schemas.
 
 	  sstr.append(FROM);
-        appendQuotedTableName(sstr, t.name);
+		appendQuotedTableName(sstr, t.name);
 	  
 	  // Add WHERE clause.
 
@@ -988,7 +993,7 @@ public class Map extends XMLOutputStream
 	  }
 	  
 	  return sstr.toString();
-   }      
+   }         
    
    private void addColumnName(StringBuffer str, Column column, boolean comma)
    {
@@ -997,11 +1002,11 @@ public class Map extends XMLOutputStream
 		 str.append(COMMA);
 	  }
 
-        // 8/13/01, Ronald Bourret
-        // Move calls to add quoted name to separate method.
+		// 8/13/01, Ronald Bourret
+		// Move calls to add quoted name to separate method.
 
-        appendQuotedName(str, column.name);
-   }   
+		appendQuotedName(str, column.name);
+   }      
 
    private void addColumnRestriction(StringBuffer sstr, Column column, boolean and)
    {
@@ -1011,7 +1016,7 @@ public class Map extends XMLOutputStream
 	  }
 	  addColumnName(sstr, column, false);
 	  sstr.append(EQUALSPARAM);
-   }   
+   }      
 
    //**************************************************************************
    // Private methods - serialize map
@@ -1036,7 +1041,7 @@ public class Map extends XMLOutputStream
 	  attrs[0] = XMLDBMSConst.ATTR_NAME.getBytes();
 	  values[0] = name.prefixed.getBytes();
 	  writeElementStart(XMLDBMSConst.ELEM_ATTRIBUTE.getBytes(), attrs, values, true);
-   }   
+   }      
 
    private void writeClassMap(ClassMap classMap)
 	  throws IOException
@@ -1068,7 +1073,7 @@ public class Map extends XMLOutputStream
 
 	  // End the ClassMap element.
 	  writeElementEnd(XMLDBMSConst.ELEM_CLASSMAP.getBytes());
-   }   
+   }      
 
    private void writeClassMaps()
 	  throws IOException
@@ -1086,7 +1091,7 @@ public class Map extends XMLOutputStream
 			writeClassMap(classMap);
 		 }
 	  }
-   }   
+   }      
 
    private void writeColumn(Column column)
 	  throws IOException
@@ -1095,7 +1100,7 @@ public class Map extends XMLOutputStream
 	  attrs[0] = XMLDBMSConst.ATTR_NAME.getBytes();
 	  values[0] = column.name.getBytes();
 	  writeElementStart(XMLDBMSConst.ELEM_COLUMN.getBytes(), attrs, values, true);
-   }   
+   }      
 
    private void writeDateTimeFormat(DateFormat date, DateFormat time, DateFormat timestamp)
 	  throws IOException
@@ -1124,7 +1129,7 @@ public class Map extends XMLOutputStream
 	  }
 
 	  writeElementStart(XMLDBMSConst.ELEM_PATTERNS.getBytes(), attrs, values, true);
-   }   
+   }      
 
    private void writeDateTimeFormats()
 	  throws IOException
@@ -1142,7 +1147,7 @@ public class Map extends XMLOutputStream
 	  writeElementStart(XMLDBMSConst.ELEM_DATETIMEFORMATS.getBytes(), null, null, false);
 	  writeDateTimeFormat(dateFormatter, timeFormatter, timestampFormatter);
 	  writeElementEnd(XMLDBMSConst.ELEM_DATETIMEFORMATS.getBytes());
-   }   
+   }      
 
    private void writeElementType(NSName name)
 	  throws IOException
@@ -1151,7 +1156,7 @@ public class Map extends XMLOutputStream
 	  attrs[0] = XMLDBMSConst.ATTR_NAME.getBytes();
 	  values[0] = name.prefixed.getBytes();
 	  writeElementStart(XMLDBMSConst.ELEM_ELEMENTTYPE.getBytes(), attrs, values, true);
-   }   
+   }      
 
    private void writeEmptyStringIsNull()
 	  throws IOException
@@ -1160,7 +1165,7 @@ public class Map extends XMLOutputStream
 	  {
 		 writeElementStart(XMLDBMSConst.ELEM_EMPTYSTRINGISNULL.getBytes(), null, null, true);
 	  }
-   }   
+   }      
 
    private void writeIgnoreRoot(RootClassMap rootClassMap)
 	  throws IOException
@@ -1169,7 +1174,7 @@ public class Map extends XMLOutputStream
 	  writeElementType(rootClassMap.classMap.name);
 	  writeRelatedClassMaps(XMLDBMSConst.ELEM_PSEUDOROOT.getBytes(), rootClassMap.classMap.subElementTypeMaps);
 	  writeElementEnd(XMLDBMSConst.ELEM_IGNOREROOT.getBytes());
-   }   
+   }      
 
    private void writeIgnoreRoots()
 	  throws IOException
@@ -1184,7 +1189,7 @@ public class Map extends XMLOutputStream
 		 if (rootClassMap.classMap.type != ClassMap.TYPE_IGNOREROOT) continue;
 		 writeIgnoreRoot(rootClassMap);
 	  }
-   }   
+   }      
 
    private void writeKey(LinkInfo linkInfo, boolean candidate)
 	  throws IOException
@@ -1230,13 +1235,13 @@ public class Map extends XMLOutputStream
 
 	  // End the CandidateKey or ForeignKey element.
 	  writeElementEnd(elementTypeName);
-   }   
+   }      
 
    private void writeMapEnd()
 	  throws IOException
    {
 	  writeElementEnd(XMLDBMSConst.ELEM_XMLTODBMS.getBytes());
-   }   
+   }      
 
    private void writeMaps()
 	  throws IOException
@@ -1245,7 +1250,7 @@ public class Map extends XMLOutputStream
 	  writeIgnoreRoots();
 	  writeClassMaps();
 	  writeElementEnd(XMLDBMSConst.ELEM_MAPS.getBytes());
-   }   
+   }      
 
    private void writeMapStart()
 	  throws IOException
@@ -1257,7 +1262,7 @@ public class Map extends XMLOutputStream
 	  writeXMLDecl(null);
 	  writeDOCTYPE(XMLDBMSConst.ELEM_XMLTODBMS.getBytes(), XMLDBMSDTD, null);
 	  writeElementStart(XMLDBMSConst.ELEM_XMLTODBMS.getBytes(), attrs, values, false);
-   }   
+   }      
 
    private void writeNamespaces()
 	  throws IOException
@@ -1272,7 +1277,7 @@ public class Map extends XMLOutputStream
 		 values[1] = uris[i].getBytes();
 		 writeElementStart(XMLDBMSConst.ELEM_NAMESPACE.getBytes(), attrs, values, true);
 	  }
-   }   
+   }      
 
    private void writeOptions()
 	  throws IOException
@@ -1282,7 +1287,7 @@ public class Map extends XMLOutputStream
 	  writeDateTimeFormats();
 	  writeNamespaces();
 	  writeElementEnd(XMLDBMSConst.ELEM_OPTIONS.getBytes());
-   }   
+   }      
 
    private void writeOrderColumn(OrderInfo orderInfo)
 	  throws IOException
@@ -1296,7 +1301,7 @@ public class Map extends XMLOutputStream
 	  values[0] = orderInfo.orderColumn.name.getBytes();
 	  values[1] = (orderInfo.generateOrder) ? XMLDBMSConst.ENUM_YES.getBytes() : XMLDBMSConst.ENUM_NO.getBytes();
 	  writeElementStart(XMLDBMSConst.ELEM_ORDERCOLUMN.getBytes(), attrs, values, true);
-   }   
+   }      
 
    private void writePropertyMap(PropertyMap propMap, int type)
 	  throws IOException
@@ -1330,7 +1335,7 @@ public class Map extends XMLOutputStream
 	  writeOrderColumn(propMap.orderInfo);
 
 	  writeElementEnd(XMLDBMSConst.ELEM_PROPERTYMAP.getBytes());
-   }   
+   }      
 
    private void writePropertyMaps(ClassMap classMap)
 	  throws IOException
@@ -1364,7 +1369,7 @@ public class Map extends XMLOutputStream
 			writePropertyMap(propMap, ColumnMap.TYPE_TOELEMENTTYPE);
 		 }
 	  }
-   }   
+   }      
 
    private void writeRelatedClassMap(byte[] elementTypeName, RelatedClassMap relatedClassMap)
 	  throws IOException
@@ -1410,7 +1415,7 @@ public class Map extends XMLOutputStream
 
 	  // End the PseudoRoot or RelatedClass element.
 	  writeElementEnd(elementTypeName);
-   }   
+   }      
 
    private void writeRelatedClassMaps(byte[] elementTypeName, Hashtable subElementTypeMaps)
 	  throws IOException
@@ -1429,7 +1434,7 @@ public class Map extends XMLOutputStream
 			writeRelatedClassMap(elementTypeName, relatedClassMap);
 		 }
 	  }
-   }   
+   }      
 
    private void writeTable(Table table)
 	  throws IOException
@@ -1438,7 +1443,7 @@ public class Map extends XMLOutputStream
 	  attrs[0] = XMLDBMSConst.ATTR_NAME.getBytes();
 	  values[0] = table.name.getBytes();
 	  writeElementStart(XMLDBMSConst.ELEM_TABLE.getBytes(), attrs, values, true);
-   }   
+   }      
 
    private void writeToClassTable(Table table)
 	  throws IOException
@@ -1446,7 +1451,7 @@ public class Map extends XMLOutputStream
 	  writeElementStart(XMLDBMSConst.ELEM_TOCLASSTABLE.getBytes(), null, null, false);
 	  writeTable(table);
 	  writeElementEnd(XMLDBMSConst.ELEM_TOCLASSTABLE.getBytes());
-   }   
+   }      
 
    private void writeToColumn(Column column)
 	  throws IOException
@@ -1454,7 +1459,7 @@ public class Map extends XMLOutputStream
 	  writeElementStart(XMLDBMSConst.ELEM_TOCOLUMN.getBytes(), null, null, false);
 	  writeColumn(column);
 	  writeElementEnd(XMLDBMSConst.ELEM_TOCOLUMN.getBytes());
-   }   
+   }      
 
    private void writeToPropertyTable(PropertyMap propMap)
 	  throws IOException
@@ -1470,7 +1475,7 @@ public class Map extends XMLOutputStream
 	  writeColumn(propMap.column);
 	  writeElementEnd(XMLDBMSConst.ELEM_TOPROPERTYTABLE.getBytes());
 	  
-   }   
+   }      
 
    private void writeToRootTable(ClassMap classMap)
 	  throws IOException
@@ -1496,7 +1501,7 @@ public class Map extends XMLOutputStream
 
 	  // End the ToRootTable element.
 	  writeElementEnd(XMLDBMSConst.ELEM_TOROOTTABLE.getBytes());
-   }   
+   }      
 
    //**************************************************************************
    // Private methods - check-in / check-out utilities
@@ -1511,7 +1516,7 @@ public class Map extends XMLOutputStream
 	  if (r < 0) r *= -1;
 	  r = r % (max + 1);
 	  return r;
-   }   
+   }      
 
    private void checkMaxActiveStmts() throws SQLException
    {
@@ -1522,7 +1527,7 @@ public class Map extends XMLOutputStream
 	  if (activeStmts == maxActiveStmts)
 		 throw new SQLException("Maximum number of active statements exceeded.");
 	  activeStmts++;
-   }   
+   }      
 
    private boolean closeSelectStmt() throws SQLException
    {
@@ -1552,7 +1557,7 @@ public class Map extends XMLOutputStream
 		 }
 	  }
 	  return false;
-   }   
+   }      
 
    private boolean closeInsertStmt() throws SQLException
    {
@@ -1578,7 +1583,7 @@ public class Map extends XMLOutputStream
 		 }
 	  }
 	  return false;
-   }   
+   }      
 
    //**************************************************************************
    // Private methods - database initialization
@@ -1588,7 +1593,7 @@ public class Map extends XMLOutputStream
 	  throws SQLException
    {
 	  DatabaseMetaData meta;
-        String           term;
+		String           term;
 
 	  meta = conn.getMetaData();
 
@@ -1604,53 +1609,44 @@ public class Map extends XMLOutputStream
 
 	  preparedSurviveCommit = meta.supportsOpenStatementsAcrossCommit();
 
-      // 8/13/01, Ronald Bourret
-      // Moved metadata stuff into global variables for efficiency. Added
-      // check that the catalog separator length is 0. This is needed as
-      // a workaround for the Postgres driver, which returns a catalog term
-      // even though it doesn't support catalogs. Also added try/catch for
-      // the call to getCatalogSeparator, since some Postgres drivers return
-      // "not implemented" exceptions.
+	  // 8/13/01, Ronald Bourret
+	  // Moved metadata stuff into global variables for efficiency. Added
+	  // check that the catalog separator length is 0. This is needed as
+	  // a workaround for the Postgres driver, which returns a catalog term
+	  // even though it doesn't support catalogs.
 
-      term = meta.getCatalogTerm();
-      try
-      {
-         catalogSeparator = meta.getCatalogSeparator();
-      }
-      catch (Exception e)
-      {
-         catalogSeparator = null;
-      }
-      if ((term == null) || (catalogSeparator == null))
-      {
-         catalogsSupported = false;
-      }
-      else
-      {
-         catalogsSupported = ((term.length() != 0) && (catalogSeparator.length() != 0));
-      }
-      catalogAtStart = meta.isCatalogAtStart();
+	  term = meta.getCatalogTerm();
+	  catalogSeparator = meta.getCatalogSeparator();
+	  if ((term == null) || (catalogSeparator == null))
+	  {
+		 catalogsSupported = false;
+	  }
+	  else
+	  {
+		 catalogsSupported = ((term.length() != 0) && (catalogSeparator.length() != 0));
+	  }
+	  catalogAtStart = meta.isCatalogAtStart();
 
-      term = meta.getSchemaTerm();
-      if (term == null)
-      {
-         schemasSupported = false;
-      }
-      else
-      {
-         schemasSupported = (term.length() != 0);
-      }
+	  term = meta.getSchemaTerm();
+	  if (term == null)
+	  {
+		 schemasSupported = false;
+	  }
+	  else
+	  {
+		 schemasSupported = (term.length() != 0);
+	  }
 
-      // 8/13/01, Ronald Bourret
-      // Moved contents of setQuote() to this method for efficiency. Also
-      // set the quote character to a space if it was null.
+	  // 8/13/01, Ronald Bourret
+	  // Moved contents of setQuote() to this method for efficiency. Also
+	  // set the quote character to a space if it was null.
 
-      quote = conn.getMetaData().getIdentifierQuoteString();
-      if (quote == null)
-      {
-         quote = " ";
-      }
-   }   
+	  quote = conn.getMetaData().getIdentifierQuoteString();
+	  if (quote == null)
+	  {
+		 quote = " ";
+	  }
+   }      
 
    private void getTableMetadata()
 	  throws SQLException, InvalidMapException
@@ -1674,7 +1670,7 @@ public class Map extends XMLOutputStream
 			addColumnMetadata(meta, tables[i]);
 		 }
 	  }
-   }   
+   }      
 
    private void addResultSetMetadata(Table table)
 	  throws SQLException, InvalidMapException
@@ -1727,158 +1723,158 @@ public class Map extends XMLOutputStream
 	  // Check that the type variable was set for all columns.
 
 	  checkColumnTypesSet(table);
-   }   
+   }      
 
    private void addColumnMetadata(DatabaseMetaData meta, Table table)
 	  throws SQLException, InvalidMapException
    {
-      DBName     dbName;
-      ResultSet  rs;
-      Column     column;
-      boolean    tableFound = false;
-      String     columnName;
+	  DBName     dbName;
+	  ResultSet  rs;
+	  Column     column;
+	  boolean    tableFound = false;
+	  String     columnName;
 
-      // Get the catalog, schema, and table names.
+	  // Get the catalog, schema, and table names.
 
-      dbName = parseQualifiedName(table.name);
+	  dbName = parseQualifiedName(table.name);
 
-      // Get the column metadata result set and process it. Column 4 is column
-      // name, column 5 is data type, and column 7 is length in characters.
+	  // Get the column metadata result set and process it. Column 4 is column
+	  // name, column 5 is data type, and column 7 is length in characters.
 
-      rs = meta.getColumns(dbName.catalog, dbName.schema, dbName.table, null);
+	  rs = meta.getColumns(dbName.catalog, dbName.schema, dbName.table, null);
 
-      while (rs.next())
-      {
-         tableFound = true;
+	  while (rs.next())
+	  {
+		 tableFound = true;
 
-         // Get the next row of metadata and get the column name. If the column
-         // isn't mapped, continue to the following row.
+		 // Get the next row of metadata and get the column name. If the column
+		 // isn't mapped, continue to the following row.
 
-         try
-         {
-            column = table.getColumn(rs.getString(4));
-         }
-         catch (InvalidMapException ime)
-         {
-            continue;
-         }
+		 try
+		 {
+			column = table.getColumn(rs.getString(4));
+		 }
+		 catch (InvalidMapException ime)
+		 {
+			continue;
+		 }
 
-         // Set the type and length.
+		 // Set the type and length.
 
-         column.type = (int)rs.getShort(5);
-         fixDateTimeType(column);
-         column.length = rs.getInt(7);
-      }
+		 column.type = (int)rs.getShort(5);
+		 fixDateTimeType(column);
+		 column.length = rs.getInt(7);
+	  }
 
-      // Close the result set.
-      rs.close();
+	  // Close the result set.
+	  rs.close();
 
-      // If the table was not found, throw an error.
+	  // If the table was not found, throw an error.
 
-      // 5/19/00, Ronald Bourret
-      // Added comments about checking case to error message.
-      //
-      // A common problem is that users use a different case in the map document
-      // than is used to store an identifier in the database. This is because
-      // databases commonly case-fold unquoted identifiers in CREATE TABLE
-      // statements before storing them. For example, the identifier Foo in
-      // "CREATE TABLE Foo ..." might be stored as FOO. If the user uses Foo in
-      // the map document, it is not found because the database uses FOO.
-      //
-      // Unfortunately, there is no easy technical solution to this problem, in
-      // spite of the fact that JDBC provides information about how identifiers
-      // are stored in the database. The problem is that the map document does
-      // not support quoted identifiers. Thus, Foo could refer to the unquoted
-      // identifier Foo (which might need to be case-folded to FOO before
-      // comparison) or the quoted identifier "Foo" (which might not need to be
-      // case-folded).
-      //
-      // Although we could support quoted identifiers in the map document,
-      // (a) this is not backwards compatible, and (b) this is more complex than
-      // simply requiring users to use the exact case.
+	  // 5/19/00, Ronald Bourret
+	  // Added comments about checking case to error message.
+	  //
+	  // A common problem is that users use a different case in the map document
+	  // than is used to store an identifier in the database. This is because
+	  // databases commonly case-fold unquoted identifiers in CREATE TABLE
+	  // statements before storing them. For example, the identifier Foo in
+	  // "CREATE TABLE Foo ..." might be stored as FOO. If the user uses Foo in
+	  // the map document, it is not found because the database uses FOO.
+	  //
+	  // Unfortunately, there is no easy technical solution to this problem, in
+	  // spite of the fact that JDBC provides information about how identifiers
+	  // are stored in the database. The problem is that the map document does
+	  // not support quoted identifiers. Thus, Foo could refer to the unquoted
+	  // identifier Foo (which might need to be case-folded to FOO before
+	  // comparison) or the quoted identifier "Foo" (which might not need to be
+	  // case-folded).
+	  //
+	  // Although we could support quoted identifiers in the map document,
+	  // (a) this is not backwards compatible, and (b) this is more complex than
+	  // simply requiring users to use the exact case.
 
-      if (!tableFound)
-         throw new InvalidMapException("Table not found: " + table.name +
-            ". Check that the table exists, that its name is spelled correctly, " +
-            "and that the case used in the map document exactly matches the " +
-            "case used in the database. This might be different from the case " +
-            "you used when creating the table.");
+	  if (!tableFound)
+		 throw new InvalidMapException("Table not found: " + table.name +
+			". Check that the table exists, that its name is spelled correctly, " +
+			"and that the case used in the map document exactly matches the " +
+			"case used in the database. This might be different from the case " +
+			"you used when creating the table.");
 
-      // Check that the type variable was set for all columns.
+	  // Check that the type variable was set for all columns.
 
-      checkColumnTypesSet(table);
-   }                                                                           
+	  checkColumnTypesSet(table);
+   }                                                                              
 
    private DBName parseQualifiedName(String qualifiedName)
    {
-      // 8/13/01, Ronald Bourret
-      // Moved name parsing to separate method (this one).
+	  // 8/13/01, Ronald Bourret
+	  // Moved name parsing to separate method (this one).
 
-      int    separatorIndex;
-      DBName dbName = new DBName();
+	  int    separatorIndex;
+	  DBName dbName = new DBName();
 
-      if (catalogsSupported)
-      {
-         separatorIndex = qualifiedName.indexOf(catalogSeparator);
-         if (separatorIndex != -1)
-         {
-            if (catalogAtStart)
-            {
-               dbName.catalog = qualifiedName.substring(0, separatorIndex);
-               qualifiedName = qualifiedName.substring(separatorIndex + 1);
-            }
-            else
-            {
-               dbName.catalog = qualifiedName.substring(separatorIndex + 1);
-               qualifiedName = qualifiedName.substring(0, separatorIndex);
-            }
-         }
-      }
+	  if (catalogsSupported)
+	  {
+		 separatorIndex = qualifiedName.indexOf(catalogSeparator);
+		 if (separatorIndex != -1)
+		 {
+			if (catalogAtStart)
+			{
+			   dbName.catalog = qualifiedName.substring(0, separatorIndex);
+			   qualifiedName = qualifiedName.substring(separatorIndex + 1);
+			}
+			else
+			{
+			   dbName.catalog = qualifiedName.substring(separatorIndex + 1);
+			   qualifiedName = qualifiedName.substring(0, separatorIndex);
+			}
+		 }
+	  }
 
-      if (schemasSupported)
-      {
-         separatorIndex = qualifiedName.indexOf(schemaSeparator);
-         if (separatorIndex != -1)
-         {
-            dbName.schema = qualifiedName.substring(0, separatorIndex);
-            qualifiedName = qualifiedName.substring(separatorIndex + 1);
-         }
-      }
+	  if (schemasSupported)
+	  {
+		 separatorIndex = qualifiedName.indexOf(schemaSeparator);
+		 if (separatorIndex != -1)
+		 {
+			dbName.schema = qualifiedName.substring(0, separatorIndex);
+			qualifiedName = qualifiedName.substring(separatorIndex + 1);
+		 }
+	  }
 
-      dbName.table = qualifiedName;
+	  dbName.table = qualifiedName;
 
-      return dbName;
-   }
+	  return dbName;
+   }   
 
    private void appendQuotedTableName(StringBuffer sb, String qualifiedName)
    {
-      DBName       dbName;
+	  DBName       dbName;
 
-      dbName = parseQualifiedName(qualifiedName);
-      if ((dbName.catalog != null) && (catalogAtStart))
-      {
-         appendQuotedName(sb, dbName.catalog);
-         sb.append(catalogSeparator);
-      }
-      if (dbName.schema != null)
-      {
-         appendQuotedName(sb, dbName.schema);
-         sb.append(schemaSeparator);
-      }
-      appendQuotedName(sb, dbName.table);
-      if ((dbName.catalog != null) && (!catalogAtStart))
-      {
-         sb.append(catalogSeparator);
-         appendQuotedName(sb, dbName.catalog);
-      }
-   }
+	  dbName = parseQualifiedName(qualifiedName);
+	  if ((dbName.catalog != null) && (catalogAtStart))
+	  {
+		 appendQuotedName(sb, dbName.catalog);
+		 sb.append(catalogSeparator);
+	  }
+	  if (dbName.schema != null)
+	  {
+		 appendQuotedName(sb, dbName.schema);
+		 sb.append(schemaSeparator);
+	  }
+	  appendQuotedName(sb, dbName.table);
+	  if ((dbName.catalog != null) && (!catalogAtStart))
+	  {
+		 sb.append(catalogSeparator);
+		 appendQuotedName(sb, dbName.catalog);
+	  }
+   }   
 
    private void appendQuotedName(StringBuffer sb, String name)
    {
-      sb.append(quote);
-      sb.append(name);
-      sb.append(quote);
-   }
+	  sb.append(quote);
+	  sb.append(name);
+	  sb.append(quote);
+   }   
 
    private void fixDateTimeType(Column column)
    {
@@ -1905,7 +1901,7 @@ public class Map extends XMLOutputStream
 		 default:
 			break;
 	  }
-   }   
+   }      
 
    private void checkColumnTypesSet(Table table) throws InvalidMapException
    {
@@ -1923,7 +1919,7 @@ public class Map extends XMLOutputStream
 			   "database. This might be different from the case you used when " +
 			   "creating the column.");
 	  }
-   }   
+   }      
 
    //**************************************************************************
    // Inner classes -- database name
@@ -1931,10 +1927,10 @@ public class Map extends XMLOutputStream
 
    private class DBName
    {
-      String catalog = null;
-      String schema = null;
-      String table = null;
+	  String catalog = null;
+	  String schema = null;
+	  String table = null;
 
-      DBName(){}
+	  DBName(){}
    }
 }

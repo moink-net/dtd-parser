@@ -1,126 +1,37 @@
 // No copyright, no warranty; use as you will.
-// Written by Adam Flinton and Ronald Bourret, 2001
-
+// Written by Adam Flinton, 2001
+//
 // Version 1.1
 // Changes from version 1.01: New in 1.1
 
 package de.tudarmstadt.ito.xmldbms.db;
 
-// No copyright, no warranty; use as you will.
-// Written by Adam Flinton and Ronald Bourret, 2001
-
-// Version 1.1
-// Changes from version 1.01: New in 1.1
-
 /**
- * Properties constants for KeyGenerator.
+ * Properties constants for DbConn implementations.
  *
  * @author Adam Flinton
- * @author Ronald Bourret
  * @version 1.1
- * @see KeyGeneratorHighLow
- * @see Transfer
- * @see ProcessProperties
  */
-
 public class DBProps
 {
+    /** JDBC driver class name (JDBC 1.0) */
+    public static String DRIVER = "Driver";
 
-		
-   // Database properties
+    /** Database URL (JDBC 1.0) */
+    public static String URL = "URL";
 
-   /** Database URL */
-   public static String URL      = "URL";
+    /**  Database user name (JDBC 1.0 and 2.0) */
+    public static String USER = "User";
 
-   /** JDBC driver class name */
-   public static String DRIVER   = "Driver";
+    /**  Database password (JDBC 1.0 and 2.0) */
+    public static String PASSWORD = "Password";
 
-   /**  Database user name */
-   public static String USER     = "User";
+    /** Logical name of the database (JDBC 2.0) */
+    public static String DATASOURCE = "DataSource";
 
-   /**  Database password */
-   public static String PASSWORD = "Password";
+    /** Name of the JNDI Context in which to create the JDBC 2.0 DataSource (JDBC 2.0)*/
+    public static String DBINITIALCONTEXT = "DBInitialContext";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   // ************************************************************************
-   // Constructor
-   // ************************************************************************
-
-   public DBProps()
-   {
-	  super();
-   }               
-
-	public static String DATASOURCE = "DataSource";
-		/** JDBC Level & JDBC 2.0 */	
-	public static String DBINITIALCONTEXT = "DBInitialContext";
-	public static String JDBCLEVEL     = "JDBCLevel";
+    /** JDBC level. Must be either 1 or 2. */
+    public static String JDBCLEVEL = "JDBCLevel";
 }

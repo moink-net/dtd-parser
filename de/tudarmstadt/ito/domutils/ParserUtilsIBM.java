@@ -6,8 +6,8 @@
 
 package de.tudarmstadt.ito.domutils;
 
-import org.w3c.dom.Document;
 import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
+import org.w3c.dom.Document;
 
 /**
  * Implements ParserUtils for the IBM parser.

@@ -27,7 +27,7 @@ import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
  * @version 1.1
  */
 
-public class ParserUtilsOracle2 implements ParserUtils
+public class ParserUtilsOracle2 extends ParserUtilsBase implements ParserUtils
 {
    // ***********************************************************************
    // Constructors
@@ -50,6 +50,7 @@ public class ParserUtilsOracle2 implements ParserUtils
 	* @return An object that implements Parser.
 	*/
    public Parser getSAXParser()
+      throws ParserUtilsException
    {
 	 SAXParser parser;
 
@@ -60,14 +61,14 @@ public class ParserUtilsOracle2 implements ParserUtils
    }                                                         
 
    /**
-	* Open an XML file and create a DOM Document.
-	*
-	* @param xmlFilename The name of the XML file.
-	* @return An object that implements Document.
-	* @exception Exception An error occurred. Exception is used because
-	*            the possible errors are different for each implementation.
-	*/
-   public Document openDocument(String xmlFilename) throws Exception
+    * Open an XML file and create a DOM Document.
+    *
+    * @param xmlFilename The name of the XML file.
+    *
+    * @return An object that implements Document.
+    */
+   public Document openDocument(String xmlFilename)
+      throws ParserUtilsException
    {
 	 DOMParser parser;
 	 GetFileURL gfu = new GetFileURL();
@@ -78,28 +79,43 @@ public class ParserUtilsOracle2 implements ParserUtils
 	 parser.showWarnings(true);
 
 	 // Parse the input file
-	 parser.parse(new InputSource(gfu.getFileURL(xmlFilename)));
+       try
+       {
+          String[] filename = new String[1];
+          filename[0] = xmlFilename;
+	    parser.parse(new InputSource(gfu.getFile(filename)));
+       }
+       catch (Exception e)
+       {
+          throw new ParserUtilsException(e);
+       }
 
 	 // Return the DOM tree
 	 return parser.getDocument();
    }                                                                  
 
    /**
-	* Write a DOM Document to a file.
-	*
-	* @param doc The DOM Document.
-	* @param xmlFilename The name of the XML file.
-	* @exception Exception An error occurred. Exception is used because
-	*            the possible errors are different for each implementation.
-	*/
-   public void writeDocument(Document doc, String xmlFilename) throws Exception
+    * Write a DOM Document to a file.
+    *
+    * @param doc The DOM Document.
+    * @param xmlFilename The name of the XML file.
+    */
+   public void writeDocument(Document doc, String xmlFilename)
+      throws ParserUtilsException
    {
 	 FileOutputStream xmlFile;
 
 	 // Write the DOM tree to a file.
-	 xmlFile = new FileOutputStream(xmlFilename);
-	 ((XMLDocument)doc).print((OutputStream)xmlFile);
-	 xmlFile.close();
+       try
+       {
+          xmlFile = new FileOutputStream(xmlFilename);
+	    ((XMLDocument)doc).print((OutputStream)xmlFile);
+          xmlFile.close();
+       }
+       catch (Exception e)
+       {
+          throw new ParserUtilsException(e);
+       }
    }                     
 
    
@@ -108,6 +124,11 @@ public class ParserUtilsOracle2 implements ParserUtils
    // Public methods
    // ********************************************************************
 
+   /**
+    * Create an empty Document.
+    *
+    * @return The Document
+    */
    public Document createDocument() throws ParserUtilsException
    {
 	  try
@@ -116,17 +137,20 @@ public class ParserUtilsOracle2 implements ParserUtils
 	  }
 	  catch (Exception e)
 	  {
-		 throw new ParserUtilsException(e.getMessage());
+		 throw new ParserUtilsException(e);
 	  }
    }         
 
-/**
- * Insert the method's description here.
- * Creation date: (10/04/01 12:30:01)
- * @return org.w3c.dom.Document
- * @param InputStream java.io.InputStream
- */
-public Document openDocument(java.io.InputStream InputStream) {
+   /**
+    * Open an InputStream and create a DOM Document.
+    *
+    * @param inputStream The InputStream.
+    *
+    * @return An object that implements Document.
+    */
+public Document openDocument(java.io.InputStream InputStream)
+      throws ParserUtilsException
+ {
 	DOMParser parser;
 	
 
@@ -136,9 +160,30 @@ public Document openDocument(java.io.InputStream InputStream) {
 	 parser.showWarnings(true);
 
 	 // Parse the input file
-	 parser.parse(new InputSource(InputStream));
+       try
+       {
+	    parser.parse(new InputSource(InputStream));
+       }
+       catch (Exception e)
+       {
+          throw new ParserUtilsException(e);
+       }
 
 	 // Return the DOM tree
 	 return parser.getDocument();
 }
+
+   /**
+    * Write a DOM Document to a String.
+    *
+    * @param doc The DOM Document.
+    *
+    * @return The XML string.
+    */
+   public String writeDocument(Document doc)
+      throws ParserUtilsException
+   {
+      return serializeDocument(doc);
+   }
+
 }

@@ -1,27 +1,45 @@
+// No copyright, no warranty; use as you will.
+// Written by Adam Flinton, 2001
+//
+// Version 1.1
+// Changes from version 1.01: New in 1.1
+
 package de.tudarmstadt.ito.xmldbms.xslt;
 
 /**
  * Interface for using XSLT processors.
- * Creation date: (08/05/01 16:45:37)
- * @author: Adam Flinton
+ *
+ * @author Adam Flinton
+ * @version 1.1
  */
-public interface ProcessXslt {
-/**
- * Insert the method's description here.
- * Creation date: (08/05/01 16:46:33)
- * @return java.lang.String
- */
-String transformFiles(String xmlfileName, String xslfileName) throws Exception;
-/**
- * Insert the method's description here.
- * Creation date: (08/05/01 16:47:42)
- * @return java.lang.String
- */
-String transformStream(java.io.InputStream srcStream, String xslfileName) throws Exception;
-/**
- * Insert the method's description here.
- * Creation date: (08/05/01 16:48:29)
- * @return java.lang.String
- */
-String transformString(String inputxml, String xslfileName) throws Exception;
+public interface ProcessXslt
+{
+    /**
+     * Transforms an XML document stored in a file.
+     *
+     * @param xmlfileName The name of the file
+     * @param xslfileName The name of the XSLT stylesheet to use
+     *
+     * @return The output of the transformation
+     */
+    String transformFiles(String xmlfileName, String xslfileName) throws Exception;
+    /**
+     * Transforms an XML document stored in an InputStream.
+     *
+     * @param srcStream The InputStream
+     * @param xslfileName The name of the XSLT stylesheet to use
+     *
+     * @return The output of the transformation
+     */
+    String transformStream(java.io.InputStream srcStream, String xslfileName)
+        throws Exception;
+    /**
+     * Transforms an XML document stored in a string.
+     *
+     * @param inputxml The string
+     * @param xslfileName The name of the XSLT stylesheet to use
+     *
+     * @return The output of the transformation
+     */
+    String transformString(String inputxml, String xslfileName) throws Exception;
 }

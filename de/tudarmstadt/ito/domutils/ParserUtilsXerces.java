@@ -20,8 +20,8 @@ import org.apache.xerces.parsers.SAXParser;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 
-import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
 import java.io.ByteArrayOutputStream;
+import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
 
 /**
  * Implements ParserUtils for the Xerces parser.
@@ -53,58 +53,73 @@ public class ParserUtilsXerces implements ParserUtils
 	* @return An object that implements Parser.
 	*/
    public Parser getSAXParser()
+      throws ParserUtilsException
    {
 	  return new SAXParser();
 
    }                                 
 
    /**
-	* Open an XML file and create a DOM Document.
-	*
-	* @param xmlFilename The name of the XML file.
-	* @return An object that implements Document.
-	* @exception Exception An error occurred. Exception is used because
-	*            the possible errors are different for each implementation.
-	*/
-   public  Document openDocument(String xmlFilename) throws Exception
+    * Open an XML file and create a DOM Document.
+    *
+    * @param xmlFilename The name of the XML file.
+    *
+    * @return An object that implements Document.
+    */
+   public  Document openDocument(String xmlFilename)
+      throws ParserUtilsException
    {
 	 DOMParser parser;
 	 GetFileURL gfu = new GetFileURL();
 
-	 // Instantiate the parser and set various options.
-	 parser = new DOMParser();
-	 parser.setFeature("http://xml.org/sax/features/namespaces", true);
+       try
+       {
+	    // Instantiate the parser and set various options.
+	    parser = new DOMParser();
+	    parser.setFeature("http://xml.org/sax/features/namespaces", true);
 
-	 System.out.println("xmlFilename = " +xmlFilename);
-	 // Parse the input file
-	 System.out.println("gfu = " +gfu.fullqual(xmlFilename));
-	 parser.parse(new InputSource(gfu.fullqual(xmlFilename)));
+	    //System.out.println("xmlFilename = " +xmlFilename);
+	    // Parse the input file
+	    //System.out.println("gfu = " +gfu.fullqual(xmlFilename));
+          parser.parse(new InputSource(gfu.fullqual(xmlFilename)));
+       }
+       catch (Exception e)
+       {
+          throw new ParserUtilsException(e);
+       }
 	 //System.out.println("gfu = " +gfu.getFileURL(xmlFilename));
 	 // Return the DOM tree
 	 return parser.getDocument();
-   }                                                            
+   }                                                               
 
    /**
-	* Write a DOM Document to a file.
-	*
-	* @param doc The DOM Document.
-	* @param xmlFilename The name of the XML file.
-	* @exception Exception An error occurred. Exception is used because
-	*            the possible errors are different for each implementation.
-	*/
-   public void writeDocument(Document doc, String xmlFilename) throws Exception
+    * Write a DOM Document to a file.
+    *
+    * @param doc The DOM Document.
+    * @param xmlFilename The name of the XML file.
+    */
+   public void writeDocument(Document doc, String xmlFilename)
+      throws ParserUtilsException
    {
 	 FileOutputStream xmlFile;
 	 OutputFormat     format;
 	 XMLSerializer    serial;
 
 	 // Write the DOM tree to a file.
-	 xmlFile = new FileOutputStream(xmlFilename);
-	 format = new OutputFormat(doc);
-	 format.setIndenting(true);
-	 serial = new XMLSerializer((OutputStream)xmlFile, format);
-	 serial.asDOMSerializer().serialize(doc);
-	 xmlFile.close();
+       try
+       {
+	    xmlFile = new FileOutputStream(xmlFilename);
+	    format = new OutputFormat(doc);
+	    format.setIndenting(true);
+	    serial = new XMLSerializer((OutputStream)xmlFile, format);
+	    serial.asDOMSerializer().serialize(doc);
+	    xmlFile.close();
+       }
+       catch (Exception e)
+       {
+          throw new ParserUtilsException(e);
+       }
+
    }                        
 
    
@@ -113,6 +128,11 @@ public class ParserUtilsXerces implements ParserUtils
    // Public methods
    // ********************************************************************
 
+   /**
+    * Create an empty Document.
+    *
+    * @return The Document
+    */
    public Document createDocument() throws ParserUtilsException
    {
 	  try
@@ -121,46 +141,66 @@ public class ParserUtilsXerces implements ParserUtils
 	  }
 	  catch (Exception e)
 	  {
-		 throw new ParserUtilsException(e.getMessage());
+		 throw new ParserUtilsException(e);
 	  }
    }         
 
-/**
- * Insert the method's description here.
- * Creation date: (10/04/01 12:30:01)
- * @return org.w3c.dom.Document
- * @param InputStream java.io.InputStream
- */
-public Document openDocument(java.io.InputStream InputStream) throws Exception {
+   /**
+    * Open an InputStream and create a DOM Document.
+    *
+    * @param inputStream The InputStream.
+    *
+    * @return An object that implements Document.
+    */
+public Document openDocument(java.io.InputStream InputStream)
+      throws ParserUtilsException
+{
 	 DOMParser parser;
 	 
 
-	 // Instantiate the parser and set various options.
-	 parser = new DOMParser();
-	 parser.setFeature("http://xml.org/sax/features/namespaces", true);
+       try
+       {
+	    // Instantiate the parser and set various options.
+	    parser = new DOMParser();
+	    parser.setFeature("http://xml.org/sax/features/namespaces", true);
 
-	 // Parse the input file
-	 parser.parse(new InputSource(InputStream));
+	    // Parse the input file
+	    parser.parse(new InputSource(InputStream));
+       }
+       catch (Exception e)
+       {
+          throw new ParserUtilsException(e);
+       }
 	 //System.out.println("gfu = " +gfu.getFileURL(xmlFilename));
 	 // Return the DOM tree
 	 return parser.getDocument();
 }
 
-/**
- * Insert the method's description here.
- * Creation date: (19/04/01 15:22:10)
- * @return java.lang.String
- * @param toConvert org.w3c.dom.Document
- */
-public String returnString(Document toConvert)throws Exception {
+   /**
+    * Write a DOM Document to a String.
+    *
+    * @param doc The DOM Document.
+    *
+    * @return The XML string.
+    */
+public String writeDocument(Document doc)
+      throws ParserUtilsException
+ {
 	 
 
 	ByteArrayOutputStream os = new ByteArrayOutputStream(); 
-	OutputFormat outputFormat = new OutputFormat(toConvert); 
+	OutputFormat outputFormat = new OutputFormat(doc); 
 	//outputFormat.setPreserveSpace(true); 
 	//outputFormat.setIndenting(true); 
 	XMLSerializer serializer = new XMLSerializer(os, outputFormat); 
-	serializer.serialize(toConvert); 
+       try
+       {
+	    serializer.serialize(doc); 
+       }
+       catch (Exception e)
+       {
+          throw new ParserUtilsException(e);
+       }
 	return new String(os.toByteArray());
 
 }

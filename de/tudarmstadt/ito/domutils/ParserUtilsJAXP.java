@@ -12,19 +12,24 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 
 import de.tudarmstadt.ito.xmldbms.tools.GetFileURL;
-import de.tudarmstadt.ito.xmldbms.tools.StringStore;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-public class ParserUtilsJAXP implements ParserUtils {
+public class ParserUtilsJAXP extends ParserUtilsBase implements ParserUtils {
 /**
- * ParserUtilsJAXP constructor comment.
+ * Construct a ParserUtilsJAXP.
  */
 public ParserUtilsJAXP() {
 	super();
 }
 
+   /**
+    * Get a SAX 1.0 Parser.
+    *
+    * @return An object that implements Parser.
+    */
 public Parser getSAXParser()
+      throws ParserUtilsException
    {
 	Parser parser = null;
 	 try{  
@@ -38,152 +43,64 @@ public Parser getSAXParser()
 		 parser = (Parser)sparser.getParser();
 		 
 	  } 
-	  catch (ParserConfigurationException e) {
-	  System.out.println("The underlying parser does not support " +
-							   " the requested features.");
- 
-	  }catch (Throwable err) {
-	   err.printStackTrace ();
-	  } 
-
+	  catch (Exception e) {
+           throw new ParserUtilsException(e);
+        }
 		return parser;    
 	  
    }                                       
    
    
-   public void writeDocument(Document doc, String xmlFilename) throws Exception
+   /**
+    * Write a DOM Document to a file.
+    *
+    * @param doc The DOM Document.
+    * @param xmlFilename The name of the XML file.
+    */
+   public void writeDocument(Document doc, String xmlFilename) throws ParserUtilsException
    {
-   
-	   try
-	   {
-   
-		 
-		 Element firstRoot = doc.getDocumentElement();
-		 NodeList nl = firstRoot.getChildNodes();
-		 for (int i = 0; i < nl.getLength(); i++) 
-		 {
-		   if(i == 0)
-		   {
-					
-			 Node nchild = nl.item(i);
-			 Node n = nchild.getParentNode();
-			 String output = traverse(n);
-			// System.out.println(output);
-			
-		   // file store method had to be called to write the string into the file
-		     StringStore.store(xmlFilename,output);
-			 
+      String     output;
+      FileWriter fw;
 
-		     
-		   }
-				
-		}// end of for loop
-
-
-		}catch (/* Unexpected */ Exception e) {
-		  e.printStackTrace(); 
-		}
-		
-	}
+      output = serializeDocument(doc);
+      try
+      {
+         fw = new FileWriter(xmlFilename);
+         fw.write(output);
+         fw.close();
+      }
+      catch (Exception e)
+      {
+         throw new ParserUtilsException(e);
+      }
+   }
  
- 
- 
-
-	public static String traverse(Node node) {
-	StringBuffer buf = new StringBuffer();
-	Node currentNode = node;
-
-	while (currentNode != null) {
-	  visit(currentNode, buf);
-
-	  // Move down to first child
-	  Node nextNode = currentNode.getFirstChild();
-	  if (nextNode != null) {
-		currentNode = nextNode;
-		continue;
-		}
-
-	  // No child nodes, so walk tree
-	  while (currentNode != null) {
-		revisit(currentNode, buf)  ;
-		// do end-of-node processing, if any
-
-		// Move to sibling if possible.
-		nextNode = currentNode.getNextSibling();
-		if (nextNode != null) {
-		  currentNode = nextNode;
-		  break;
-		  }
-
-	   // Move up
-	   if (currentNode == node)
-		 currentNode = null;
-	   else
-		 currentNode = currentNode.getParentNode();
-	   }
-	}
-
-	return buf.toString();
-  }                        
-
-  public static void visit(Node node, StringBuffer buf)
-  {
-	  int type = node.getNodeType();
-	  //Node.ELEMENT, Node.TEXT, Node.ATTRIBUTE
-	  switch (type)
-	  {
-		 case Node.ELEMENT_NODE:
-			buf.append("<");
-			buf.append(node.getNodeName());
-			processAttributes(node, buf);
-			buf.append(">");
-			break;
-
-		 case Node.TEXT_NODE:
-		 //?? Bug -- need to check here to escape <'s
-			buf.append(node.getNodeValue());
-			break;
-
-		 default:
-			break;
-	  }
-   }                                    
-
-   public static void processAttributes(Node elem, StringBuffer buf)
-   {
-	  NamedNodeMap attrs = elem.getAttributes();
-
-	  for (int i = 0; i < attrs.getLength(); i++)
-	  {
-		 Node attr = attrs.item(i);
-		 buf.append(" '");
-//       ?? Bug -- need to check here to espace single quotes
-		 buf.append(attr.getNodeValue());
-		 buf.append("'");
-	  }
-   }                                      
-
-   public static void revisit(Node node, StringBuffer buf)
-   {
-	  int type = node.getNodeType();
-	  switch (type)
-	  {
-		 case Node.ELEMENT_NODE:
-			buf.append("</");
-			buf.append(node.getNodeName());
-			buf.append(">");
-			break;
-
-		 default:
-			break;
-	  }
-   }                                         
+   /**
+    * Write a DOM Document to a String.
+    *
+    * @param doc The DOM Document.
+    *
+    * @return The XML string.
+    */
+   public String writeDocument(Document doc)
+      throws ParserUtilsException
+{
+   return serializeDocument(doc);
+}
    
-   
-   public Document openDocument(String xmlFilename) throws Exception
+   /**
+    * Open an XML file and create a DOM Document.
+    *
+    * @param xmlFilename The name of the XML file.
+    *
+    * @return An object that implements Document.
+    */
+   public Document openDocument(String xmlFilename)
+      throws ParserUtilsException
    {
    	// Get a JAXP parser factory object
-   
+      try
+      {
 		GetFileURL gfu = new GetFileURL();
 		javax.xml.parsers.DocumentBuilderFactory dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance();
 		// Tell the factory what kind of parser we want 
@@ -218,15 +135,27 @@ public Parser getSAXParser()
 	 return document;
 		   //System.out.println("gfu = " +gfu.getFileURL(xmlFilename));
 	    // Return the DOM tree
-	 
+   }
+   catch (Exception e)
+   {
+      throw new ParserUtilsException(e);
+   }
    
    
 }
 
-   public Document openDocument(java.io.InputStream InputStream) throws Exception {
-	 
-	 
-
+   /**
+    * Open an InputStream and create a DOM Document.
+    *
+    * @param inputStream The InputStream.
+    *
+    * @return An object that implements Document.
+    */
+   public Document openDocument(java.io.InputStream InputStream)
+      throws ParserUtilsException
+{
+   try
+   {
 		javax.xml.parsers.DocumentBuilderFactory dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance();
 		// Tell the factory what kind of parser we want 
 		dbf.setValidating(false);
@@ -258,39 +187,22 @@ public Parser getSAXParser()
 	 //System.out.println("gfu = " +gfu.getFileURL(xmlFilename));
 	 // Return the DOM tree
 	 return document;
+   }
+   catch (Exception e)
+   {
+      throw new ParserUtilsException(e);
+   }
 		 
 	 
 }
 
-   public String returnString(Document toConvert)throws Exception {
-	 
-
-	 // Write the DOM tree to a file.
-	  
-	    String output = null;
-	 	Element firstRoot = toConvert.getDocumentElement();
-		 NodeList nl = firstRoot.getChildNodes();
-		 for (int i = 0; i < nl.getLength(); i++) 
-		 {
-		  // Node n01 = nl.item(i);
-		  // String snode = n01.getNodeName();	
-	      // System.out.println(snode+"and the loop"+i);
-		 
-		 if(i == 0){
-		  		
-		 Node nchild = nl.item(i);
-		 Node n = nchild.getParentNode();
-		 output = traverse(n);
-		 
-		           }
-				
-		 }// end of for loop
-
-		 return output;
-
-}
-
-public Document createDocument() throws ParserUtilsException
+   /**
+    * Create an empty Document.
+    *
+    * @return The Document
+    */
+public Document createDocument()
+   throws ParserUtilsException
 {
   try
 	  {
@@ -307,7 +219,7 @@ public Document createDocument() throws ParserUtilsException
 	  }
 	  catch (Exception e)
 	  {
-		 throw new ParserUtilsException(e.getMessage());
+		 throw new ParserUtilsException(e);
 	  }
    }               
 }

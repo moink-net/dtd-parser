@@ -1,127 +1,45 @@
 // No copyright, no warranty; use as you will.
-// Written by Adam Flinton and Ronald Bourret, 2001
-
+// Written by Adam Flinton, 2001
+//
 // Version 1.1
 // Changes from version 1.01: New in 1.1
 
 package de.tudarmstadt.ito.xmldbms.jms;
 
-// No copyright, no warranty; use as you will.
-// Written by Adam Flinton and Ronald Bourret, 2001
-
-// Version 1.1
-// Changes from version 1.01: New in 1.1
-
 /**
- * Properties constants for KeyGenerator.
+ * Properties constants for JMSWrapper.
  *
  * @author Adam Flinton
- * @author Ronald Bourret
  * @version 1.1
- * @see KeyGeneratorHighLow
- * @see Transfer
- * @see ProcessProperties
  */
-
 public class JMSProps
 {
+    /** The JMS acknowledgement mode. */
+    public static String JMSACKMODE = "JMSAckMode";
 
+    /** The JMS context. */
+    public static String JMSCONTEXT = "JMSContext";
 
+    /** A sample JMS message. */
+    public static String JMSMESSAGE = "JMSMessage";
 
+    /** JMS password. Required if your JMS server is set up to use
+        user names and passwords. */
+    public static String JMSPASSWORD = "JMSPassword";
 
+    /** The provider URL of your JMS server. */
+    public static String JMSPROVIDERURL = "JMSProviderURL";
 
+    /** Whether to print debugging messages. Yes or No. */
+    public static String JMSSILENT = "JMSSilent";
 
+    /** The name of the JMS TopicConnectionFactory to use. */
+    public static String JMSTCF = "JMSTCF";
 
+    /** The JMS Topic to use. */
+    public static String JMSTOPIC = "JMSTopic";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   // ************************************************************************
-   // Constructor
-   // ************************************************************************
-
-   public JMSProps()
-   {
-	  super();
-   }               
-
-	public static String JMSACKMODE = "JMSAckMode";
-/** JMS Info */	
-
-	public static String JMSCONTEXT = "JMSContext";
-	public static String JMSMESSAGE = "JMSMessage";
-	public static String JMSPASSWORD = "JMSPassword";
-	public static String JMSPROVIDERURL = "JMSProviderURL";
-	public static String JMSSILENT = "JMSSilent";
-	public static String JMSTCF = "JMSTCF";
-	public static String JMSTESTNUM = "JMSTestNum";
-	public static String JMSTOPIC = "JMSTopic";
-	public static String JMSUSER = "JMSUser";
+    /** JMS user name. Needed if your JMS server is set up to use
+        user names and passwords. */
+    public static String JMSUSER = "JMSUser";
 }

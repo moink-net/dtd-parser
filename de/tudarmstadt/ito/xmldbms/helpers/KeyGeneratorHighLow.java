@@ -12,7 +12,7 @@ package de.tudarmstadt.ito.xmldbms.helpers;
 
 import de.tudarmstadt.ito.xmldbms.KeyGenerator;
 import de.tudarmstadt.ito.xmldbms.KeyException;
-import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
+import de.tudarmstadt.ito.xmldbms.db.*;
 
 import java.lang.ClassNotFoundException;
 import java.sql.Connection;
@@ -23,34 +23,44 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import de.tudarmstadt.ito.xmldbms.db.*;
-
 /**
  * Implementation of KeyGenerator using a high-low scheme.
  *
- * <P>This key generator assumes that there is a table named XMLDBMSKey
- * in the database with an INTEGER column named HighKey. It constructs keys
+ * <p>This key generator assumes that there is a table in the database
+ * with an INTEGER column. The name of the table and column can be
+ * specified as part of the initialization process. If no names are given,
+ * the table name is assumed to be XMLDBMSKey and the column name is
+ * assumed to be HighKey.</p>
+ *
+ * <p>KeyGeneratorHighLow constructs keys
  * from a high key value and a low key value: the high key value forms the
  * upper 24 bits of the key and the low key value forms the lower 8 bits of
- * the key. The high key value is retrieved from the XMLDBMSKey table, which
+ * the key. The high key value is retrieved from the high key table, which
  * is then incremented by 1. The low key value is initialized to 0 and
  * incremented by 1 each time generateKey() is called; when it reaches 255,
  * a new high key value is retrieved. Thus, KeyGeneratorHighLow can generate
- * 256 unique key values with a single database access.</P>
+ * 256 unique key values with a single database access.</p>
  *
- * <P>For example, the following code instantiates KeyGeneratorHighLow and
- * passes it to DOMToDBMS, which uses it to generate keys.</P>
- * <PRE>
+ * <p>For example, the following code instantiates KeyGeneratorHighLow and
+ * passes it to DOMToDBMS, which uses it to generate keys.</p>
+ * <pre>
  *    // Instantiate KeyGeneratorHighLow and initialize it with a Connection.
  *    KeyGenerator keyGenerator = new KeyGeneratorHighLow();
- *    keyGenerator.initialize(conn);<BR />
+ *    Properties p = new Properties();
+ *    p.put(HighLowProps.HIGHLOWDRIVER, "sun.jdbc.odbc.JdbcOdbcDriver");
+ *    p.put(HighLowProps.HIGHLOWURL, "jdbc:odbc:xmldbms");
+ *    p.put(HighLowProps.HIGHLOWUSER, "ron");
+ *    p.put(HighLowProps.HIGHLOWPASSWORD, "ronpwd");
+ *    keyGenerator.initialize(p);<br />
  *
  *    // Pass the key generator to DOMToDBMS.
  *    domToDBMS = new DOMToDBMS(map, keyGenerator, null);
- * </PRE>
+ * </pre>
  *
- * @author Ronald Bourret, Technical University of Darmstadt
+ * @author Ronald Bourret
+ * @author Adam Flinton
  * @version 1.1
+ * @see HighLowProps
  */
 
 public class KeyGeneratorHighLow implements KeyGenerator
@@ -61,7 +71,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
 
    private int        highKeyValue = -1, lowKeyValue = 0xFF;
    private Connection conn = null;
-   private String     url, user, password,table,schema,cat,sep,fulltable,catsep;
+   private String     queryString, updateString;
 
    //**************************************************************************
    // Constructors
@@ -84,16 +94,33 @@ public class KeyGeneratorHighLow implements KeyGenerator
 	*
 	* <p>Applications must call this method before passing a KeyGeneratorHighLow
 	* object to DOMToDBMS. The following properties are accepted by this
-	* method:</p>
+	* method for JDBC 1.0 drivers:</p>
 	*
 	* <ul>
-	* <li>Driver: Name of the JDBC driver class to use. Required.</li>
-	* <li>URL: URL of the database containing the XMLDBMSKey table. Required.</li>
-	* <li>User: Database user name. Optional.</li>
-	* <li>Password: Database password. Optional.</li>
+	* <li>HighLowDriver: Name of the JDBC driver class to use. Required.</li>
+	* <li>HighLowURL: URL of the database containing the high key table. Required.</li>
 	* </ul>
 	*
+    	* <p>The following properties are accepted for JDBC 2.0 drivers:</p>
+    	*
+    	* <ul>
+    	* <li>HighLowDBInitialContext: Name of the JNDI Context in which to create
+      *     the JDBC 2.0 DataSource. Required.</li>
+    	* <li>HighLowDataSource: Logical name of the database containing the
+      *     high key table. Required.</li>
+    	* </ul>
+	*
+    	* <p>The following properties are accepted for all drivers:</p>
+	*
+	* <ul>
+	* <li>HighLowUser: Database user name. Depends on database.</li>
+	* <li>HighLowPassword: Database password. Depends on database.</li>
+      * <li>HighLowTable: Name of the high key table. Optional.</li>
+      * <li>HighLowColumn: Name of the high key table. Optional.</li>
+	* </ul>
+    	*
 	* @param props A properties object containing the above properties.
+	*
 	* @exception KeyException Thrown if an error occurred initializing the 
 	*  database. Usually, this will be an error setting the auto-commit or
 	*  transaction isolation level.
@@ -111,10 +138,10 @@ public class KeyGeneratorHighLow implements KeyGenerator
 	 {
  
 	   setDatabaseProperties(props);
-	   
-	   this.conn = dbConn.getConn();
-//         conn.setAutoCommit(false);
 	   dbm = conn.getMetaData();
+	   setDBNames(props, dbm);
+	   
+//         conn.setAutoCommit(false);
 	   if (dbm.supportsTransactionIsolationLevel(
 						   Connection.TRANSACTION_SERIALIZABLE))
 	   {
@@ -139,9 +166,6 @@ public class KeyGeneratorHighLow implements KeyGenerator
 		 conn.setTransactionIsolation(
 						   Connection.TRANSACTION_READ_UNCOMMITTED);
 	   }
-
-	   
-		setName(props,dbm);
 	   
 	   getHighKey();
 	 }
@@ -158,7 +182,7 @@ public class KeyGeneratorHighLow implements KeyGenerator
 	* do not need to call this method.</p>
 	*
 	* @return The key as an array of Objects.
-	* @exception KeyException Thrown if the XMLDBMSKey table is not initialized
+	* @exception KeyException Thrown if the high key table is not initialized
 	*                         or if a SQLException occurs.
 	*/
 
@@ -222,14 +246,14 @@ public class KeyGeneratorHighLow implements KeyGenerator
 
 	 // Increment the high key value.
 
-	 update.executeUpdate("UPDATE" +fulltable +" SET HighKey = HighKey + 1");
+	 update.executeUpdate(updateString);
 
 	 // Get the new high key value.
 
-	 rs = select.executeQuery("SELECT HighKey FROM" +fulltable);
+	 rs = select.executeQuery(queryString);
 	 if (!rs.next())
 	 {
-	   throw new KeyException("XMLDBMSKey table not initialized. A single row with a value of 0 in the HighKey column is needed.");
+	   throw new KeyException("High key table (XMLDBMSKey) not initialized. A single row with a value of 0 in the high key column (HighKey) is needed.");
 	 }
 	 highKeyValue = rs.getInt(1);
 
@@ -253,177 +277,131 @@ public class KeyGeneratorHighLow implements KeyGenerator
 	 conn.commit();
    }               
 
-   // ************************************************************************
-   // Public methods
-   // ************************************************************************
-
-   /**
-	* Set the properties used to connect to the database.
-	*
-	* <p>This method must be called before transferring data between
-	* an XML document and a database. The following properties are
-	* accepted:</p>
-	*
-	* <ul>
-	* <li>Driver: Name of the JDBC driver class to use. Required.</li>
-	* <li>URL: URL of the database containing the XMLDBMSKey table. Required.</li>
-	* <li>User: Database user name. Optional.</li>
-	* <li>Password: Database password. Optional.</li>
-	* </ul>
-	*
-	* @param props A Properties object containing the above properties.
-	* Changed by Adam Flinton 08/04/2001. Now the method evaluates the JDBC level to work out
-	* which JDBC level to use (presently 1 or 2). Level 2 requires JNDI & Javax.sql so to compensate
-	* for the possibility of level 1 useage instantiation is used.
-	* If & when JDBC level 3 comes along shoving it in as well should be easy.
-	*/
-
-   public void setDatabaseProperties(Properties props)
+   private void setDatabaseProperties(Properties props)
 	 throws ClassNotFoundException, IllegalAccessException, InstantiationException, java.lang.Exception
 
    {
+      String value;
+      DbConn dbConn;
 
 	Properties props1 = new Properties();
 	props1 = props;
 
-		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWDRIVER) != null) {
-		props1.put(DBProps.DRIVER, props.getProperty(KeyGeneratorProps.HIGHLOWDRIVER));
-		}
-		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWURL) != null) {
-		props1.put(DBProps.URL, props.getProperty(KeyGeneratorProps.HIGHLOWURL));
-		}
-		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWUSER) != null) {
-		props1.put(DBProps.USER, props.getProperty(KeyGeneratorProps.HIGHLOWUSER));
-		}		
-		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWPASSWORD) != null) {
-		props1.put(DBProps.PASSWORD, props.getProperty(KeyGeneratorProps.HIGHLOWPASSWORD));
-		}
-		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWJDBCLEVEL) != null) {
-		props1.put(DBProps.JDBCLEVEL, props.getProperty(KeyGeneratorProps.HIGHLOWJDBCLEVEL));
-		}
-		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWDATASOURCE) != null) {
-		props1.put(DBProps.DATASOURCE, props.getProperty(KeyGeneratorProps.HIGHLOWDATASOURCE));
-		}		
-		if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWDBINITIALCONTEXT) != null) {
-		props1.put(DBProps.DBINITIALCONTEXT, props.getProperty(KeyGeneratorProps.HIGHLOWDBINITIALCONTEXT));
-		}		
-		
-		 
-	   int i = 0;
+      value = props.getProperty(HighLowProps.HIGHLOWDRIVER);
+	if (value != null) {
+	props1.put(DBProps.DRIVER, value);
+	}
+
+      value = props.getProperty(HighLowProps.HIGHLOWURL);
+	if (value != null) {
+	props1.put(DBProps.URL, value);
+	}
+
+      value = props.getProperty(HighLowProps.HIGHLOWUSER);
+	if (value != null) {
+	props1.put(DBProps.USER, value);
+	}		
+
+      value = props.getProperty(HighLowProps.HIGHLOWPASSWORD);
+	if (value != null) {
+	props1.put(DBProps.PASSWORD, value);
+	}
+
+      value = props.getProperty(HighLowProps.HIGHLOWJDBCLEVEL);
+	if (value != null) {
+	props1.put(DBProps.JDBCLEVEL, value);
+	}
+
+      value = props.getProperty(HighLowProps.HIGHLOWDATASOURCE);
+	if (value != null) {
+	props1.put(DBProps.DATASOURCE, value);
+	}		
+
+      value = props.getProperty(HighLowProps.HIGHLOWDBINITIALCONTEXT);
+	if (value != null) {
+	props1.put(DBProps.DBINITIALCONTEXT, value);
+	}
+	 
+	int i = 1;
 	String JDBC = props1.getProperty(DBProps.JDBCLEVEL);
-	if (JDBC == null) {i = 1; }
-
-	else {
-	try {
-		i = Integer.parseInt(JDBC.trim());
-	}
-	catch (NumberFormatException nfe)
-	{ System.out.println ("JDBC Level MUST be a number " + nfe.getMessage());
-		//For safety try resorting to JDBC level 1
-		i = 1;	
-	}
-
+	if (JDBC != null) {
+		try {
+			i = Integer.parseInt(JDBC.trim());
+		}
+		catch (NumberFormatException nfe)
+		{
+         		throw new IllegalArgumentException("Invalid value for JDBCLevel property: " + JDBC);
+		}
 	}	
+
 	switch (i) {
 		case 1: dbConn = (DbConn)instantiateClass("de.tudarmstadt.ito.xmldbms.db.DbConn1"); break;
 		case 2: dbConn = (DbConn)instantiateClass("de.tudarmstadt.ito.xmldbms.db.DbConn2"); break;
+            default: throw new IllegalArgumentException("Invalid value for JDBCLevel property: " + JDBC);
 	}
 
-	
 	dbConn.setDB(props1);
-	
+	this.conn = dbConn.getConn();
    }                                                                                                   
-
-   private DbConn			dbConn;
 
    private Object instantiateClass(String className)
 	  throws ClassNotFoundException, IllegalAccessException, InstantiationException
    {
-	 if (className == null) return null;
 	 return Class.forName(className).newInstance();
    }            
 
-/**
- * Insert the method's description here.
- * Creation date: (19/04/01 13:56:08)
- */
-public void setName(Properties props) {
+   private void setDBNames(Properties props, DatabaseMetaData dbm) throws java.sql.SQLException
+   {
+      String value, quote, table, schemaSeparator, schema, catalog, column;
+
+	// Initialize the database names
 
 	table = "XMLDBMSKey";
-	sep = ".";
+      column = "HighKey";
+	schemaSeparator = ".";
 	schema = null;
-	cat = null;
+	catalog = null;
 
-	
-	// Set the Table/Schema/Catalog names if different
-	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWTABLE) != null)
-	{table = (String)props.getProperty(KeyGeneratorProps.HIGHLOWTABLE);}
-	
-	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMA) != null)
-	{schema = (String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMA);}
-	
-	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWCATALOG) != null)
-	{cat = (String)props.getProperty(KeyGeneratorProps.HIGHLOWCATALOG);}
+	// Set the Column/Table/Schema/Catalog names if different
 
-	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMASEPARATOR) != null)
-	{sep = (String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMASEPARATOR);}	
+      value = props.getProperty(HighLowProps.HIGHLOWCOLUMN);
+      if (value != null) {column = value;}
 
-	
+      value = props.getProperty(HighLowProps.HIGHLOWTABLE);
+      if (value != null) {table = value;}
 
-	fulltable = table; 
+      value = props.getProperty(HighLowProps.HIGHLOWSCHEMA);
+      if (value != null) {schema = value;}
+
+      value = props.getProperty(HighLowProps.HIGHLOWCATALOG);
+      if (value != null) {catalog = value;}
+
+      value = props.getProperty(HighLowProps.HIGHLOWSCHEMASEPARATOR);
+      if (value != null) {schemaSeparator = value;}
+
+      // Get the identifier quote character
+
+      quote = dbm.getIdentifierQuoteString();
+
+      // Build the qualified table and column names
+
+      column = quote + column + quote;
+	table = quote + table + quote;
 		
 	if (schema != null)
-	{fulltable = schema + sep +fulltable;}
+	{table = quote + schema + quote + schemaSeparator + table;}
 
-	if (cat != null)
-	{fulltable = cat + sep +fulltable;}	
-
-	
-	
-	}
-
-/**
- * Insert the method's description here.
- * Creation date: (19/04/01 13:56:08)
- */
-public void setName(Properties props, DatabaseMetaData dbm) throws java.sql.SQLException {
-
-	table = "XMLDBMSKey";
-	sep = ".";
-	schema = null;
-	cat = null;
-
-	
-	// Set the Table/Schema/Catalog names if different
-	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWTABLE) != null)
-	{table = (String)props.getProperty(KeyGeneratorProps.HIGHLOWTABLE);}
-	
-	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMA) != null)
-	{schema = (String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMA);}
-	
-	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWCATALOG) != null)
-	{cat = (String)props.getProperty(KeyGeneratorProps.HIGHLOWCATALOG);}
-
-	if ((String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMASEPARATOR) != null)
-	{sep = (String)props.getProperty(KeyGeneratorProps.HIGHLOWSCHEMASEPARATOR);}	
-	
-
-	fulltable = table; 
-		
-	if (schema != null)
-	{fulltable = schema + sep +fulltable;}
-
-	if (cat != null)
-	{	if (dbm.isCatalogAtStart() == true)
-		{fulltable = cat + dbm.getCatalogSeparator() +fulltable;
-		}
+	if (catalog != null)
+	{
+ 		if (dbm.isCatalogAtStart() == true)
+		{table = quote + catalog + quote + dbm.getCatalogSeparator() + table;}
 		else
-		{ fulltable = fulltable + dbm.getCatalogSeparator() + cat;}
-		
-		
-	}	
-
-	
-	
+		{table = table + dbm.getCatalogSeparator() + quote + catalog + quote;}
 	}
+
+      // Build the SELECT and UPDATE strings
+
+      queryString = "SELECT " + column + " FROM " + table;
+      updateString = "UPDATE " + table + " SET " + column + " = " + column + " + 1";
+   }
 }

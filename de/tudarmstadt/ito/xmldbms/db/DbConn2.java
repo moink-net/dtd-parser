@@ -1,56 +1,71 @@
+// No copyright, no warranty; use as you will.
+// Written by Adam Flinton, 2001
+//
+// Version 1.1
+// Changes from version 1.01: New in 1.1
+
 package de.tudarmstadt.ito.xmldbms.db;
 
-/**
- * Insert the type's description here.
- * Creation date: (08/04/01 20:46:48)
- * @author: Adam Flinton
- */
-
-import de.tudarmstadt.ito.xmldbms.tools.XMLDBMSProps;
-import DbConn;
-
 import java.util.Hashtable;
-
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import javax.sql.*;
 import javax.naming.*;
- 
-public class DbConn2 implements DbConn {
-	private String user,password,InitContext,Data_Source;
-	private DataSource ds;
+
 /**
- * Insert the method's description here.
- * Creation date: (08/04/01 22:35:42)
- * @return java.sql.Connection
+ * An implementation of the DbConn interface for JDBC 2.0.
+ *
+ * @author Adam Flinton
+ * @version 1.1
  */
-public java.sql.Connection getConn()  throws java.sql.SQLException {
+public class DbConn2 implements DbConn
+{
+    private String user, password, InitContext, Data_Source;
+    private DataSource ds;
 
-	Connection conn = ds.getConnection(user,password);
-	return conn;
-}
-/**
- * Insert the method's description here.
- * Creation date: (08/04/01 21:14:17)
- * @param prop java.util.Properties
- */
-public void setDB(java.util.Properties props) throws javax.naming.NamingException {
+    /**
+     * Get a JDBC Connection.
+     *
+     * <p>setDB must be called before this method is called.</p>
+     *
+     * @return The Connection.
+     */
+    public java.sql.Connection getConn() throws java.sql.SQLException
+    {
+        Connection conn = ds.getConnection(user, password);
+        return conn;
+    }
 
-	 InitContext = props.getProperty(DBProps.DBINITIALCONTEXT);
-	 Data_Source = props.getProperty(DBProps.DATASOURCE);
-	 user = props.getProperty(DBProps.USER);
-	 password = props.getProperty(DBProps.PASSWORD);
-		 
-	if (InitContext == null) {System.out.println("Initial Context Not Set");}
-
-	Hashtable env = new Hashtable();
-	env.put(Context.INITIAL_CONTEXT_FACTORY, InitContext.trim());
-
-	Context ctx = new InitialContext(env);
-	ds = (DataSource)ctx.lookup(Data_Source);
-
-	
-	
-	}
+    /**
+     * Specify the properties needed to get a connection.
+     *
+    	* <p>This method must be called before calling getConn().
+    	* The following properties are accepted:</p>
+    	*
+    	* <ul>
+    	* <li>DBInitialContext: Name of the JNDI Context in which to create
+      *     the JDBC 2.0 DataSource. Required.</li>
+    	* <li>DataSource: Logical name of the database. Required.</li>
+    	* <li>User: Database user name. Depends on database.</li>
+    	* <li>Password: Database password. Depends on database.</li>
+    	* </ul>
+      *
+    	* @param props A Properties object containing the above properties.
+     */
+    public void setDB(java.util.Properties props)
+        throws javax.naming.NamingException
+    {
+        InitContext = props.getProperty(DBProps.DBINITIALCONTEXT);
+        Data_Source = props.getProperty(DBProps.DATASOURCE);
+        user = props.getProperty(DBProps.USER);
+        password = props.getProperty(DBProps.PASSWORD);
+        if (InitContext == null)
+            {
+            throw new IllegalArgumentException("DBInitialContext property not set.");
+        }
+        Hashtable env = new Hashtable();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, InitContext.trim());
+        Context ctx = new InitialContext(env);
+        ds = (DataSource) ctx.lookup(Data_Source);
+    }
 }
