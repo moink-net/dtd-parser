@@ -1,0 +1,120 @@
+<?xml version='1.0' ?>
+<!--
+     This sample tests a more complex set of inline elements. It maps
+     the following tree structure to two tables. tn indicates a table
+     element, cn indicates a column element, and in indicates an
+     inlined element.
+
+                          t1
+                           |
+                          i1
+                         /  \
+                        i2  i3___
+                       /   /  \  \
+                      c1  i4  i5  c2
+                         /   /  \
+                        t2  c3  c4 (PCDATA)
+                       /  \
+                      i6  c5
+                     /  \
+                    c6  i7
+                         |
+                        c7
+-->     
+
+<!DOCTYPE XMLToDBMS SYSTEM "xmldbms2.dtd" >
+
+<XMLToDBMS Version="2.0" xmlns="http://www.xmlmiddleware.org/xmldbms/v2">
+   <Databases>
+      <Database Name="Default" QuoteIdentifiers="Yes">
+         <Catalog>
+            <Schema>
+               <Table Name="t1">
+                  <Column Name="c1" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="c2" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="c3" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="c4" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <PrimaryKey>
+                     <UseColumn Name="c1"/>
+                  </PrimaryKey>
+               </Table>
+               <Table Name="t2">
+                  <Column Name="c5" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="c6" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <Column Name="c7" DataType="VARCHAR" Length="30" Nullable="No"/>
+                  <PrimaryKey>
+                     <UseColumn Name="c5"/>
+                  </PrimaryKey>
+                  <ForeignKey Name="t1_fk">
+                     <UseColumn Name="c6"/>
+                  </ForeignKey>
+               </Table>
+            </Schema>
+         </Catalog>
+      </Database>
+   </Databases>
+   <Maps>
+      <ClassMap>
+         <ElementType Name="t1"/>
+         <ToClassTable Name="t1"/>
+         <InlineMap>
+            <ElementType Name="i1"/>
+            <InlineMap>
+               <ElementType Name="i2"/>
+               <PropertyMap>
+                  <ElementType Name="c1"/>
+                  <ToColumn Name="c1"/>
+               </PropertyMap>
+            </InlineMap>
+            <InlineMap>
+               <ElementType Name="i3"/>
+               <PropertyMap>
+                  <ElementType Name="c2"/>
+                  <ToColumn Name="c2"/>
+               </PropertyMap>
+               <InlineMap>
+                  <ElementType Name="i4"/>
+                  <RelatedClass KeyInParentTable="Unique">
+                     <ElementType Name="t2"/>
+                     <UseUniqueKey Name="Primary Key"/>
+                     <UseForeignKey Name="t1_fk"/>
+                  </RelatedClass>
+               </InlineMap>
+               <InlineMap>
+                  <ElementType Name="i5"/>
+                  <PropertyMap>
+                     <ElementType Name="c3"/>
+                     <ToColumn Name="c3"/>
+                  </PropertyMap>
+                  <PropertyMap>
+                     <PCDATA/>
+                     <ToColumn Name="c4"/>
+                  </PropertyMap>
+               </InlineMap>
+            </InlineMap>
+         </InlineMap>
+      </ClassMap>
+      <ClassMap>
+         <ElementType Name="t2"/>
+         <ToClassTable Name="t2"/>
+         <PropertyMap>
+            <ElementType Name="c5"/>
+            <ToColumn Name="c5"/>
+         </PropertyMap>
+         <InlineMap>
+            <ElementType Name="i6"/>
+            <PropertyMap>
+               <ElementType Name="c6"/>
+               <ToColumn Name="c6"/>
+            </PropertyMap>
+            <InlineMap>
+               <ElementType Name="i7"/>
+               <PropertyMap>
+                  <ElementType Name="c7"/>
+                  <ToColumn Name="c7"/>
+               </PropertyMap>
+            </InlineMap>
+         </InlineMap>
+      </ClassMap>
+   </Maps>
+</XMLToDBMS>
