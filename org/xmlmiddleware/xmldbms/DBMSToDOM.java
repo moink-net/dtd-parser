@@ -47,38 +47,43 @@ import java.util.Vector;
 /**
  * Transfers data from the database to a DOM tree.
  *
- * <P>DBMSToDOM transfers data from the database to a DOM tree according
+ * <p>DBMSToDOM transfers data from the database to a DOM tree according
  * to a particular Map and FilterSet. The map provides the general structural
  * mapping from the database to XML; the filters specify exactly which data
  * are to be transferred. In addition, DBMSToDOM can transfer data from
  * application-constructed result sets to XML.</p>
  *
- * <p>For example, the following code transfers data 
-
- * <P>For example, the following code transfers data for sales order number 123
- * from the Sales table to a DOM tree using Oracle's DOM implementation:</P>
+ * <p>For example, the following code transfers data according to the map
+ * document orders.map and the filter document ordersbynumber.ftr, which
+ * uses sales order number as a parameter:</p>
  *
  * <pre>
  *    // Create the Map object with a user-defined function.
+ *
  *    map = createMap("orders.map");
- *    <br />
+ *
  *    // Create the FilterSet object with a user-defined function.
+ *
  *    filterSet = createFilterSet(map, "ordersbynumber.ftr");
- *    <br />
+ *
  *    // Create a new DBMSToDOM object that uses the Xerces parser.
+ *
  *    dbmsToDOM = new DBMSToDOM(new ParserUtilsXerces());
- *    <br />
+ *
  *    // Create a data source and data handler for our database, then
  *    // bundle these into a TransferInfo object.
+ *
  *    ds = new JDBC1DataSource("sun.jdbc.odbc.JdbcOdbcDriver", "jdbc:odbc:xmldbms");
  *    handler = new GenericHandler(ds, null, null);
  *    ti = new TransferInfo(map, null, handler);
- *    <br />
+ *
  *    // Build the parameters hashtable.
+ *
  *    params = new Hashtable();
  *    params.put("$Number", "123");
- *    <br />
+ *
  *    // Call retrieveDocument to transfer the data.
+ *
  *    doc = dbmsToDOM.retrieveDocument(ti, filterSet, params, null);
  * </pre>
  *
@@ -568,7 +573,7 @@ public class DBMSToDOM
       orderInfo = relatedClassTableMap.getOrderInfo();
 
       rs = dataHandler.select(childTable, childKey, keyValue, where, columns, params, orderInfo);
-      processClassResultSet(classNode,
+      processClassResultSet(parentNode,
                             rs,
                             relatedClassTableMap.getElementTypeName(),
                             orderInfo,

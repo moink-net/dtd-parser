@@ -98,7 +98,7 @@ import java.util.*;
  *
  * <li><p>Configuration properties specify how the underlying data transfer
  *     classes are to function. They are Encoding, SystemID, PublicID,
- *     CommitMode, StopOneError, ReturnFilter, KeyGeneratorName, and
+ *     CommitMode, StopOnError, ReturnFilter, KeyGeneratorName, and
  *     KeyGeneratorClass. See below for details.</p></li>
  * </ul>
  *
@@ -1028,7 +1028,7 @@ public class Transfer extends PropertyProcessor
       // values if for any configuration properties not set.
 
       domToDBMS.setCommitMode(commitMode);
-      domToDBMS.setDBErrorHandling(stopOnError);
+      domToDBMS.stopOnException(stopOnError);
       domToDBMS.setFilterSetReturned(returnFilterSet);
    }
 

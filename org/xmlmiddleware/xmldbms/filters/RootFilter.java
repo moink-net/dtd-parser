@@ -95,4 +95,26 @@ public class RootFilter extends FilterBase
       rootFilterConditions = new FilterConditions(classTableMap.getTable());
       return rootFilterConditions;
    }
+
+   /**
+    * Create the root filter conditions.
+    *
+    * <p>If a root filter conditions already exist, they are overwritten.</p>
+    *
+    * @param table The root table.
+    *
+    * @return The root filter conditions.
+    * @exception IllegalArgumentException Thrown if the table is not mapped as a class table.
+    */
+   public FilterConditions createRootFilterConditions(Table table)
+   {
+      ClassTableMap    classTableMap;
+
+      classTableMap = map.getClassTableMap(table);
+      if (classTableMap == null)
+         throw new IllegalArgumentException("Table not mapped as a class table: " + table.getUniversalName());
+
+      rootFilterConditions = new FilterConditions(table);
+      return rootFilterConditions;
+   }
 }

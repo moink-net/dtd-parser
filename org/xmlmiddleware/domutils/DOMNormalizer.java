@@ -352,6 +352,8 @@ public class DOMNormalizer
     * @param childrenOnly Whether to serialize the node itself or only its
     *    children. For example, for an element node, this dictates whether a
     *    tag for the element itself is included in the returned value.
+    * @param escapeMarkup Whether to replace '&lt;' and '&amp;' with entity references
+    *    (&amp;lt;, &amp;amp;) or serialize them literally (&lt;, &amp;).
     * @return The serialized node. If the node is a comment, document type,
     *    entity, notation, or processing instruction node, or if the node is
     *    a text or CDATA node and childrenOnly is true, null is returned.

@@ -150,7 +150,7 @@ public class Action
             break;
 
          default:
-            throw new IllegalArgumentException("action must be one of NONE, INSERT, SOFTINSERT, UPDATE, UPDATEORINSERT, DELETE, or SOFTDELETE.");
+            throw new IllegalArgumentException("Action must be one of NONE, INSERT, SOFTINSERT, UPDATE, UPDATEORINSERT, DELETE, or SOFTDELETE.");
       }
 
       if (action != UPDATE)
@@ -159,16 +159,31 @@ public class Action
       }
    }
 
+   /**
+    * Get the names of child elements of the class element type to be updated.
+    *
+    * @return An Enumeration of XMLNames
+    */
    public final Enumeration getUpdateElementTypeNames()
    {
       return updateElements.keys();
    }
 
+   /**
+    * Get the names of attributes of the class element type to be updated.
+    *
+    * @return An Enumeration of XMLNames
+    */
    public final Enumeration getUpdateAttributeNames()
    {
       return updateAttrs.keys();
    }
 
+   /**
+    * Whether PCDATA is to be updated for the class element type.
+    *
+    * @return Whether PCDATA is updated
+    */
    public final boolean isPCDATAUpdated()
    {
       return (pcdataMap != null);
@@ -209,11 +224,24 @@ public class Action
       return updatePropMaps;
    }
 
+   /**
+    * Add a property to the update list.
+    *
+    * @param uri URI of the property. Null for PCDATA.
+    * @param localName Local name of the property. Null for PCDATA.
+    * @param type PropertyMap.ELEMENTTYPE, .ATTRIBUTE, or .PCDATA
+    */
    public void setUpdateProperty(String uri, String localName, int type)
    {
       setUpdateProperty(XMLName.create(uri, localName), type);
    }
 
+   /**
+    * Add a property to the update list.
+    *
+    * @param propName XMLName of the property. Null for PCDATA.
+    * @param type PropertyMap.ELEMENTTYPE, .ATTRIBUTE, or .PCDATA
+    */
    public void setUpdateProperty(XMLName propName, int type)
    {
       Object o;
@@ -255,14 +283,30 @@ public class Action
       updatePropMaps = null;
    }
 
+   /**
+    * Remove a property from the update list.
+    *
+    * @param uri URI of the property. Null for PCDATA.
+    * @param localName Local name of the property. Null for PCDATA.
+    * @param type PropertyMap.ELEMENTTYPE, .ATTRIBUTE, or .PCDATA
+    */
    public void removeUpdateProperty(String uri, String localName, int type)
    {
       removeUpdateProperty(XMLName.create(uri, localName), type);
    }
 
+   /**
+    * Remove a property from the update list.
+    *
+    * @param propName XMLName of the property. Null for PCDATA.
+    * @param type PropertyMap.ELEMENTTYPE, .ATTRIBUTE, or .PCDATA
+    */
    public void removeUpdateProperty(XMLName propName, int type)
    {
       Object o;
+
+      if (classMap == null)
+         throw new IllegalStateException("Cannot remove update properties for the default action.");
 
       switch (type)
       {
@@ -290,6 +334,9 @@ public class Action
       updatePropMaps = null;
    }
 
+   /**
+    * Remove all properties from the update list.
+    */
    public void removeAllUpdateProperties()
    {
       updateElements.clear();

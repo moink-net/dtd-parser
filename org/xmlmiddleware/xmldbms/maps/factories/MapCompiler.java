@@ -1538,12 +1538,13 @@ public class MapCompiler
    {
       String hashName;
 
-      // Get the property table and the location of the unique key. We will
-      // set the property table in processUseForeignKey, since we will then
-      // have all the necessary information.
+      // Get the property table. We will set the property table in
+      // processUseForeignKey, since we will then have all the necessary information.
+      // Note that the unique key is always in the parent (class) table.
 
       propertyTable = getTable(attrs);
-      parentKeyIsUnique = getParentKeyIsUnique(attrs, MapConst.ATTR_KEYINPARENTTABLE);
+      parentKeyIsUnique = true;
+//      parentKeyIsUnique = getParentKeyIsUnique(attrs, MapConst.ATTR_KEYINPARENTTABLE);
 
       // Check that the table is not already mapped and add it to the list of mapped tables.
 
