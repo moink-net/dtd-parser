@@ -24,20 +24,13 @@
 
 package org.xmlmiddleware.xmldbms.maps;
 
-import org.xmlmiddleware.conversions.StringFormatter;
-import org.xmlmiddleware.conversions.helpers.Base64Formatter;
-import org.xmlmiddleware.conversions.helpers.BooleanFormatter;
-import org.xmlmiddleware.conversions.helpers.CharFormatter;
-import org.xmlmiddleware.conversions.helpers.DateFormatter;
-import org.xmlmiddleware.conversions.helpers.NumberFormatter;
-import org.xmlmiddleware.db.JDBCTypes;
-import org.xmlmiddleware.utils.XMLName;
+import org.xmlmiddleware.conversions.formatters.*;
+import org.xmlmiddleware.db.*;
+import org.xmlmiddleware.xmlutils.*;
 
-import java.sql.Types;
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.sql.*;
+import java.text.*;
+import java.util.*;
 
 /**
  * Describes how an XML document is mapped to a database and vice versa;
@@ -45,13 +38,13 @@ import java.util.Hashtable;
  *
  * <h3>For people writing XML-DBMS applications</h3>
  *
- * <p>Map objects describe how XML documents are mapped to databases and
+ * <p>XMLDBMSMap objects describe how XML documents are mapped to databases and
  * vice versa. You can think of them as compiled versions of map documents,
  * although they can be created from other sources as well, such as a map
- * factory that creates a Map object from a DTD.</p>
+ * factory that creates an XMLDBMSMap object from a DTD.</p>
  *
- * <p>Applications that use XML-DBMS to transfer data treat Map objects as
- * opaque objects. That is, they call a map factory to create a Map object,
+ * <p>Applications that use XML-DBMS to transfer data treat XMLDBMSMap objects as
+ * opaque objects. That is, they call a map factory to create an XMLDBMSMap object,
  * then pass it to a data transfer class such as DOMToDBMS or DBMSToDOM,
  * often without calling any methods on it.</p>
  *
@@ -68,17 +61,16 @@ import java.util.Hashtable;
  *    // and SAX parser.
  *    factory = new MapFactory_MapDocument(parser);<br />
  *
- *    // Create a Map from sales.map.
+ *    // Create an XMLDBMSMap from sales.map.
  *    map = factory.createMap(new InputSource(new FileReader("sales.map")));
  * </pre>
  *
  * <h3>For people writing map factories and other internal XML-DBMS code</h3>
  *
- * <p>Map objects are actually a graph of related objects. This graph can be fairly
+ * <p>XMLDBMSMap objects are actually a graph of related objects. This graph can be fairly
  * complex and it is a good idea to familiarize yourself with all map objects before
- * trying to use them. (With a capital M, Map object refers to an object of the Map
- * class. With a lower case m, map object refers to any of the objects in the graph,
- * such as a Map, a ClassMap, or a ColumnMap.) One way to understand the graph is to
+ * trying to use them. (With a lower case m, map object refers to any of the objects in the graph,
+ * such as an XMLDBMSMap, a ClassMap, or a ColumnMap.) One way to understand the graph is to
  * look at the private variables in each map class.</p>
  *
  * <p>The graph of objects contains two views of the mapping, one from the XML point
@@ -108,7 +100,7 @@ import java.util.Hashtable;
  * The following classes are shared by both views:</p>
  *
  * <pre>
- *    Map
+ *    XMLDBMSMap
  *    Table
  *    Column
  *    Key
@@ -125,7 +117,7 @@ import java.util.Hashtable;
  *    MapException
  *
  *    MapBase
- *       Map
+ *       XMLDBMSMap
  *
  *       ClassMapBase
  *          ClassMap
@@ -154,7 +146,7 @@ import java.util.Hashtable;
  * ClassMap or the Table in the PropertyMap (if any).</p>
  *
  * <pre>
- *    Map
+ *    XMLDBMSMap
  *       ClassMap (hashtable of)
  *          Table
  *             Column (hashtable of)
@@ -205,7 +197,7 @@ import java.util.Hashtable;
  * <h4>Methods for Creating Map Objects</h4>
  *
  * <p>Map objects are created by factory methods. These occur in all map objects
- * except Map, which has a simple constructor. For example, the following code
+ * except XMLDBMSMap, which has a simple constructor. For example, the following code
  * creates a LinkInfo object.</p>
  *
  * <pre>
@@ -213,7 +205,7 @@ import java.util.Hashtable;
  * </pre>
  *
  * <p>In many cases, factory methods can also be found on the parent object.
- * For example, the following code creates a ClassMap object from a Map object:</p>
+ * For example, the following code creates a ClassMap object from an XMLDBMSMap object:</p>
  *
  * <pre>
  *    classMap = map.createClassMap(null, "foo");
@@ -223,10 +215,10 @@ import java.util.Hashtable;
  * automatically added to the parent object. Furthermore, if a child object
  * with the same name already exists, that object will be returned instead of
  * creating a new object. Since objects are frequently used in multiple places
- * -- for example, the same ClassMap can appear in a Map and a RelatedClassMap --
+ * -- for example, the same ClassMap can appear in an XMLDBMSMap and a RelatedClassMap --
  * this is useful, as the alternative would be to first check if
  * the object exists, then create it if it doesn't. For example, the following
- * code is equivalent to calling createClassMap on a Map object:</p>
+ * code is equivalent to calling createClassMap on an XMLDBMSMap object:</p>
  *
  * <pre>
  *    classMap = map.getClassMap(null, "foo");
@@ -333,12 +325,12 @@ import java.util.Hashtable;
  *
  * <p>Because of this, map factories must ensure that a map has valid state before
  * they return it. (The only exception to this rule is database metadata. A map
- * factory can return a Map that has not been initialized with database metadata
+ * factory can return an XMLDBMSMap that has not been initialized with database metadata
  * and allow the application to do this. In this case, it is the application's
  * responsibility to ensure the map is in a valid state.)</p>
  *
  * <p>Map factories can check whether a map has valid state by calling
- * MapChecker.check(Map). Whether this is necessary depends on the map factory.
+ * MapChecker.check(XMLDBMSMap). Whether this is necessary depends on the map factory.
  * Some map factories keep track of map state themselves, others call MapChecker to
  * check for them.</p>
  *
@@ -346,7 +338,7 @@ import java.util.Hashtable;
  * @version 2.0
  */
 
-public class Map extends MapBase
+public class XMLDBMSMap extends MapBase
 {
    //**************************************************************************
    // Private variables
@@ -367,8 +359,8 @@ public class Map extends MapBase
    // Constructors
    //**************************************************************************
 
-   /** Construct a new Map. */
-   public Map()
+   /** Construct a new XMLDBMSMap. */
+   public XMLDBMSMap()
    {
       resetDefaultFormatters();
    }
@@ -410,7 +402,7 @@ public class Map extends MapBase
     * Get the default formatting object for a type.
     *
     * <p>This method returns an object that implements the
-    * org.xmlmiddleware.conversions.StringFormatter interface.</p>
+    * org.xmlmiddleware.conversions.formatters.StringFormatter interface.</p>
     *
     * @param type The JDBC type. Must be a valid value from the java.sql.Types class.
     *
@@ -437,7 +429,7 @@ public class Map extends MapBase
     * Set the default formatting object for a type.
     *
     * <p>The format object must be an object that implements the 
-    * org.xmlmiddleware.conversions.StringFormatter interface.</p>
+    * org.xmlmiddleware.conversions.formatters.StringFormatter interface.</p>
     *
     * @param type The JDBC type.
     * @param formatter The formatting object. Must not be null.
@@ -456,13 +448,13 @@ public class Map extends MapBase
     */
    public void resetDefaultFormatters()
    {
-      Base64Formatter base64Formatter = new Base64Formatter();
+      NoFormatter     noFormatter = new NoFormatter();
       CharFormatter   charFormatter = new CharFormatter();
       NumberFormatter numberFormatter = new NumberFormatter(NumberFormat.getNumberInstance());
 
-      setDefaultFormatter(Types.BINARY, base64Formatter);
-      setDefaultFormatter(Types.VARBINARY, base64Formatter);
-      setDefaultFormatter(Types.LONGVARBINARY, base64Formatter);
+      setDefaultFormatter(Types.BINARY, noFormatter);
+      setDefaultFormatter(Types.VARBINARY, noFormatter);
+      setDefaultFormatter(Types.LONGVARBINARY, noFormatter);
 
       setDefaultFormatter(Types.CHAR, charFormatter);
       setDefaultFormatter(Types.VARCHAR, charFormatter);
@@ -743,7 +735,7 @@ public class Map extends MapBase
    }
 
    /**
-    * Create a ClassMap for an element type and add it to the Map.
+    * Create a ClassMap for an element type and add it to the XMLDBMSMap.
     *
     * <p>If the element type has already been mapped, returns the existing ClassMap.</p>
     *
@@ -758,7 +750,7 @@ public class Map extends MapBase
    }
 
    /**
-    * Create a ClassMap for an element type and add it to the Map.
+    * Create a ClassMap for an element type and add it to the XMLDBMSMap.
     *
     * <p>If the element type has already been mapped, returns the existing ClassMap.</p>
     *
@@ -886,7 +878,7 @@ public class Map extends MapBase
    }
 
    /**
-    * Create a ClassTableMap for a table and add it to the Map.
+    * Create a ClassTableMap for a table and add it to the XMLDBMSMap.
     *
     * <p>If the table has already been mapped as a class table, returns the
     * existing ClassTableMap.</p>
@@ -1006,7 +998,7 @@ public class Map extends MapBase
    }
 
    /**
-    * Create a Table and add it to the Map.
+    * Create a Table and add it to the XMLDBMSMap.
     *
     * <p>If the table exists, returns the existing Table.</p>
     *
