@@ -397,8 +397,10 @@ public class FilterCompiler implements ContentHandler
    private void processResultSetInfo(Attributes attrs)
       throws SAXException
    {
-      String          databaseName, catalogName, schemaName, tableName;
+      String          databaseName, catalogName, schemaName, tableName, rsName;
       ResultSetFilter resultSetFilter;
+
+      rsName = getAttrValue(attrs, FilterConst.ATTR_NAME, FilterConst.DEF_NAME);
 
       databaseName = getAttrValue(attrs, FilterConst.ATTR_DATABASE, FilterConst.DEF_DATABASE);
       catalogName = getAttrValue(attrs, FilterConst.ATTR_CATALOG);
@@ -407,27 +409,20 @@ public class FilterCompiler implements ContentHandler
 
       try
       {
-         resultSetFilter = filterSet.createResultSetFilter();
-         resultSetFilter.setTable(databaseName, catalogName, schemaName, tableName);
+         resultSetFilter = filterSet.createResultSetFilter(rsName);
          filterBase = resultSetFilter;
+         resultSetFilter.setTable(databaseName, catalogName, schemaName, tableName);
       }
       catch (IllegalArgumentException e)
       {
-         throw new IllegalArgumentException(e.getMessage());
+         throw new SAXException(e.getMessage());
       }
    }
 
    private void processRootFilter()
    {
-      try
-      {
-         rootFilter = filterSet.createRootFilter();
-         filterBase = rootFilter;
-      }
-      catch (IllegalArgumentException e)
-      {
-         throw new IllegalArgumentException(e.getMessage());
-      }
+      rootFilter = filterSet.createRootFilter();
+      filterBase = rootFilter;
    }
 
    private void processTable(Attributes attrs)

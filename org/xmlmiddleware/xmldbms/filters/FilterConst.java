@@ -104,7 +104,6 @@ public class FilterConst
    public static String ATTR_CONDITION        = "Condition";
    public static String ATTR_DATABASE         = "Database";
    public static String ATTR_NAME             = "Name";
-   public static String ATTR_NUMBER           = "Number";
    public static String ATTR_PARENTKEY        = "ParentKey";
    public static String ATTR_PREFIX           = "Prefix";
    public static String ATTR_SCHEMA           = "Schema";
@@ -118,7 +117,6 @@ public class FilterConst
                                          ATTR_CONDITION,
                                          ATTR_DATABASE,
                                          ATTR_NAME,
-                                         ATTR_NUMBER,
                                          ATTR_PARENTKEY,
                                          ATTR_PREFIX,
                                          ATTR_SCHEMA,
@@ -135,13 +133,12 @@ public class FilterConst
    public static final int ATTR_TOKEN_CONDITION = 3;
    public static final int ATTR_TOKEN_DATABASE  = 4;
    public static final int ATTR_TOKEN_NAME      = 5;
-   public static final int ATTR_TOKEN_NUMBER    = 6;
-   public static final int ATTR_TOKEN_PARENTKEY = 7;
-   public static final int ATTR_TOKEN_PREFIX    = 8;
-   public static final int ATTR_TOKEN_SCHEMA    = 9;
-   public static final int ATTR_TOKEN_TABLE     = 10;
-   public static final int ATTR_TOKEN_URI       = 11;
-   public static final int ATTR_TOKEN_VERSION   = 12;
+   public static final int ATTR_TOKEN_PARENTKEY = 6;
+   public static final int ATTR_TOKEN_PREFIX    = 7;
+   public static final int ATTR_TOKEN_SCHEMA    = 8;
+   public static final int ATTR_TOKEN_TABLE     = 9;
+   public static final int ATTR_TOKEN_URI       = 10;
+   public static final int ATTR_TOKEN_VERSION   = 11;
 
    public static final int[] ATTR_TOKENS = {
                                             ATTR_TOKEN_CATALOG,
@@ -149,7 +146,6 @@ public class FilterConst
                                             ATTR_TOKEN_CONDITION,
                                             ATTR_TOKEN_DATABASE,
                                             ATTR_TOKEN_NAME,
-                                            ATTR_TOKEN_NUMBER,
                                             ATTR_TOKEN_PARENTKEY,
                                             ATTR_TOKEN_PREFIX,
                                             ATTR_TOKEN_SCHEMA,
@@ -161,6 +157,6 @@ public class FilterConst
    // Attribute defaults
 
    public static String DEF_DATABASE = "Default";
-   public static String DEF_NUMBER = "0";
+   public static String DEF_NAME = "Default";
    public static String DEF_VERSION = "2.0";
 }

@@ -39,6 +39,7 @@ public class ResultSetFilter extends FilterBase
    private String catalogName;
    private String schemaName;
    private String tableName;
+   private String name;
 
    //*********************************************************************
    // Constants
@@ -55,9 +56,10 @@ public class ResultSetFilter extends FilterBase
     *
     * @param map The Map to which the filter applies.
     */
-   protected ResultSetFilter(Map map)
+   protected ResultSetFilter(Map map, String name)
    {
       super(map);
+      this.name = name;
    }
 
    //*********************************************************************
@@ -127,5 +129,15 @@ public class ResultSetFilter extends FilterBase
       this.catalogName = catalogName;
       this.schemaName = schemaName;
       this.tableName = tableName;
+   }
+
+   /**
+    * Get the name used to identify the result set.
+    *
+    * @return The name.
+    */
+   public String getResultSetName()
+   {
+      return name;
    }
 }

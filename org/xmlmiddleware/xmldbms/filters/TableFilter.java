@@ -102,12 +102,12 @@ public class TableFilter
     *    parent table, this may be null.
     * @return The filter. May be null.
     */
-   public final FilterConditions getRelatedTableFilter(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
+   public final RelatedTableFilter getRelatedTableFilter(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
    {
       String hashName;
 
       hashName = getHashName(databaseName, catalogName, schemaName, tableName, parentKeyName, childKeyName);
-      return (FilterConditions)relatedTableFilters.get(hashName);
+      return (RelatedTableFilter)relatedTableFilters.get(hashName);
    }
 
    /**
@@ -116,12 +116,12 @@ public class TableFilter
     * @param relatedClassTableMap RelatedClassTableMap that describes the related table.
     * @return The filter. May be null.
     */
-   public final FilterConditions getRelatedTableFilter(RelatedClassTableMap relatedClassTableMap)
+   public final RelatedTableFilter getRelatedTableFilter(RelatedClassTableMap relatedClassTableMap)
    {
       String hashName;
 
       hashName = getHashName(relatedClassTableMap.getClassTableMap().getTable(), relatedClassTableMap.getLinkInfo());
-      return (FilterConditions)relatedTableFilters.get(hashName);
+      return (RelatedTableFilter)relatedTableFilters.get(hashName);
    }
 
    /**
@@ -130,18 +130,18 @@ public class TableFilter
     * @param propTableMap PropertyTableMap that describes the related table.
     * @return The filter. May be null.
     */
-   public final FilterConditions getRelatedTableFilter(PropertyTableMap propTableMap)
+   public final RelatedTableFilter getRelatedTableFilter(PropertyTableMap propTableMap)
    {
       String hashName;
 
       hashName = getHashName(propTableMap.getTable(), propTableMap.getLinkInfo());
-      return (FilterConditions)relatedTableFilters.get(hashName);
+      return (RelatedTableFilter)relatedTableFilters.get(hashName);
    }
 
    /**
     * Get the filters for all related tables.
     *
-    * @return An Enumeration of FilterConditions. May be empty.
+    * @return An Enumeration of RelatedTableFilter objects. May be empty.
     */
    public final Enumeration getRelatedTableFilters()
    {
@@ -164,32 +164,34 @@ public class TableFilter
     * @return The filter
     * @exception IllegalArgumentException Returned if the filter already exists.
     */
-   public FilterConditions createRelatedTableFilter(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
+   public RelatedTableFilter createRelatedTableFilter(String databaseName, String catalogName, String schemaName, String tableName, String parentKeyName, String childKeyName)
    {
       Object               o;
       PropertyTableMap     propTableMap;
       RelatedClassTableMap relatedClassTableMap;
       Table                table;
       String               hashName;
-      FilterConditions     relatedTableFilter;
+      LinkInfo             linkInfo;
+      RelatedTableFilter   relatedTableFilter;
 
       o = getRelatedTableMap(databaseName, catalogName, schemaName, tableName, parentKeyName, childKeyName);
       if (o instanceof PropertyTableMap)
       {
          propTableMap = (PropertyTableMap)o;
          table = propTableMap.getTable();
-         hashName = getHashName(table, propTableMap.getLinkInfo());
+         linkInfo = propTableMap.getLinkInfo();
       }
       else // if (o instanceof RelatedClassTableMap)
       {
          relatedClassTableMap = (RelatedClassTableMap)o;
          table = relatedClassTableMap.getClassTableMap().getTable();
-         hashName = getHashName(table, relatedClassTableMap.getLinkInfo());
+         linkInfo = relatedClassTableMap.getLinkInfo();
       }
+      hashName = getHashName(table, linkInfo);
       if (relatedTableFilters.get(hashName) != null)
          throw new IllegalArgumentException("Related table filter already exists for " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " with the parent key name '" + parentKeyName + "' and the child key name '" + childKeyName + "'.");
 
-      relatedTableFilter = new FilterConditions(table);
+      relatedTableFilter = new RelatedTableFilter(table, linkInfo.getParentKey().getName(), linkInfo.getChildKey().getName());
       relatedTableFilters.put(hashName, relatedTableFilter);
       return relatedTableFilter;
    }
@@ -249,7 +251,7 @@ public class TableFilter
          throw new IllegalArgumentException("Parent key name and child key name must both be null or both be non-null.");
 
       // First check if the table is a property table. If so, check that the correct
-      // keys are used (assuming they are specified), then return the hash name.
+      // keys are used (assuming they are specified), then return the PropertyTableMap.
 
       propTableMap = classTableMap.getPropertyTableMap(databaseName, catalogName, schemaName, tableName);
       if (propTableMap != null)
@@ -258,7 +260,7 @@ public class TableFilter
          if (parentKeyName != null)
          {
             if ((!parentKeyName.equals(linkInfo.getParentKey().getName())) ||
-                (!childKeyName.equals(linkInfo.getParentKey().getName())))
+                (!childKeyName.equals(linkInfo.getChildKey().getName())))
                throw new IllegalArgumentException("The property table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " is not linked to the class table " + classTableMap.getTable().getUniversalName() + " with the keys named " + parentKeyName + " and " + childKeyName);
          }
          return propTableMap;
@@ -291,7 +293,7 @@ public class TableFilter
          if (parentKeyName != null)
          {
             if ((!parentKeyName.equals(linkInfo.getParentKey().getName())) ||
-                (!childKeyName.equals(linkInfo.getParentKey().getName())))
+                (!childKeyName.equals(linkInfo.getChildKey().getName())))
                throw new IllegalArgumentException("The related class table " + Table.getUniversalName(databaseName, catalogName, schemaName, tableName) + " is never linked to the class table " + classTableMap.getTable().getUniversalName() + " with the keys named " + parentKeyName + " and " + childKeyName);
          }
       }

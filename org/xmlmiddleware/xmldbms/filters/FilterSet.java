@@ -56,6 +56,7 @@ public class FilterSet
    private Vector    filters = new Vector();
    private Hashtable uris = new Hashtable();              // Indexed by prefix
    private Hashtable prefixes = new Hashtable();          // Indexed by URI
+   private Hashtable rsNames = new Hashtable();           // Indexed by result set name
 
    //*********************************************************************
    // Constants
@@ -65,6 +66,7 @@ public class FilterSet
    private static String NOTNULL  = " must not be null.";
    private static String ARG_PREFIX = "prefix";
    private static String ARG_URI = "uri";
+   private static final Object O = new Object();
 
    //*********************************************************************
    // Constructors
@@ -311,18 +313,10 @@ public class FilterSet
     * Create a root filter.
     *
     * @return The root filter.
-    * @exception IllegalArgumentException Thrown if the filter set contains
-    *    a ResultSetFilter.
     */
    public RootFilter createRootFilter()
    {
       RootFilter filter;
-
-      if (filters.size() == 1)
-      {
-         if (filters.elementAt(0) instanceof ResultSetFilter)
-            throw new IllegalArgumentException("Cannot mix result set filters and root filters.");
-      }
 
       filter = new RootFilter(map);
       filters.addElement(filter);
@@ -332,21 +326,20 @@ public class FilterSet
    /**
     * Create a result set filter.
     *
-    * <p>Note that a filter set can contain either (1) any number of Filters or
-    * (2) at most one result set filter. This restriction may be removed in the
-    * future.</p>
-    *
+    * @param name The name used to identify the result set. If this is null, "Default"
+    *    is used.
     * @return The filter.
-    * @exception IllegalArgumentException Thrown if the filter set contains
-    *    any other filters.
+    * @exception IllegalArgumentException Thrown if the name is already being used.
     */
-   public ResultSetFilter createResultSetFilter()
+   public ResultSetFilter createResultSetFilter(String name)
    {
       ResultSetFilter filter;
 
-      if (filters.size() != 0)
-         throw new IllegalArgumentException("Cannot mix result sets and root filters or have more than one result set.");
-      filter = new ResultSetFilter(map);
+      if (name == null) name = "Default";
+      if (rsNames.get(name) != null)
+         throw new IllegalArgumentException("A result set filter for the result set named " + name + " has already been created.");
+      rsNames.put(name, O);
+      filter = new ResultSetFilter(map, name);
       filters.addElement(filter);
       return filter;
    }
@@ -362,8 +355,15 @@ public class FilterSet
     */
    public void removeFilter(int index)
    {
+      Object filter;
+
       if ((index >= 0) && (index < filters.size()))
       {
+         filter = filters.elementAt(index);
+         if (filter instanceof ResultSetFilter)
+         {
+            rsNames.remove(((ResultSetFilter)filter).getResultSetName());
+         }
          filters.removeElementAt(index);
       }
       else
@@ -376,6 +376,7 @@ public class FilterSet
    public void removeAllFilters()
    {
       filters.removeAllElements();
+      rsNames.clear();
    }
 
    //*********************************************************************
