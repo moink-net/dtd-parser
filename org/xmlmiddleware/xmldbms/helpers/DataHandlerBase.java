@@ -1,12 +1,12 @@
-package org.xmlmiddleware.xmldbms;
+package org.xmlmiddleware.xmldbms.helpers;
 
 import java.lang.*;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 
+import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
-import org.xmlmiddleware.xmldbms.maps.utils.*;
 
 abstract class DataHandlerBase
     implements DataHandler
@@ -15,6 +15,10 @@ abstract class DataHandlerBase
     protected DMLGenerator m_dml;
     protected int m_commitMode;
 
+    /**
+     * Creates a DataHandlerBase
+     */
+
     DataHandlerBase(DataSource dataSource, String user, String password)
         throws SQLException
     {
@@ -22,7 +26,7 @@ abstract class DataHandlerBase
         m_dml = new DMLGenerator(m_connection.getMetaData());
 
         // TODO: Shouldn't the commit modes be moved to another class?
-        m_commitMode = DOMToDBMS.COMMIT_AFTERSTATEMENT;
+        m_commitMode = COMMIT_AFTERSTATEMENT;
     }
 
 
@@ -64,11 +68,12 @@ abstract class DataHandlerBase
     public void update(Table table, Row row, Column[] cols)
         throws SQLException
     {
-        int ret = doUpdate(table, row, cols);
+        PreparedStatement stmt = makeUpdate(table, row, cols);
+        int numRows = stmt.executeUpdate();
 
-        if(ret == 0)
+        if(numRows == 0)
             throw new SQLException("[xmldbms] Row to be updated is not present in table.");
-        else if(ret > 1)
+        else if(numRows > 1)
             throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
 
         // TODO: Do we need to refresh values here? I think not as any changes 
@@ -79,11 +84,12 @@ abstract class DataHandlerBase
     public void updateOrInsert(Table table, Row row)
         throws SQLException
     {
-        int ret = doUpdate(table, row, null);
+        PreparedStatement stmt = makeUpdate(table, row, null);  
+        int numRows = stmt.executeUpdate();
 
-        if(ret == 0)
+        if(numRows == 0)
             insert(table, row);
-        else if(ret > 1)
+        else if(numRows > 1)
             throw new SQLException("[xmldbms] Primary key not unique. Multiple rows updated!");
     }
 
@@ -91,12 +97,20 @@ abstract class DataHandlerBase
     public void delete(Table table, Row row)
         throws SQLException
     {
-        int ret = doDelete(table, row);
+        PreparedStatement stmt = makeDelete(table, row);
+        int numRows = stmt.executeUpdate();
 
-        if(ret == 0)
+        if(numRows == 0)
             throw new SQLException("[xmldbms] Row to be deleted is not present in table.");
-        else if(ret > 1)
+        else if(numRows > 1)
             throw new SQLException("[xmldbms] Primary key not unique. Multiple rows deleted!");
+    }
+
+    public ResultSet select(Table table, Object[] key, OrderInfo orderInfo)
+        throws SQLException
+    {
+        PreparedStatement stmt = makeSelect(table, key, orderInfo);
+        return stmt.executeQuery();
     }
 
        
@@ -104,7 +118,22 @@ abstract class DataHandlerBase
 
 
 
-    protected int doInsert(Table table, Row row)
+    protected PreparedStatement makeSelect(Table table, Object[] key, OrderInfo orderInfo)
+        throws SQLException
+    {
+        Key priKey = table.getPrimaryKey();
+
+        // Make the SELECT statement
+        String sql = m_dml.getSelect(table, priKey, orderInfo);
+        PreparedStatement stmt = m_connection.prepareStatement(sql);
+
+        // Set the paremeters
+        Parameters.setParameters(stmt, 0, priKey.getColumns(), key);
+
+        return stmt;
+    }
+
+    protected PreparedStatement makeInsert(Table table, Row row)
         throws SQLException
     {
         Column[] cols = row.getColumnsFor(table);
@@ -116,10 +145,10 @@ abstract class DataHandlerBase
         // Set the parameters
         Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
 
-        return stmt.executeUpdate();
+        return stmt;
     }
 
-    protected int doUpdate(Table table, Row row, Column[] cols)
+    protected PreparedStatement makeUpdate(Table table, Row row, Column[] cols)
         throws SQLException
     { 
         Column[] priCols = table.getPrimaryKey().getColumns();
@@ -165,12 +194,12 @@ abstract class DataHandlerBase
         Parameters.setParameters(stmt, cols.length, priCols, row.getColumnValues(priCols));
 
 
-        // Execute statement
-        return stmt.executeUpdate();
+        // Return the statement ready for execution
+        return stmt;
     }
 
 
-    protected int doDelete(Table table, Row row)
+    protected PreparedStatement makeDelete(Table table, Row row)
         throws SQLException
     {
         Key priKey = table.getPrimaryKey();
@@ -184,8 +213,11 @@ abstract class DataHandlerBase
         Parameters.setParameters(stmt, 0, cols, row.getColumnValues(cols));
 
         // Execute Statement
-        return stmt.executeUpdate();
+        return stmt;
     }
+
+
+
 
 
     protected Column[] getRefreshCols(Table table, Row row)
@@ -216,4 +248,16 @@ abstract class DataHandlerBase
 
         return (Column[])colVec.toArray();    
     }
+
+    protected Key createColumnKey(String colName, int type)
+    {
+        Column[] keyCols = { Column.create(colName) };
+        keyCols[0].setType(type);
+
+        // Make a key out of it
+        Key key = Key.createPrimaryKey(null);
+        key.setColumns(keyCols);
+
+        return key;
+    }        
 }

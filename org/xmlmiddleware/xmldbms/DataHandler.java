@@ -10,6 +10,30 @@ import org.xmlmiddleware.xmldbms.maps.*;
  */
 public interface DataHandler  
 {
+    /** 
+     * Commit transaction after each statement. 
+     */
+    public static final int COMMIT_AFTERSTATEMENT = 1;
+
+    /**
+     * Commit transaction after the whole document
+     */
+    public static final int COMMIT_AFTERDOCUMENT = 2;
+
+    /**
+     * Let calling code commit transaction. Useful when part of 
+     * a larger transaction.
+     */
+    public static final int COMMIT_NONE = 3;
+
+    /**
+     * Disable transactions all together.
+     */
+    public static final int COMMIT_NOTRANSACTIONS = 4;
+
+
+
+
     public void startDocument(int commitMode)
         throws SQLException;
 

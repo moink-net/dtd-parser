@@ -19,44 +19,6 @@ import org.xmlmiddleware.domutils.*;
 
 public class DOMToDBMS
 {
-    /** 
-     * Commit transaction after each statement. 
-     */
-    public static final int COMMIT_AFTERSTATEMENT = 1;
-
-    /**
-     * Commit transaction after the whole document
-     */
-    public static final int COMMIT_AFTERDOCUMENT = 2;
-
-    /**
-     * Let calling code commit transaction. Useful when part of 
-     * a larger transaction.
-     */
-    public static final int COMMIT_NONE = 3;
-
-    /**
-     * Disable transactions all together.
-     */
-    public static final int COMMIT_NOTRANSACTIONS = 4;
-    
-
-    // TODO: The action specific code should probably be moved
-    // to a class else where.
-
-    // The namespace and attr name for action attributes
-    protected static final String NS_ACTIONS = "http://www.xmlmiddleware.org/xmldbms/actions";
-    protected static final String ATTR_ACTION = "Action";
-
-    protected static final String VAL_NONE          = "None";
-    protected static final String VAL_INSERT        = "Insert";
-    protected static final String VAL_SOFTINSERT    = "SoftInsert";
-    protected static final String VAL_INSORUPDATE   = "InsertOrUpdate";
-    protected static final String VAL_UPDATE        = "Update";
-    protected static final String VAL_DELETE        = "Delete";
-    protected static final String VAL_SOFTDELETE    = "SoftDelete";
-
-
     // The transfer info used for a session of storeDocument
     // TODO: We may have to remove this and make this entire thing
     // reentrant
@@ -333,7 +295,7 @@ public class DOMToDBMS
 	            generateOrder(classRow, relMap.getOrderInfo(), orderInParent);
 
             // Get the action for the node
-            Action action = getActionFor(classNode);
+            Action action = ActionAttrParser.getActionFor(classNode);
             if(action == null)
                 action = parentAction;
 
@@ -767,56 +729,18 @@ public class DOMToDBMS
         if(columns.length != values.length)
             throw new KeyException("Invalid number of columns generated key generator: " + key.getKeyGeneratorName());
 
-        row.setColumnValues(key.getColumns(), keyGen.generateKey());
+        for(int i = 0; i < columns.length; i++)
+        {
+            // loop for each generated key column value
+            row.setColumnValue(columns[i], ConvertJDBCObject.toObject(values[i], columns[i].getType()));
+        }
     }
 
     private void generateOrder(Row row, OrderInfo o, int orderInParent)
     {
 	    if(o != null && !o.orderValueIsFixed() && o.generateOrder())
-		    row.setColumnValue(o.getOrderColumn(), new Integer(orderInParent));
+            row.setColumnValue(column, ConvertJDBCObject.toObject(new Integer(orderValue), column.getType());
     }   
-
-
-    private Action getActionFor(Element el)
-        throws MapException
-    {
-        Attr attrAction = el.getAttributeNodeNS(NS_ACTIONS, ATTR_ACTION);
-
-        if(attrAction == null)
-        {
-            return m_actions.getAction(el.getNamespaceURI(), el.getLocalName());
-        }
-        else
-        {
-            String s = attrAction.getValue();
-            int act;
-
-            if(s.equals(VAL_NONE))
-                act = Action.NONE;
-            else if(s.equals(VAL_INSERT))
-                act = Action.INSERT;
-            else if(s.equals(VAL_SOFTINSERT))
-                act = Action.SOFTINSERT;
-            else if(s.equals(VAL_INSORUPDATE))
-                act = Action.INSERTORUPDATE;
-            else if(s.equals(VAL_UPDATE))
-                act = Action.UPDATE;
-            else if(s.equals(VAL_DELETE))
-                act = Action.DELETE;
-            else if(s.equals(VAL_SOFTDELETE))
-                act = Action.SOFTDELETE;
-            else
-            {   
-                // TODO: Get the right exception
-                throw new MapException("xmldbms: Invalid action specified on element.");
-            }
-            
-            Action action = new Action(el.getNamespaceURI(), el.getLocalName());
-            action.setAction(act);
-
-            return action;
-        }
-    }
 
 
     private void storeRow(Table table, Row row, Action action)

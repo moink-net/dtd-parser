@@ -69,7 +69,7 @@ import java.sql.Types;
  * @version 2.0
  */
 
-class Parameters
+public class Parameters
 {
    //**************************************************************************
    // Public methods
@@ -89,7 +89,7 @@ class Parameters
     *  the parameter.
    */
 
-   protected static void setParameters(PreparedStatement p, int offset, Column[] columns, Object[] values)
+   public static void setParameters(PreparedStatement p, int offset, Column[] columns, Object[] values)
       throws SQLException
    {
      for (int i = 0; i < values.length; i++)
@@ -110,7 +110,7 @@ class Parameters
     * @exception SQLException A database error occurred while setting
     *  the parameter.
    */
-   protected static void setParameter(PreparedStatement p, int number, int type, Object value)
+   public static void setParameter(PreparedStatement p, int number, int type, Object value)
      throws SQLException
    {
       byte[]      b;
@@ -248,7 +248,7 @@ class Parameters
     * @exception SQLException A database error occurred while setting
     *  the parameter.
    */
-   protected static void convertAndSetParameters(PreparedStatement p, int offset, Column[] columns, Object[] values)
+   public static void convertAndSetParameters(PreparedStatement p, int offset, Column[] columns, Object[] values)
       throws SQLException
    {
      for (int i = 0; i < values.length; i++)
@@ -272,7 +272,7 @@ class Parameters
     * @exception SQLException A database error occurred while setting
     *  the parameter.
     */
-   protected static void convertAndSetParameter(PreparedStatement p, int number, Column column, Object value)
+   public static void convertAndSetParameter(PreparedStatement p, int number, Column column, Object value)
      throws SQLException
    {
       StringFormatter formatter;

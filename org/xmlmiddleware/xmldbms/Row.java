@@ -9,7 +9,7 @@ import org.xmlmiddleware.xmldbms.maps.*;
  * Caches data for a single row.
  */
 
-class Row
+public class Row
 {
     class Null
     {

@@ -1,17 +1,25 @@
-package org.xmlmiddleware.xmldbms;
+package org.xmlmiddleware.xmldbms.helpers;
 
 import java.lang.*;
 import java.sql.*;
+import javax.sql.*;
 
+import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
+
 
 class PostgresHandler
     extends DataHandlerBase
 {
-    PostgresHandler()
+    protected final static String OIDNAME = "oid";
+
+    PostgresHandler(DataSource dataSource, String user, String password)
+        throws SQLException
     {
+        super(dataSource, user, password);
+
         // Create the oid column
-        Column[] keyCols = { Column.create("oid"); }
+        Column[] keyCols = { Column.create(OIDNAME); }
         keyCol[0].setType(Types.INTEGER);
 
         // Make a key out of it
@@ -35,7 +43,7 @@ class PostgresHandler
 
             // SELECT the columns with that oid
             String sql = m_dml.getSelect(table, m_oidKey, refreshCols);
-            PreparedStatement selStmt = conn.prepareStatement(sql);
+            PreparedStatement selStmt = m_connection.prepareStatement(sql);
 
             // Put the oid in
             selStmt.setInt(1, oid);

@@ -17,7 +17,7 @@
 // Version 2.0
 // Changes from version 1.01: New in version 2.0
 
-package org.xmlmiddleware.xmldbms.maps.utils;
+package org.xmlmiddleware.xmldbms.helpers;
 
 import org.xmlmiddleware.xmldbms.maps.*;
 import java.lang.*;
@@ -82,7 +82,6 @@ public class DMLGenerator
    //**************************************************************************
 
    public String getInsert(Table t)
-      throws SQLException
    {
       return getInsert(t, null);
    }
@@ -94,7 +93,6 @@ public class DMLGenerator
     * @return The INSERT string.
     */
    public String getInsert(Table t, Column[] cols)
-      throws SQLException
    {
       StringBuffer insert = new StringBuffer(1000);
 
@@ -111,7 +109,7 @@ public class DMLGenerator
       {
          for(Enumeration e = t.getColumns(); e.hasMoreElements(); )
          {
-            appendColumnName(insert, (Column)e.nextElement(), (numCols != 0));
+            insert.append(makeColumnName((Column)e.nextElement(), (numCols != 0)));
             numCols++;
          }
       }
@@ -119,7 +117,7 @@ public class DMLGenerator
       {
          for(int i = 0; i < cols.length; i++)
          {
-            appendColumnName(insert, cols[i], (numCols != 0));
+            insert.append(makeColumnName(cols[i], (numCols != 0)));
             numCols++;
          }
       }
@@ -147,9 +145,9 @@ public class DMLGenerator
     * @return The SELECT string.
     */
    public String getSelect(Table t, Key key, OrderInfo order)
-      throws SQLException
    {
-      return buildSelect(t, key.getColumns(), t.getResultSetColumns(), order);
+      return buildSelect(t, makeWhereLink(key.getColumns()), 
+                         t.getResultSetColumns(), order);
    }
 
    /**
@@ -160,9 +158,9 @@ public class DMLGenerator
     * @return The SELECT string.
     */
    public String getSelect(Table t, Key key)
-      throws SQLException
    {
-      return buildSelect(t, key.getColumns(), key.getColumns(), null);
+      return buildSelect(t, makeWhereLink(key.getColumns()), 
+                         key.getColumns(), null);
    }
 
    /**
@@ -175,7 +173,20 @@ public class DMLGenerator
     */
    public String getSelect(Table t, Key key, Column[] cols)
    {
-      return buildSelect(t, key.getColumns(), cols, null);
+      return buildSelect(t, makeWhereLink(key.getColumns()), cols, null);
+   }
+
+   /** 
+    * Returns a "SELECT cols WHERE <whereclause>" SQL string for a given table
+    * 
+    * @param t The table to select from. Must not be null.
+    * @param where The entire where clause
+    * @param cols The columns to select.
+    * @return The SELECT string.
+    */
+   public String getSelect(Table t, String where, Column[] cols)
+   {
+      return buildSelect(t, WHERE + where, cols, null);
    }
 
    /**
@@ -187,7 +198,6 @@ public class DMLGenerator
     * @return The UPDATE string.
     */
    public String getUpdate(Table t, Key key, Column[] cols)
-      throws SQLException
    {
       StringBuffer update = new StringBuffer(1000);
       boolean         first = true;
@@ -207,7 +217,7 @@ public class DMLGenerator
             if(first)
                update.append(COMMA);
 
-            appendColumnName(update, cols[i], false);
+            update.append(makeColumnName(cols[i], false));
             update.append(EQUALSPARAM);
             first = false;   
          }
@@ -220,13 +230,13 @@ public class DMLGenerator
             if(first)
                update.append(COMMA);
 
-            appendColumnName(update, (Column)e.nextElement(), false);
+            update.append(makeColumnName((Column)e.nextElement(), false));
             update.append(EQUALSPARAM);
             first = false;
          }
       }
 
-      appendWhereLink(update, key.getColumns());
+      update.append(makeWhereLink(key.getColumns()));
 
       return update.toString();
    }   
@@ -239,7 +249,6 @@ public class DMLGenerator
     * @return The DELETE string.
     */
    public String getDelete(Table t, Key key)
-      throws SQLException
    {
       StringBuffer delete = new StringBuffer(1000);
       boolean         first = true;
@@ -250,7 +259,7 @@ public class DMLGenerator
       // Add table name.
       appendTableName(delete, t);
 
-      appendWhereLink(delete, key.getColumns());
+      delete.append(makeWhereLink(key.getColumns()));
       
       return delete.toString();
    }
@@ -259,7 +268,7 @@ public class DMLGenerator
    // Private/protected methods
    //**************************************************************************
 
-   protected String buildSelect(Table t, Column[] keyColumns, 
+   protected String buildSelect(Table t, String whereLink, 
                                 Column[] valueColumns, OrderInfo order)
    {
       StringBuffer select = new StringBuffer(1000);
@@ -270,7 +279,7 @@ public class DMLGenerator
       // Add value column names.
       for(int i = 0; i < valueColumns.length; i++)
       {
-         appendColumnName(select, valueColumns[i], first);
+         select.append(makeColumnName(valueColumns[i], first));
          first = false;
       }
       
@@ -279,8 +288,8 @@ public class DMLGenerator
       select.append(FROM);
       appendTableName(select, t);
       
-      if(keyColumns != null)
-         appendWhereLink(select, keyColumns);
+      if(whereLink != null)
+         select.append(whereLink);
 
       // Add ORDER BY clause. We sort in descending order because this
       // gives us better performance in some cases. For more details,
@@ -293,21 +302,24 @@ public class DMLGenerator
       return select.toString();
    }
 
-   protected void appendWhereLink(StringBuffer stmt, Column[] keyColumns)
+   protected String makeWhereLink(Column[] keyColumns)
    {
       // Add WHERE clause.
       boolean first = false;
+      String str = new String();
 
-      stmt.append(WHERE);
+      str.concat(WHERE);
 
       for(int i = 0; i < keyColumns.length; i++)
       {
          if(i != 0)
-            stmt.append(AND);
+            str.concat(AND);
       
-         appendColumnName(stmt, keyColumns[i], false);
-         stmt.append(EQUALSPARAM);
+         str.concat(makeColumnName(keyColumns[i], false));
+         str.concat(EQUALSPARAM);
       }
+
+      return str;
    }
 
    protected void appendOrderBy(StringBuffer stmt, OrderInfo order)
@@ -318,17 +330,19 @@ public class DMLGenerator
       // Add the ORDER BY clause
 
       stmt.append(ORDERBY);
-      appendColumnName(stmt, order.getOrderColumn(), false);
+      stmt.append(makeColumnName(order.getOrderColumn(), false));
       if(!order.isAscending())
          stmt.append(DESC);
    }
 
-   protected void appendColumnName(StringBuffer str, Column column, boolean comma)
+   protected String makeColumnName(Column column, boolean comma)
    {
-      if(comma)
-         str.append(COMMA);
+      String str = makeQuotedName(column.getName());
 
-      appendQuotedName(str, column.getName());
+      if(comma)
+         return COMMA + str;
+      else
+        return str;
    }
 
    private void appendTableName(StringBuffer sb, Table table)
@@ -343,7 +357,7 @@ public class DMLGenerator
          catalog = table.getCatalogName();
          if((catalog != null) && (m_isCatalogAtStart))
          {
-            appendQuotedName(sb, catalog);
+            sb.append(makeQuotedName(catalog));
             sb.append(m_catalogSeparator);
          }
       }
@@ -353,28 +367,26 @@ public class DMLGenerator
          schema = table.getSchemaName();
          if(schema != null)
          {
-            appendQuotedName(sb, schema);
+            sb.append(makeQuotedName(schema));
             sb.append(PERIOD);
          }
       }
  
-      appendQuotedName(sb, table.getTableName());
+      sb.append(makeQuotedName(table.getTableName()));
  
       if(m_useCatalog)
       {
          if((catalog != null) && (!m_isCatalogAtStart))
          {
             sb.append(m_catalogSeparator);
-            appendQuotedName(sb, catalog);
+            sb.append(makeQuotedName(catalog));
          }
       }
    }
  
-   private void appendQuotedName(StringBuffer sb, String name)
+   private String makeQuotedName(String name)
    {
-      sb.append(m_quote);
-      sb.append(name);
-      sb.append(m_quote);
+      return m_quote + name + m_quote;
    }
 
    //**************************************************************************

@@ -1,33 +1,33 @@
-package org.xmlmiddleware.xmldbms;
+package org.xmlmiddleware.xmldbms.helpers;
 
 import java.lang.*;
 import java.sql.*;
+import javax.sql.*;
 
+import org.xmlmiddleware.xmldbms.*;
 import org.xmlmiddleware.xmldbms.maps.*;
-import org.sourceforge.jxdbcon.postgresql.*;
 
 class PostgresJDBXHandler
     extends DataHandlerBase
 {
     protected final static String OIDNAME = "oid";
 
-    PostgresJDBXHandler()
+    PostgresJDBXHandler(DataSource dataSource, String user, String password)
+        throws SQLException
     {
-        // Create the oid column
-        Column[] keyCols = { Column.create(OIDNAME); }
-        keyCol[0].setType(Types.INTEGER);
+        super(dataSource, user, password);
 
-        // Make a key out of it
-        m_oidKey = Key.createPrimaryKey(null);
-        m_oidKey.setColumns(keyCols);
+        // Create the oid column
+        m_oidKey = createColumnKey(OIDNAME, Types.INTEGER);
     }
 
 	public void insert(Table table, Row row)
         throws SQLException
     {     
-        int rows = doInsert();
+        PreparedStatement stmt = makeInsert(table, row);
+        int numRows = stmt.executeUpdate();
 
-        Column[] refreshCols = getRefreshCols(table);
+        Column[] refreshCols = getRefreshCols(table, row);
 
         if(refreshCols.length > 0)
         {
@@ -38,7 +38,7 @@ class PostgresJDBXHandler
 
             // SELECT the columns with that oid
             String sql = m_dml.getSelect(table, m_oidKey, refreshCols);
-            PreparedStatement selStmt = conn.prepareStatement(sql);
+            PreparedStatement selStmt = m_connection.prepareStatement(sql);
 
             // Put the oid in
             selStmt.setInt(1, oid);
@@ -53,5 +53,5 @@ class PostgresJDBXHandler
         }
     }
 
-    private Column m_oidKey;
+    private Key m_oidKey;
 }
