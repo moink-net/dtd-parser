@@ -1,0 +1,77 @@
+// No copyright, no warranty; use as you will.
+// Written by Ronald Bourret, Technical University of Darmstadt, 1998-9
+
+// Version 1.1
+// Changes from version 1.0: None
+// Changes from version 1.01:
+// * Added initialize(Properties) and close() methods
+
+package de.tudarmstadt.ito.xmldbms;
+
+import java.util.Properties;
+
+/**
+ * Interface for a class that generates key values (object IDs).
+ *
+ * <P>Applications that want DOMToDBMS to generate key values pass an
+ * instance of an object that implements this class to DOMToDBMS. Keys
+ * are used to join tables (class table-to-class table or class table-
+ * to-property table) and also to retrieve data from root tables.
+ * Whether DOMToDBMS generates a key for a given table (or one or more
+ * properties are mapped to the key columns) depends on the mapping to
+ * that table.</P>
+ *
+ * <P>Programmers using XML-DBMS never need to call the method (generateKey)
+ * in this interface; it is called only by DOMToDBMS. Programmers only
+ * need to supply an object that implements this interface to DOMToDBMS if
+ * they want DOMToDBMS to generate keys.</P>
+ *
+ * <P>The helper class KeyGeneratorHighLow provides a sample implementation
+ * of this interface.</P>
+ *
+ * @author Ronald Bourret, Technical University of Darmstadt
+ * @version 1.1
+ * @see de.tudarmstadt.ito.xmldbms.helpers.KeyGeneratorHighLow
+ */
+
+public interface KeyGenerator
+{
+   /**
+	* Initializes a key generator.
+	*
+	* <p>This method must be called by applications before the key generator
+	* is pass to DOMToDBMS. Applications using DOMToDBMS call this method.</p>
+	*
+	* @param props A Properties object containing properties to initialize
+	*              the key generator. The documentation for the key generator
+	*              must give the names and legal values for these properties.
+	* @exception KeyException An error occured while initializing the key.
+	*/
+
+   public void initialize(Properties props) throws java.lang.Exception,KeyException;      
+
+   /**
+	* Generates a key.
+	*
+	* <P>This method is called by DOMToDBMS. Applications using DOMToDBMS
+	* do not need to call this method.</P>
+	* 
+	* @return The key as an array of Objects.
+	* @exception KeyException An error occured while generating the key.
+	*/
+
+   public Object[] generateKey() throws KeyException;      
+
+   /**
+	* Closes a key generator.
+	*
+	* <p>This method must be called by applications after the key generator
+	* is used by DOMToDBMS. Note that it is generally possible to use the key
+	* generator multiple times before it is closed. Programmers using DOMToDBMS
+	* call this method.</p>
+	*
+	* @exception KeyException An error occured while closing the key.
+	*/
+
+   public void close() throws java.lang.Exception,KeyException;      
+}
