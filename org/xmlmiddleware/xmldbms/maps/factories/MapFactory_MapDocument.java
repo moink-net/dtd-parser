@@ -283,19 +283,14 @@ public class MapFactory_MapDocument
             if (e instanceof MapException)
                throw (MapException)e;
             else
-            {
-               if (e.getMessage() == null)
-                  throw new MapException(e.getClass().getName());
-               else
-                  throw new MapException(e.getClass().getName() + ": " + e.getMessage());
-            }
+               throw new MapException(e);
          }
          else
-            throw new MapException("SAX exception: " + s.getMessage());
+            throw new MapException(s);
       }
       catch (IOException io)
       {
-         throw new MapException("IO exception: " + io.getMessage());
+         throw new MapException(io);
       }
 
       // Create the database-centric view of the map.
@@ -1195,7 +1190,7 @@ public class MapFactory_MapDocument
       }
       catch (Exception e)
       {
-         throw new MapException(e.getClass().getName() + ": " + e.getMessage());
+         throw new MapException(e);
       }
 
       // Add the formatting object to the hashtable of named formatting
