@@ -1,0 +1,5 @@
+2.0.0
+* initialized Gradle Java project
+* added CHANGELOG and README.md
+* forked from Ronald Bourret's [XML-DBMS](http://www.rpbourret.com/xmldbms/index.htm) codebase
+  (imported from SourceForge CVS on 2016-08-26)
